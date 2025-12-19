@@ -7,6 +7,9 @@ struct PPCInterpreter_t;
 
 namespace snd_core
 {
+	struct AXProfile;
+	uint32 AXGetSwapProfile(AXProfile* profile, uint32 count);
+
 	// sndcore2 - AX init param config
 	const int AX_RENDERER_FREQ_32KHZ = 0;
 	const int AX_RENDERER_FREQ_48KHZ = 1;

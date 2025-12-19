@@ -38,10 +38,35 @@
 #include "Cafe/IOSU/ccr_nfc/iosu_ccr_nfc.h"
 #include "Cafe/IOSU/nn/boss/boss_service.h"
 
+#include <cstdlib>
+
+#include <functional>
+#include <thread>
+
 // IOSU initializer functions
 #include "Cafe/IOSU/kernel/iosu_kernel.h"
 #include "Cafe/IOSU/fsa/iosu_fsa.h"
 #include "Cafe/IOSU/ODM/iosu_odm.h"
+
+static bool CafeSystem_libretro_debug_enabled()
+{
+	static int s_cached = -1;
+	if (s_cached == -1)
+	{
+		const char* env = std::getenv("CEMU_LIBRETRO_DEBUG");
+		s_cached = (env && env[0] != '\0' && env[0] != '0') ? 1 : 0;
+	}
+	return s_cached != 0;
+}
+
+static uint64 CafeSystem_get_tid()
+{
+#ifdef _WIN32
+	return (uint64)GetCurrentThreadId();
+#else
+	return (uint64)std::hash<std::thread::id>{}(std::this_thread::get_id());
+#endif
+}
 
 // Cafe OS initializer and shutdown functions
 #include "Cafe/OS/libs/avm/avm.h"
@@ -362,13 +387,19 @@ uint32 LoadSharedData()
 	return mmuRange_SHARED_AREA.getBase() + sizeof(SharedDataEntry) * numEntries;
 }
 
+static std::atomic<uint32> s_cemuInitForGameStage = 0;
+
 void cemu_initForGame()
 {
+	s_cemuInitForGameStage.store(1, std::memory_order_relaxed);
 	WindowSystem::UpdateWindowTitles(false, true, 0.0);
+	s_cemuInitForGameStage.store(2, std::memory_order_relaxed);
 	// input manager apply game profile
 	InputManager::instance().apply_game_profile();
+	s_cemuInitForGameStage.store(3, std::memory_order_relaxed);
 	// log info for launched title
 	InfoLog_TitleLoaded();
+	s_cemuInitForGameStage.store(4, std::memory_order_relaxed);
 	// determine cycle offset since 1.1.2000
 	uint64 secondsSince2000_UTC = (uint64)(time(NULL) - 946684800);
 	ppcCyclesSince2000_UTC = secondsSince2000_UTC * (uint64)ESPRESSO_CORE_CLOCK;
@@ -383,14 +414,20 @@ void cemu_initForGame()
 	}
 	ppcCyclesSince2000 = theTime * (uint64)ESPRESSO_CORE_CLOCK;
 	ppcCyclesSince2000TimerClock = ppcCyclesSince2000 / 20ULL;
+	s_cemuInitForGameStage.store(5, std::memory_order_relaxed);
 	PPCTimer_start();
+	s_cemuInitForGameStage.store(6, std::memory_order_relaxed);
 	// this must happen after the RPX/RPL files are mapped to memory (coreinit sets up heaps so that they don't overwrite RPX/RPL data)
 	osLib_load();
+	s_cemuInitForGameStage.store(7, std::memory_order_relaxed);
 	// link all modules
 	uint32 linkTimeStart = GetTickCount();
 	RPLLoader_UpdateDependencies();
+	s_cemuInitForGameStage.store(8, std::memory_order_relaxed);
 	RPLLoader_Link();
+	s_cemuInitForGameStage.store(9, std::memory_order_relaxed);
 	RPLLoader_NotifyControlPassedToApplication();
+	s_cemuInitForGameStage.store(10, std::memory_order_relaxed);
 	uint32 linkTime = GetTickCount() - linkTimeStart;
 	cemuLog_log(LogType::Force, "RPL link time: {}ms", linkTime);
 	// for HBL ELF: Setup OS-specifics struct
@@ -404,9 +441,12 @@ void cemu_initForGame()
 		// replace any known function signatures with our HLE implementations and patch bugs in the games
 		GamePatch_scan();
 	}
+	s_cemuInitForGameStage.store(11, std::memory_order_relaxed);
 	LatteGPUState.isDRCPrimary = ActiveSettings::DisplayDRCEnabled();
 	InfoLog_PrintActiveSettings();
+	s_cemuInitForGameStage.store(12, std::memory_order_relaxed);
 	Latte_Start();
+	s_cemuInitForGameStage.store(13, std::memory_order_relaxed);
 	// check for debugger entrypoint bp
     if (g_gdbstub)
     {
@@ -414,9 +454,11 @@ void cemu_initForGame()
         g_gdbstub->Initialize();
     }
 	debugger_handleEntryBreakpoint(_entryPoint);
+	s_cemuInitForGameStage.store(14, std::memory_order_relaxed);
 	// load graphic packs
 	cemuLog_log(LogType::Force, "------- Activate graphic packs -------");
 	GraphicPack2::ActivateForCurrentTitle();
+	s_cemuInitForGameStage.store(15, std::memory_order_relaxed);
 	// print audio log
 	IAudioAPI::PrintLogging();
 	IAudioInputAPI::PrintLogging();
@@ -424,16 +466,20 @@ void cemu_initForGame()
 	cemuLog_log(LogType::Force, "------- Run title -------");
 	// wait till GPU thread is initialized
 	while (g_isGPUInitFinished == false) std::this_thread::sleep_for(std::chrono::milliseconds(50));
+	s_cemuInitForGameStage.store(16, std::memory_order_relaxed);
 	// init initial thread
 	OSThread_t* initialThread = coreinit::OSGetDefaultThread(1);
 	coreinit::OSSetThreadPriority(initialThread, 16);
 	coreinit::OSRunThread(initialThread, PPCInterpreter_makeCallableExportDepr(coreinit_start), 0, nullptr);
+	s_cemuInitForGameStage.store(17, std::memory_order_relaxed);
 	// init AX and start AX I/O thread
 	snd_core::AXOut_init();
+	s_cemuInitForGameStage.store(18, std::memory_order_relaxed);
 }
 
 namespace CafeSystem
 {
+	static std::atomic<uint32> s_launchThreadStage = 0;
 	void InitVirtualMlcStorage();
 	void MlcStorageMountTitle(TitleInfo& titleInfo);
     void MlcStorageUnmountAllTitles();
@@ -447,7 +493,6 @@ namespace CafeSystem
 	TitleId sForegroundTitleId = 0;
 
 	GameInfo2 sGameInfo_ForegroundTitle;
-
 
 	static void _CheckForWine()
 	{
@@ -795,6 +840,8 @@ namespace CafeSystem
 
 	PREPARE_STATUS_CODE PrepareForegroundTitle(TitleId titleId)
 	{
+		if (CafeSystem_libretro_debug_enabled())
+			cemuLog_log(LogType::Force, "[CafeSystem] PrepareForegroundTitle begin tid={} titleId={:016x}", (unsigned long long)CafeSystem_get_tid(), (uint64)titleId);
 		CafeTitleList::WaitForMandatoryScan();
 		sLaunchModeIsStandalone = false;
         _pathToExecutable.clear();
@@ -806,17 +853,31 @@ namespace CafeSystem
         // mount title folders
 		PREPARE_STATUS_CODE r = LoadAndMountForegroundTitle(titleId);
 		if (r != PREPARE_STATUS_CODE::SUCCESS)
+		{
+			if (CafeSystem_libretro_debug_enabled())
+				cemuLog_log(LogType::Force, "[CafeSystem] PrepareForegroundTitle mount failed tid={} titleId={:016x} status={}", (unsigned long long)CafeSystem_get_tid(), (uint64)titleId, (int)r);
 			return r;
+		}
 		gameProfile_load();
 		// setup memory space and PPC recompiler
         SetupMemorySpace();
         PPCRecompiler_init();
 		r = SetupExecutable(); // load RPX
 		if (r != PREPARE_STATUS_CODE::SUCCESS)
+		{
+			if (CafeSystem_libretro_debug_enabled())
+				cemuLog_log(LogType::Force, "[CafeSystem] PrepareForegroundTitle SetupExecutable failed tid={} titleId={:016x} status={}", (unsigned long long)CafeSystem_get_tid(), (uint64)titleId, (int)r);
 			return r;
+		}
 		InitVirtualMlcStorage();
+		if (CafeSystem_libretro_debug_enabled())
+			cemuLog_log(LogType::Force, "[CafeSystem] PrepareForegroundTitle end tid={} titleId={:016x}", (unsigned long long)CafeSystem_get_tid(), (uint64)titleId);
 		return PREPARE_STATUS_CODE::SUCCESS;
 	}
+
+	#ifdef RETRO_CORE
+	static std::atomic<bool> s_libretro_use_multicore{true};
+	#endif
 
 	PREPARE_STATUS_CODE PrepareForegroundTitleFromStandaloneRPX(const fs::path& path)
 	{
@@ -863,24 +924,78 @@ namespace CafeSystem
 
 	void _LaunchTitleThread()
 	{
-		for(auto& module : s_iosuModules)
-			module->TitleStart();
-		cemu_initForGame();
-		// enter scheduler
-		if ((ActiveSettings::GetCPUMode() == CPUMode::MulticoreRecompiler || LaunchSettings::ForceMultiCoreInterpreter()) && !LaunchSettings::ForceInterpreter())
-			coreinit::OSSchedulerBegin(3);
-		else
-			coreinit::OSSchedulerBegin(1);
+		s_launchThreadStage.store(1, std::memory_order_relaxed);
+		try
+		{
+			for(auto& module : s_iosuModules)
+				module->TitleStart();
+			s_launchThreadStage.store(2, std::memory_order_relaxed);
+			cemu_initForGame();
+			s_launchThreadStage.store(3, std::memory_order_relaxed);
+			// enter scheduler
+			s_launchThreadStage.store(4, std::memory_order_relaxed);
+			#ifdef RETRO_CORE
+			// Libretro: multi-core is now default, can be disabled via core option
+			if (s_libretro_use_multicore.load(std::memory_order_relaxed) && (ActiveSettings::GetCPUMode() == CPUMode::MulticoreRecompiler || LaunchSettings::ForceMultiCoreInterpreter()) && !LaunchSettings::ForceInterpreter())
+			{
+				cemuLog_log(LogType::Force, "[Libretro] Multi-core mode enabled");
+				coreinit::OSSchedulerBegin(3);
+			}
+			else
+			{
+				cemuLog_log(LogType::Force, "[Libretro] Single-core mode");
+				coreinit::OSSchedulerBegin(1);
+			}
+			#else
+			if ((ActiveSettings::GetCPUMode() == CPUMode::MulticoreRecompiler || LaunchSettings::ForceMultiCoreInterpreter()) && !LaunchSettings::ForceInterpreter())
+				coreinit::OSSchedulerBegin(3);
+			else
+				coreinit::OSSchedulerBegin(1);
+			#endif
+			s_launchThreadStage.store(5, std::memory_order_relaxed);
+		}
+		catch (const std::exception& e)
+		{
+			s_launchThreadStage.store(0xFFFFFFFFu, std::memory_order_relaxed);
+			cemuLog_log(LogType::Force, "Launch thread exception: {}", e.what());
+		}
+		catch (...)
+		{
+			s_launchThreadStage.store(0xFFFFFFFFu, std::memory_order_relaxed);
+			cemuLog_log(LogType::Force, "Launch thread unknown exception");
+		}
 	}
 
 	void LaunchForegroundTitle()
 	{
+		if (CafeSystem_libretro_debug_enabled())
+			cemuLog_log(LogType::Force, "[CafeSystem] LaunchForegroundTitle begin tid={} titleId={:016x}", (unsigned long long)CafeSystem_get_tid(), (uint64)GetForegroundTitleId());
 		PPCTimer_waitForInit();
 		// start system
 		sSystemRunning = true;
 		WindowSystem::NotifyGameLoaded();
+		s_launchThreadStage.store(0, std::memory_order_relaxed);
 		std::thread t(_LaunchTitleThread);
 		t.detach();
+		if (CafeSystem_libretro_debug_enabled())
+			cemuLog_log(LogType::Force, "[CafeSystem] LaunchForegroundTitle end tid={} launchThreadStage={}", (unsigned long long)CafeSystem_get_tid(), (unsigned)GetLaunchThreadStage());
+	}
+
+	#ifdef RETRO_CORE
+	void SetLibretroMultiCoreEnabled(bool enabled)
+	{
+		s_libretro_use_multicore.store(enabled, std::memory_order_relaxed);
+	}
+	#endif
+
+	uint32 GetLaunchThreadStage()
+	{
+		return s_launchThreadStage.load(std::memory_order_relaxed);
+	}
+
+	uint32 GetCemuInitForGameStage()
+	{
+		return ::s_cemuInitForGameStage.load(std::memory_order_relaxed);
 	}
 
 	bool IsTitleRunning()
@@ -1008,27 +1123,46 @@ namespace CafeSystem
 
 	void ShutdownTitle()
 	{
+		if (CafeSystem_libretro_debug_enabled())
+			cemuLog_log(LogType::Force, "[CafeSystem] ShutdownTitle begin tid={} running={} launchStage={} cemuInitStage={} titleId={:016x}",
+				(unsigned long long)CafeSystem_get_tid(),
+				sSystemRunning ? 1 : 0,
+				(unsigned)GetLaunchThreadStage(),
+				(unsigned)GetCemuInitForGameStage(),
+				(uint64)GetForegroundTitleId());
 		if(!sSystemRunning)
 			return;
-        coreinit::OSSchedulerEnd();
-        Latte_Stop();
+		coreinit::OSSchedulerEnd();
+		if (CafeSystem_libretro_debug_enabled())
+			cemuLog_log(LogType::Force, "[CafeSystem] ShutdownTitle after OSSchedulerEnd");
+		Latte_Stop();
+		if (CafeSystem_libretro_debug_enabled())
+			cemuLog_log(LogType::Force, "[CafeSystem] ShutdownTitle after Latte_Stop");
         // reset Cafe OS userspace modules
         snd_core::reset();
+		if (CafeSystem_libretro_debug_enabled())
+			cemuLog_log(LogType::Force, "[CafeSystem] ShutdownTitle after snd_core::reset");
         coreinit::OSAlarm_Shutdown();
         GX2::_GX2DriverReset();
         nn::save::ResetToDefaultState();
         coreinit::__OSDeleteAllActivePPCThreads();
         RPLLoader_ResetState();
+		if (CafeSystem_libretro_debug_enabled())
+			cemuLog_log(LogType::Force, "[CafeSystem] ShutdownTitle after PPC thread delete + RPLLoader_ResetState");
 		for(auto it = s_iosuModules.rbegin(); it != s_iosuModules.rend(); ++it)
 			(*it)->TitleStop();
         // reset Cemu subsystems
         PPCRecompiler_Shutdown();
+		if (CafeSystem_libretro_debug_enabled())
+			cemuLog_log(LogType::Force, "[CafeSystem] ShutdownTitle after PPCRecompiler_Shutdown");
         GraphicPack2::Reset();
         UnmountCurrentTitle();
         MlcStorageUnmountAllTitles();
         UnmountBaseDirectories();
         DestroyMemorySpace();
 		sSystemRunning = false;
+		if (CafeSystem_libretro_debug_enabled())
+			cemuLog_log(LogType::Force, "[CafeSystem] ShutdownTitle end tid={}", (unsigned long long)CafeSystem_get_tid());
 	}
 
 	/* Virtual mlc storage */

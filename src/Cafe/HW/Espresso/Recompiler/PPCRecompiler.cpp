@@ -13,6 +13,14 @@
 #include "util/helpers/helpers.h"
 #include "util/MemMapper/MemMapper.h"
 
+ #include <cstdlib>
+#if defined(_MSC_VER)
+ #include <intrin.h>
+#endif
+#if defined(_WIN32)
+ #include <Windows.h>
+#endif
+
 #include "IML/IML.h"
 #include "IML/IMLRegisterAllocator.h"
 #include "BackendX64/BackendX64.h"
@@ -20,6 +28,49 @@
 #include "BackendAArch64/BackendAArch64.h"
 #endif
 #include "util/highresolutiontimer/HighResolutionTimer.h"
+
+static bool PPCRecompiler_IsDebugEnabled()
+{
+	static int s_cached = -1;
+	if (s_cached == -1)
+	{
+		const char* env = std::getenv("CEMU_LIBRETRO_REC_DEBUG");
+		if (!env) env = std::getenv("CEMU_REC_DEBUG");
+		s_cached = (env && env[0] != '\0' && env[0] != '0') ? 1 : 0;
+	}
+	return s_cached != 0;
+}
+
+static bool PPCRecompiler_IsLibretroForceInterpreterEnabled()
+{
+	static int s_cached = -1;
+	if (s_cached == -1)
+	{
+		const char* env = std::getenv("CEMU_LIBRETRO_FORCE_INTERPRETER");
+		s_cached = (env && env[0] != '\0' && env[0] != '0') ? 1 : 0;
+	}
+	return s_cached != 0;
+}
+
+static uint64 PPCRecompiler_GetTid()
+{
+#if defined(_WIN32)
+	return (uint64)GetCurrentThreadId();
+#else
+	return 0;
+#endif
+}
+
+static uint64 PPCRecompiler_GetReturnAddressU64()
+{
+#if defined(_MSC_VER)
+	return (uint64)(uintptr_t)_ReturnAddress();
+#elif defined(__GNUC__) || defined(__clang__)
+	return (uint64)(uintptr_t)__builtin_return_address(0);
+#else
+	return 0;
+#endif
+}
 
 #define PPCREC_FORCE_SYNCHRONOUS_COMPILATION	0 // if 1, then function recompilation will block and execute on the thread that called PPCRecompiler_visitAddressNoBlock
 #define PPCREC_LOG_RECOMPILATION_RESULTS		0
@@ -47,6 +98,9 @@ void ATTR_MS_ABI (*PPCRecompiler_leaveRecompilerCode_unvisited)();
 
 PPCRecompilerInstanceData_t* ppcRecompilerInstanceData;
 
+static std::atomic<uint64> s_recompilerInitCounter{0};
+static std::atomic<uint64> s_recompilerShutdownCounter{0};
+
 #if PPCREC_FORCE_SYNCHRONOUS_COMPILATION
 static std::mutex s_singleRecompilationMutex;
 #endif
@@ -58,6 +112,9 @@ void PPCRecompiler_recompileAtAddress(uint32 address);
 // this function does never block and can fail if the recompiler lock cannot be acquired immediately
 void PPCRecompiler_visitAddressNoBlock(uint32 enterAddress)
 {
+	// Safety check - return early if recompiler is disabled or instance data is null
+	if (!ppcRecompilerEnabled || ppcRecompilerInstanceData == nullptr)
+		return;
 #if PPCREC_FORCE_SYNCHRONOUS_COMPILATION
 	if (ppcRecompilerInstanceData->ppcRecompilerDirectJumpTable[enterAddress / 4] != PPCRecompiler_leaveRecompilerCode_unvisited)
 		return;
@@ -130,11 +187,44 @@ void PPCRecompiler_enter(PPCInterpreter_t* hCPU, PPCREC_JUMP_ENTRY funcPtr)
 	}
 }
 
+static std::atomic<uint64> s_attemptEnterCount{0};
+static std::atomic<uint64> s_attemptEnterNullCount{0};
+
+static std::atomic<uint64> s_getJumpTableBaseCallCount{0};
+static std::atomic<uint64> s_getJumpTableBaseLastCallIdx{0};
+static std::atomic<uint64> s_getJumpTableBaseLastTid{0};
+static std::atomic<uint64> s_getJumpTableBaseLastRetAddr{0};
+static std::atomic<uint64> s_getJumpTableBaseLastRetModBase{0};
+static std::atomic<uint64> s_getJumpTableBaseLastRetModOffset{0};
+static std::atomic<uint64> s_getJumpTableBaseLastEnabled{0};
+static std::atomic<uint64> s_getJumpTableBaseLastForceLibretroInterp{0};
+static std::atomic<uint64> s_getJumpTableBaseLastInstanceData{0};
+static std::atomic<uint64> s_getJumpTableBaseLastJt{0};
+
 void PPCRecompiler_attemptEnterWithoutRecompile(PPCInterpreter_t* hCPU, uint32 enterAddress)
 {
 	cemu_assert_debug(hCPU->instructionPointer == enterAddress);
 	if (ppcRecompilerEnabled == false)
+	{
+		if (PPCRecompiler_IsDebugEnabled())
+		{
+			uint64 cnt = s_attemptEnterCount.fetch_add(1, std::memory_order_relaxed);
+			if (cnt < 10)
+				cemuLog_log(LogType::Force, "[Recompiler] attemptEnterWithoutRecompile called while disabled addr={:08x} ip={:08x} lr={:08x}", enterAddress, hCPU->instructionPointer, (uint32)hCPU->spr.LR);
+		}
 		return;
+	}
+	if (ppcRecompilerInstanceData == nullptr)
+	{
+		// Instance data is null - recompiler was shut down
+		if (PPCRecompiler_IsDebugEnabled())
+		{
+			uint64 cnt = s_attemptEnterNullCount.fetch_add(1, std::memory_order_relaxed);
+			if (cnt < 5)
+				cemuLog_log(LogType::Force, "[Recompiler] attemptEnterWithoutRecompile called but instanceData is NULL! addr={:08x}", enterAddress);
+		}
+		return;
+	}
 	auto funcPtr = ppcRecompilerInstanceData->ppcRecompilerDirectJumpTable[enterAddress / 4];
 	if (funcPtr != PPCRecompiler_leaveRecompilerCode_unvisited && funcPtr != PPCRecompiler_leaveRecompilerCode_visited)
 	{
@@ -147,9 +237,28 @@ void PPCRecompiler_attemptEnter(PPCInterpreter_t* hCPU, uint32 enterAddress)
 {
 	cemu_assert_debug(hCPU->instructionPointer == enterAddress);
 	if (ppcRecompilerEnabled == false)
+	{
+		if (PPCRecompiler_IsDebugEnabled())
+		{
+			uint64 cnt = s_attemptEnterCount.fetch_add(1, std::memory_order_relaxed);
+			if (cnt < 10)
+				cemuLog_log(LogType::Force, "[Recompiler] attemptEnter called while disabled addr={:08x} ip={:08x} lr={:08x}", enterAddress, hCPU->instructionPointer, (uint32)hCPU->spr.LR);
+		}
 		return;
+	}
 	if (hCPU->remainingCycles <= 0)
 		return;
+	if (ppcRecompilerInstanceData == nullptr)
+	{
+		// Instance data is null - recompiler was shut down
+		if (PPCRecompiler_IsDebugEnabled())
+		{
+			uint64 cnt = s_attemptEnterNullCount.fetch_add(1, std::memory_order_relaxed);
+			if (cnt < 5)
+				cemuLog_log(LogType::Force, "[Recompiler] attemptEnter called but instanceData is NULL! addr={:08x}", enterAddress);
+		}
+		return;
+	}
 	auto funcPtr = ppcRecompilerInstanceData->ppcRecompilerDirectJumpTable[enterAddress / 4];
 	if (funcPtr == PPCRecompiler_leaveRecompilerCode_unvisited)
 	{
@@ -575,9 +684,72 @@ bool PPCRecompiler_findFuncRanges(uint32 addr, ppcRecompilerFuncRange_t* rangesO
 
 extern "C" DLLEXPORT uintptr_t * PPCRecompiler_getJumpTableBase()
 {
-	if (ppcRecompilerInstanceData == nullptr)
-		return nullptr;
-	return (uintptr_t*)ppcRecompilerInstanceData->ppcRecompilerDirectJumpTable;
+	const uint64 callIdx = s_getJumpTableBaseCallCount.fetch_add(1, std::memory_order_relaxed) + 1;
+	const uint64 tid = PPCRecompiler_GetTid();
+	const uint64 retAddr = PPCRecompiler_GetReturnAddressU64();
+	const bool forceLibretroInterp = PPCRecompiler_IsLibretroForceInterpreterEnabled();
+	const bool doLog = PPCRecompiler_IsDebugEnabled() || callIdx <= 25 || ((callIdx & 0x3FFu) == 0);
+	uint64 retModBase = 0;
+	uint64 retModOffset = 0;
+	char retModPath[260] = {};
+	retModPath[0] = '\0';
+	#if defined(_WIN32)
+	HMODULE retMod = nullptr;
+	if (retAddr != 0 && GetModuleHandleExA(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT, (LPCSTR)(uintptr_t)retAddr, &retMod))
+	{
+		retModBase = (uint64)(uintptr_t)retMod;
+		retModOffset = (retModBase != 0) ? (retAddr - retModBase) : 0;
+		GetModuleFileNameA(retMod, retModPath, (DWORD)(sizeof(retModPath) - 1));
+	}
+	#endif
+
+	uintptr_t* jt = nullptr;
+	if (ppcRecompilerEnabled && ppcRecompilerInstanceData)
+		jt = (uintptr_t*)ppcRecompilerInstanceData->ppcRecompilerDirectJumpTable;
+
+	s_getJumpTableBaseLastCallIdx.store(callIdx, std::memory_order_relaxed);
+	s_getJumpTableBaseLastTid.store(tid, std::memory_order_relaxed);
+	s_getJumpTableBaseLastRetAddr.store(retAddr, std::memory_order_relaxed);
+	s_getJumpTableBaseLastRetModBase.store(retModBase, std::memory_order_relaxed);
+	s_getJumpTableBaseLastRetModOffset.store(retModOffset, std::memory_order_relaxed);
+	s_getJumpTableBaseLastEnabled.store(ppcRecompilerEnabled ? 1 : 0, std::memory_order_relaxed);
+	s_getJumpTableBaseLastForceLibretroInterp.store(forceLibretroInterp ? 1 : 0, std::memory_order_relaxed);
+	s_getJumpTableBaseLastInstanceData.store((uint64)(uintptr_t)ppcRecompilerInstanceData, std::memory_order_relaxed);
+	s_getJumpTableBaseLastJt.store((uint64)(uintptr_t)jt, std::memory_order_relaxed);
+
+	if (doLog)
+	{
+		cemuLog_log(LogType::Force,
+			"[Recompiler] getJumpTableBase #{} tid={} ret=0x{:x} retModBase=0x{:x} retOff=0x{:x} retMod={} enabled={} forceLibretroInterp={} instanceData=0x{:x} jt=0x{:x}",
+			callIdx,
+			tid,
+			retAddr,
+			retModBase,
+			retModOffset,
+			retModPath,
+			ppcRecompilerEnabled ? 1 : 0,
+			forceLibretroInterp ? 1 : 0,
+			(uint64)(uintptr_t)ppcRecompilerInstanceData,
+			(uint64)(uintptr_t)jt);
+	}
+	return jt;
+}
+
+extern "C" DLLEXPORT void PPCRecompiler_getJumpTableBaseDebugSnapshot(uint64* outValues, uint32 outCount)
+{
+	if (!outValues || outCount == 0)
+		return;
+	for (uint32 i = 0; i < outCount; i++)
+		outValues[i] = 0;
+	if (outCount > 0) outValues[0] = s_getJumpTableBaseLastCallIdx.load(std::memory_order_relaxed);
+	if (outCount > 1) outValues[1] = s_getJumpTableBaseLastTid.load(std::memory_order_relaxed);
+	if (outCount > 2) outValues[2] = s_getJumpTableBaseLastRetAddr.load(std::memory_order_relaxed);
+	if (outCount > 3) outValues[3] = s_getJumpTableBaseLastRetModBase.load(std::memory_order_relaxed);
+	if (outCount > 4) outValues[4] = s_getJumpTableBaseLastRetModOffset.load(std::memory_order_relaxed);
+	if (outCount > 5) outValues[5] = s_getJumpTableBaseLastEnabled.load(std::memory_order_relaxed);
+	if (outCount > 6) outValues[6] = s_getJumpTableBaseLastForceLibretroInterp.load(std::memory_order_relaxed);
+	if (outCount > 7) outValues[7] = s_getJumpTableBaseLastInstanceData.load(std::memory_order_relaxed);
+	if (outCount > 8) outValues[8] = s_getJumpTableBaseLastJt.load(std::memory_order_relaxed);
 }
 
 void PPCRecompiler_invalidateTableRange(uint32 offset, uint32 size)
@@ -686,6 +858,25 @@ void PPCRecompiler_initPlatform()
 
 void PPCRecompiler_init()
 {
+	const uint64 initId = s_recompilerInitCounter.fetch_add(1) + 1;
+	if (PPCRecompiler_IsDebugEnabled())
+		cemuLog_log(LogType::Force, "[Recompiler] INIT begin #{} cpuMode={} forceInterp={} forceMCInterp={} forceLibretroInterp={} existingInstanceData=0x{:x} enabled={} threadJoinable={} ",
+			initId,
+			(int)ActiveSettings::GetCPUMode(),
+			LaunchSettings::ForceInterpreter() ? 1 : 0,
+			LaunchSettings::ForceMultiCoreInterpreter() ? 1 : 0,
+			PPCRecompiler_IsLibretroForceInterpreterEnabled() ? 1 : 0,
+			(uint64)(uintptr_t)ppcRecompilerInstanceData,
+			ppcRecompilerEnabled ? 1 : 0,
+			s_threadRecompiler.joinable() ? 1 : 0);
+	if (s_threadRecompiler.joinable())
+	{
+		if (PPCRecompiler_IsDebugEnabled())
+			cemuLog_log(LogType::Force, "[Recompiler] INIT detected joinable recompiler thread. Forcing shutdown before re-init");
+		PPCRecompiler_Shutdown();
+	}
+	ppcRecompilerEnabled = false;
+
 	if (ActiveSettings::GetCPUMode() == CPUMode::SinglecoreInterpreter)
 	{
 		ppcRecompilerEnabled = false;
@@ -696,8 +887,15 @@ void PPCRecompiler_init()
 		cemuLog_log(LogType::Force, "Recompiler disabled. Command line --force-interpreter or force-multicore-interpreter was passed");
 		return;
 	}
+	if (PPCRecompiler_IsLibretroForceInterpreterEnabled())
+	{
+		cemuLog_log(LogType::Force, "Recompiler disabled. CEMU_LIBRETRO_FORCE_INTERPRETER is set");
+		return;
+	}
 	if (ppcRecompilerInstanceData)
 	{
+		if (PPCRecompiler_IsDebugEnabled())
+			cemuLog_log(LogType::Force, "[Recompiler] INIT freeing previous reservation instanceData=0x{:x}", (uint64)(uintptr_t)ppcRecompilerInstanceData);
 		MemMapper::FreeReservation(ppcRecompilerInstanceData, sizeof(PPCRecompilerInstanceData_t));
 		ppcRecompilerInstanceData = nullptr;
 	}
@@ -722,10 +920,16 @@ void PPCRecompiler_init()
 	// launch recompilation thread
     s_recompilerThreadStopSignal = false;
     s_threadRecompiler = std::thread(PPCRecompiler_thread);
+	if (PPCRecompiler_IsDebugEnabled())
+		cemuLog_log(LogType::Force, "[Recompiler] INIT end #{} instanceData=0x{:x} enabled={} threadJoinable={}", initId, (uint64)(uintptr_t)ppcRecompilerInstanceData, ppcRecompilerEnabled ? 1 : 0, s_threadRecompiler.joinable() ? 1 : 0);
 }
 
 void PPCRecompiler_Shutdown()
 {
+	const uint64 shutdownId = s_recompilerShutdownCounter.fetch_add(1) + 1;
+	if (PPCRecompiler_IsDebugEnabled())
+		cemuLog_log(LogType::Force, "[Recompiler] SHUTDOWN begin #{} instanceData=0x{:x} enabled={} threadJoinable={}", shutdownId, (uint64)(uintptr_t)ppcRecompilerInstanceData, ppcRecompilerEnabled ? 1 : 0, s_threadRecompiler.joinable() ? 1 : 0);
+	ppcRecompilerEnabled = false;
     // shut down recompiler thread
     s_recompilerThreadStopSignal = true;
     if(s_threadRecompiler.joinable())
@@ -737,6 +941,12 @@ void PPCRecompiler_Shutdown()
     // clean range store
     rangeStore_ppcRanges.clear();
     // clean up memory
+	if (ppcRecompilerInstanceData == nullptr)
+	{
+		if (PPCRecompiler_IsDebugEnabled())
+			cemuLog_log(LogType::Force, "[Recompiler] SHUTDOWN end #{} (no instance data)", shutdownId);
+		return;
+	}
     uint32 numBlocks = PPCRecompiler_GetNumAddressSpaceBlocks();
     for(uint32 i=0; i<numBlocks; i++)
     {
@@ -749,4 +959,9 @@ void PPCRecompiler_Shutdown()
         // mark as unmapped
         ppcRecompiler_reservedBlockMask[i] = false;
     }
+
+	MemMapper::FreeReservation(ppcRecompilerInstanceData, sizeof(PPCRecompilerInstanceData_t));
+	ppcRecompilerInstanceData = nullptr;
+	if (PPCRecompiler_IsDebugEnabled())
+		cemuLog_log(LogType::Force, "[Recompiler] SHUTDOWN end #{} instanceData=null enabled={} threadJoinable={}", shutdownId, ppcRecompilerEnabled ? 1 : 0, s_threadRecompiler.joinable() ? 1 : 0);
 }

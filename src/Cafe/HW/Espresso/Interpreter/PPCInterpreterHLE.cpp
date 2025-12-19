@@ -6,15 +6,20 @@ std::unordered_set<std::string> s_unsupportedHLECalls;
 
 void PPCInterpreter_handleUnsupportedHLECall(PPCInterpreter_t* hCPU)
 {
-	const char* libFuncName = (char*)memory_getPointerFromVirtualOffset(hCPU->instructionPointer + 8);
+	const char* libFuncName = "<unknown>";
+	if (memory_isAddressRangeAccessible(hCPU->instructionPointer + 8, 1))
+		libFuncName = (char*)memory_getPointerFromVirtualOffset(hCPU->instructionPointer + 8);
 	std::string tempString = fmt::format("Unsupported lib call: {}", libFuncName);
 	if (s_unsupportedHLECalls.find(tempString) == s_unsupportedHLECalls.end())
 	{
 		cemuLog_log(LogType::UnsupportedAPI, "{}", tempString);
 		s_unsupportedHLECalls.emplace(tempString);
 	}
+	// Return a failure result and immediately return to the caller.
+	// Advancing to the next instruction inside the trampoline (e.g. BLR) can lead to stalls if the interpreter/recompiler
+	// re-enters the unsupported stub. Returning via LR matches how other HLE calls return.
 	hCPU->gpr[3] = 0;
-	PPCInterpreter_nextInstruction(hCPU);
+	hCPU->instructionPointer = hCPU->spr.LR;
 }
 
 static constexpr size_t HLE_TABLE_CAPACITY = 0x4000;

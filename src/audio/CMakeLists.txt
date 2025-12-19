@@ -28,6 +28,14 @@ if(ENABLE_CUBEB)
 	#add_compile_definitions(HAS_CUBEB)
 endif()
 
+if(ENABLE_LIBRETRO)
+	target_sources(CemuAudio PRIVATE
+		LibretroAudioAPI.cpp
+		LibretroAudioAPI.h
+	)
+	target_compile_definitions(CemuAudio PRIVATE RETRO_CORE)
+endif()
+
 target_include_directories(CemuAudio PUBLIC "../")
 
 target_link_libraries(CemuAudio PRIVATE

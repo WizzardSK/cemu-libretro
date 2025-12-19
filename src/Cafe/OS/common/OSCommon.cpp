@@ -56,6 +56,7 @@ typedef struct
 
 std::vector<osFunctionEntry_t>* s_osFunctionTable;
 std::vector<osPointerEntry_t> osDataTable;
+static std::vector<std::string> s_hleIndexToName;
 
 void osLib_generateHashFromName(const char* name, uint32* hashA, uint32* hashB)
 {
@@ -96,10 +97,25 @@ void osLib_addFunctionInternal(const char* libraryName, const char* functionName
 			it.funcHashB == funcHashB)
 		{
 			it.hleFunc = PPCInterpreter_registerHLECall(osFunction, hleName);
+			if ((sint32)it.hleFunc >= 0)
+			{
+				const size_t idx = (size_t)it.hleFunc;
+				if (s_hleIndexToName.size() <= idx)
+					s_hleIndexToName.resize(idx + 1);
+				s_hleIndexToName[idx] = hleName;
+			}
 			return;
 		}
 	}
-	s_osFunctionTable->emplace_back(libHashA, libHashB, funcHashA, funcHashB, hleName, PPCInterpreter_registerHLECall(osFunction, hleName));
+	const HLEIDX hleIdx = PPCInterpreter_registerHLECall(osFunction, hleName);
+	if ((sint32)hleIdx >= 0)
+	{
+		const size_t idx = (size_t)hleIdx;
+		if (s_hleIndexToName.size() <= idx)
+			s_hleIndexToName.resize(idx + 1);
+		s_hleIndexToName[idx] = hleName;
+	}
+	s_osFunctionTable->emplace_back(libHashA, libHashB, funcHashA, funcHashB, hleName, hleIdx);
 }
 
 extern "C" DLLEXPORT void osLib_registerHLEFunction(const char* libraryName, const char* functionName, void(*osFunction)(PPCInterpreter_t * hCPU))
@@ -124,6 +140,16 @@ sint32 osLib_getFunctionIndex(const char* libraryName, const char* functionName)
 		}
 	}
 	return -1;
+}
+
+std::string_view osLib_getFunctionNameByIndex(sint32 hleFuncIndex)
+{
+	if (hleFuncIndex < 0)
+		return {};
+	const size_t idx = (size_t)hleFuncIndex;
+	if (idx < s_hleIndexToName.size())
+		return s_hleIndexToName[idx];
+	return {};
 }
 
 void osLib_addVirtualPointer(const char* libraryName, const char* functionName, uint32 vPtr)

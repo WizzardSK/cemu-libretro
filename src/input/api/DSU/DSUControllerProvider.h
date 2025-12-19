@@ -4,6 +4,7 @@
 #include "input/api/DSU/DSUMessages.h"
 
 #include "input/api/ControllerProvider.h"
+#include "config/CemuConfig.h"
 
 #include <boost/asio.hpp>
 
@@ -18,7 +19,7 @@ struct DSUProviderSettings : public ControllerProviderSettings
 	std::string ip;
 	uint16 port;
 
-	DSUProviderSettings() : ip("127.0.0.1"), port(26760) {}
+	DSUProviderSettings() : ip(GetConfig().dsu_client.host.GetValue()), port(GetConfig().dsu_client.port.GetValue()) {}
 
 	DSUProviderSettings(std::string ip, uint16 port)
 		: ip(std::move(ip)), port(port)

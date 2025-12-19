@@ -1206,13 +1206,23 @@ VulkanRenderer::QueueFamilyIndices VulkanRenderer::FindQueueFamilies(VkSurfaceKH
 		if (queueFamily.queueCount > 0 && queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT)
 			indices.graphicsFamily = i;
 
-		VkBool32 presentSupport = false;
-		const VkResult result = vkGetPhysicalDeviceSurfaceSupportKHR(device, i, surface, &presentSupport);
-		if (result != VK_SUCCESS)
-			throw std::runtime_error(fmt::format("Error while attempting to check if a surface supports presentation: {}", result));
+		// Skip present support check if no surface (libretro mode)
+		if (surface != VK_NULL_HANDLE)
+		{
+			VkBool32 presentSupport = false;
+			const VkResult result = vkGetPhysicalDeviceSurfaceSupportKHR(device, i, surface, &presentSupport);
+			if (result != VK_SUCCESS)
+				throw std::runtime_error(fmt::format("Error while attempting to check if a surface supports presentation: {}", result));
 
-		if (queueFamily.queueCount > 0 && presentSupport)
-			indices.presentFamily = i;
+			if (queueFamily.queueCount > 0 && presentSupport)
+				indices.presentFamily = i;
+		}
+		else
+		{
+			// In libretro mode, use graphics queue for presentation too
+			if (queueFamily.queueCount > 0 && queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT)
+				indices.presentFamily = i;
+		}
 
 		if (indices.IsComplete())
 			break;
@@ -1383,6 +1393,10 @@ bool VulkanRenderer::IsDeviceSuitable(VkSurfaceKHR surface, const VkPhysicalDevi
 	if (!CheckDeviceExtensionSupport(device, info))
 		return false;
 
+	// Skip swapchain support check if no surface (libretro mode)
+	if (surface == VK_NULL_HANDLE)
+		return true;
+
 	const auto swapchainSupport = SwapchainInfoVk::QuerySwapchainSupport(surface, device);
 
 	return !swapchainSupport.formats.empty() && !swapchainSupport.presentModes.empty();
@@ -1470,6 +1484,10 @@ VkSurfaceKHR VulkanRenderer::CreateWaylandSurface(VkInstance instance, wl_displa
 
 VkSurfaceKHR VulkanRenderer::CreateFramebufferSurface(VkInstance instance, WindowSystem::WindowHandleInfo& windowInfo)
 {
+	// Return null surface if no window (libretro mode)
+	if (windowInfo.surface == nullptr)
+		return VK_NULL_HANDLE;
+
 #if BOOST_OS_WINDOWS
 	return CreateWinSurface(instance, static_cast<HWND>(windowInfo.surface));
 #elif BOOST_OS_LINUX || BOOST_OS_BSD
@@ -1638,6 +1656,9 @@ void VulkanRenderer::DeleteNullObjects()
 
 void VulkanRenderer::ImguiInit()
 {
+#ifdef RETRO_CORE
+	return;
+#endif
 	VkRenderPass prevRenderPass = m_imguiRenderPass;
 
 	VkAttachmentDescription colorAttachment = {};
@@ -1687,10 +1708,23 @@ void VulkanRenderer::ImguiInit()
 
 void VulkanRenderer::Initialize()
 {
+	cemuLog_log(LogType::Force, "VulkanRenderer::Initialize() - calling Renderer::Initialize()");
 	Renderer::Initialize();
+	cemuLog_log(LogType::Force, "VulkanRenderer::Initialize() - calling CreatePipelineCache()");
 	CreatePipelineCache();
+	cemuLog_log(LogType::Force, "VulkanRenderer::Initialize() - calling ImguiInit()");
 	ImguiInit();
+#ifdef RETRO_CORE
+	// In libretro mode, initialize command buffer if not already done (normally done in InitializeSurface)
+	if (m_state.currentCommandBuffer == nullptr)
+	{
+		cemuLog_log(LogType::Force, "VulkanRenderer::Initialize() - initializing command buffer for libretro");
+		InitFirstCommandBuffer();
+	}
+#endif
+	cemuLog_log(LogType::Force, "VulkanRenderer::Initialize() - calling CreateNullObjects()");
 	CreateNullObjects();
+	cemuLog_log(LogType::Force, "VulkanRenderer::Initialize() - completed successfully");
 }
 
 void VulkanRenderer::Shutdown()
@@ -2908,11 +2942,20 @@ void VulkanRenderer::SwapBuffers(bool swapTV, bool swapDRC)
 {
 	SubmitCommandBuffer();
 
+#ifdef RETRO_CORE
+	// In libretro mode, signal frame ready even without swapchain
+	if (swapTV || swapDRC)
+	{
+		extern std::atomic_bool s_frame_ready;
+		s_frame_ready.store(true, std::memory_order_release);
+	}
+#else
 	if (swapTV && IsSwapchainInfoValid(true))
 		SwapBuffer(true);
 
 	if (swapDRC && IsSwapchainInfoValid(false))
 		SwapBuffer(false);
+#endif
 
 	if(swapTV)
 		VulkanBenchmarkPrintResults();
@@ -2998,6 +3041,14 @@ void VulkanRenderer::ClearColorImage(LatteTextureVk* vkTexture, uint32 sliceInde
 
 void VulkanRenderer::DrawBackbufferQuad(LatteTextureView* texView, RendererOutputShader* shader, bool useLinearTexFilter, sint32 imageX, sint32 imageY, sint32 imageWidth, sint32 imageHeight, bool padView, bool clearBackground)
 {
+#ifdef RETRO_CORE
+	// In libretro mode, we don't have a swapchain - frames are presented via retro_video_refresh_t
+	cemuLog_log(LogType::Force, "[Vulkan] DrawBackbufferQuad called: padView={} imageSize={}x{}", padView, imageWidth, imageHeight);
+	extern std::atomic_bool s_frame_ready;
+	s_frame_ready.store(true, std::memory_order_release);
+	return;
+#endif
+
 	if(!AcquireNextSwapchainImage(!padView))
 		return;
 

@@ -171,6 +171,7 @@ public:
 	static bool DeactivateGraphicPack(const std::shared_ptr<GraphicPack2>& graphic_pack);
 	static void ClearGraphicPacks();
 	static void WaitUntilReady(); // wait until all graphic packs finished activation
+	static bool IsReady() { return s_isReady; } // check if graphic packs finished activation
 
 	static void ActivateForCurrentTitle();
 	static void Reset();

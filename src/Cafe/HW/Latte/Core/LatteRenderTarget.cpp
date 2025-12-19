@@ -1012,6 +1012,12 @@ void LatteRenderTarget_itHLECopyColorBufferToScanBuffer(MPTR colorBufferPtr, uin
 		LatteRenderTarget_copyToBackbuffer(texView, true);
 	if (((renderTarget & RENDER_TARGET_TV) && !showDRC) || ((renderTarget & RENDER_TARGET_DRC) && showDRC))
 		LatteRenderTarget_copyToBackbuffer(texView, false);
+	
+	#ifdef RETRO_CORE
+	// Libretro: Auto-mirror TV to DRC when game doesn't explicitly render to DRC
+	if (g_renderer->IsPadWindowActive() && !(renderTarget & RENDER_TARGET_DRC) && (renderTarget & RENDER_TARGET_TV))
+		LatteRenderTarget_copyToBackbuffer(texView, true);
+	#endif
 }
 
 

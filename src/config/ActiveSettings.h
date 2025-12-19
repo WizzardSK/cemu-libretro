@@ -1,5 +1,6 @@
 #pragma once
 
+#include <optional>
 #include <utility>
 #include "config/CemuConfig.h"
 #include "config/NetworkSettings.h"
@@ -125,6 +126,10 @@ public:
 	[[nodiscard]] static bool FlushGPUCacheOnSwap();
 	[[nodiscard]] static bool ForceSamplerRoundToPrecision();
 
+	static void SetLibretroCPUModeOverride(std::optional<CPUMode> mode);
+	static void SetLibretroPrecompiledShadersOverride(std::optional<PrecompiledShaderOption> opt);
+	static void SetLibretroDisplayDRCOverride(std::optional<bool> enabled);
+
 private:
 	inline static bool s_setPathsCalled = false;
 	// dump options
@@ -135,6 +140,10 @@ private:
 
 	// timer speed
 	inline static uint8 s_timer_shift = 3; // right shift factor, 0 -> 8x, 3 -> 1x, 4 -> 0.5x
+
+	inline static std::optional<CPUMode> s_libretro_cpu_mode_override{};
+	inline static std::optional<PrecompiledShaderOption> s_libretro_precompiled_shaders_override{};
+	inline static std::optional<bool> s_libretro_display_drc_override{};
 
 	// debug
 	inline static bool s_audio_aux_only = false;

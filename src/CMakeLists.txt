@@ -153,3 +153,7 @@ endif()
 if (BSD)
 	target_link_libraries(CemuBin PRIVATE execinfo SPIRV-Tools SPIRV-Tools-opt)
 endif()
+
+if (ENABLE_LIBRETRO)
+	add_subdirectory(libretro)
+endif()

@@ -136,6 +136,14 @@ option(ENABLE_CUBEB "Enabled cubeb backend" ON)
 
 option(ENABLE_WXWIDGETS "Build with wxWidgets UI (Currently required)" ON)
 
+option(ENABLE_LIBRETRO "Build Libretro core" OFF)
+
+# Disable cubeb for libretro builds (COM threading issues with WASAPI)
+if(ENABLE_LIBRETRO)
+	add_compile_definitions(RETRO_CORE)
+	set(ENABLE_CUBEB OFF CACHE BOOL "" FORCE)
+endif()
+
 set(THREADS_PREFER_PTHREAD_FLAG true)
 find_package(Threads REQUIRED)
 find_package(SDL2 REQUIRED)

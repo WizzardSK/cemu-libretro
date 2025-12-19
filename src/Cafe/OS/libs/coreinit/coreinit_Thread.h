@@ -608,6 +608,23 @@ namespace coreinit
 	// scheduler
 	void OSSchedulerBegin(sint32 numCPUEmulationThreads);
 	void OSSchedulerEnd();
+	bool OSSchedulerIsActive();
+	uint64 OSSchedulerGetHeartbeat(sint32 coreIndex);
+	uint64 OSSchedulerGetTimesliceCount(sint32 coreIndex);
+	uint64 OSSchedulerGetHostEnterCount(sint32 coreIndex);
+	uint32 OSSchedulerGetHostAlive(sint32 coreIndex);
+	uint64 OSSchedulerGetIdleLoopCount(sint32 coreIndex);
+	uint64 OSSchedulerGetIdleWaitEnterCount(sint32 coreIndex);
+	uint64 OSSchedulerGetIdleWaitWakeCount(sint32 coreIndex);
+	uint32 OSSchedulerGetSystemEventStage();
+	uint64 OSSchedulerGetSystemEventCount();
+	uint64 OSSchedulerGetPpcFiberLoopCount(sint32 coreIndex);
+	uint64 OSSchedulerGetPpcFiberRescheduleCount(sint32 coreIndex);
+	sint32 OSSchedulerGetPpcFiberLastRemainingCycles(sint32 coreIndex);
+	uint32 OSSchedulerGetPpcFiberStage(sint32 coreIndex);
+	uint32 OSSchedulerGetPpcFiberLastInstructionPointer(sint32 coreIndex);
+	uint32 OSSchedulerGetPpcFiberLastLR(sint32 coreIndex);
+	uint64 OSSchedulerGetPpcFiberInstructionHeartbeatCount(sint32 coreIndex);
 
 	// internal
 	void __OSAddReadyThreadToRunQueue(OSThread_t* thread);

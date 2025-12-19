@@ -8,6 +8,7 @@ namespace InputAPI
 	{
 		Keyboard,
 		SDLController,
+		Libretro,
 		XInput,
 		DirectInput,
 		DSUClient,
@@ -26,6 +27,8 @@ namespace InputAPI
 		{
 		case Keyboard:
 			return "Keyboard";
+		case Libretro:
+			return "Libretro";
 		case DirectInput:
 			return "DirectInput";
 		case XInput:
@@ -53,6 +56,8 @@ namespace InputAPI
 	{
 		if (str == to_string(Keyboard))
 			return Keyboard;
+		else if (str == to_string(Libretro))
+			return Libretro;
 		else if (str == to_string(DirectInput))
 			return DirectInput;
 		else if (str == to_string(XInput))

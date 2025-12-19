@@ -84,7 +84,7 @@ void IAudioAPI::InitializeStatic()
 	if (!s_availableApis[XAudio2]) // don't try to initialize the older lib if the newer version is available
 		s_availableApis[XAudio27] = XAudio27API::InitializeStatic();
 #endif
-#if HAS_CUBEB
+#if HAS_CUBEB && !defined(RETRO_CORE)
 	s_availableApis[Cubeb] = CubebAPI::InitializeStatic();
 #endif
 }

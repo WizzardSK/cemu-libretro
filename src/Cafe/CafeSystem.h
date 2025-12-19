@@ -29,6 +29,8 @@ namespace CafeSystem
 	PREPARE_STATUS_CODE PrepareForegroundTitle(TitleId titleId);
 	PREPARE_STATUS_CODE PrepareForegroundTitleFromStandaloneRPX(const fs::path& path);
 	void LaunchForegroundTitle();
+	uint32 GetLaunchThreadStage();
+	uint32 GetCemuInitForGameStage();
 	bool IsTitleRunning();
 
 	bool GetOverrideArgStr(std::vector<std::string>& args);
@@ -46,6 +48,9 @@ namespace CafeSystem
 	CosCapabilityBits GetForegroundTitleCosCapabilities(CosCapabilityGroup group);
 
 	void ShutdownTitle();
+
+	// Libretro-specific
+	void SetLibretroMultiCoreEnabled(bool enabled);
 
 	std::string GetMlcStoragePath(TitleId titleId);
 	void MlcStorageMountAllTitles();

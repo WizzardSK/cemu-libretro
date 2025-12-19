@@ -871,7 +871,8 @@ void* PPCRecompiler_virtualHLE(PPCInterpreter_t* ppcInterpreter, uint32 hleFuncI
 	{
 		ppcInterpreter->remainingCycles -= 500; // let subtract about 500 cycles for each HLE call
 		ppcInterpreter->gpr[3] = 0;
-		PPCInterpreter_nextInstruction(ppcInterpreter);
+		ppcInterpreter->instructionPointer = ppcInterpreter->spr.LR;
+		ppcInterpreter->rspTemp = prevRSPTemp;
 		return PPCInterpreter_getCurrentInstance();
 	}
 	else

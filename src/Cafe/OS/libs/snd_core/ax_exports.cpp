@@ -20,6 +20,11 @@ namespace snd_core
 		return sndGeneric.isInitialized;
 	}
 
+	uint32 AXGetSwapProfile(AXProfile* /*profile*/, uint32 /*count*/)
+	{
+		return 0;
+	}
+
 	void __AXInit(bool isSoundCore2, uint32 frameLength, uint32 rendererFreq, uint32 pipelineMode)
 	{
 		cemu_assert(frameLength == AX_FRAMELENGTH_3MS);
@@ -384,6 +389,7 @@ namespace snd_core
 		cafeExportRegisterFunc(sndcore1_AXInitEx, "snd_core", "AXInitEx", LogType::SoundAPI);
 		cafeExportRegister("snd_core", AXIsInit, LogType::SoundAPI);
 		cafeExportRegister("snd_core", AXQuit, LogType::SoundAPI);
+		cafeExportRegister("snd_core", AXGetSwapProfile, LogType::SoundAPI);
 
 		cafeExportRegister("snd_core", AXGetMaxVoices, LogType::SoundAPI);
 		cafeExportRegister("snd_core", AXGetInputSamplesPerFrame, LogType::SoundAPI);
@@ -436,6 +442,7 @@ namespace snd_core
 		cafeExportRegisterFunc(sndcore2_AXInitEx, "sndcore2", "AXInitEx", LogType::SoundAPI);
 		cafeExportRegister("sndcore2", AXIsInit, LogType::SoundAPI);
 		cafeExportRegister("sndcore2", AXQuit, LogType::SoundAPI);
+		cafeExportRegister("sndcore2", AXGetSwapProfile, LogType::SoundAPI);
 
 		cafeExportRegister("sndcore2", AXGetMaxVoices, LogType::SoundAPI);
 		cafeExportRegister("sndcore2", AXGetInputSamplesPerFrame, LogType::SoundAPI);

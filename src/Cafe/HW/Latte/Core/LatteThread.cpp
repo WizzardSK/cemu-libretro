@@ -17,7 +17,20 @@
 #include <imgui.h>
 #include "config/ActiveSettings.h"
 
+#include <cstdlib>
+
 #include "Cafe/CafeSystem.h"
+
+static bool LatteThread_libretro_debug_enabled()
+{
+	static int s_cached = -1;
+	if (s_cached == -1)
+	{
+		const char* env = std::getenv("CEMU_LIBRETRO_DEBUG");
+		s_cached = (env && env[0] != '\0' && env[0] != '0') ? 1 : 0;
+	}
+	return s_cached != 0;
+}
 
 LatteGPUState_t LatteGPUState = {};
 
@@ -219,6 +232,8 @@ std::mutex sLatteThreadStateMutex;
 // does not return until the thread finished initialization
 void Latte_Start()
 {
+	if (LatteThread_libretro_debug_enabled())
+		cemuLog_log(LogType::Force, "[LatteThread] Latte_Start begin running={} finishedInit={}", sLatteThreadRunning.load() ? 1 : 0, sLatteThreadFinishedInit.load() ? 1 : 0);
 	std::unique_lock _lock(sLatteThreadStateMutex);
 	cemu_assert_debug(!sLatteThreadRunning);
 	sLatteThreadRunning = true;
@@ -229,16 +244,22 @@ void Latte_Start()
 	{
 		std::this_thread::sleep_for(std::chrono::milliseconds(1));
 	}
+	if (LatteThread_libretro_debug_enabled())
+		cemuLog_log(LogType::Force, "[LatteThread] Latte_Start end running={} finishedInit={}", sLatteThreadRunning.load() ? 1 : 0, sLatteThreadFinishedInit.load() ? 1 : 0);
 }
 
 void Latte_Stop()
 {
+	if (LatteThread_libretro_debug_enabled())
+		cemuLog_log(LogType::Force, "[LatteThread] Latte_Stop begin running={} finishedInit={}", sLatteThreadRunning.load() ? 1 : 0, sLatteThreadFinishedInit.load() ? 1 : 0);
 	std::unique_lock _lock(sLatteThreadStateMutex);
 	if (!sLatteThreadRunning)
 		return;
 	sLatteThreadRunning = false;
 	_lock.unlock();
 	sLatteThread.join();
+	if (LatteThread_libretro_debug_enabled())
+		cemuLog_log(LogType::Force, "[LatteThread] Latte_Stop end running={} finishedInit={}", sLatteThreadRunning.load() ? 1 : 0, sLatteThreadFinishedInit.load() ? 1 : 0);
 }
 
 bool Latte_GetStopSignal()
@@ -248,17 +269,31 @@ bool Latte_GetStopSignal()
 
 void LatteThread_Exit()
 {
+	if (LatteThread_libretro_debug_enabled())
+		cemuLog_log(LogType::Force, "[LatteThread] LatteThread_Exit begin renderer={}", g_renderer ? 1 : 0);
 	if (g_renderer)
 		g_renderer->Shutdown();
+	if (LatteThread_libretro_debug_enabled())
+		cemuLog_log(LogType::Force, "[LatteThread] LatteThread_Exit after renderer->Shutdown");
     // clean up vertex/uniform cache
     LatteBufferCache_UnloadAll();
+	if (LatteThread_libretro_debug_enabled())
+		cemuLog_log(LogType::Force, "[LatteThread] LatteThread_Exit after LatteBufferCache_UnloadAll");
 	// clean up texture cache
 	LatteTC_UnloadAllTextures();
+	if (LatteThread_libretro_debug_enabled())
+		cemuLog_log(LogType::Force, "[LatteThread] LatteThread_Exit after LatteTC_UnloadAllTextures");
 	// clean up runtime shader cache
     LatteSHRC_UnloadAll();
+	if (LatteThread_libretro_debug_enabled())
+		cemuLog_log(LogType::Force, "[LatteThread] LatteThread_Exit after LatteSHRC_UnloadAll");
     // close disk cache
     LatteShaderCache_Close();
+	if (LatteThread_libretro_debug_enabled())
+		cemuLog_log(LogType::Force, "[LatteThread] LatteThread_Exit after LatteShaderCache_Close");
 	RendererOutputShader::ShutdownStatic();
+	if (LatteThread_libretro_debug_enabled())
+		cemuLog_log(LogType::Force, "[LatteThread] LatteThread_Exit after RendererOutputShader::ShutdownStatic");
     // destroy renderer but make sure that g_renderer remains valid until the destructor has finished
 	if (g_renderer)
 	{
@@ -266,8 +301,12 @@ void LatteThread_Exit()
 		delete renderer;
 		g_renderer.release();
 	}
+	if (LatteThread_libretro_debug_enabled())
+		cemuLog_log(LogType::Force, "[LatteThread] LatteThread_Exit after renderer delete/release");
 	// reset GPU7 state
 	std::memset(&LatteGPUState, 0, sizeof(LatteGPUState));
+	if (LatteThread_libretro_debug_enabled())
+		cemuLog_log(LogType::Force, "[LatteThread] LatteThread_Exit end (ExitThread)\n");
 	#if BOOST_OS_WINDOWS
 	ExitThread(0);
 	#else

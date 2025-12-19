@@ -52,6 +52,23 @@ void GLCanvas_SwapBuffers(bool swapTV, bool swapDRC)
 	g_openGLCanvasCallbacks->SwapBuffers(swapTV, swapDRC);
 }
 
+GLuint GLCanvas_GetOutputFramebuffer()
+{
+	return g_openGLCanvasCallbacks->GetOutputFramebuffer();
+}
+
+bool GLCanvas_ShouldRenderScreen(bool padView)
+{
+	return g_openGLCanvasCallbacks->ShouldRenderScreen(padView);
+}
+
+void GLCanvas_AdjustScreenViewport(bool padView, sint32 windowWidth, sint32 windowHeight,
+	sint32& outX, sint32& outY, sint32& outWidth, sint32& outHeight)
+{
+	g_openGLCanvasCallbacks->AdjustScreenViewport(padView, windowWidth, windowHeight,
+		outX, outY, outWidth, outHeight);
+}
+
 #define STRINGIFY2(X) #X
 #define STRINGIFY(X) STRINGIFY2(X)
 
@@ -578,6 +595,10 @@ void OpenGLRenderer::DrawBackbufferQuad(LatteTextureView* texView, RendererOutpu
 {
 	if (padView && !IsPadWindowActive())
 		return;
+	
+	// Check if this screen should be rendered (for libretro DRC display modes)
+	if (!GLCanvas_ShouldRenderScreen(padView))
+		return;
 
 	catchOpenGLError();
 	GLCanvas_MakeCurrent(padView);
@@ -589,13 +610,20 @@ void OpenGLRenderer::DrawBackbufferQuad(LatteTextureView* texView, RendererOutpu
 	// bind back buffer
 	rendertarget_bindFramebufferObject(nullptr);
 
+	// Get window size for viewport calculations
+	int windowWidth, windowHeight;
+	if (padView)
+		WindowSystem::GetPadWindowPhysSize(windowWidth, windowHeight);
+	else
+		WindowSystem::GetWindowPhysSize(windowWidth, windowHeight);
+
+	// Allow canvas callbacks to adjust viewport for composite DRC modes
+	sint32 adjustedX, adjustedY, adjustedWidth, adjustedHeight;
+	GLCanvas_AdjustScreenViewport(padView, windowWidth, windowHeight,
+		adjustedX, adjustedY, adjustedWidth, adjustedHeight);
+
 	if (clearBackground)
 	{
-		int windowWidth, windowHeight;
-		if (padView)
-			WindowSystem::GetPadWindowPhysSize(windowWidth, windowHeight);
-		else
-			WindowSystem::GetWindowPhysSize(windowWidth, windowHeight);
 		g_renderer->renderTarget_setViewport(0, 0, windowWidth, windowHeight, 0.0f, 1.0f);
 		g_renderer->ClearColorbuffer(padView);
 	}
@@ -603,10 +631,10 @@ void OpenGLRenderer::DrawBackbufferQuad(LatteTextureView* texView, RendererOutpu
 	shader_unbind(RendererShader::ShaderType::kGeometry);
 	shader_bind(shader->GetVertexShader());
 	shader_bind(shader->GetFragmentShader());
-	shader->SetUniformParameters(*texView, {imageWidth, imageHeight}, padView);
+	shader->SetUniformParameters(*texView, {adjustedWidth, adjustedHeight}, padView);
 
-	// set viewport
-	glViewportIndexedf(0, imageX, imageY, imageWidth, imageHeight);
+	// set viewport with adjusted coordinates for composite DRC modes
+	glViewportIndexedf(0, (float)adjustedX, (float)adjustedY, (float)adjustedWidth, (float)adjustedHeight);
 
 	LatteTextureViewGL* texViewGL = (LatteTextureViewGL*)texView;
 	texture_bindAndActivate(texView, 0);
@@ -719,7 +747,7 @@ void OpenGLRenderer::rendertarget_bindFramebufferObject(LatteCachedFBO* cfbo)
 		fboid = cfboGL->glId_fbo;
 	}
 	else
-		fboid = 0;
+		fboid = GLCanvas_GetOutputFramebuffer(); // Use callback's FBO (0 for window, or libretro's FBO)
 
 	if (prevBoundFBO != fboid)
 	{

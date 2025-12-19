@@ -3,10 +3,51 @@
 #include "Cafe/CafeSystem.h"
 #include "Cafe/OS/libs/coreinit/coreinit_Thread.h"
 #include "Cafe/HW/Espresso/PPCState.h"
+#include "Cafe/HW/Espresso/Recompiler/PPCRecompiler.h"
 #include "Cafe/HW/Espresso/Debugger/GDBStub.h"
 #include "ExceptionHandler.h"
 
 bool crashLogCreated = false;
+
+extern "C" void PPCRecompiler_getJumpTableBaseDebugSnapshot(uint64* outValues, uint32 outCount);
+
+#if defined(_MSC_VER)
+#define CEMU_EH_NOINLINE __declspec(noinline)
+#elif defined(__GNUC__) || defined(__clang__)
+#define CEMU_EH_NOINLINE __attribute__((noinline))
+#else
+#define CEMU_EH_NOINLINE
+#endif
+
+#if defined(_MSC_VER)
+#pragma auto_inline(off)
+#endif
+
+static CEMU_EH_NOINLINE bool ExceptionHandler_TryGetRecompilerSnapshot(uint64* outValues, uint32 outCount)
+{
+    if (!outValues || outCount == 0)
+        return false;
+    for (uint32 i = 0; i < outCount; i++)
+        outValues[i] = 0;
+#if defined(_MSC_VER) && defined(_WIN32)
+    __try
+    {
+        PPCRecompiler_getJumpTableBaseDebugSnapshot(outValues, outCount);
+        return true;
+    }
+    __except (EXCEPTION_EXECUTE_HANDLER)
+    {
+        return false;
+    }
+#else
+    PPCRecompiler_getJumpTableBaseDebugSnapshot(outValues, outCount);
+    return true;
+#endif
+}
+
+#if defined(_MSC_VER)
+#pragma auto_inline(on)
+#endif
 
 bool CrashLog_Create()
 {
@@ -68,6 +109,22 @@ void ExceptionHandler_LogGeneralInfo()
     {
         CrashLog_WriteLine("Not running");
     }
+
+    // recompiler diagnostics
+    CrashLog_WriteLine("");
+    CrashLog_WriteHeader("Recompiler diagnostics");
+    uint64 recompilerSnap[9]{};
+    const bool recompilerSnapOk = ExceptionHandler_TryGetRecompilerSnapshot(recompilerSnap, 9);
+    CrashLog_WriteLine(fmt::format("getJumpTableBase snapshotOk: {}", recompilerSnapOk ? 1 : 0));
+    CrashLog_WriteLine(fmt::format("getJumpTableBase lastCallIdx: {}", recompilerSnap[0]));
+    CrashLog_WriteLine(fmt::format("getJumpTableBase lastTid: {}", recompilerSnap[1]));
+    CrashLog_WriteLine(fmt::format("getJumpTableBase lastRetAddr: 0x{:016x}", recompilerSnap[2]));
+    CrashLog_WriteLine(fmt::format("getJumpTableBase lastRetModBase: 0x{:016x}", recompilerSnap[3]));
+    CrashLog_WriteLine(fmt::format("getJumpTableBase lastRetModOffset: 0x{:016x}", recompilerSnap[4]));
+    CrashLog_WriteLine(fmt::format("getJumpTableBase lastEnabled: {}", recompilerSnap[5]));
+    CrashLog_WriteLine(fmt::format("getJumpTableBase lastForceLibretroInterp: {}", recompilerSnap[6]));
+    CrashLog_WriteLine(fmt::format("getJumpTableBase lastInstanceData: 0x{:016x}", recompilerSnap[7]));
+    CrashLog_WriteLine(fmt::format("getJumpTableBase lastJumpTable: 0x{:016x}", recompilerSnap[8]));
     // info about active PPC instance:
     CrashLog_WriteLine("");
     CrashLog_WriteHeader("Active PPC instance");
@@ -78,6 +135,27 @@ void ExceptionHandler_LogGeneralInfo()
         uint32 threadPtr = memory_getVirtualOffsetFromPointer(coreinit::OSGetCurrentThread());
         sprintf(dumpLine, "IP 0x%08x LR 0x%08x Thread 0x%08x", hCPU->instructionPointer, hCPU->spr.LR, threadPtr);
         CrashLog_WriteLine(dumpLine);
+
+		// dump a small window of PPC instruction words around IP and LR
+		const uint32 ip = hCPU->instructionPointer;
+		const uint32 lr = hCPU->spr.LR;
+		if (memory_isAddressRangeAccessible(ip, 5 * 4) && memory_isAddressRangeAccessible(lr, 1 * 4))
+		{
+			sprintf(dumpLine,
+				"IPW=%08x,%08x,%08x,%08x,%08x LRW=%08x",
+				memory_readU32(ip + 0),
+				memory_readU32(ip + 4),
+				memory_readU32(ip + 8),
+				memory_readU32(ip + 12),
+				memory_readU32(ip + 16),
+				memory_readU32(lr));
+			CrashLog_WriteLine(dumpLine);
+		}
+ 		else
+ 		{
+ 			sprintf(dumpLine, "IPW=? (ip access=%d lr access=%d)", memory_isAddressRangeAccessible(ip, 5 * 4) ? 1 : 0, memory_isAddressRangeAccessible(lr, 1 * 4) ? 1 : 0);
+ 			CrashLog_WriteLine(dumpLine);
+ 		}
 
         // GPR info
         CrashLog_WriteLine("");

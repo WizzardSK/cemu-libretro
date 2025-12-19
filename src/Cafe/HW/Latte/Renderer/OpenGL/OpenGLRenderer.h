@@ -18,6 +18,26 @@ class OpenGLCanvasCallbacks
 		return false;
 	}
 	virtual void SwapBuffers(bool swapTV, bool swapDRC) {}
+	virtual GLuint GetOutputFramebuffer() const
+	{
+		return 0; // Default: render to FBO 0 (window backbuffer)
+	}
+	// Returns true if the specified screen should be rendered (for libretro DRC modes)
+	virtual bool ShouldRenderScreen(bool padView) const
+	{
+		return true; // By default, render all screens
+	}
+	// Adjusts viewport for composite DRC display modes (side-by-side, top-bottom, PiP)
+	// Returns adjusted coordinates. windowWidth/Height are the full output dimensions.
+	virtual void AdjustScreenViewport(bool padView, sint32 windowWidth, sint32 windowHeight,
+		sint32& outX, sint32& outY, sint32& outWidth, sint32& outHeight) const
+	{
+		// By default, use full viewport
+		outX = 0;
+		outY = 0;
+		outWidth = windowWidth;
+		outHeight = windowHeight;
+	}
 	virtual ~OpenGLCanvasCallbacks() = default;
 };
 
@@ -27,6 +47,10 @@ void ClearOpenGLCanvasCallbacks();
 bool GLCanvas_HasPadViewOpen();
 bool GLCanvas_MakeCurrent(bool padView);
 void GLCanvas_SwapBuffers(bool swapTV, bool swapDRC);
+GLuint GLCanvas_GetOutputFramebuffer();
+bool GLCanvas_ShouldRenderScreen(bool padView);
+void GLCanvas_AdjustScreenViewport(bool padView, sint32 windowWidth, sint32 windowHeight,
+	sint32& outX, sint32& outY, sint32& outWidth, sint32& outHeight);
 
 class OpenGLRenderer : public Renderer
 {

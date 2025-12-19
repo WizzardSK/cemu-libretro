@@ -14,6 +14,18 @@
 #include "util/Fiber/Fiber.h"
 
 #include "util/helpers/helpers.h"
+#include <cstdlib>
+
+static bool coreinit_libretro_debug_enabled()
+{
+	static int s_cached = -1;
+	if (s_cached == -1)
+	{
+		const char* env = std::getenv("CEMU_LIBRETRO_DEBUG");
+		s_cached = (env && env[0] != '\0' && env[0] != '0') ? 1 : 0;
+	}
+	return s_cached != 0;
+}
 
 #ifdef __arm64__
 #if defined(__clang__)
@@ -65,6 +77,22 @@ namespace coreinit
 {
 	// scheduler state
 	std::atomic<bool> sSchedulerActive;
+	static std::atomic<uint64> sSchedulerHeartbeat[3]{};
+	static std::atomic<uint64> sSchedulerTimeslice[3]{};
+	static std::atomic<uint64> sSchedulerHostEnterCount[3]{};
+	static std::atomic<uint32> sSchedulerHostAlive[3]{};
+	static std::atomic<uint64> sSchedulerIdleLoopCount[3]{};
+	static std::atomic<uint64> sSchedulerIdleWaitEnterCount[3]{};
+	static std::atomic<uint64> sSchedulerIdleWaitWakeCount[3]{};
+	static std::atomic<uint32> sSchedulerSystemEventStage{};
+	static std::atomic<uint64> sSchedulerSystemEventCount{};
+	static std::atomic<uint64> sSchedulerPpcFiberLoopCount[3]{};
+	static std::atomic<uint64> sSchedulerPpcFiberRescheduleCount[3]{};
+	static std::atomic<sint32> sSchedulerPpcFiberLastRemainingCycles[3]{};
+	static std::atomic<uint32> sSchedulerPpcFiberStage[3]{};
+	static std::atomic<uint32> sSchedulerPpcFiberLastIP[3]{};
+	static std::atomic<uint32> sSchedulerPpcFiberLastLR[3]{};
+	static std::atomic<uint64> sSchedulerPpcFiberInstructionHeartbeatCount[3]{};
 	std::vector<std::thread> sSchedulerThreads;
 	std::mutex sSchedulerStateMtx;
 
@@ -1236,12 +1264,17 @@ namespace coreinit
 
 	void __OSCheckSystemEvents()
 	{
+		sSchedulerSystemEventCount.fetch_add(1, std::memory_order_relaxed);
 		// AX update
+		sSchedulerSystemEventStage.store(1, std::memory_order_relaxed);
 		snd_core::AXOut_update();
 		// alarm update
+		sSchedulerSystemEventStage.store(2, std::memory_order_relaxed);
 		coreinit::alarm_update();
 		// nfp update
+		sSchedulerSystemEventStage.store(3, std::memory_order_relaxed);
 		nnNfp_update();
+		sSchedulerSystemEventStage.store(0, std::memory_order_relaxed);
 	}
 
 	Fiber* g_idleLoopFiber[3]{};
@@ -1255,6 +1288,8 @@ namespace coreinit
 		__OSUnlockScheduler();
 		while (true)
 		{
+			sSchedulerIdleLoopCount[t_assignedCoreIndex].fetch_add(1, std::memory_order_relaxed);
+			sSchedulerHeartbeat[t_assignedCoreIndex].fetch_add(1, std::memory_order_relaxed);
 			if (!g_coreRunQueueThreadCount[coreIndex].isZero()) // avoid hammering the lock on the main core if there is no runable thread
 			{
 				__OSLockScheduler();
@@ -1275,9 +1310,15 @@ namespace coreinit
 			else
 			{
 				// wait for semaphore (only in multicore mode)
+				sSchedulerIdleWaitEnterCount[t_assignedCoreIndex].fetch_add(1, std::memory_order_relaxed);
 				g_coreRunQueueThreadCount[t_assignedCoreIndex].waitUntilNonZero();
+				sSchedulerIdleWaitWakeCount[t_assignedCoreIndex].fetch_add(1, std::memory_order_relaxed);
 				if (!sSchedulerActive.load(std::memory_order::relaxed))
+				{
+					if (coreinit_libretro_debug_enabled())
+						cemuLog_log(LogType::Force, "[OSScheduler] Core {} idle loop detected shutdown, switching to scheduler fiber", t_assignedCoreIndex);
 					Fiber::Switch(*t_schedulerFiber); // switch back to original thread to exit
+				}
 			}
 		}
 	}
@@ -1285,6 +1326,7 @@ namespace coreinit
 	void __OSThreadSwitchToNext()
 	{
 		cemu_assert_debug(__OSHasSchedulerLock());
+		sSchedulerTimeslice[t_assignedCoreIndex].fetch_add(1, std::memory_order_relaxed);
 
 		OSHostThread* hostThread = (OSHostThread*)Fiber::GetFiberPrivateData();
         cemu_assert_debug(hostThread);
@@ -1298,6 +1340,8 @@ namespace coreinit
 
 		if (!sSchedulerActive.load(std::memory_order::relaxed))
 		{
+			if (coreinit_libretro_debug_enabled())
+				cemuLog_log(LogType::Force, "[OSScheduler] Core {} __OSThreadSwitchToNext detected shutdown, switching to scheduler fiber", t_assignedCoreIndex);
 			__OSUnlockScheduler();
 			Fiber::Switch(*t_schedulerFiber); // switch back to original thread entry for it to exit
 		}
@@ -1356,21 +1400,59 @@ namespace coreinit
 		__OSUnlockScheduler(); // lock is always held when switching to a fiber, so we need to unlock it here
 		while (true)
 		{
+			if (hostThread->selectedCore >= 0 && hostThread->selectedCore < 3)
+				sSchedulerPpcFiberStage[hostThread->selectedCore].store(1, std::memory_order_relaxed);
+			if (hostThread->selectedCore >= 0 && hostThread->selectedCore < 3)
+				sSchedulerPpcFiberLoopCount[hostThread->selectedCore].fetch_add(1, std::memory_order_relaxed);
 			if (hCPU->remainingCycles > 0)
 			{
+				if (hostThread->selectedCore >= 0 && hostThread->selectedCore < 3)
+					sSchedulerPpcFiberStage[hostThread->selectedCore].store(2, std::memory_order_relaxed);
+				if (hostThread->selectedCore >= 0 && hostThread->selectedCore < 3)
+					sSchedulerPpcFiberLastIP[hostThread->selectedCore].store(hCPU->instructionPointer, std::memory_order_relaxed);
+				if (hostThread->selectedCore >= 0 && hostThread->selectedCore < 3)
+					sSchedulerPpcFiberLastLR[hostThread->selectedCore].store((uint32)hCPU->spr.LR, std::memory_order_relaxed);
 				// try to enter recompiler immediately
 				PPCRecompiler_attemptEnterWithoutRecompile(hCPU, hCPU->instructionPointer);
+				if (hostThread->selectedCore >= 0 && hostThread->selectedCore < 3)
+					sSchedulerPpcFiberStage[hostThread->selectedCore].store(3, std::memory_order_relaxed);
 				// keep executing as long as there are cycles left
+				uint32 instrHeartbeat = 0;
 				while ((--hCPU->remainingCycles) >= 0)
+				{
+					if (hostThread->selectedCore >= 0 && hostThread->selectedCore < 3)
+					{
+						// Update at a low frequency to avoid slowing down emulation
+						if ((instrHeartbeat++ & 0xFFFFu) == 0)
+						{
+							sSchedulerPpcFiberStage[hostThread->selectedCore].store(7, std::memory_order_relaxed);
+							sSchedulerPpcFiberLastIP[hostThread->selectedCore].store(hCPU->instructionPointer, std::memory_order_relaxed);
+							sSchedulerPpcFiberLastLR[hostThread->selectedCore].store((uint32)hCPU->spr.LR, std::memory_order_relaxed);
+							sSchedulerPpcFiberInstructionHeartbeatCount[hostThread->selectedCore].fetch_add(1, std::memory_order_relaxed);
+						}
+					}
 					PPCInterpreterSlim_executeInstruction(hCPU);
+				}
 			}
+			if (hostThread->selectedCore >= 0 && hostThread->selectedCore < 3)
+				sSchedulerPpcFiberLastRemainingCycles[hostThread->selectedCore].store(hCPU->remainingCycles, std::memory_order_relaxed);
+			if (hostThread->selectedCore >= 0 && hostThread->selectedCore < 3)
+				sSchedulerPpcFiberStage[hostThread->selectedCore].store(4, std::memory_order_relaxed);
+			if (hostThread->selectedCore >= 0 && hostThread->selectedCore < 3)
+				sSchedulerPpcFiberLastLR[hostThread->selectedCore].store((uint32)hCPU->spr.LR, std::memory_order_relaxed);
 
 			// reset reservation
 			hCPU->reservedMemAddr = 0;
 			hCPU->reservedMemValue = 0;
 
 			// reschedule
+			if (hostThread->selectedCore >= 0 && hostThread->selectedCore < 3)
+				sSchedulerPpcFiberStage[hostThread->selectedCore].store(5, std::memory_order_relaxed);
 			__OSLockScheduler();
+			if (hostThread->selectedCore >= 0 && hostThread->selectedCore < 3)
+				sSchedulerPpcFiberRescheduleCount[hostThread->selectedCore].fetch_add(1, std::memory_order_relaxed);
+			if (hostThread->selectedCore >= 0 && hostThread->selectedCore < 3)
+				sSchedulerPpcFiberStage[hostThread->selectedCore].store(6, std::memory_order_relaxed);
 			__OSThreadSwitchToNext();
 			__OSUnlockScheduler();
 		}
@@ -1394,6 +1476,11 @@ namespace coreinit
 	{
 		SetThreadName(fmt::format("OSSched[core={}]", (uintptr_t)_assignedCoreIndex).c_str());
 		t_assignedCoreIndex = (sint32)(uintptr_t)_assignedCoreIndex;
+		if (t_assignedCoreIndex >= 0 && t_assignedCoreIndex < 3)
+		{
+			sSchedulerHostEnterCount[t_assignedCoreIndex].fetch_add(1, std::memory_order_relaxed);
+			sSchedulerHostAlive[t_assignedCoreIndex].store(1, std::memory_order_relaxed);
+		}
 
 		enableFlushDenormalsToZero();
 
@@ -1418,9 +1505,15 @@ namespace coreinit
 		g_idleLoopFiber[t_assignedCoreIndex] = new Fiber(__OSThreadCoreIdle, nullptr, nullptr);
 		cemu_assert_debug(PPCInterpreter_getCurrentInstance() == nullptr);
 		__OSLockScheduler();
+		if (coreinit_libretro_debug_enabled())
+			cemuLog_log(LogType::Force, "[OSScheduler] Core {} entering idle loop", t_assignedCoreIndex);
 		Fiber::Switch(*g_idleLoopFiber[t_assignedCoreIndex]);
 		// returned from scheduler loop, exit thread
+		if (coreinit_libretro_debug_enabled())
+			cemuLog_log(LogType::Force, "[OSScheduler] Core {} exited idle loop, thread exiting", t_assignedCoreIndex);
 		cemu_assert_debug(!__OSHasSchedulerLock());
+		if (t_assignedCoreIndex >= 0 && t_assignedCoreIndex < 3)
+			sSchedulerHostAlive[t_assignedCoreIndex].store(0, std::memory_order_relaxed);
 	}
 
 	std::vector<std::thread::native_handle_type> g_schedulerThreadHandles;
@@ -1436,6 +1529,36 @@ namespace coreinit
 		std::unique_lock _lock(sSchedulerStateMtx);
 		if (sSchedulerActive.exchange(true))
 			return;
+		for (auto& hb : sSchedulerHeartbeat)
+			hb.store(0, std::memory_order_relaxed);
+		for (auto& ts : sSchedulerTimeslice)
+			ts.store(0, std::memory_order_relaxed);
+		for (auto& ec : sSchedulerHostEnterCount)
+			ec.store(0, std::memory_order_relaxed);
+		for (auto& al : sSchedulerHostAlive)
+			al.store(0, std::memory_order_relaxed);
+		for (auto& c : sSchedulerIdleLoopCount)
+			c.store(0, std::memory_order_relaxed);
+		for (auto& c : sSchedulerIdleWaitEnterCount)
+			c.store(0, std::memory_order_relaxed);
+		for (auto& c : sSchedulerIdleWaitWakeCount)
+			c.store(0, std::memory_order_relaxed);
+		sSchedulerSystemEventStage.store(0, std::memory_order_relaxed);
+		sSchedulerSystemEventCount.store(0, std::memory_order_relaxed);
+		for (auto& c : sSchedulerPpcFiberLoopCount)
+			c.store(0, std::memory_order_relaxed);
+		for (auto& c : sSchedulerPpcFiberRescheduleCount)
+			c.store(0, std::memory_order_relaxed);
+		for (auto& c : sSchedulerPpcFiberLastRemainingCycles)
+			c.store(0, std::memory_order_relaxed);
+		for (auto& c : sSchedulerPpcFiberStage)
+			c.store(0, std::memory_order_relaxed);
+		for (auto& c : sSchedulerPpcFiberLastIP)
+			c.store(0, std::memory_order_relaxed);
+		for (auto& c : sSchedulerPpcFiberLastLR)
+			c.store(0, std::memory_order_relaxed);
+		for (auto& c : sSchedulerPpcFiberInstructionHeartbeatCount)
+			c.store(0, std::memory_order_relaxed);
 		cemu_assert_debug(numCPUEmulationThreads == 1 || numCPUEmulationThreads == 3);
 		g_isMulticoreMode = numCPUEmulationThreads > 1;
 		if (numCPUEmulationThreads == 1)
@@ -1454,13 +1577,27 @@ namespace coreinit
     // shuts down all scheduler host threads and deletes all fibers and ppc threads
 	void OSSchedulerEnd()
 	{
+		if (coreinit_libretro_debug_enabled())
+			cemuLog_log(LogType::Force, "[OSScheduler] OSSchedulerEnd begin threadCount={}", sSchedulerThreads.size());
 		std::unique_lock _lock(sSchedulerStateMtx);
+		if (coreinit_libretro_debug_enabled())
+			cemuLog_log(LogType::Force, "[OSScheduler] OSSchedulerEnd locked, setting sSchedulerActive=false");
 		sSchedulerActive.store(false);
 		for (size_t i = 0; i < Espresso::CORE_COUNT; i++)
 			g_coreRunQueueThreadCount[i].increment(); // make sure to wake up cores if they are paused and waiting for runnable threads
+		if (coreinit_libretro_debug_enabled())
+			cemuLog_log(LogType::Force, "[OSScheduler] OSSchedulerEnd woke cores, joining threads...");
 		// wait for threads to stop execution
-		for (auto& threadItr : sSchedulerThreads)
-			threadItr.join();
+		for (size_t idx = 0; idx < sSchedulerThreads.size(); idx++)
+		{
+			if (coreinit_libretro_debug_enabled())
+				cemuLog_log(LogType::Force, "[OSScheduler] OSSchedulerEnd joining thread {}", idx);
+			sSchedulerThreads[idx].join();
+			if (coreinit_libretro_debug_enabled())
+				cemuLog_log(LogType::Force, "[OSScheduler] OSSchedulerEnd thread {} joined", idx);
+		}
+		if (coreinit_libretro_debug_enabled())
+			cemuLog_log(LogType::Force, "[OSScheduler] OSSchedulerEnd all threads joined");
 		sSchedulerThreads.clear();
 		g_schedulerThreadHandles.clear();
 #if BOOST_OS_LINUX
@@ -1475,12 +1612,157 @@ namespace coreinit
 			delete it;
 			it = nullptr;
 		}
+		for (auto& hb : sSchedulerHeartbeat)
+			hb.store(0, std::memory_order_relaxed);
+		for (auto& ts : sSchedulerTimeslice)
+			ts.store(0, std::memory_order_relaxed);
+		for (auto& al : sSchedulerHostAlive)
+			al.store(0, std::memory_order_relaxed);
+		for (auto& c : sSchedulerIdleLoopCount)
+			c.store(0, std::memory_order_relaxed);
+		for (auto& c : sSchedulerIdleWaitEnterCount)
+			c.store(0, std::memory_order_relaxed);
+		for (auto& c : sSchedulerIdleWaitWakeCount)
+			c.store(0, std::memory_order_relaxed);
+		sSchedulerSystemEventStage.store(0, std::memory_order_relaxed);
+		sSchedulerSystemEventCount.store(0, std::memory_order_relaxed);
+		for (auto& c : sSchedulerPpcFiberLoopCount)
+			c.store(0, std::memory_order_relaxed);
+		for (auto& c : sSchedulerPpcFiberRescheduleCount)
+			c.store(0, std::memory_order_relaxed);
+		for (auto& c : sSchedulerPpcFiberLastRemainingCycles)
+			c.store(0, std::memory_order_relaxed);
+		for (auto& c : sSchedulerPpcFiberStage)
+			c.store(0, std::memory_order_relaxed);
+		for (auto& c : sSchedulerPpcFiberLastIP)
+			c.store(0, std::memory_order_relaxed);
+		for (auto& c : sSchedulerPpcFiberLastLR)
+			c.store(0, std::memory_order_relaxed);
+		for (auto& c : sSchedulerPpcFiberInstructionHeartbeatCount)
+			c.store(0, std::memory_order_relaxed);
+		if (coreinit_libretro_debug_enabled())
+			cemuLog_log(LogType::Force, "[OSScheduler] OSSchedulerEnd deleting fibers, count={}", s_threadToFiber.size());
 		for (auto& it : s_threadToFiber)
 		{
 			OSHostThread* hostThread = it.second;
 			delete hostThread;
 		}
 		s_threadToFiber.clear();
+		if (coreinit_libretro_debug_enabled())
+			cemuLog_log(LogType::Force, "[OSScheduler] OSSchedulerEnd done");
+	}
+
+	bool OSSchedulerIsActive()
+	{
+		return sSchedulerActive.load(std::memory_order_relaxed);
+	}
+
+	uint64 OSSchedulerGetHeartbeat(sint32 coreIndex)
+	{
+		if (coreIndex < 0 || coreIndex >= 3)
+			return 0;
+		return sSchedulerHeartbeat[coreIndex].load(std::memory_order_relaxed);
+	}
+
+	uint64 OSSchedulerGetTimesliceCount(sint32 coreIndex)
+	{
+		if (coreIndex < 0 || coreIndex >= 3)
+			return 0;
+		return sSchedulerTimeslice[coreIndex].load(std::memory_order_relaxed);
+	}
+
+	uint64 OSSchedulerGetHostEnterCount(sint32 coreIndex)
+	{
+		if (coreIndex < 0 || coreIndex >= 3)
+			return 0;
+		return sSchedulerHostEnterCount[coreIndex].load(std::memory_order_relaxed);
+	}
+
+	uint32 OSSchedulerGetHostAlive(sint32 coreIndex)
+	{
+		if (coreIndex < 0 || coreIndex >= 3)
+			return 0;
+		return sSchedulerHostAlive[coreIndex].load(std::memory_order_relaxed);
+	}
+
+	uint64 OSSchedulerGetIdleLoopCount(sint32 coreIndex)
+	{
+		if (coreIndex < 0 || coreIndex >= 3)
+			return 0;
+		return sSchedulerIdleLoopCount[coreIndex].load(std::memory_order_relaxed);
+	}
+
+	uint64 OSSchedulerGetIdleWaitEnterCount(sint32 coreIndex)
+	{
+		if (coreIndex < 0 || coreIndex >= 3)
+			return 0;
+		return sSchedulerIdleWaitEnterCount[coreIndex].load(std::memory_order_relaxed);
+	}
+
+	uint64 OSSchedulerGetIdleWaitWakeCount(sint32 coreIndex)
+	{
+		if (coreIndex < 0 || coreIndex >= 3)
+			return 0;
+		return sSchedulerIdleWaitWakeCount[coreIndex].load(std::memory_order_relaxed);
+	}
+
+	uint32 OSSchedulerGetSystemEventStage()
+	{
+		return sSchedulerSystemEventStage.load(std::memory_order_relaxed);
+	}
+
+	uint64 OSSchedulerGetSystemEventCount()
+	{
+		return sSchedulerSystemEventCount.load(std::memory_order_relaxed);
+	}
+
+	uint64 OSSchedulerGetPpcFiberLoopCount(sint32 coreIndex)
+	{
+		if (coreIndex < 0 || coreIndex >= 3)
+			return 0;
+		return sSchedulerPpcFiberLoopCount[coreIndex].load(std::memory_order_relaxed);
+	}
+
+	uint64 OSSchedulerGetPpcFiberRescheduleCount(sint32 coreIndex)
+	{
+		if (coreIndex < 0 || coreIndex >= 3)
+			return 0;
+		return sSchedulerPpcFiberRescheduleCount[coreIndex].load(std::memory_order_relaxed);
+	}
+
+	sint32 OSSchedulerGetPpcFiberLastRemainingCycles(sint32 coreIndex)
+	{
+		if (coreIndex < 0 || coreIndex >= 3)
+			return 0;
+		return sSchedulerPpcFiberLastRemainingCycles[coreIndex].load(std::memory_order_relaxed);
+	}
+
+	uint32 OSSchedulerGetPpcFiberStage(sint32 coreIndex)
+	{
+		if (coreIndex < 0 || coreIndex >= 3)
+			return 0;
+		return sSchedulerPpcFiberStage[coreIndex].load(std::memory_order_relaxed);
+	}
+
+	uint32 OSSchedulerGetPpcFiberLastInstructionPointer(sint32 coreIndex)
+	{
+		if (coreIndex < 0 || coreIndex >= 3)
+			return 0;
+		return sSchedulerPpcFiberLastIP[coreIndex].load(std::memory_order_relaxed);
+	}
+
+	uint32 OSSchedulerGetPpcFiberLastLR(sint32 coreIndex)
+	{
+		if (coreIndex < 0 || coreIndex >= 3)
+			return 0;
+		return sSchedulerPpcFiberLastLR[coreIndex].load(std::memory_order_relaxed);
+	}
+
+	uint64 OSSchedulerGetPpcFiberInstructionHeartbeatCount(sint32 coreIndex)
+	{
+		if (coreIndex < 0 || coreIndex >= 3)
+			return 0;
+		return sSchedulerPpcFiberInstructionHeartbeatCount[coreIndex].load(std::memory_order_relaxed);
 	}
 
 	SysAllocator<OSThread_t, PPC_CORE_COUNT> s_defaultThreads;

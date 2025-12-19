@@ -58,12 +58,14 @@ bool ActiveSettings::LoadSharedLibrariesEnabled()
 
 bool ActiveSettings::DisplayDRCEnabled()
 {
+	if (s_libretro_display_drc_override.has_value())
+		return s_libretro_display_drc_override.value();
 	return g_current_game_profile->StartWithGamepadView();
 }
 
 CPUMode ActiveSettings::GetCPUMode()
 {
-	auto mode = g_current_game_profile->GetCPUMode().value_or(CPUMode::Auto);
+	auto mode = s_libretro_cpu_mode_override.value_or(g_current_game_profile->GetCPUMode().value_or(CPUMode::Auto));
 
 	if (mode == CPUMode::Auto)
 	{
@@ -90,7 +92,24 @@ void ActiveSettings::SetTimerShiftFactor(uint8 shiftFactor)
 
 PrecompiledShaderOption ActiveSettings::GetPrecompiledShadersOption()
 {
-	return PrecompiledShaderOption::Auto; // g_current_game_profile->GetPrecompiledShadersState().value_or(GetConfig().precompiled_shaders);
+	if (s_libretro_precompiled_shaders_override.has_value())
+		return s_libretro_precompiled_shaders_override.value();
+	return g_current_game_profile->GetPrecompiledShadersState().value_or(PrecompiledShaderOption::Auto);
+}
+
+void ActiveSettings::SetLibretroCPUModeOverride(std::optional<CPUMode> mode)
+{
+	s_libretro_cpu_mode_override = mode;
+}
+
+void ActiveSettings::SetLibretroPrecompiledShadersOverride(std::optional<PrecompiledShaderOption> opt)
+{
+	s_libretro_precompiled_shaders_override = opt;
+}
+
+void ActiveSettings::SetLibretroDisplayDRCOverride(std::optional<bool> enabled)
+{
+	s_libretro_display_drc_override = enabled;
 }
 
 bool ActiveSettings::RenderUpsideDownEnabled()
