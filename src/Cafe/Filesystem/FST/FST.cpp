@@ -1,5 +1,5 @@
 #include "Common/precompiled.h"
-#include "Common/FileStream.h"
+#include "Common/VFSFileStream.h"
 #include "Cemu/ncrypto/ncrypto.h"
 #include "Cafe/Filesystem/WUD/wud.h"
 #include "util/crypto/aes128.h"
@@ -75,7 +75,7 @@ class FSTDataSourceApp : public FSTDataSource
 public:
 	static FSTDataSourceApp* Open(fs::path path, NCrypto::TMDParser& tmd)
 	{
-		std::vector<std::unique_ptr<FileStream>> clusterFile;
+		std::vector<std::unique_ptr<VFSFileStream>> clusterFile;
 		uint32 maxIndex = 0;
 		for (auto& itr : tmd.GetContentList())
 			maxIndex = std::max(maxIndex, (uint32)itr.index);
@@ -83,7 +83,7 @@ public:
 		// open all the app files
 		for (auto& itr : tmd.GetContentList())
 		{
-			FileStream* appFile = FileStream::openFile2(path / fmt::format("{:08x}.app", itr.contentId));
+			VFSFileStream* appFile = VFSFileStream::openFile2(path / fmt::format("{:08x}.app", itr.contentId));
 			if (!appFile)
 				return nullptr;
 			clusterFile[itr.index].reset(appFile);
@@ -110,12 +110,12 @@ public:
 	}
 
 private:
-	FSTDataSourceApp(std::vector<std::unique_ptr<FileStream>>&& clusterFiles)
+	FSTDataSourceApp(std::vector<std::unique_ptr<VFSFileStream>>&& clusterFiles)
 	{
 		m_clusterFile = std::move(clusterFiles);
 	}
 
-	std::vector<std::unique_ptr<FileStream>> m_clusterFile;
+	std::vector<std::unique_ptr<VFSFileStream>> m_clusterFile;
 };
 
 constexpr size_t DISC_SECTOR_SIZE = 0x8000;
@@ -191,30 +191,48 @@ static_assert(sizeof(DiscPartitionHeader) == 0x40+0x20);
 
 bool FSTVolume::FindDiscKey(const fs::path& path, NCrypto::AesKey& discTitleKey)
 {
+	cemuLog_log(LogType::Force, "[FST] FindDiscKey begin path='{}'", path.generic_string());
 	std::unique_ptr<FSTDataSourceWUD> dataSource(FSTDataSourceWUD::Open(path));
 	if (!dataSource)
+	{
+		cemuLog_log(LogType::Force, "[FST] FindDiscKey: FSTDataSourceWUD::Open failed");
 		return false;
+	}
+	cemuLog_log(LogType::Force, "[FST] FindDiscKey: datasource opened");
 
 	// read section of header which should only contain zero bytes if decrypted
 	uint8 header[16*3];
 	if (dataSource->readData(0, 0, 0x18000 + 0x100, header, sizeof(header)) != sizeof(header))
+	{
+		cemuLog_log(LogType::Force, "[FST] FindDiscKey: failed to read header bytes");
 		return false;
+	}
+	cemuLog_log(LogType::Force, "[FST] FindDiscKey: read header bytes ok (size={})", (sint32)sizeof(header));
 
 	// try all the keys
 	uint8 headerDecrypted[sizeof(header)-16];
+	sint32 triedKeys = 0;
 	for (sint32 i = 0; i < 0x7FFFFFFF; i++)
 	{
 		uint8* key128 = KeyCache_GetAES128(i);
 		if (key128 == NULL)
+		{
+			cemuLog_log(LogType::Force, "[FST] FindDiscKey: reached end of keycache at index {} (tried={})", i, triedKeys);
 			break;
+		}
+		triedKeys++;
+		if (i < 10 || (i % 250) == 0)
+			cemuLog_log(LogType::Force, "[FST] FindDiscKey: trying key index {}", i);
 		AES128_CBC_decrypt(headerDecrypted, header + 16, sizeof(headerDecrypted), key128, header);
 		if (std::all_of(headerDecrypted, headerDecrypted + sizeof(headerDecrypted), [](const uint8 v) {return v == 0; }))
 		{
 			// key found
+			cemuLog_log(LogType::Force, "[FST] FindDiscKey: key FOUND at index {} after trying {} keys", i, triedKeys);
 			std::memcpy(discTitleKey.b, key128, 16);
 			return true;
 		}
 	}
+	cemuLog_log(LogType::Force, "[FST] FindDiscKey: NO KEY FOUND (keys_tried={})", triedKeys);
 	return false;
 }
 
@@ -400,7 +418,7 @@ FSTVolume* FSTVolume::OpenFromContentFolder(fs::path folderPath, ErrorCode* erro
 {
 	SET_FST_ERROR(UNKNOWN_ERROR);
 	// load TMD
-	FileStream* tmdFile = FileStream::openFile2(folderPath / "title.tmd");
+	VFSFileStream* tmdFile = VFSFileStream::openFile2(folderPath / "title.tmd");
 	if (!tmdFile)
 		return nullptr;
 	std::vector<uint8> tmdData;
@@ -413,7 +431,7 @@ FSTVolume* FSTVolume::OpenFromContentFolder(fs::path folderPath, ErrorCode* erro
 		return nullptr;
 	}
 	// load ticket
-	FileStream* ticketFile = FileStream::openFile2(folderPath / "title.tik");
+	VFSFileStream* ticketFile = VFSFileStream::openFile2(folderPath / "title.tik");
 	if (!ticketFile)
 	{
 		SET_FST_ERROR(TITLE_TIK_MISSING);
@@ -1184,7 +1202,7 @@ FSTVolume::~FSTVolume()
 		delete m_dataSource;
 }
 
-bool FSTVerifier::VerifyContentFile(FileStream* fileContent, const NCrypto::AesKey* key, uint32 contentIndex, uint32 contentSize, uint32 contentSizePadded, bool isSHA1, const uint8* tmdContentHash)
+bool FSTVerifier::VerifyContentFile(VFSFileStream* fileContent, const NCrypto::AesKey* key, uint32 contentIndex, uint32 contentSize, uint32 contentSizePadded, bool isSHA1, const uint8* tmdContentHash)
 {
 	cemu_assert_debug(isSHA1); // test this case
 	cemu_assert_debug(((contentSize+0xF)&~0xF) == contentSizePadded);
@@ -1221,7 +1239,7 @@ bool FSTVerifier::VerifyContentFile(FileStream* fileContent, const NCrypto::AesK
 	return memcmp(calculatedHash, tmdContentHash, md_len) == 0;
 }
 
-bool FSTVerifier::VerifyHashedContentFile(FileStream* fileContent, const NCrypto::AesKey* key, uint32 contentIndex, uint32 contentSize, uint32 contentSizePadded, bool isSHA1, const uint8* tmdContentHash)
+bool FSTVerifier::VerifyHashedContentFile(VFSFileStream* fileContent, const NCrypto::AesKey* key, uint32 contentIndex, uint32 contentSize, uint32 contentSizePadded, bool isSHA1, const uint8* tmdContentHash)
 {
 	if (!isSHA1)
 		return false; // not supported

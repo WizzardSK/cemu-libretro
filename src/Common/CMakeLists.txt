@@ -6,6 +6,8 @@ add_library(CemuCommon
   ExceptionHandler/ExceptionHandler.cpp
   ExceptionHandler/ExceptionHandler.h
   FileStream.h
+  VFSFileStream.h
+  VFSFileStream.cpp
   GLInclude/glext.h
   GLInclude/glFunctions.h
   GLInclude/GLInclude.h

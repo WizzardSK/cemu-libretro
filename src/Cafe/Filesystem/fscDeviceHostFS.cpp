@@ -2,7 +2,7 @@
 #include "Cafe/Filesystem/fsc.h"
 #include "Cafe/Filesystem/fscDeviceHostFS.h"
 
-#include "Common/FileStream.h"
+#include "Common/VFSFileStream.h"
 
 /* FSCVirtualFile implementation for HostFS */
 
@@ -165,28 +165,28 @@ FSCVirtualFile* FSCVirtualFile_Host::OpenFile(const fs::path& path, FSC_ACCESS_F
 	// attempt to open as file
 	if (HAS_FLAG(accessFlags, FSC_ACCESS_FLAG::OPEN_FILE))
 	{
-		FileStream* fs{};
+		VFSFileStream* fs{};
 		bool writeAccessRequested = HAS_FLAG(accessFlags, FSC_ACCESS_FLAG::WRITE_PERMISSION);
 		if (HAS_FLAG(accessFlags, FSC_ACCESS_FLAG::FILE_ALLOW_CREATE))
 		{
-			fs = FileStream::openFile2(path, writeAccessRequested);
+			fs = VFSFileStream::openFile2(path, writeAccessRequested);
 			if (!fs)
 			{
 				cemu_assert_debug(writeAccessRequested);
-				fs = FileStream::createFile2(path);
+				fs = VFSFileStream::createFile2(path);
 				if (!fs)
 					cemuLog_log(LogType::Force, "FSC: File create failed for {}", _pathToUtf8(path));
 			}
 		}
 		else if (HAS_FLAG(accessFlags, FSC_ACCESS_FLAG::FILE_ALWAYS_CREATE))
 		{
-			fs = FileStream::createFile2(path);
+			fs = VFSFileStream::createFile2(path);
 			if (!fs)
 				cemuLog_log(LogType::Force, "FSC: File create failed for {}", _pathToUtf8(path));
 		}
 		else
 		{
-			fs = FileStream::openFile2(path, writeAccessRequested);
+			fs = VFSFileStream::openFile2(path, writeAccessRequested);
 		}
 		if (fs)
 		{

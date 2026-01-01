@@ -2,11 +2,11 @@
 #include <string.h>
 #include <stdlib.h>
 #include "wud.h"
-#include "Common/FileStream.h"
+#include "Common/VFSFileStream.h"
 
 wud_t* wud_open(const fs::path& path)
 {
-	FileStream* fs = FileStream::openFile2(path);
+	VFSFileStream* fs = VFSFileStream::openFile2(path);
 	if( !fs )
 		return nullptr;
 	// allocate wud struct

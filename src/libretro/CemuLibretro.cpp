@@ -4,12 +4,8 @@
 #include <boost/algorithm/string/predicate.hpp>
 
 #include "Common/GLInclude/GLInclude.h"
+#include "Common/VFSFileStream.h"
 #include "gui/interface/WindowSystem.h"
-
-#ifdef _WIN32
-#include <objbase.h>
-#include <windows.h>
-#endif
 
 #include "Cafe/CafeSystem.h"
 
@@ -33,6 +29,7 @@ std::atomic_bool g_isGPUInitFinished = false;
 #include "audio/LibretroAudioAPI.h"
 #include "util/crypto/aes128.h"
 #include "Cafe/HW/Latte/Core/Latte.h"
+#include "Cafe/HW/Latte/Core/LatteTiming.h"
 #include "Cafe/HW/Latte/Renderer/OpenGL/OpenGLRenderer.h"
 #ifdef ENABLE_VULKAN
 #include "Cafe/HW/Latte/Renderer/Vulkan/VulkanRenderer.h"
@@ -65,11 +62,7 @@ std::atomic_bool g_isGPUInitFinished = false;
 
 static uint64_t libretro_get_thread_id()
 {
-#ifdef _WIN32
-	return (uint64_t)GetCurrentThreadId();
-#else
 	return (uint64_t)std::hash<std::thread::id>{}(std::this_thread::get_id());
-#endif
 }
 
 static bool libretro_debug_enabled()
@@ -102,6 +95,8 @@ static retro_input_poll_t s_input_poll_cb = nullptr;
 static retro_input_state_t s_input_state_cb = nullptr;
 
 retro_log_printf_t s_log_cb = nullptr;
+
+static struct retro_vfs_interface *s_vfs_interface = nullptr;
 
 static bool s_core_options_registered = false;
 static bool s_core_options_supported = false;
@@ -284,6 +279,22 @@ static struct retro_core_option_v2_definition s_core_options_v2_defs[] = {
 			{ NULL, NULL }
 		},
 		"linear"
+	},
+	{
+		"cemu_internal_resolution",
+		"Internal Resolution",
+		NULL,
+		"Set the internal rendering resolution. Higher values improve image quality but require more GPU power.",
+		NULL,
+		NULL,
+		{
+			{ "1920x1080", "1920x1080 (1080p)" },
+			{ "1280x720", "1280x720 (720p)" },
+			{ "2560x1440", "2560x1440 (1440p)" },
+			{ "3840x2160", "3840x2160 (4K)" },
+			{ NULL, NULL }
+		},
+		"1920x1080"
 	},
 	{
 		"cemu_fullscreen_scaling",
@@ -618,6 +629,7 @@ static void libretro_register_core_options()
 		{ "cemu_shader_fast_math", "Shader Fast Math; enabled|disabled" },
 		{ "cemu_upscale_filter", "Upscale filter; linear|bicubic|bicubic_hermite|nearest" },
 		{ "cemu_downscale_filter", "Downscale filter; linear|bicubic|bicubic_hermite|nearest" },
+		{ "cemu_internal_resolution", "Internal Resolution; 1920x1080|1280x720|2560x1440|3840x2160" },
 		{ "cemu_fullscreen_scaling", "Fullscreen scaling; keep_aspect|stretch" },
 		{ "cemu_graphic_packs_update", "Update community graphic packs; disabled|startup|run_once" },
 		{ "cemu_drc_mode", "DRC Display Mode; disabled|toggle|side_by_side|top_bottom|picture_in_picture" },
@@ -634,7 +646,6 @@ static void libretro_register_core_options()
 		{ "cemu_emulate_dimensions_toypad", "Emulate Dimensions Toypad; disabled|enabled" },
 		{ "cemu_skip_draw_on_dupe", "Skip Draw on Duplicate Frames; disabled|enabled" },
 		{ "cemu_cpu_cores", "CPU Cores; multicore|singlecore" },
-		{ "cemu_graphics_api", "Graphics API; opengl|vulkan" },
 		{ "cemu_network_service", "Network Service; offline|pretendo|custom" },
 		{ "cemu_disable_ssl_verify", "Disable SSL Verification; disabled|enabled" },
 		{ "cemu_account_id", "Account; 1|2|3|4|5|6|7|8" },
@@ -995,10 +1006,54 @@ static std::optional<int> libretro_parse_fullscreen_scaling(const char* v)
 {
 	if (!v)
 		return std::nullopt;
-	if (libretro_iequals(v, "keep_aspect")) return (int)kKeepAspectRatio;
-	if (libretro_iequals(v, "stretch")) return (int)kStretch;
+	if (libretro_iequals(v, "keep_aspect"))
+		return 0;
+	if (libretro_iequals(v, "stretch"))
+		return 1;
 	return std::nullopt;
 }
+
+static bool libretro_parse_internal_resolution(const char* v, unsigned& outWidth, unsigned& outHeight)
+{
+	if (!v)
+		return false;
+	
+	if (libretro_iequals(v, "1280x720")) {
+		outWidth = 1280;
+		outHeight = 720;
+		return true;
+	}
+	if (libretro_iequals(v, "1920x1080")) {
+		outWidth = 1920;
+		outHeight = 1080;
+		return true;
+	}
+	if (libretro_iequals(v, "2560x1440")) {
+		outWidth = 2560;
+		outHeight = 1440;
+		return true;
+	}
+	if (libretro_iequals(v, "3840x2160")) {
+		outWidth = 3840;
+		outHeight = 2160;
+		return true;
+	}
+	return false;
+}
+
+// Video/audio configuration
+static unsigned s_video_width = 1920;
+static unsigned s_video_height = 1080;
+static std::vector<uint32_t> s_framebuffer;
+static constexpr double s_audio_sample_rate = 48000.0;
+static constexpr double s_fps = 60.0;
+static std::vector<int16_t> s_audio_silence_interleaved;
+
+// Game state
+static bool s_cemu_initialized = false;
+static bool s_game_loaded = false;
+static bool s_game_launched = false;
+static bool s_hw_context_ready = false;
 
 static void libretro_apply_core_options(bool log)
 {
@@ -1081,13 +1136,40 @@ static void libretro_apply_core_options(bool log)
 			s_drc_showing_gamepad = s_drc_position_swapped;
 	}
 
-	// Graphics API selection
-	if (const char* v = libretro_get_option_value("cemu_graphics_api"))
+	// Internal resolution
+	if (const char* v = libretro_get_option_value("cemu_internal_resolution"))
 	{
-		if (libretro_iequals(v, "vulkan"))
-			s_graphics_api = GraphicsAPI::Vulkan;
-		else
-			s_graphics_api = GraphicsAPI::OpenGL;
+		unsigned newWidth = 1920;
+		unsigned newHeight = 1080;
+		if (libretro_parse_internal_resolution(v, newWidth, newHeight))
+		{
+			if (s_video_width != newWidth || s_video_height != newHeight)
+			{
+				s_video_width = newWidth;
+				s_video_height = newHeight;
+				
+				// Update window info to match internal resolution
+				auto& windowInfo = WindowSystem::GetWindowInfo();
+				windowInfo.width = newWidth;
+				windowInfo.height = newHeight;
+				windowInfo.phys_width = newWidth;
+				windowInfo.phys_height = newHeight;
+				
+				// Resize framebuffer for software rendering
+				s_framebuffer.assign(s_video_width * s_video_height, 0u);
+				
+				if (s_log_cb)
+					s_log_cb(RETRO_LOG_INFO, "[Cemu] Internal resolution set to %ux%u\n", newWidth, newHeight);
+				
+				// Notify frontend of geometry change if game is loaded
+				if (s_game_loaded && s_env_cb)
+				{
+					struct retro_system_av_info av_info;
+					retro_get_system_av_info(&av_info);
+					s_env_cb(RETRO_ENVIRONMENT_SET_GEOMETRY, &av_info.geometry);
+				}
+			}
+		}
 	}
 
 	if (const char* v = libretro_get_option_value("cemu_graphic_packs_update"))
@@ -1275,23 +1357,12 @@ static std::atomic_bool s_libretro_input_active{false};
 static std::shared_ptr<ControllerBase> s_libretro_controller;
 static std::atomic_bool s_libretro_keyboard_active{false};
 
-static unsigned s_video_width = 1280;
-static unsigned s_video_height = 720;
-static std::vector<uint32_t> s_framebuffer;
-
-static constexpr double s_audio_sample_rate = 48000.0;
-static constexpr double s_fps = 60.0;
-static std::vector<int16_t> s_audio_silence_interleaved;
-
-static bool s_cemu_initialized = false;
-static bool s_game_loaded = false;
-static bool s_game_launched = false;
-static bool s_hw_context_ready = false;
-std::atomic_bool s_frame_ready = false;  // Set by render thread, consumed by retro_run
-static std::atomic<GLuint> s_current_fbo = 0;   // Cached FBO from main thread for render thread
+std::atomic_bool s_frame_ready = false;
+static std::atomic<GLuint> s_current_fbo = 0;
 static std::atomic_uint32_t s_make_current_calls = 0;
 static std::atomic_uint32_t s_make_current_failures = 0;
 static std::atomic_uint32_t s_swapbuffers_calls = 0;
+
 static fs::path s_system_path;
 static fs::path s_save_path;
 static fs::path s_content_path;
@@ -2219,6 +2290,20 @@ extern "C"
 
 		if (cb)
 		{
+			// Request VFS interface (version 1 is minimum required)
+			struct retro_vfs_interface_info vfs_info = { 1, nullptr };
+			if (cb(RETRO_ENVIRONMENT_GET_VFS_INTERFACE, &vfs_info) && vfs_info.iface)
+			{
+				s_vfs_interface = vfs_info.iface;
+				VFSFileStream::SetVFSInterface(s_vfs_interface);
+				if (s_log_cb && libretro_debug_enabled())
+					s_log_cb(RETRO_LOG_INFO, "[Cemu] VFS interface v%u obtained and initialized\n", vfs_info.required_interface_version);
+			}
+			else if (s_log_cb && libretro_debug_enabled())
+			{
+				s_log_cb(RETRO_LOG_INFO, "[Cemu] VFS interface not available, using native file I/O\n");
+			}
+
 			libretro_register_core_options();
 
 			retro_keyboard_callback kb = {};
@@ -2257,6 +2342,10 @@ extern "C"
 
 	RETRO_API void RETRO_CALLCONV retro_init(void)
 	{
+		// Initialize internal resolution to 1920x1080 by default
+		s_video_width = 1920;
+		s_video_height = 1080;
+		
 #ifdef _WIN32
 		CoInitializeEx(nullptr, COINIT_MULTITHREADED);
 #endif
@@ -2377,6 +2466,13 @@ extern "C"
 		if (s_frame_count == 1 && s_log_cb)
 			s_log_cb(RETRO_LOG_INFO, "[Cemu] retro_run first frame\n");
 
+		// Trigger vsync for emulation - this controls frame pacing
+		// When menu is open and retro_run stops being called, vsync stops, emulation pauses
+		if (s_game_launched)
+		{
+			LatteTiming_TriggerVSync();
+		}
+
 		// Launch the game on first frame when GL context is ready
 		if (s_game_loaded && !s_game_launched && s_hw_context_ready)
 		{
@@ -2421,9 +2517,11 @@ extern "C"
 				goto skip_launch;
 			if (s_log_cb) s_log_cb(RETRO_LOG_INFO, "[Cemu] Launching game...\n");
 			try {
+				// Enable libretro vsync mode - frontend controls frame timing
+				LatteTiming_EnableLibretroVSync();
 				CafeSystem::LaunchForegroundTitle();
 				s_game_launched = true;
-				if (s_log_cb) s_log_cb(RETRO_LOG_INFO, "[Cemu] Game launched\n");
+				if (s_log_cb) s_log_cb(RETRO_LOG_INFO, "[Cemu] Game launched with libretro vsync mode\n");
 				// Snapshot counters right after launch
 				if (s_log_cb)
 					s_log_cb(RETRO_LOG_INFO, "[Cemu] Counters after launch: MakeCurrent=%u SwapBuffers=%u MakeCurrentFail=%u\n",

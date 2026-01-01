@@ -982,6 +982,8 @@ namespace CafeSystem
 	}
 
 	#ifdef RETRO_CORE
+	static Semaphore s_libretro_frame_gate;
+	
 	void SetLibretroMultiCoreEnabled(bool enabled)
 	{
 		s_libretro_use_multicore.store(enabled, std::memory_order_relaxed);
@@ -1002,6 +1004,18 @@ namespace CafeSystem
 	{
 		return sSystemRunning;
 	}
+	
+#ifdef RETRO_CORE
+	void CafeSystem_WaitForFrameAdvance()
+	{
+		s_libretro_frame_gate.wait();
+	}
+	
+	void CafeSystem_SignalFrameAdvance()
+	{
+		s_libretro_frame_gate.notify();
+	}
+#endif
 
 	TitleId GetForegroundTitleId()
 	{

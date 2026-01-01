@@ -23,7 +23,7 @@ private:
 
 private:
 	uint32 m_type; // FSC_TYPE_*
-	class FileStream* m_fs{};
+	class VFSFileStream* m_fs{};
 	// file
 	uint64 m_seek{ 0 };
 	uint64 m_fileSize{ 0 };

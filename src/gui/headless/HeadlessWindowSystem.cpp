@@ -24,10 +24,11 @@ namespace WindowSystem
 	{
 		g_window_info.app_active = true;
 
-		g_window_info.width = 1280;
-		g_window_info.height = 720;
-		g_window_info.phys_width = 1280;
-		g_window_info.phys_height = 720;
+		// Default to 1920x1080 for libretro (will be updated by core options)
+		g_window_info.width = 1920;
+		g_window_info.height = 1080;
+		g_window_info.phys_width = 1920;
+		g_window_info.phys_height = 1080;
 		g_window_info.dpi_scale = 1.0;
 
 		g_window_info.pad_open = false;  // Will be set dynamically based on DRC mode

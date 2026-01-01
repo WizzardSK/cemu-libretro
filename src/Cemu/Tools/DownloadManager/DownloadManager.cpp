@@ -3,7 +3,7 @@
 #include "Cafe/Account/Account.h"
 #include "util/crypto/md5.h"
 #include "Cafe/TitleList/TitleId.h"
-#include "Common/FileStream.h"
+#include "Common/VFSFileStream.h"
 #include "Cemu/FileCache/FileCache.h"
 #include "Cemu/ncrypto/ncrypto.h"
 #include "config/ActiveSettings.h"
@@ -1185,7 +1185,7 @@ void DownloadManager::asyncPackageVerifyFile(Package* package, uint16 index, boo
 	Package::ContentFile::STATE newStateOnSuccess = Package::ContentFile::STATE::INSTALL;
 
 	// verify file
-	std::unique_ptr<FileStream> fileStream(FileStream::openFile2(packageDownloadPath / fmt::format("{:08x}.app", contentId)));
+	std::unique_ptr<VFSFileStream> fileStream(VFSFileStream::openFile2(packageDownloadPath / fmt::format("{:08x}.app", contentId)));
 	if (!fileStream)
 	{
 		_l.lock();

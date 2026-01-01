@@ -51,6 +51,8 @@ namespace CafeSystem
 
 	// Libretro-specific
 	void SetLibretroMultiCoreEnabled(bool enabled);
+	void CafeSystem_WaitForFrameAdvance();
+	void CafeSystem_SignalFrameAdvance();
 
 	std::string GetMlcStoragePath(TitleId titleId);
 	void MlcStorageMountAllTitles();

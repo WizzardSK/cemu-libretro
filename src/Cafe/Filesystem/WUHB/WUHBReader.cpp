@@ -1,7 +1,8 @@
 #include "WUHBReader.h"
+#include "Common/VFSFileStream.h"
 WUHBReader* WUHBReader::FromPath(const fs::path& path)
 {
-	FileStream* fileIn{FileStream::openFile2(path)};
+	VFSFileStream* fileIn{VFSFileStream::openFile2(path)};
 	if (!fileIn)
 		return nullptr;
 

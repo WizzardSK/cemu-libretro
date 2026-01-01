@@ -1,5 +1,5 @@
 #pragma once
-#include <Common/FileStream.h>
+#include <Common/VFSFileStream.h>
 #include "RomFSStructs.h"
 class WUHBReader
 {
@@ -16,15 +16,14 @@ class WUHBReader
 	uint32 Lookup(const std::filesystem::path& path, bool isFile) const;
 
   private:
-	WUHBReader(FileStream* file)
-		: m_fileIn(file)
+	WUHBReader(VFSFileStream* fileIn) : m_fileIn(fileIn)
 	{
-		cemu_assert_debug(file != nullptr);
+		cemu_assert_debug(fileIn != nullptr);
 	};
 	WUHBReader() = delete;
 
 	romfs_header_t m_header;
-	std::unique_ptr<FileStream> m_fileIn;
+	std::unique_ptr<VFSFileStream> m_fileIn;
 	constexpr static std::string_view s_headerMagicValue = "WUHB";
 	bool ReadHeader();
 	bool CheckMagicValue() const;
