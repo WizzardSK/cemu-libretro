@@ -57,7 +57,7 @@ if(ENABLE_LIBRETRO)
 	add_library(cemu_libretro SHARED
 		main.cpp
 		mainLLE.cpp
-		libretro/libretro_core.cpp
+		libretro/CemuLibretroLinux.cpp
 		libretro/LibretroAudioAPI.cpp
 		libretro/LibretroWindowSystem.cpp
 	)
@@ -67,6 +67,10 @@ if(ENABLE_LIBRETRO)
 		${CMAKE_CURRENT_SOURCE_DIR}/gui
 		${CMAKE_CURRENT_SOURCE_DIR}/libretro
 	)
+
+	if(ENABLE_VULKAN)
+		target_compile_definitions(cemu_libretro PRIVATE ENABLE_VULKAN)
+	endif()
 
 	set_property(TARGET cemu_libretro PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
@@ -93,6 +97,9 @@ if(ENABLE_LIBRETRO)
 	)
 
 	if(UNIX AND NOT APPLE)
+		target_link_libraries(cemu_libretro PRIVATE GL X11)
+		# Force all CemuResource symbols (imgui needs fontawesome from resource archive)
+		target_link_options(cemu_libretro PRIVATE "LINKER:--whole-archive" $<TARGET_FILE:CemuResource> "LINKER:--no-whole-archive")
 		target_link_options(cemu_libretro PRIVATE -z noexecstack)
 		target_link_options(cemu_libretro PRIVATE "$<$<CONFIG:Release>:-Xlinker;--strip-debug>")
 		# Only export retro_* symbols

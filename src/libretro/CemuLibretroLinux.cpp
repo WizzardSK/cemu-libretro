@@ -15,6 +15,11 @@
 #include "Cafe/HW/Latte/Core/Latte.h"
 #include "Cafe/HW/Latte/Renderer/Renderer.h"
 #include "Cafe/HW/Latte/Renderer/OpenGL/OpenGLRenderer.h"
+#ifdef ENABLE_VULKAN
+#include "Cafe/HW/Latte/Renderer/Vulkan/VulkanRenderer.h"
+#include "Cafe/HW/Latte/Renderer/Vulkan/VulkanAPI.h"
+#include "libretro_vulkan.h"
+#endif
 
 #include "audio/IAudioAPI.h"
 #include "input/InputManager.h"
@@ -108,18 +113,210 @@ static GLuint s_frontend_upload_tex = 0;
 // Frame synchronization
 static std::mutex s_frame_mutex;
 static std::condition_variable s_frame_cv;
-static std::atomic_bool s_frame_ready{false};
+std::atomic_bool s_frame_ready{false};
 static std::atomic_bool s_shutting_down{false};
 
 // Framebuffer for software readback
 static constexpr uint32_t SCREEN_WIDTH = 1280;
 static constexpr uint32_t SCREEN_HEIGHT = 720;
-static std::vector<uint32_t> s_framebuffer(SCREEN_WIDTH * SCREEN_HEIGHT);
+std::vector<uint32_t> s_libretro_framebuffer(SCREEN_WIDTH * SCREEN_HEIGHT);
+static auto& s_framebuffer = s_libretro_framebuffer; // alias for existing OpenGL code
 static bool s_use_hw_render = false;
 static bool s_hw_render_initialized = false;
 static bool s_core_options_supported = false;
 
+enum class SelectedGraphicsAPI { OpenGL, Vulkan };
+static SelectedGraphicsAPI s_graphics_api = SelectedGraphicsAPI::OpenGL;
+
 static retro_hw_render_callback s_hw_render{};
+
+#ifdef ENABLE_VULKAN
+// Vulkan HW render interface
+static const struct retro_hw_render_interface_vulkan* s_vk_interface = nullptr;
+static struct retro_vulkan_image s_vk_present_image{};
+static retro_vulkan_context s_vk_context{};
+static bool s_vk_device_created = false;
+
+static const VkApplicationInfo* libretro_vk_get_application_info()
+{
+	static VkApplicationInfo app_info{};
+	app_info.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
+	app_info.pApplicationName = "Cemu";
+	app_info.applicationVersion = VK_MAKE_VERSION(2, 6, 0);
+	app_info.pEngineName = "Cemu";
+	app_info.engineVersion = VK_MAKE_VERSION(2, 6, 0);
+	app_info.apiVersion = VK_API_VERSION_1_1;
+	return &app_info;
+}
+
+static bool libretro_vk_create_device(
+	struct retro_vulkan_context* context,
+	VkInstance instance,
+	VkPhysicalDevice gpu,
+	VkSurfaceKHR surface,
+	PFN_vkGetInstanceProcAddr get_instance_proc_addr,
+	const char** required_device_extensions,
+	unsigned num_required_device_extensions,
+	const char** required_device_layers,
+	unsigned num_required_device_layers,
+	const VkPhysicalDeviceFeatures* required_features)
+{
+	if (log_cb)
+		log_cb(RETRO_LOG_INFO, "Cemu: Vulkan create_device called (gpu=%p, surface=%p)\n", gpu, surface);
+
+	// Load instance functions
+	if (!InitializeGlobalVulkan())
+		return false;
+	if (!InitializeInstanceVulkan(instance))
+		return false;
+
+	// Find suitable physical device if not provided
+	if (gpu == VK_NULL_HANDLE)
+	{
+		uint32_t count = 0;
+		vkEnumeratePhysicalDevices(instance, &count, nullptr);
+		std::vector<VkPhysicalDevice> devices(count);
+		vkEnumeratePhysicalDevices(instance, &count, devices.data());
+		for (auto& d : devices)
+		{
+			VkPhysicalDeviceProperties props;
+			vkGetPhysicalDeviceProperties(d, &props);
+			if (props.apiVersion >= VK_API_VERSION_1_1)
+			{
+				gpu = d;
+				break;
+			}
+		}
+		if (gpu == VK_NULL_HANDLE && !devices.empty())
+			gpu = devices[0];
+	}
+
+	// Find graphics queue family
+	uint32_t queueFamilyCount = 0;
+	vkGetPhysicalDeviceQueueFamilyProperties(gpu, &queueFamilyCount, nullptr);
+	std::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
+	vkGetPhysicalDeviceQueueFamilyProperties(gpu, &queueFamilyCount, queueFamilies.data());
+
+	uint32_t graphicsFamily = 0;
+	for (uint32_t i = 0; i < queueFamilyCount; i++)
+	{
+		if (queueFamilies[i].queueFlags & VK_QUEUE_GRAPHICS_BIT)
+		{
+			graphicsFamily = i;
+			break;
+		}
+	}
+
+	// Build extension list: RetroArch required + Cemu needs
+	std::vector<const char*> extensions;
+	for (unsigned i = 0; i < num_required_device_extensions; i++)
+		extensions.push_back(required_device_extensions[i]);
+
+	// Add Cemu-specific extensions if available
+	uint32_t extCount = 0;
+	vkEnumerateDeviceExtensionProperties(gpu, nullptr, &extCount, nullptr);
+	std::vector<VkExtensionProperties> availableExts(extCount);
+	vkEnumerateDeviceExtensionProperties(gpu, nullptr, &extCount, availableExts.data());
+
+	auto hasExt = [&](const char* name) {
+		for (auto& e : availableExts)
+			if (strcmp(e.extensionName, name) == 0) return true;
+		return false;
+	};
+
+	const char* cemuExtensions[] = {
+		VK_EXT_TRANSFORM_FEEDBACK_EXTENSION_NAME,
+		VK_EXT_DEPTH_RANGE_UNRESTRICTED_EXTENSION_NAME,
+		"VK_EXT_pipeline_creation_cache_control",
+		"VK_EXT_custom_border_color",
+		"VK_EXT_pipeline_robustness",
+		"VK_KHR_shader_float_controls",
+	};
+	for (auto ext : cemuExtensions)
+	{
+		if (hasExt(ext))
+			extensions.push_back(ext);
+	}
+
+	// Device features
+	VkPhysicalDeviceFeatures features{};
+	if (required_features)
+		features = *required_features;
+	features.independentBlend = VK_TRUE;
+	features.samplerAnisotropy = VK_TRUE;
+	features.imageCubeArray = VK_TRUE;
+	features.logicOp = VK_TRUE;
+	features.geometryShader = VK_TRUE;
+	features.occlusionQueryPrecise = VK_TRUE;
+	features.depthClamp = VK_TRUE;
+	features.depthBiasClamp = VK_TRUE;
+
+	float queuePriority = 1.0f;
+	VkDeviceQueueCreateInfo queueInfo{};
+	queueInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+	queueInfo.queueFamilyIndex = graphicsFamily;
+	queueInfo.queueCount = 1;
+	queueInfo.pQueuePriorities = &queuePriority;
+
+	// Enable transform feedback features if available
+	VkPhysicalDeviceTransformFeedbackFeaturesEXT tfFeatures{};
+	tfFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_TRANSFORM_FEEDBACK_FEATURES_EXT;
+	tfFeatures.transformFeedback = VK_TRUE;
+
+	VkDeviceCreateInfo createInfo{};
+	createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+	createInfo.queueCreateInfoCount = 1;
+	createInfo.pQueueCreateInfos = &queueInfo;
+	createInfo.enabledExtensionCount = (uint32_t)extensions.size();
+	createInfo.ppEnabledExtensionNames = extensions.data();
+	createInfo.pEnabledFeatures = &features;
+	if (hasExt(VK_EXT_TRANSFORM_FEEDBACK_EXTENSION_NAME))
+		createInfo.pNext = &tfFeatures;
+
+	VkDevice device;
+	VkResult result = vkCreateDevice(gpu, &createInfo, nullptr, &device);
+	if (result != VK_SUCCESS)
+	{
+		if (log_cb)
+			log_cb(RETRO_LOG_ERROR, "Cemu: Failed to create Vulkan device: %d\n", result);
+		return false;
+	}
+
+	InitializeDeviceVulkan(device);
+
+	VkQueue queue;
+	vkGetDeviceQueue(device, graphicsFamily, 0, &queue);
+
+	context->gpu = gpu;
+	context->device = device;
+	context->queue = queue;
+	context->queue_family_index = graphicsFamily;
+	context->presentation_queue = queue;
+	context->presentation_queue_family_index = graphicsFamily;
+
+	s_vk_context = *context;
+	s_vk_device_created = true;
+
+	if (log_cb)
+		log_cb(RETRO_LOG_INFO, "Cemu: Vulkan device created (queue family %u)\n", graphicsFamily);
+	return true;
+}
+
+static void libretro_vk_destroy_device()
+{
+	if (log_cb)
+		log_cb(RETRO_LOG_INFO, "Cemu: Vulkan destroy_device called\n");
+	s_vk_device_created = false;
+}
+
+static struct retro_hw_render_context_negotiation_interface_vulkan s_vk_negotiation{
+	RETRO_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE_VULKAN,
+	RETRO_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE_VULKAN_VERSION,
+	libretro_vk_get_application_info,
+	libretro_vk_create_device,
+	libretro_vk_destroy_device,
+};
+#endif
 
 // ============================================================================
 // OpenGL Canvas Callbacks for libretro
@@ -543,6 +740,9 @@ RETRO_API void retro_set_environment(retro_environment_t cb)
 		{"cemu_emulate_infinity_base", "Emulate Infinity Base; disabled|enabled"},
 		{"cemu_emulate_dimensions_toypad", "Emulate Dimensions Toypad; disabled|enabled"},
 		{"cemu_skip_draw_on_dupe", "Skip Draw on Duplicate Frames; disabled|enabled"},
+#ifdef ENABLE_VULKAN
+		{"cemu_gpu_api", "Graphics API (restart); OpenGL|Vulkan"},
+#endif
 		{nullptr, nullptr},
 	};
 	s_core_options_supported = cb(RETRO_ENVIRONMENT_SET_VARIABLES, (void*)variables);
@@ -571,8 +771,27 @@ RETRO_API void retro_init()
 	if (fs::exists(ActiveSettings::GetConfigPath("settings.xml")))
 		GetConfigHandle().Load();
 
-	// Override graphics API to OpenGL for libretro HW render
-	GetConfig().graphic_api = kOpenGL;
+	// Select graphics API based on core option
+	s_graphics_api = SelectedGraphicsAPI::OpenGL;
+#ifdef ENABLE_VULKAN
+	if (const char* v = libretro_get_option_value("cemu_gpu_api"))
+	{
+		if (libretro_iequals(v, "vulkan"))
+		{
+			if (InitializeGlobalVulkan() && g_vulkan_available)
+			{
+				s_graphics_api = SelectedGraphicsAPI::Vulkan;
+				GetConfig().graphic_api = kVulkan;
+				if (log_cb)
+					log_cb(RETRO_LOG_INFO, "Cemu: Vulkan graphics API selected\n");
+			}
+			else if (log_cb)
+				log_cb(RETRO_LOG_WARN, "Cemu: Vulkan not available, falling back to OpenGL\n");
+		}
+	}
+#endif
+	if (s_graphics_api == SelectedGraphicsAPI::OpenGL)
+		GetConfig().graphic_api = kOpenGL;
 
 	ActiveSettings::Init();
 
@@ -582,10 +801,7 @@ RETRO_API void retro_init()
 	s_initialized = true;
 }
 
-RETRO_API void retro_deinit()
-{
-	s_initialized = false;
-}
+// retro_deinit is defined after retro_unload_game
 
 RETRO_API unsigned retro_api_version()
 {
@@ -620,12 +836,29 @@ RETRO_API void retro_set_controller_port_device(unsigned port, unsigned device)
 
 RETRO_API void retro_reset()
 {
-	if (s_game_loaded)
+	if (!s_game_loaded || s_game_path.empty())
+		return;
+
+	const char* corePath = nullptr;
+	if (environ_cb)
+		environ_cb(RETRO_ENVIRONMENT_GET_LIBRETRO_PATH, &corePath);
+
+	// Prepare relaunch command BEFORE exit
+	std::string cmd;
+	if (corePath)
 	{
-		CafeSystem::ShutdownTitle();
-		// Would need to relaunch - for now just stop
-		s_game_loaded = false;
+		cmd = "sh -c 'sleep 1 && retroarch -L \"";
+		cmd += corePath;
+		cmd += "\" \"";
+		cmd += s_game_path;
+		cmd += "\"' &";
 	}
+
+	// Launch relaunch process and immediately exit
+	// _exit() skips all destructors/atexit — no Vulkan cleanup crash
+	if (!cmd.empty())
+		system(cmd.c_str());
+	_exit(0);
 }
 
 static void libretro_launch_game()
@@ -825,28 +1058,68 @@ static void libretro_context_reset()
 	s_frontend_read_rbo_attached = 0;
 	s_frontend_upload_tex = 0;
 
-	// Create or update shared GL context for GPU thread
-	if (!s_glx_shared_context)
+	// Create or update shared GL context for GPU thread (OpenGL only)
+	if (s_graphics_api == SelectedGraphicsAPI::OpenGL)
 	{
-		libretro_create_shared_gl_context();
-	}
-	else
-	{
-		// Context restored (e.g. fullscreen toggle) - update drawable for MakeCurrent
-		// Don't destroy/recreate the shared context - it holds all Cemu's GL objects
-		s_glx_display = glXGetCurrentDisplay();
-		s_glx_drawable = glXGetCurrentDrawable();
-		s_gpu_context_made_current = false; // force re-MakeCurrent with new drawable
-		if (log_cb)
-			log_cb(RETRO_LOG_INFO, "Cemu: Context restored, updating drawable=0x%lx\n",
-				(unsigned long)s_glx_drawable);
+		if (!s_glx_shared_context)
+		{
+			libretro_create_shared_gl_context();
+		}
+		else
+		{
+			// Context restored (e.g. fullscreen toggle) - update drawable for MakeCurrent
+			s_glx_display = glXGetCurrentDisplay();
+			s_glx_drawable = glXGetCurrentDrawable();
+			s_gpu_context_made_current = false;
+			if (log_cb)
+				log_cb(RETRO_LOG_INFO, "Cemu: Context restored, updating drawable=0x%lx\n",
+					(unsigned long)s_glx_drawable);
+		}
 	}
 
 	// Only create renderer on first call - subsequent calls are context restores
 	if (!g_renderer)
 	{
-		s_gl_callbacks = std::make_unique<LibretroGLCanvasCallbacks>();
-		g_renderer = std::make_unique<OpenGLRenderer>();
+#ifdef ENABLE_VULKAN
+		if (s_graphics_api == SelectedGraphicsAPI::Vulkan)
+		{
+			// Get Vulkan HW render interface from RetroArch
+			const struct retro_hw_render_interface* iface = nullptr;
+			if (environ_cb(RETRO_ENVIRONMENT_GET_HW_RENDER_INTERFACE, &iface) && iface &&
+				iface->interface_type == RETRO_HW_RENDER_INTERFACE_VULKAN)
+			{
+				s_vk_interface = (const struct retro_hw_render_interface_vulkan*)iface;
+				if (log_cb)
+					log_cb(RETRO_LOG_INFO, "Cemu: Got Vulkan HW render interface (device=%p queue=%p)\n",
+						(void*)s_vk_interface->device, (void*)s_vk_interface->queue);
+
+				// Create VulkanRenderer using the shared device
+				auto vkRenderer = new VulkanRenderer(
+					s_vk_interface->instance,
+					s_vk_interface->gpu,
+					s_vk_interface->device,
+					s_vk_interface->queue,
+					s_vk_interface->queue_index);
+				g_renderer.reset(vkRenderer);
+
+				// Create presentation image
+				vkRenderer->CreatePresentationImage(SCREEN_WIDTH, SCREEN_HEIGHT);
+
+				if (log_cb)
+					log_cb(RETRO_LOG_INFO, "Cemu: VulkanRenderer created with shared device\n");
+			}
+			else
+			{
+				if (log_cb)
+					log_cb(RETRO_LOG_ERROR, "Cemu: Failed to get Vulkan HW render interface\n");
+			}
+		}
+		else
+#endif
+		{
+			s_gl_callbacks = std::make_unique<LibretroGLCanvasCallbacks>();
+			g_renderer = std::make_unique<OpenGLRenderer>();
+		}
 	}
 
 	// Set window info
@@ -872,14 +1145,13 @@ static void libretro_context_reset()
 
 static void libretro_context_destroy()
 {
-	// Only mark context as unavailable - never destroy renderer
-	// Cemu GPU thread may be using it, and the context will be restored in context_reset
-	// cache_context=true in HW render setup tells the frontend to preserve the GL context
 	s_hw_render_initialized = false;
-	// Reset all GL state so everything gets recreated after context restore (e.g. fullscreen toggle)
 	s_frontend_read_fbo = 0;
 	s_frontend_read_rbo_attached = 0;
 	s_gpu_context_made_current = false;
+
+	// Vulkan: do NOT clean up here — GPU thread may still be using Vulkan objects.
+	// Cleanup happens via _exit() in retro_unload_game/retro_reset.
 }
 
 RETRO_API bool retro_load_game(const struct retro_game_info* game)
@@ -896,43 +1168,76 @@ RETRO_API bool retro_load_game(const struct retro_game_info* game)
 		return false;
 	}
 
-	// Try HW render (OpenGL Core profile)
-	s_hw_render.context_type = RETRO_HW_CONTEXT_OPENGL_CORE;
-	s_hw_render.version_major = 4;
-	s_hw_render.version_minor = 5;
-	s_hw_render.context_reset = libretro_context_reset;
-	s_hw_render.context_destroy = libretro_context_destroy;
-	s_hw_render.bottom_left_origin = true;
-	s_hw_render.depth = true;
-	s_hw_render.stencil = true;
-	s_hw_render.cache_context = true;
-
-	// Request shared GL context so Cemu GPU thread can use it from another thread
-	environ_cb(RETRO_ENVIRONMENT_SET_HW_SHARED_CONTEXT, nullptr);
-
-	if (environ_cb(RETRO_ENVIRONMENT_SET_HW_RENDER, &s_hw_render))
+	// Set up HW render context based on selected graphics API
+#ifdef ENABLE_VULKAN
+	if (s_graphics_api == SelectedGraphicsAPI::Vulkan)
 	{
-		s_use_hw_render = true;
-		if (log_cb)
-			log_cb(RETRO_LOG_INFO, "Cemu: Using OpenGL 4.5 HW rendering\n");
-	}
-	else
-	{
-		// Try lower GL version
-		s_hw_render.context_type = RETRO_HW_CONTEXT_OPENGL_CORE;
-		s_hw_render.version_major = 4;
-		s_hw_render.version_minor = 1;
+		// Set negotiation interface so RetroArch lets us create the VkDevice
+		environ_cb(RETRO_ENVIRONMENT_SET_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE, &s_vk_negotiation);
+
+		s_hw_render.context_type = RETRO_HW_CONTEXT_VULKAN;
+		s_hw_render.version_major = VK_API_VERSION_MAJOR(VK_API_VERSION_1_1);
+		s_hw_render.version_minor = VK_API_VERSION_MINOR(VK_API_VERSION_1_1);
+		s_hw_render.context_reset = libretro_context_reset;
+		s_hw_render.context_destroy = libretro_context_destroy;
+		s_hw_render.cache_context = false;
+		s_hw_render.debug_context = false;
+
 		if (environ_cb(RETRO_ENVIRONMENT_SET_HW_RENDER, &s_hw_render))
 		{
 			s_use_hw_render = true;
 			if (log_cb)
-				log_cb(RETRO_LOG_INFO, "Cemu: Using OpenGL 4.1 HW rendering\n");
+				log_cb(RETRO_LOG_INFO, "Cemu: Vulkan HW render context requested\n");
 		}
 		else
 		{
 			if (log_cb)
-				log_cb(RETRO_LOG_ERROR, "Cemu: HW rendering not available - OpenGL 4.1+ required\n");
-			return false;
+				log_cb(RETRO_LOG_WARN, "Cemu: Vulkan not supported by frontend, falling back to OpenGL\n");
+			s_graphics_api = SelectedGraphicsAPI::OpenGL;
+			GetConfig().graphic_api = kOpenGL;
+		}
+	}
+	if (s_graphics_api == SelectedGraphicsAPI::OpenGL)
+#endif
+	{
+		// OpenGL path
+		s_hw_render.context_type = RETRO_HW_CONTEXT_OPENGL_CORE;
+		s_hw_render.version_major = 4;
+		s_hw_render.version_minor = 5;
+		s_hw_render.context_reset = libretro_context_reset;
+		s_hw_render.context_destroy = libretro_context_destroy;
+		s_hw_render.bottom_left_origin = true;
+		s_hw_render.depth = true;
+		s_hw_render.stencil = true;
+		s_hw_render.cache_context = true;
+
+		// Request shared GL context so Cemu GPU thread can use it from another thread
+		environ_cb(RETRO_ENVIRONMENT_SET_HW_SHARED_CONTEXT, nullptr);
+
+		if (environ_cb(RETRO_ENVIRONMENT_SET_HW_RENDER, &s_hw_render))
+		{
+			s_use_hw_render = true;
+			if (log_cb)
+				log_cb(RETRO_LOG_INFO, "Cemu: Using OpenGL 4.5 HW rendering\n");
+		}
+		else
+		{
+			// Try lower GL version
+			s_hw_render.context_type = RETRO_HW_CONTEXT_OPENGL_CORE;
+			s_hw_render.version_major = 4;
+			s_hw_render.version_minor = 1;
+			if (environ_cb(RETRO_ENVIRONMENT_SET_HW_RENDER, &s_hw_render))
+			{
+				s_use_hw_render = true;
+				if (log_cb)
+					log_cb(RETRO_LOG_INFO, "Cemu: Using OpenGL 4.1 HW rendering\n");
+			}
+			else
+			{
+				if (log_cb)
+					log_cb(RETRO_LOG_ERROR, "Cemu: HW rendering not available - OpenGL 4.1+ required\n");
+				return false;
+			}
 		}
 	}
 
@@ -964,6 +1269,8 @@ RETRO_API bool retro_load_game(const struct retro_game_info* game)
 	// Store game path - actual launch happens in context_reset when GL is ready
 	s_game_path = game->path;
 
+	// Vulkan: context_reset is called by RetroArch after RETRO_HW_CONTEXT_VULKAN is set up
+
 	return true;
 }
 
@@ -974,21 +1281,34 @@ RETRO_API bool retro_load_game_special(unsigned game_type, const struct retro_ga
 
 RETRO_API void retro_unload_game()
 {
-	if (s_game_loaded)
+	if (!s_game_loaded)
+		return;
+
+#ifdef ENABLE_VULKAN
+	if (s_graphics_api == SelectedGraphicsAPI::Vulkan)
 	{
-		// Signal shutdown to GPU thread
-		s_shutting_down = true;
-		{
-			std::lock_guard lock(s_frame_mutex);
-			s_frame_ready = true;
-			s_frame_cv.notify_one();
-		}
-		// Cemu's ShutdownTitle deadlocks in libretro mode because
-		// Latte_Stop and OSSchedulerEnd join threads that are blocked.
-		// Use _exit to terminate cleanly - RetroArch will handle cleanup.
-		std::this_thread::sleep_for(std::chrono::milliseconds(50));
+		// Vulkan shared device cannot be cleanly unloaded
 		_exit(0);
 	}
+#endif
+
+	// OpenGL: signal shutdown and let threads wind down
+	s_shutting_down = true;
+	{
+		std::lock_guard lock(s_frame_mutex);
+		s_frame_ready = true;
+		s_frame_cv.notify_one();
+	}
+	std::this_thread::sleep_for(std::chrono::milliseconds(50));
+	_exit(0);
+}
+
+RETRO_API void retro_deinit()
+{
+	// If unload didn't fully clean up, force exit
+	if (s_emu_initialized)
+		_exit(0);
+	s_initialized = false;
 }
 
 // ============================================================================
@@ -1133,8 +1453,35 @@ RETRO_API void retro_run()
 		s_frame_ready = false;
 	}
 
-	// Upload CPU framebuffer (from GPU thread's glReadPixels) to RetroArch's HW FBO
-	// This works across context recreations since we create GL objects in the frontend context
+#ifdef ENABLE_VULKAN
+	// Vulkan: present via HW render interface
+	if (s_graphics_api == SelectedGraphicsAPI::Vulkan)
+	{
+		if (s_vk_interface)
+		{
+			auto* vkRenderer = VulkanRenderer::GetInstance();
+			if (vkRenderer && vkRenderer->m_presentImageView)
+			{
+				// Set the presentation image for RetroArch to display
+				s_vk_present_image.image_view = vkRenderer->m_presentImageView;
+				s_vk_present_image.image_layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+				s_vk_present_image.create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+				s_vk_present_image.create_info.image = vkRenderer->m_presentImage;
+				s_vk_present_image.create_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
+				s_vk_present_image.create_info.format = VK_FORMAT_R8G8B8A8_UNORM;
+				s_vk_present_image.create_info.subresourceRange = {VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1};
+
+				s_vk_interface->set_image(s_vk_interface->handle, &s_vk_present_image,
+					0, nullptr, VK_QUEUE_FAMILY_IGNORED);
+			}
+		}
+		video_cb(RETRO_HW_FRAME_BUFFER_VALID, SCREEN_WIDTH, SCREEN_HEIGHT, 0);
+		LibretroAudioAPI::FlushAudio(audio_batch_cb);
+		return;
+	}
+#endif
+
+	// OpenGL: Upload CPU framebuffer (from GPU thread's glReadPixels) to RetroArch's HW FBO
 	{
 		typedef void (*PFNGLGENTEXTURESPROC_)(int, unsigned int*);
 		typedef void (*PFNGLBINDTEXTUREPROC_)(unsigned int, unsigned int);
