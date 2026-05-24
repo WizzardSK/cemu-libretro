@@ -66,17 +66,17 @@ cp cemu_libretro.info ~/.config/retroarch/cores/libcemu_libretro.info
 - Shared fonts for Japanese/CJK text
 - Clean exit via Esc key
 - Core options registered via `RETRO_ENVIRONMENT_SET_CORE_OPTIONS_V2` (CPU mode, internal resolution up to 4K, thread quantum, audio latency, vsync, async shader compile, upscale/downscale filter, DRC mode/position, account, network service, USB peripherals, …)
-- DRC (GamePad) screen rendering with multiple layouts: disabled, toggle, side-by-side, top-bottom, picture-in-picture. Composite is done by Cemu's `OpenGLRenderer` via `ShouldRenderScreen`/`AdjustScreenViewport` callbacks into the single libretro window FBO — **OpenGL path only**; Vulkan presentation uses a single shared image via `set_image()` and would need a separate composite pass to support DRC.
+- DRC (GamePad) screen rendering with multiple layouts: disabled, toggle, side-by-side, top-bottom, picture-in-picture. The OpenGL path composites via `ShouldRenderScreen`/`AdjustScreenViewport` canvas callbacks. The Vulkan path overrides `IsPadWindowActive()` so DRC scan-outs (and the existing libretro auto-mirror fallback) reach `DrawBackbufferQuad`, then blits TV + DRC into different sub-regions of the shared present image using the same `LibretroDRC_ComputeViewport` helper.
 
 ### Known Issues
 - **Some games may crash** - depends on game complexity and required HLE functions
 - **Save states are not supported** - Cemu has no savestate infrastructure (no serialization of PPC/MMU/GPU/HLE state). `retro_serialize_size` returns 0 by design.
 - **OpenGL path requires X11 (GLX)** - `glXGetCurrentContext()` returns NULL on Wayland sessions, so the OpenGL HW context fails to initialize and the core falls back to a black screen. Use the Vulkan path (`cemu_gpu_api = "Vulkan"`) on Wayland.
-- **DRC display modes are OpenGL-only** - the composite happens inside Cemu's OpenGLRenderer via canvas callbacks. The Vulkan presentation hands a single image to RetroArch's swapchain; DRC support there would need a separate composite pass.
+- **DRC sub-region of the present image is not cleared** - in side-by-side/top-bottom modes the gap between primary and secondary keeps whatever the last frame left there (in practice black, but it's not guaranteed). Pure black would be more correct.
 
 ### TODO
 1. Test with more games
-2. Vulkan DRC composite (so PiP/side-by-side work without dropping back to OpenGL)
+2. Clear the unused regions of the Vulkan present image between blits so SBS/TopBottom backgrounds are predictable
 
 ### Key files
 - `src/libretro/CemuLibretro.cpp` - Cross-platform libretro core (used on Windows/macOS; on Linux only its Vulkan presentation tail is exercised)

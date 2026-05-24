@@ -128,20 +128,10 @@ static bool s_core_options_supported = false;
 enum class SelectedGraphicsAPI { OpenGL, Vulkan };
 static SelectedGraphicsAPI s_graphics_api = SelectedGraphicsAPI::OpenGL;
 
-// DRC (GamePad) display modes — Cemu composites TV + DRC into the libretro
-// window FBO via OpenGLCanvasCallbacks::ShouldRenderScreen/AdjustScreenViewport,
-// so all we have to do here is read the core options and report the layout.
-enum class DRCDisplayMode
-{
-	Disabled,         // TV only
-	Toggle,           // either TV or DRC (controlled by cemu_drc_position)
-	SideBySide,       // primary 80% + secondary 20%, side-by-side
-	TopBottom,        // primary 70% on top, secondary 30% on bottom
-	PictureInPicture, // primary fullscreen, secondary as small corner overlay
-};
-
-static DRCDisplayMode s_drc_display_mode = DRCDisplayMode::Disabled;
-static bool s_drc_position_swapped = false;
+// DRC layout state is shared with VulkanRenderer via LibretroDRC.h.
+#include "LibretroDRC.h"
+LibretroDRCDisplayMode g_libretroDRCMode = LibretroDRCDisplayMode::Disabled;
+bool g_libretroDRCPositionSwapped = false;
 static bool s_drc_showing_gamepad = false;
 
 static retro_hw_render_callback s_hw_render{};
@@ -355,21 +345,116 @@ static bool libretro_drc_iequals(const char* a, const char* b)
 	return *a == 0 && *b == 0;
 }
 
-static DRCDisplayMode libretro_parse_drc_mode(const char* v)
+static LibretroDRCDisplayMode libretro_parse_drc_mode(const char* v)
 {
 	if (!v)
-		return DRCDisplayMode::Disabled;
-	if (libretro_drc_iequals(v, "disabled")) return DRCDisplayMode::Disabled;
-	if (libretro_drc_iequals(v, "toggle")) return DRCDisplayMode::Toggle;
-	if (libretro_drc_iequals(v, "side_by_side")) return DRCDisplayMode::SideBySide;
-	if (libretro_drc_iequals(v, "top_bottom")) return DRCDisplayMode::TopBottom;
-	if (libretro_drc_iequals(v, "picture_in_picture")) return DRCDisplayMode::PictureInPicture;
-	return DRCDisplayMode::Disabled;
+		return LibretroDRCDisplayMode::Disabled;
+	if (libretro_drc_iequals(v, "disabled")) return LibretroDRCDisplayMode::Disabled;
+	if (libretro_drc_iequals(v, "toggle")) return LibretroDRCDisplayMode::Toggle;
+	if (libretro_drc_iequals(v, "side_by_side")) return LibretroDRCDisplayMode::SideBySide;
+	if (libretro_drc_iequals(v, "top_bottom")) return LibretroDRCDisplayMode::TopBottom;
+	if (libretro_drc_iequals(v, "picture_in_picture")) return LibretroDRCDisplayMode::PictureInPicture;
+	return LibretroDRCDisplayMode::Disabled;
 }
 
 static bool libretro_drc_needs_pad_view()
 {
-	return s_drc_display_mode != DRCDisplayMode::Disabled;
+	return g_libretroDRCMode != LibretroDRCDisplayMode::Disabled;
+}
+
+// Shared DRC helpers (declared in LibretroDRC.h, also called from VulkanRenderer).
+bool LibretroDRC_ShouldRenderScreen(bool padView)
+{
+	switch (g_libretroDRCMode)
+	{
+	case LibretroDRCDisplayMode::Disabled:
+		return !padView;
+	case LibretroDRCDisplayMode::Toggle:
+		return g_libretroDRCPositionSwapped ? padView : !padView;
+	case LibretroDRCDisplayMode::SideBySide:
+	case LibretroDRCDisplayMode::TopBottom:
+	case LibretroDRCDisplayMode::PictureInPicture:
+		return true;
+	}
+	return !padView;
+}
+
+void LibretroDRC_ComputeViewport(bool padView,
+	int dstWidth, int dstHeight,
+	int& outX, int& outY, int& outWidth, int& outHeight)
+{
+	// Top-left origin convention. GL callers flip Y at their site.
+	const bool isPrimary = g_libretroDRCPositionSwapped ? padView : !padView;
+
+	switch (g_libretroDRCMode)
+	{
+	case LibretroDRCDisplayMode::Disabled:
+	case LibretroDRCDisplayMode::Toggle:
+		outX = 0;
+		outY = 0;
+		outWidth = dstWidth;
+		outHeight = dstHeight;
+		return;
+
+	case LibretroDRCDisplayMode::SideBySide:
+	{
+		const int primaryWidth = (dstWidth * 80) / 100;
+		const int secondaryWidth = dstWidth - primaryWidth;
+		int primaryHeight = (primaryWidth * 9) / 16;
+		if (primaryHeight > dstHeight) primaryHeight = dstHeight;
+		int secondaryHeight = (secondaryWidth * 9) / 16;
+		if (secondaryHeight > dstHeight) secondaryHeight = dstHeight;
+		if (isPrimary)
+		{
+			outX = 0;
+			outY = 0;
+			outWidth = primaryWidth;
+			outHeight = primaryHeight;
+		}
+		else
+		{
+			outX = primaryWidth;
+			outY = dstHeight - secondaryHeight;
+			outWidth = secondaryWidth;
+			outHeight = secondaryHeight;
+		}
+		return;
+	}
+
+	case LibretroDRCDisplayMode::TopBottom:
+		if (isPrimary)
+		{
+			outX = 0;
+			outY = 0;
+			outWidth = dstWidth;
+			outHeight = (dstHeight * 70) / 100;
+		}
+		else
+		{
+			outX = 0;
+			outY = (dstHeight * 70) / 100;
+			outWidth = dstWidth;
+			outHeight = (dstHeight * 30) / 100;
+		}
+		return;
+
+	case LibretroDRCDisplayMode::PictureInPicture:
+		if (isPrimary)
+		{
+			outX = 0;
+			outY = 0;
+			outWidth = dstWidth;
+			outHeight = dstHeight;
+		}
+		else
+		{
+			outWidth = (dstWidth * 20) / 100;
+			outHeight = (dstHeight * 20) / 100;
+			outX = dstWidth - outWidth - 10;
+			outY = dstHeight - outHeight - 10;
+		}
+		return;
+	}
 }
 
 // ============================================================================
@@ -396,100 +481,19 @@ public:
 
 	bool ShouldRenderScreen(bool padView) const override
 	{
-		switch (s_drc_display_mode)
-		{
-		case DRCDisplayMode::Disabled:
-			return !padView;
-		case DRCDisplayMode::Toggle:
-			// In Toggle mode, position swap selects which screen is shown.
-			return s_drc_position_swapped ? padView : !padView;
-		case DRCDisplayMode::SideBySide:
-		case DRCDisplayMode::TopBottom:
-		case DRCDisplayMode::PictureInPicture:
-			return true;
-		}
-		return !padView;
+		return LibretroDRC_ShouldRenderScreen(padView);
 	}
 
 	void AdjustScreenViewport(bool padView, sint32 windowWidth, sint32 windowHeight,
 		sint32& outX, sint32& outY, sint32& outWidth, sint32& outHeight) const override
 	{
-		// Position swap chooses which screen is "primary" (larger).
-		const bool isPrimary = s_drc_position_swapped ? padView : !padView;
-
-		switch (s_drc_display_mode)
-		{
-		case DRCDisplayMode::Disabled:
-		case DRCDisplayMode::Toggle:
-			outX = 0;
-			outY = 0;
-			outWidth = windowWidth;
-			outHeight = windowHeight;
-			break;
-
-		case DRCDisplayMode::SideBySide:
-		{
-			const sint32 primaryWidth = (windowWidth * 80) / 100;
-			const sint32 secondaryWidth = windowWidth - primaryWidth;
-			sint32 primaryHeight = (primaryWidth * 9) / 16;
-			if (primaryHeight > windowHeight) primaryHeight = windowHeight;
-			sint32 secondaryHeight = (secondaryWidth * 9) / 16;
-			if (secondaryHeight > windowHeight) secondaryHeight = windowHeight;
-
-			if (isPrimary)
-			{
-				outX = 0;
-				outY = windowHeight - primaryHeight;
-				outWidth = primaryWidth;
-				outHeight = primaryHeight;
-			}
-			else
-			{
-				outX = primaryWidth;
-				outY = 0;
-				outWidth = secondaryWidth;
-				outHeight = secondaryHeight;
-			}
-			break;
-		}
-
-		case DRCDisplayMode::TopBottom:
-			if (isPrimary)
-			{
-				outX = 0;
-				outY = (windowHeight * 30) / 100;
-				outWidth = windowWidth;
-				outHeight = (windowHeight * 70) / 100;
-			}
-			else
-			{
-				outX = 0;
-				outY = 0;
-				outWidth = windowWidth;
-				outHeight = (windowHeight * 30) / 100;
-			}
-			break;
-
-		case DRCDisplayMode::PictureInPicture:
-			if (isPrimary)
-			{
-				outX = 0;
-				outY = 0;
-				outWidth = windowWidth;
-				outHeight = windowHeight;
-			}
-			else
-			{
-				// Small overlay in upper-right corner (10% margin, 20% size,
-				// OpenGL Y is bottom-up so a low outY puts it near the bottom;
-				// match the deleted CemuLibretro.cpp's "bottom-right corner").
-				outWidth = (windowWidth * 20) / 100;
-				outHeight = (windowHeight * 20) / 100;
-				outX = windowWidth - outWidth - 10;
-				outY = 10;
-			}
-			break;
-		}
+		// Shared helper returns top-left origin; OpenGL expects bottom-up Y.
+		int x, y, w, h;
+		LibretroDRC_ComputeViewport(padView, windowWidth, windowHeight, x, y, w, h);
+		outX = x;
+		outY = windowHeight - y - h;
+		outWidth = w;
+		outHeight = h;
 	}
 
 	bool MakeCurrent(bool padView) override
@@ -634,7 +638,10 @@ static void libretro_init_audio()
 
 static const char* libretro_get_option_value(const char* key)
 {
-	if (!s_core_options_supported || !environ_cb || !key)
+	// Don't gate on s_core_options_supported: some RetroArch versions return
+	// false from SET_VARIABLES even though they still happily serve values via
+	// GET_VARIABLE (reads cached value from the .opt file).
+	if (!environ_cb || !key)
 		return nullptr;
 	retro_variable var{key, nullptr};
 	if (!environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var))
@@ -713,7 +720,7 @@ static bool libretro_parse_internal_resolution(const char* v, unsigned& outWidth
 
 static void libretro_apply_core_options()
 {
-	if (!environ_cb || !s_core_options_supported)
+	if (!environ_cb)
 		return;
 
 	auto& cfg = GetConfig();
@@ -774,18 +781,16 @@ static void libretro_apply_core_options()
 	// DRC (GamePad) display mode
 	if (const char* v = libretro_get_option_value("cemu_drc_mode"))
 	{
-		s_drc_display_mode = libretro_parse_drc_mode(v);
-		const bool drcEnabled = s_drc_display_mode != DRCDisplayMode::Disabled;
+		g_libretroDRCMode = libretro_parse_drc_mode(v);
+		const bool drcEnabled = g_libretroDRCMode != LibretroDRCDisplayMode::Disabled;
 		ActiveSettings::SetLibretroDisplayDRCOverride(drcEnabled);
-		// Tell Cemu's WindowSystem to treat the pad as open so it renders
-		// a DRC backbuffer alongside the TV one.
 		WindowSystem::GetWindowInfo().pad_open = drcEnabled;
 	}
 	if (const char* v = libretro_get_option_value("cemu_drc_position"))
 	{
-		s_drc_position_swapped = libretro_drc_iequals(v, "swapped");
-		if (s_drc_display_mode == DRCDisplayMode::Toggle)
-			s_drc_showing_gamepad = s_drc_position_swapped;
+		g_libretroDRCPositionSwapped = libretro_drc_iequals(v, "swapped");
+		if (g_libretroDRCMode == LibretroDRCDisplayMode::Toggle)
+			s_drc_showing_gamepad = g_libretroDRCPositionSwapped;
 	}
 
 	// Internal resolution

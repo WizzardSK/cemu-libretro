@@ -1,5 +1,8 @@
 #include "Cafe/HW/Latte/Renderer/Vulkan/VulkanRenderer.h"
 #include "Cafe/HW/Latte/Renderer/Vulkan/VulkanAPI.h"
+#ifdef RETRO_CORE
+#include "libretro/LibretroDRC.h"
+#endif
 #include "Cafe/HW/Latte/Renderer/Vulkan/LatteTextureVk.h"
 #include "Cafe/HW/Latte/Renderer/Vulkan/RendererShaderVk.h"
 #include "Cafe/HW/Latte/Renderer/Vulkan/VulkanTextureReadback.h"
@@ -957,6 +960,14 @@ void VulkanRenderer::StopUsingPadAndWait()
 
 bool VulkanRenderer::IsPadWindowActive()
 {
+#ifdef RETRO_CORE
+	// Libretro has no pad-window swapchain; we composite TV+DRC into the single
+	// shared present image. Report "active" whenever the DRC layout asks for it
+	// so LatteRenderTarget routes DRC scan-out (and the auto-mirror fallback)
+	// through DrawBackbufferQuad.
+	if (g_libretroDRCMode != LibretroDRCDisplayMode::Disabled)
+		return true;
+#endif
 	return IsSwapchainInfoValid(false);
 }
 
@@ -3192,7 +3203,9 @@ void VulkanRenderer::ClearColorImage(LatteTextureVk* vkTexture, uint32 sliceInde
 void VulkanRenderer::DrawBackbufferQuad(LatteTextureView* texView, RendererOutputShader* shader, bool useLinearTexFilter, sint32 imageX, sint32 imageY, sint32 imageWidth, sint32 imageHeight, bool padView, bool clearBackground)
 {
 #ifdef RETRO_CORE
-	if (padView)
+	// Skip screens the DRC layout says we don't present (Disabled mode skips
+	// DRC, Toggle mode skips the un-selected screen).
+	if (!LibretroDRC_ShouldRenderScreen(padView))
 		return;
 	{
 		LatteTextureViewVk* texViewVk = (LatteTextureViewVk*)texView;
@@ -3200,6 +3213,17 @@ void VulkanRenderer::DrawBackbufferQuad(LatteTextureView* texView, RendererOutpu
 
 		if (m_presentImage != VK_NULL_HANDLE)
 		{
+			// Composite TV + DRC into m_presentImage. TV is presented first by
+			// Cemu, so a non-composite TV blit (Disabled/Toggle) can start from
+			// VK_IMAGE_LAYOUT_UNDEFINED. The DRC blit in a composite mode must
+			// preserve the TV region we already wrote this frame, so transition
+			// from SHADER_READ_ONLY_OPTIMAL (the layout set_image left it in).
+			const bool compositeMode =
+				g_libretroDRCMode == LibretroDRCDisplayMode::SideBySide ||
+				g_libretroDRCMode == LibretroDRCDisplayMode::TopBottom ||
+				g_libretroDRCMode == LibretroDRCDisplayMode::PictureInPicture;
+			const bool preservePrior = compositeMode && padView;
+
 			// Blit source texture to presentation image (GPU-only, no CPU readback)
 			draw_endRenderPass();
 			baseTexture->GetImageObj()->flagForCurrentCommandBuffer();
@@ -3217,9 +3241,9 @@ void VulkanRenderer::DrawBackbufferQuad(LatteTextureView* texView, RendererOutpu
 			VkImageSubresourceRange fullRange{VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1};
 			VkImageMemoryBarrier dstBarrier{};
 			dstBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-			dstBarrier.srcAccessMask = VK_ACCESS_SHADER_READ_BIT;
+			dstBarrier.srcAccessMask = preservePrior ? VK_ACCESS_SHADER_READ_BIT : VK_ACCESS_SHADER_READ_BIT;
 			dstBarrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-			dstBarrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+			dstBarrier.oldLayout = preservePrior ? VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL : VK_IMAGE_LAYOUT_UNDEFINED;
 			dstBarrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
 			dstBarrier.image = m_presentImage;
 			dstBarrier.subresourceRange = fullRange;
@@ -3227,12 +3251,17 @@ void VulkanRenderer::DrawBackbufferQuad(LatteTextureView* texView, RendererOutpu
 				VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
 				0, 0, nullptr, 0, nullptr, 1, &dstBarrier);
 
-			// Blit
+			// Pick destination sub-region from the DRC layout. Top-left origin
+			// matches Vulkan dstOffsets convention.
+			int dx = 0, dy = 0, dw = (int)m_presentWidth, dh = (int)m_presentHeight;
+			LibretroDRC_ComputeViewport(padView, (int)m_presentWidth, (int)m_presentHeight, dx, dy, dw, dh);
+
 			VkImageBlit blitRegion{};
 			blitRegion.srcSubresource = {VK_IMAGE_ASPECT_COLOR_BIT, 0, 0, 1};
 			blitRegion.srcOffsets[1] = {(int32_t)baseTexture->width, (int32_t)baseTexture->height, 1};
 			blitRegion.dstSubresource = {VK_IMAGE_ASPECT_COLOR_BIT, 0, 0, 1};
-			blitRegion.dstOffsets[1] = {(int32_t)m_presentWidth, (int32_t)m_presentHeight, 1};
+			blitRegion.dstOffsets[0] = {dx, dy, 0};
+			blitRegion.dstOffsets[1] = {dx + dw, dy + dh, 1};
 
 			vkCmdBlitImage(m_state.currentCommandBuffer,
 				baseTexture->GetImageObj()->m_image, VK_IMAGE_LAYOUT_GENERAL,
