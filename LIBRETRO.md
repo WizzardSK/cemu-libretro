@@ -66,16 +66,17 @@ cp cemu_libretro.info ~/.config/retroarch/cores/libcemu_libretro.info
 - Shared fonts for Japanese/CJK text
 - Clean exit via Esc key
 - Core options registered via `RETRO_ENVIRONMENT_SET_CORE_OPTIONS_V2` (CPU mode, internal resolution up to 4K, thread quantum, audio latency, vsync, async shader compile, upscale/downscale filter, DRC mode/position, account, network service, USB peripherals, …)
-- DRC (GamePad) screen rendering with multiple layouts: disabled, toggle, side-by-side, top-bottom, picture-in-picture
+- DRC (GamePad) screen rendering with multiple layouts: disabled, toggle, side-by-side, top-bottom, picture-in-picture. Composite is done by Cemu's `OpenGLRenderer` via `ShouldRenderScreen`/`AdjustScreenViewport` callbacks into the single libretro window FBO — **OpenGL path only**; Vulkan presentation uses a single shared image via `set_image()` and would need a separate composite pass to support DRC.
 
 ### Known Issues
 - **Some games may crash** - depends on game complexity and required HLE functions
 - **Save states are not supported** - Cemu has no savestate infrastructure (no serialization of PPC/MMU/GPU/HLE state). `retro_serialize_size` returns 0 by design.
-- **`CemuLibretro.cpp` and `CemuLibretroLinux.cpp` are largely duplicated** - the Linux entry-point reimplements every `retro_*` export plus context_reset/Vulkan negotiation/input polling, while the cross-platform file carries an unused parallel copy. Refactor opportunity: factor shared logic into a common TU and keep only the platform window/context glue split.
+- **OpenGL path requires X11 (GLX)** - `glXGetCurrentContext()` returns NULL on Wayland sessions, so the OpenGL HW context fails to initialize and the core falls back to a black screen. Use the Vulkan path (`cemu_gpu_api = "Vulkan"`) on Wayland.
+- **DRC display modes are OpenGL-only** - the composite happens inside Cemu's OpenGLRenderer via canvas callbacks. The Vulkan presentation hands a single image to RetroArch's swapchain; DRC support there would need a separate composite pass.
 
 ### TODO
 1. Test with more games
-2. Unify `CemuLibretro.cpp` / `CemuLibretroLinux.cpp` into a single shared core + thin platform shim
+2. Vulkan DRC composite (so PiP/side-by-side work without dropping back to OpenGL)
 
 ### Key files
 - `src/libretro/CemuLibretro.cpp` - Cross-platform libretro core (used on Windows/macOS; on Linux only its Vulkan presentation tail is exercised)
