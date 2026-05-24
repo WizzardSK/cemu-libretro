@@ -3,7 +3,7 @@
 #include "Cafe/HW/MMU/MMU.h"
 #include "audio/IAudioAPI.h"
 #ifdef RETRO_CORE
-#include "audio/LibretroAudioAPI.h"
+#include "libretro/LibretroAudioAPI.h"
 #endif
 //#include "ax.h"
 #include "config/CemuConfig.h"

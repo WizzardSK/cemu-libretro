@@ -57,6 +57,7 @@ cp cemu_libretro.info ~/.config/retroarch/cores/libcemu_libretro.info
 ### Working
 - Core loads in RetroArch, games boot and run with full rendering
 - OpenGL 4.5 Core Profile with shared GLX context for GPU thread
+- Vulkan HW context via `RETRO_HW_CONTEXT_VULKAN` + context-negotiation interface; `VulkanRenderer` built on the shared instance/device/queue from RetroArch (Linux path)
 - Video output with correct orientation, survives fullscreen/windowed toggles
 - GL_QUADS -> GL_TRIANGLES conversion with proper index buffer mapping
 - Input: joypad buttons, analog sticks, touchscreen (mouse -> GamePad touch)
@@ -70,14 +71,15 @@ cp cemu_libretro.info ~/.config/retroarch/cores/libcemu_libretro.info
 ### Known Issues
 - **Some games may crash** - depends on game complexity and required HLE functions
 - **Save states are not supported** - Cemu has no savestate infrastructure (no serialization of PPC/MMU/GPU/HLE state). `retro_serialize_size` returns 0 by design.
+- **`CemuLibretro.cpp` and `CemuLibretroLinux.cpp` are largely duplicated** - the Linux entry-point reimplements every `retro_*` export plus context_reset/Vulkan negotiation/input polling, while the cross-platform file carries an unused parallel copy. Refactor opportunity: factor shared logic into a common TU and keep only the platform window/context glue split.
 
 ### TODO
 1. Test with more games
-2. Vulkan backend wiring (libretro_vulkan path is partially scaffolded)
+2. Unify `CemuLibretro.cpp` / `CemuLibretroLinux.cpp` into a single shared core + thin platform shim
 
 ### Key files
-- `src/libretro/CemuLibretro.cpp` - Main libretro core (GL context, video, input, game loading, core options, DRC layout)
-- `src/libretro/CemuLibretroLinux.cpp` - Linux-specific glue
+- `src/libretro/CemuLibretro.cpp` - Cross-platform libretro core (used on Windows/macOS; on Linux only its Vulkan presentation tail is exercised)
+- `src/libretro/CemuLibretroLinux.cpp` - Linux libretro entry point (full reimplementation: retro_* exports, GLX/Vulkan negotiation, input, video pipeline)
 - `src/audio/LibretroAudioAPI.{h,cpp}` - Audio backend (lock-free ring buffer)
 - `src/libretro/LibretroWindowSystem.cpp` - WindowSystem without wxWidgets
 - `src/Cafe/HW/Latte/Renderer/OpenGL/OpenGLRendererCore.cpp` - GL_QUADS to triangles conversion

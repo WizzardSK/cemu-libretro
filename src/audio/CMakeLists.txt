@@ -29,10 +29,9 @@ if(ENABLE_CUBEB)
 endif()
 
 if(ENABLE_LIBRETRO)
-	target_sources(CemuAudio PRIVATE
-		LibretroAudioAPI.cpp
-		LibretroAudioAPI.h
-	)
+	# LibretroAudioAPI lives under src/libretro/ (alongside the libretro entry
+	# point). CemuAudio still needs RETRO_CORE so IAudioAPI knows which
+	# backend list to expose.
 	target_compile_definitions(CemuAudio PRIVATE RETRO_CORE)
 endif()
 

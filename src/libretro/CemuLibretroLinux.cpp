@@ -764,6 +764,12 @@ RETRO_API void retro_init()
 	if (s_initialized)
 		return;
 
+	LibretroAudioAPI::SetAudioCallback([](const int16_t* data, size_t frames) -> size_t {
+		if (audio_batch_cb && data && frames > 0)
+			return audio_batch_cb(data, frames);
+		return 0;
+	});
+
 	libretro_init_paths();
 
 	// Configure settings
@@ -1476,7 +1482,7 @@ RETRO_API void retro_run()
 			}
 		}
 		video_cb(RETRO_HW_FRAME_BUFFER_VALID, SCREEN_WIDTH, SCREEN_HEIGHT, 0);
-		LibretroAudioAPI::FlushAudio(audio_batch_cb);
+		LibretroAudioAPI::FlushAudio();
 		return;
 	}
 #endif
@@ -1564,7 +1570,7 @@ RETRO_API void retro_run()
 	video_cb(RETRO_HW_FRAME_BUFFER_VALID, SCREEN_WIDTH, SCREEN_HEIGHT, 0);
 
 	// Flush audio
-	LibretroAudioAPI::FlushAudio(audio_batch_cb);
+	LibretroAudioAPI::FlushAudio();
 }
 
 // ============================================================================
