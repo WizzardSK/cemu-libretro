@@ -88,24 +88,26 @@ void LibretroAudioAPI::FlushAudio()
 	if (!s_audio_callback)
 		return;
 
-	// RetroArch expects consistent audio delivery: ~800 frames per retro_run at 48kHz/60fps
-	// Deliver exactly the target amount per frame for consistent timing
-	// This reduces audio deviation by providing predictable sample counts
-	constexpr size_t kTargetFramesPerRun = 800;  // 48000 / 60 = 800 audio frames per video frame
-	constexpr size_t kTargetSamplesPerRun = kTargetFramesPerRun * LibretroAudioRingBuffer::kChannels;  // 1600 samples (stereo)
-	
+	// Drain whatever Cemu produced since the last retro_run, up to the ring's
+	// capacity. RetroArch's audio driver handles variable per-call frame counts
+	// (it has its own buffer + dynamic-rate-control resampler), so a fixed
+	// kTargetFramesPerRun cap is the wrong shape: when Cemu's audio thread runs
+	// slightly faster than retro_run on the host clock, samples accumulate in
+	// the ring until FeedBlock starts dropping them, which is what shows up
+	// as crackling. Delivering the actual produced count per frame keeps the
+	// ring near-empty and lets the frontend do the rate-matching.
 	const size_t availableSamples = s_ring_buffer.GetReadAvailableSamples();
 	if (availableSamples == 0)
 		return;
 
-	// Read up to target samples, but don't exceed what's available
-	const size_t samplesToRead = (availableSamples >= kTargetSamplesPerRun) ? kTargetSamplesPerRun : availableSamples;
+	const size_t bufferCap = s_flush_buffer.size();
+	const size_t samplesToRead = (availableSamples <= bufferCap) ? availableSamples : bufferCap;
 	const size_t samplesRead = s_ring_buffer.Read(s_flush_buffer.data(), samplesToRead);
-	
+
 	if (samplesRead == 0)
 		return;
 
-	// Convert samples to frames (stereo = 2 samples per frame)
+	// retro_audio_sample_batch_t expects frames (pairs of L/R samples)
 	const size_t framesRead = samplesRead / LibretroAudioRingBuffer::kChannels;
 
 	if (libretro_audio_debug_enabled())
@@ -113,13 +115,21 @@ void LibretroAudioAPI::FlushAudio()
 		static uint64 s_flushes = 0;
 		s_flushes++;
 		if (s_flushes <= 50 || (s_flushes % 200) == 0)
-			cemuLog_log(LogType::Force, "[LibretroAudio] FlushAudio flushes={} available={} samples={} frames={}", 
-				(unsigned long long)s_flushes, (unsigned long long)availableSamples, 
+			cemuLog_log(LogType::Force, "[LibretroAudio] FlushAudio flushes={} available={} samples={} frames={}",
+				(unsigned long long)s_flushes, (unsigned long long)availableSamples,
 				(unsigned long long)samplesRead, (unsigned long long)framesRead);
 	}
 
-	// retro_audio_sample_batch_t expects frames (pairs of L/R samples)
-	s_audio_callback(s_flush_buffer.data(), framesRead);
+	size_t framesSent = 0;
+	const int16_t* cursor = s_flush_buffer.data();
+	while (framesSent < framesRead)
+	{
+		const size_t accepted = s_audio_callback(cursor, framesRead - framesSent);
+		if (accepted == 0)
+			break;
+		framesSent += accepted;
+		cursor += accepted * LibretroAudioRingBuffer::kChannels;
+	}
 }
 
 #endif

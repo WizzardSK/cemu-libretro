@@ -52,7 +52,7 @@ cp cemu_libretro.info ~/.config/retroarch/cores/libcemu_libretro.info
 - Input: libretro joypad -> VPAD (GamePad) buttons + analog sticks + touchscreen (RETRO_DEVICE_POINTER)
 - Graphic packs loaded and auto-enabled (default=1) at startup
 
-## Current Status (2026-03-18)
+## Current Status (2026-05-24)
 
 ### Working
 - Core loads in RetroArch, games boot and run with full rendering
@@ -60,26 +60,25 @@ cp cemu_libretro.info ~/.config/retroarch/cores/libcemu_libretro.info
 - Video output with correct orientation, survives fullscreen/windowed toggles
 - GL_QUADS -> GL_TRIANGLES conversion with proper index buffer mapping
 - Input: joypad buttons, analog sticks, touchscreen (mouse -> GamePad touch)
-- Audio routing via LibretroAudioAPI
+- Audio routing via lock-free ring-buffer `LibretroAudioAPI` (drains full ring per `retro_run` so the frontend rate-controls)
 - Graphic packs loading with workaround patches (NSMBU crash fix etc.)
 - Shared fonts for Japanese/CJK text
 - Clean exit via Esc key
+- Core options registered via `RETRO_ENVIRONMENT_SET_CORE_OPTIONS_V2` (CPU mode, internal resolution up to 4K, thread quantum, audio latency, vsync, async shader compile, upscale/downscale filter, DRC mode/position, account, network service, USB peripherals, …)
+- DRC (GamePad) screen rendering with multiple layouts: disabled, toggle, side-by-side, top-bottom, picture-in-picture
 
 ### Known Issues
-- **Audio crackling** - audio sync between Cemu and RetroArch needs improvement
-- **DRC (GamePad) screen** - currently shows TV output only
 - **Some games may crash** - depends on game complexity and required HLE functions
+- **Save states are not supported** - Cemu has no savestate infrastructure (no serialization of PPC/MMU/GPU/HLE state). `retro_serialize_size` returns 0 by design.
 
 ### TODO
-1. Fix audio synchronization/crackling
-2. Add core option to switch between TV and GamePad (DRC) display
-3. Implement core options (CPU mode, resolution, etc.)
-4. Save states support
-5. Test with more games
+1. Test with more games
+2. Vulkan backend wiring (libretro_vulkan path is partially scaffolded)
 
 ### Key files
-- `src/libretro/libretro_core.cpp` - Main libretro core (GL context, video, input, game loading)
-- `src/libretro/LibretroAudioAPI.h/cpp` - Audio backend
+- `src/libretro/CemuLibretro.cpp` - Main libretro core (GL context, video, input, game loading, core options, DRC layout)
+- `src/libretro/CemuLibretroLinux.cpp` - Linux-specific glue
+- `src/audio/LibretroAudioAPI.{h,cpp}` - Audio backend (lock-free ring buffer)
 - `src/libretro/LibretroWindowSystem.cpp` - WindowSystem without wxWidgets
 - `src/Cafe/HW/Latte/Renderer/OpenGL/OpenGLRendererCore.cpp` - GL_QUADS to triangles conversion
 - `src/Cafe/OS/libs/vpad/vpad.cpp` - Libretro input integration (buttons + touch)
