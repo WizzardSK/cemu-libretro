@@ -632,6 +632,11 @@ public:
 	VkImageView m_presentImageView = VK_NULL_HANDLE;
 	uint32 m_presentWidth = 0;
 	uint32 m_presentHeight = 0;
+	// Tracks the LatteGPUState.frameCounter value at which m_presentImage was
+	// last touched, so the first DrawBackbufferQuad of each frame clears it
+	// before the blit and subsequent blits in that frame preserve prior
+	// content. ~0u sentinel = no blit yet.
+	uint32 m_presentLastFrameCounter = ~0u;
 	void CreatePresentationImage(uint32 width, uint32 height);
 	void DestroyPresentationImage();
 private:

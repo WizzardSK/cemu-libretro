@@ -15,6 +15,9 @@
 #include "Cafe/OS/libs/erreula/erreula.h"
 #include "input/InputManager.h"
 #include "Cafe/OS/libs/swkbd/swkbd.h"
+#ifdef RETRO_CORE
+#include "libretro/LibretroDRC.h"
+#endif
 
 uint32 prevScissorX = 0;
 uint32 prevScissorY = 0;
@@ -1016,14 +1019,57 @@ void LatteRenderTarget_itHLECopyColorBufferToScanBuffer(MPTR colorBufferPtr, uin
 	}
 #endif
 
-	if ((renderTarget & RENDER_TARGET_DRC) && g_renderer->IsPadWindowActive())
-		LatteRenderTarget_copyToBackbuffer(texView, true);
-	if (((renderTarget & RENDER_TARGET_TV) && !showDRC) || ((renderTarget & RENDER_TARGET_DRC) && showDRC))
-		LatteRenderTarget_copyToBackbuffer(texView, false);
-	
+#ifdef RETRO_CORE
+	// In libretro composite display modes (SBS / TopBottom / PiP) both screens
+	// are presented simultaneously, so the standalone showDRC toggle-swap (which
+	// substitutes DRC for TV when the user holds Tab) must not apply — route each
+	// renderTarget straight to its own destination. We also enforce TV-then-DRC
+	// dispatch order, regardless of Cemu's scan-out call order, because PiP's
+	// DRC sub-rect overlays the full-image TV blit and must be drawn last.
+	const bool libretroComposite =
+		g_libretroDRCMode == LibretroDRCDisplayMode::SideBySide ||
+		g_libretroDRCMode == LibretroDRCDisplayMode::TopBottom ||
+		g_libretroDRCMode == LibretroDRCDisplayMode::PictureInPicture;
+	if (libretroComposite)
+	{
+		static LatteTextureView* s_cachedTvView = nullptr;
+		static LatteTextureView* s_cachedDrcView = nullptr;
+		static uint32 s_cachedFrameCounter = ~0u;
+
+		const uint32 currentFrame = LatteGPUState.frameCounter;
+		if (currentFrame != s_cachedFrameCounter)
+		{
+			s_cachedTvView = nullptr;
+			s_cachedDrcView = nullptr;
+			s_cachedFrameCounter = currentFrame;
+		}
+		if (renderTarget & RENDER_TARGET_TV)
+			s_cachedTvView = texView;
+		if (renderTarget & RENDER_TARGET_DRC)
+			s_cachedDrcView = texView;
+
+		// Always dispatch in TV-then-DRC order with whatever is cached so
+		// far. Blits are idempotent within a frame; PiP's DRC overlay
+		// survives because DRC always lands after TV.
+		if (s_cachedTvView)
+			LatteRenderTarget_copyToBackbuffer(s_cachedTvView, false);
+		if (s_cachedDrcView && g_renderer->IsPadWindowActive())
+			LatteRenderTarget_copyToBackbuffer(s_cachedDrcView, true);
+	}
+	else
+#endif
+	{
+		if ((renderTarget & RENDER_TARGET_DRC) && g_renderer->IsPadWindowActive())
+			LatteRenderTarget_copyToBackbuffer(texView, true);
+		if (((renderTarget & RENDER_TARGET_TV) && !showDRC) || ((renderTarget & RENDER_TARGET_DRC) && showDRC))
+			LatteRenderTarget_copyToBackbuffer(texView, false);
+	}
+
 	#ifdef RETRO_CORE
-	// Libretro: Auto-mirror TV to DRC when game doesn't explicitly render to DRC
-	if (g_renderer->IsPadWindowActive() && !(renderTarget & RENDER_TARGET_DRC) && (renderTarget & RENDER_TARGET_TV))
+	// Libretro: Auto-mirror TV to DRC when game doesn't explicitly render to DRC.
+	// Skip in composite modes — those already route TV and DRC independently, and
+	// an unconditional mirror would clobber the DRC sub-rect with TV content.
+	if (!libretroComposite && g_renderer->IsPadWindowActive() && !(renderTarget & RENDER_TARGET_DRC) && (renderTarget & RENDER_TARGET_TV))
 		LatteRenderTarget_copyToBackbuffer(texView, true);
 	#endif
 }

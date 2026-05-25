@@ -1570,9 +1570,21 @@ bool libretro_get_touch_state(uint16_t* x, uint16_t* y)
 {
 	if (!s_input_state.touch_pressed)
 		return false;
-	// Convert from RETRO_DEVICE_POINTER range (-0x7fff..0x7fff) to GamePad touchscreen (0..853, 0..479)
-	*x = (uint16_t)(((int32_t)s_input_state.touch_x + 0x7fff) * 853 / (2 * 0x7fff));
-	*y = (uint16_t)(((int32_t)s_input_state.touch_y + 0x7fff) * 479 / (2 * 0x7fff));
+	// Pointer comes in as (-0x7fff..0x7fff) over the libretro presentation
+	// surface, which we treat as a 1280x720 (SCREEN_WIDTH x SCREEN_HEIGHT)
+	// virtual canvas. In composite DRC modes (SBS / TopBottom / PiP) only the
+	// DRC sub-rect is the touchable area; clicks elsewhere don't belong on the
+	// GamePad. Map pointer → canvas → DRC sub-rect → GamePad touchscreen.
+	const int canvasX = (int)(((int32_t)s_input_state.touch_x + 0x7fff) * (int)SCREEN_WIDTH  / (2 * 0x7fff));
+	const int canvasY = (int)(((int32_t)s_input_state.touch_y + 0x7fff) * (int)SCREEN_HEIGHT / (2 * 0x7fff));
+	int drcX, drcY, drcW, drcH;
+	LibretroDRC_ComputeViewport(true, (int)SCREEN_WIDTH, (int)SCREEN_HEIGHT, drcX, drcY, drcW, drcH);
+	if (drcW <= 0 || drcH <= 0)
+		return false;
+	if (canvasX < drcX || canvasX >= drcX + drcW || canvasY < drcY || canvasY >= drcY + drcH)
+		return false;
+	*x = (uint16_t)((canvasX - drcX) * 853 / drcW);
+	*y = (uint16_t)((canvasY - drcY) * 479 / drcH);
 	return true;
 }
 

@@ -3213,16 +3213,17 @@ void VulkanRenderer::DrawBackbufferQuad(LatteTextureView* texView, RendererOutpu
 
 		if (m_presentImage != VK_NULL_HANDLE)
 		{
-			// Composite TV + DRC into m_presentImage. TV is presented first by
-			// Cemu, so a non-composite TV blit (Disabled/Toggle) can start from
-			// VK_IMAGE_LAYOUT_UNDEFINED. The DRC blit in a composite mode must
-			// preserve the TV region we already wrote this frame, so transition
-			// from SHADER_READ_ONLY_OPTIMAL (the layout set_image left it in).
-			const bool compositeMode =
-				g_libretroDRCMode == LibretroDRCDisplayMode::SideBySide ||
-				g_libretroDRCMode == LibretroDRCDisplayMode::TopBottom ||
-				g_libretroDRCMode == LibretroDRCDisplayMode::PictureInPicture;
-			const bool preservePrior = compositeMode && padView;
+			// Composite TV + DRC into m_presentImage. The image is reused
+			// across libretro frames; LatteGPUState.frameCounter (incremented
+			// once per Cemu frame in LatteRenderTarget_itHLESwapScanBuffer) is
+			// the source of truth for "which frame is being scanned out". The
+			// first blit per frame transitions from VK_IMAGE_LAYOUT_UNDEFINED
+			// and clears the image to opaque black so SBS / TopBottom gaps are
+			// deterministic regardless of TV/DRC order. Subsequent blits in
+			// the same frame preserve prior content (SHADER_READ_ONLY → TRANSFER_DST).
+			const uint32 currentFrame = LatteGPUState.frameCounter;
+			const bool preservePrior = (m_presentLastFrameCounter == currentFrame);
+			m_presentLastFrameCounter = currentFrame;
 
 			// Blit source texture to presentation image (GPU-only, no CPU readback)
 			draw_endRenderPass();
@@ -3250,6 +3251,35 @@ void VulkanRenderer::DrawBackbufferQuad(LatteTextureView* texView, RendererOutpu
 			vkCmdPipelineBarrier(m_state.currentCommandBuffer,
 				VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
 				0, 0, nullptr, 0, nullptr, 1, &dstBarrier);
+
+			// First blit of the frame starts from UNDEFINED — pixels outside
+			// this blit's dst rect (and outside any follow-up screen blit)
+			// would otherwise read garbage. SBS/TopBottom leave visible gaps
+			// around the letterboxed sub-rects, so wipe the whole image to
+			// opaque black before the blit.
+			if (!preservePrior)
+			{
+				VkClearColorValue clearColor{};
+				clearColor.float32[0] = 0.0f;
+				clearColor.float32[1] = 0.0f;
+				clearColor.float32[2] = 0.0f;
+				clearColor.float32[3] = 1.0f;
+				vkCmdClearColorImage(m_state.currentCommandBuffer,
+					m_presentImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+					&clearColor, 1, &fullRange);
+
+				VkImageMemoryBarrier clearBarrier{};
+				clearBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+				clearBarrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+				clearBarrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+				clearBarrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+				clearBarrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+				clearBarrier.image = m_presentImage;
+				clearBarrier.subresourceRange = fullRange;
+				vkCmdPipelineBarrier(m_state.currentCommandBuffer,
+					VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
+					0, 0, nullptr, 0, nullptr, 1, &clearBarrier);
+			}
 
 			// Pick destination sub-region from the DRC layout. Top-left origin
 			// matches Vulkan dstOffsets convention.
