@@ -52,7 +52,7 @@ cp cemu_libretro.info ~/.config/retroarch/cores/libcemu_libretro.info
 - Input: libretro joypad -> VPAD (GamePad) buttons + analog sticks + touchscreen (RETRO_DEVICE_POINTER)
 - Graphic packs loaded and auto-enabled (default=1) at startup
 
-## Current Status (2026-05-24)
+## Current Status (2026-05-25)
 
 ### Working
 - Core loads in RetroArch, games boot and run with full rendering
@@ -60,23 +60,21 @@ cp cemu_libretro.info ~/.config/retroarch/cores/libcemu_libretro.info
 - Vulkan HW context via `RETRO_HW_CONTEXT_VULKAN` + context-negotiation interface; `VulkanRenderer` built on the shared instance/device/queue from RetroArch (Linux path)
 - Video output with correct orientation, survives fullscreen/windowed toggles
 - GL_QUADS -> GL_TRIANGLES conversion with proper index buffer mapping
-- Input: joypad buttons, analog sticks, touchscreen (mouse -> GamePad touch)
+- Input: joypad buttons, analog sticks, touchscreen (mouse -> GamePad touch; in SBS/TopBottom/PiP only clicks inside the DRC sub-rect register, mapped sub-rect-relative to the GamePad's 853x479 touch space)
 - Audio routing via lock-free ring-buffer `LibretroAudioAPI` (drains full ring per `retro_run` so the frontend rate-controls)
 - Graphic packs loading with workaround patches (NSMBU crash fix etc.)
 - Shared fonts for Japanese/CJK text
 - Clean exit via Esc key
 - Core options registered via `RETRO_ENVIRONMENT_SET_CORE_OPTIONS_V2` (CPU mode, internal resolution up to 4K, thread quantum, audio latency, vsync, async shader compile, upscale/downscale filter, DRC mode/position, account, network service, USB peripherals, …)
-- DRC (GamePad) screen rendering with multiple layouts: disabled, toggle, side-by-side, top-bottom, picture-in-picture. The OpenGL path composites via `ShouldRenderScreen`/`AdjustScreenViewport` canvas callbacks. The Vulkan path overrides `IsPadWindowActive()` so DRC scan-outs (and the existing libretro auto-mirror fallback) reach `DrawBackbufferQuad`, then blits TV + DRC into different sub-regions of the shared present image using the same `LibretroDRC_ComputeViewport` helper.
+- DRC (GamePad) screen rendering with multiple layouts: disabled, toggle, side-by-side, top-bottom, picture-in-picture. The OpenGL path composites via `ShouldRenderScreen`/`AdjustScreenViewport` canvas callbacks. The Vulkan path overrides `IsPadWindowActive()` so DRC scan-outs (and the existing libretro auto-mirror fallback) reach `DrawBackbufferQuad`, then blits TV + DRC into different sub-regions of the shared present image using the same `LibretroDRC_ComputeViewport` helper. `LatteRenderTarget_itHLECopyColorBufferToScanBuffer` bypasses the standalone showDRC toggle-swap in composite modes and caches the latest TV/DRC texViews per frame so they always dispatch TV-then-DRC (PiP's DRC overlay would otherwise lose to the full-image TV blit when the game scans DRC first). `DrawBackbufferQuad` clears `m_presentImage` to opaque black on the first blit of each frame (detected via `LatteGPUState.frameCounter`) so SBS/TopBottom gaps are deterministic regardless of TV/DRC scan order.
 
 ### Known Issues
 - **Some games may crash** - depends on game complexity and required HLE functions
 - **Save states are not supported** - Cemu has no savestate infrastructure (no serialization of PPC/MMU/GPU/HLE state). `retro_serialize_size` returns 0 by design.
 - **OpenGL path requires X11 (GLX)** - `glXGetCurrentContext()` returns NULL on Wayland sessions, so the OpenGL HW context fails to initialize and the core falls back to a black screen. Use the Vulkan path (`cemu_gpu_api = "Vulkan"`) on Wayland.
-- **DRC sub-region of the present image is not cleared** - in side-by-side/top-bottom modes the gap between primary and secondary keeps whatever the last frame left there (in practice black, but it's not guaranteed). Pure black would be more correct.
 
 ### TODO
 1. Test with more games
-2. Clear the unused regions of the Vulkan present image between blits so SBS/TopBottom backgrounds are predictable
 
 ### Key files
 - `src/libretro/CemuLibretro.cpp` - Cross-platform libretro core (used on Windows/macOS; on Linux only its Vulkan presentation tail is exercised)
