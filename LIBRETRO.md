@@ -45,7 +45,7 @@ cp cemu_libretro.info ~/.config/retroarch/cores/libcemu_libretro.info
 ## Architecture
 
 - Uses OpenGL 4.5 Core Profile HW rendering via `RETRO_ENVIRONMENT_SET_HW_RENDER`
-- Creates a separate shared GLX context for Cemu's GPU thread
+- Creates a separate shared GL context for Cemu's GPU thread (GLX on X11, EGL fallback on Wayland)
 - Video pipeline: GPU thread renders to custom FBO -> `glReadPixels` to CPU buffer -> frontend thread uploads to texture -> `glBlitFramebuffer` to RetroArch FBO
 - GL_QUADS/GL_QUAD_STRIP converted to triangles for Core Profile compatibility (indexed quads use `glMapBuffer`)
 - Audio routed through `LibretroAudioAPI` (accumulates samples, flushed each frame)
@@ -71,7 +71,7 @@ cp cemu_libretro.info ~/.config/retroarch/cores/libcemu_libretro.info
 ### Known Issues
 - **Some games may crash** - depends on game complexity and required HLE functions
 - **Save states are not supported** - Cemu has no savestate infrastructure (no serialization of PPC/MMU/GPU/HLE state). `retro_serialize_size` returns 0 by design.
-- **OpenGL path requires X11 (GLX)** - `glXGetCurrentContext()` returns NULL on Wayland sessions, so the OpenGL HW context fails to initialize and the core falls back to a black screen. Use the Vulkan path (`cemu_gpu_api = "Vulkan"`) on Wayland.
+- **OpenGL path on Wayland renders black (work in progress)** - The core now has an EGL fallback for the shared GPU-thread context (GLX is still used on X11). On a Wayland/EGL session it no longer crashes and gets much further: the EGL frontend context is captured, a shared GL 4.5 context is created, and the GPU thread makes it current surfaceless (`EGL_NO_SURFACE`, since the frontend holds the window surface on another thread). However the video pipeline still produces a black screen on Wayland - frames rendered on the GPU thread aren't reaching the presented framebuffer (cross-context object sharing / blit on EGL is still being investigated). **Use the Vulkan path (`cemu_gpu_api = "Vulkan"`) on Wayland** - it is fully working. The OpenGL path works on X11 (GLX).
 
 ### TODO
 1. Test with more games

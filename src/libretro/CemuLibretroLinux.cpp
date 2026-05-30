@@ -66,12 +66,67 @@ extern void glReadPixels(int x, int y, int width, int height, unsigned int forma
 #endif
 #include <dlfcn.h>
 
+// EGL fallback for Wayland sessions: RetroArch uses EGL there, so glXGetCurrentContext()
+// returns NULL and the GLX path can't grab the frontend context.
+#include <EGL/egl.h>
+#ifndef EGL_CONTEXT_MAJOR_VERSION
+#define EGL_CONTEXT_MAJOR_VERSION 0x3098
+#endif
+#ifndef EGL_CONTEXT_MINOR_VERSION
+#define EGL_CONTEXT_MINOR_VERSION 0x30FB
+#endif
+#ifndef EGL_CONTEXT_OPENGL_PROFILE_MASK
+#define EGL_CONTEXT_OPENGL_PROFILE_MASK 0x30FD
+#endif
+#ifndef EGL_CONTEXT_OPENGL_CORE_PROFILE_BIT
+#define EGL_CONTEXT_OPENGL_CORE_PROFILE_BIT 0x00000001
+#endif
+// egl.h here only exposes EGL types (its prototypes sit behind EGL_EGL_PROTOTYPES,
+// and another header pulled egl.h in first with them disabled). Declare the few EGL
+// entry points we need ourselves — an identical redeclaration is harmless if visible.
+// eglGetCurrentDisplay is already declared by another header in this TU; the rest were
+// missing (egl.h's prototypes are gated off here), so declare them ourselves.
+extern "C" {
+EGLContext eglGetCurrentContext(void);
+EGLSurface eglGetCurrentSurface(EGLint readdraw);
+EGLBoolean eglBindAPI(EGLenum api);
+EGLint     eglGetError(void);
+EGLBoolean eglQueryContext(EGLDisplay dpy, EGLContext ctx, EGLint attribute, EGLint* value);
+EGLBoolean eglChooseConfig(EGLDisplay dpy, const EGLint* attrib_list, EGLConfig* configs, EGLint config_size, EGLint* num_config);
+EGLContext eglCreateContext(EGLDisplay dpy, EGLConfig config, EGLContext share_context, const EGLint* attrib_list);
+EGLBoolean eglMakeCurrent(EGLDisplay dpy, EGLSurface draw, EGLSurface read, EGLContext ctx);
+}
+
 // Shared GL context for Cemu GPU thread
 static Display* s_glx_display = nullptr;
 static GLXDrawable s_glx_drawable = 0;
 static GLXContext s_glx_shared_context = nullptr;  // created for GPU thread
 static GLXContext s_glx_frontend_context = nullptr; // RetroArch's context
 static bool s_gpu_context_made_current = false;
+
+// EGL equivalents (used when the frontend runs on EGL, e.g. Wayland)
+static bool s_use_egl = false;
+static EGLDisplay s_egl_display = EGL_NO_DISPLAY;
+static EGLSurface s_egl_surface = EGL_NO_SURFACE;
+static EGLContext s_egl_shared_context = EGL_NO_CONTEXT;  // created for GPU thread
+static EGLContext s_egl_frontend_context = EGL_NO_CONTEXT; // RetroArch's context
+
+// NOTE: Cemu's glFunctions.h declares `eglGetCurrentDisplay` as a global function
+// POINTER (loaded lazily via dlsym in LoadOpenGLImports). At context_reset time that
+// pointer is still null, so calling the name here would crash. Resolve the real libEGL
+// symbol ourselves instead.
+static EGLDisplay egl_current_display()
+{
+	typedef EGLDisplay (*PFN_egl_gcd)(void);
+	static PFN_egl_gcd fn = nullptr;
+	if (!fn)
+	{
+		void* libegl = dlopen("libEGL.so.1", RTLD_NOW | RTLD_GLOBAL);
+		if (!libegl) libegl = dlopen("libEGL.so", RTLD_NOW | RTLD_GLOBAL);
+		if (libegl) fn = (PFN_egl_gcd)dlsym(libegl, "eglGetCurrentDisplay");
+	}
+	return fn ? fn() : EGL_NO_DISPLAY;
+}
 
 // ============================================================================
 // CafeSystem implementation for libretro
@@ -502,8 +557,30 @@ public:
 			return false;
 		if (!s_hw_render_initialized || s_shutting_down)
 			return false;
-		// Make our shared GL context current on the GPU thread
-		if (s_glx_shared_context && s_glx_display && s_glx_drawable && !s_gpu_context_made_current)
+		// Make our shared GL context current on the GPU thread (EGL on Wayland, GLX on X11)
+		if (s_use_egl)
+		{
+			if (s_egl_shared_context != EGL_NO_CONTEXT && s_egl_display != EGL_NO_DISPLAY && !s_gpu_context_made_current)
+			{
+				eglBindAPI(EGL_OPENGL_API);
+				// The GPU thread only renders to FBOs, never to the window surface (which
+				// the frontend context holds on another thread → EGL_BAD_ACCESS if shared).
+				// Bind surfaceless (EGL_KHR_surfaceless_context, supported by Mesa).
+				if (eglMakeCurrent(s_egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, s_egl_shared_context))
+				{
+					s_gpu_context_made_current = true;
+					if (log_cb)
+						log_cb(RETRO_LOG_INFO, "Cemu: GPU thread EGL context made current successfully\n");
+				}
+				else
+				{
+					if (log_cb)
+						log_cb(RETRO_LOG_ERROR, "Cemu: Failed to make GPU thread EGL context current (0x%x)\n", eglGetError());
+					return false;
+				}
+			}
+		}
+		else if (s_glx_shared_context && s_glx_display && s_glx_drawable && !s_gpu_context_made_current)
 		{
 			int result = glXMakeCurrent(s_glx_display, s_glx_drawable, s_glx_shared_context);
 			if (result)
@@ -1145,18 +1222,91 @@ static void libretro_launch_game()
 
 static std::atomic_bool s_launch_thread_running{false};
 
-static void libretro_create_shared_gl_context()
+// Wayland / EGL frontends: build the shared GPU-thread context via EGL instead of GLX.
+static void libretro_create_shared_egl_context()
 {
-	// Capture the frontend's GL context info so we can create a shared context for GPU thread
-	s_glx_display = glXGetCurrentDisplay();
-	s_glx_drawable = glXGetCurrentDrawable();
-	s_glx_frontend_context = glXGetCurrentContext();
+	s_egl_frontend_context = eglGetCurrentContext();
+	s_egl_display = egl_current_display();
+	s_egl_surface = eglGetCurrentSurface(EGL_DRAW);
 
-	if (!s_glx_display || !s_glx_frontend_context)
+	if (s_egl_frontend_context == EGL_NO_CONTEXT || s_egl_display == EGL_NO_DISPLAY)
 	{
 		if (log_cb)
-			log_cb(RETRO_LOG_ERROR, "Cemu: Cannot get current GLX context (display=%p ctx=%p)\n",
-				s_glx_display, s_glx_frontend_context);
+			log_cb(RETRO_LOG_ERROR, "Cemu: No current GLX or EGL context (frontend display=%p ctx=%p)\n",
+				s_egl_display, s_egl_frontend_context);
+		return;
+	}
+
+	s_use_egl = true;
+	if (log_cb)
+		log_cb(RETRO_LOG_INFO, "Cemu: Frontend EGL context (Wayland path): display=%p surface=%p ctx=%p\n",
+			s_egl_display, s_egl_surface, s_egl_frontend_context);
+
+	if (!eglBindAPI(EGL_OPENGL_API))
+	{
+		if (log_cb)
+			log_cb(RETRO_LOG_ERROR, "Cemu: eglBindAPI(EGL_OPENGL_API) failed (0x%x)\n", eglGetError());
+		return;
+	}
+
+	// Match the frontend's EGLConfig so the shared context is compatible.
+	EGLConfig config = nullptr;
+	EGLint matched = 0;
+	EGLint cfgId = 0;
+	if (eglQueryContext(s_egl_display, s_egl_frontend_context, EGL_CONFIG_ID, &cfgId) && cfgId != 0)
+	{
+		const EGLint byId[] = { EGL_CONFIG_ID, cfgId, EGL_NONE };
+		eglChooseConfig(s_egl_display, byId, &config, 1, &matched);
+	}
+	if (matched == 0)
+	{
+		// Fallback: any config that can back a desktop-GL window context.
+		const EGLint generic[] = {
+			EGL_RENDERABLE_TYPE, EGL_OPENGL_BIT,
+			EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
+			EGL_NONE
+		};
+		eglChooseConfig(s_egl_display, generic, &config, 1, &matched);
+	}
+
+	// OpenGL 4.5 Core Profile shared context (shares object namespace with the frontend ctx)
+	const EGLint ctxAttribs[] = {
+		EGL_CONTEXT_MAJOR_VERSION, 4,
+		EGL_CONTEXT_MINOR_VERSION, 5,
+		EGL_CONTEXT_OPENGL_PROFILE_MASK, EGL_CONTEXT_OPENGL_CORE_PROFILE_BIT,
+		EGL_NONE
+	};
+	s_egl_shared_context = eglCreateContext(s_egl_display, config, s_egl_frontend_context, ctxAttribs);
+
+	if (s_egl_shared_context != EGL_NO_CONTEXT)
+	{
+		if (log_cb)
+			log_cb(RETRO_LOG_INFO, "Cemu: Created shared EGL GL 4.5 context for GPU thread: %p\n", s_egl_shared_context);
+	}
+	else if (log_cb)
+	{
+		log_cb(RETRO_LOG_ERROR, "Cemu: Failed to create shared EGL context (0x%x)\n", eglGetError());
+	}
+}
+
+static void libretro_create_shared_gl_context()
+{
+	// Capture the frontend's GL context. Prefer GLX (X11); on Wayland the frontend
+	// runs on EGL and glXGetCurrentContext() returns NULL, so fall back to EGL.
+	s_glx_frontend_context = glXGetCurrentContext();
+	if (!s_glx_frontend_context)
+	{
+		libretro_create_shared_egl_context();
+		return;
+	}
+	s_glx_display = glXGetCurrentDisplay();
+	s_glx_drawable = glXGetCurrentDrawable();
+
+	if (!s_glx_display)
+	{
+		if (log_cb)
+			log_cb(RETRO_LOG_ERROR, "Cemu: Cannot get current GLX display (ctx=%p)\n",
+				s_glx_frontend_context);
 		return;
 	}
 
@@ -1243,9 +1393,20 @@ static void libretro_context_reset()
 	// Create or update shared GL context for GPU thread (OpenGL only)
 	if (s_graphics_api == SelectedGraphicsAPI::OpenGL)
 	{
-		if (!s_glx_shared_context)
+		const bool haveSharedContext = s_use_egl ? (s_egl_shared_context != EGL_NO_CONTEXT)
+		                                          : (s_glx_shared_context != nullptr);
+		if (!haveSharedContext)
 		{
 			libretro_create_shared_gl_context();
+		}
+		else if (s_use_egl)
+		{
+			// Context restored (e.g. fullscreen toggle) - refresh display/surface for MakeCurrent
+			s_egl_display = egl_current_display();
+			s_egl_surface = eglGetCurrentSurface(EGL_DRAW);
+			s_gpu_context_made_current = false;
+			if (log_cb)
+				log_cb(RETRO_LOG_INFO, "Cemu: EGL context restored, surface=%p\n", s_egl_surface);
 		}
 		else
 		{

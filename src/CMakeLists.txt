@@ -97,7 +97,7 @@ if(ENABLE_LIBRETRO)
 	)
 
 	if(UNIX AND NOT APPLE)
-		target_link_libraries(cemu_libretro PRIVATE GL X11)
+		target_link_libraries(cemu_libretro PRIVATE GL EGL X11)
 		# Force all CemuResource symbols (imgui needs fontawesome from resource archive)
 		target_link_options(cemu_libretro PRIVATE "LINKER:--whole-archive" $<TARGET_FILE:CemuResource> "LINKER:--no-whole-archive")
 		target_link_options(cemu_libretro PRIVATE -z noexecstack)
