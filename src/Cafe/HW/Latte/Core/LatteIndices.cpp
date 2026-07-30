@@ -580,7 +580,9 @@ void LatteIndices_fastConvertU16_NEON(const void* indexDataInput, void* indexDat
 		{
 			mTemp = vld1q_u16((uint16*)mRawIndices);
 			mRawIndices++;
-			mTemp = vrev16q_u8(mTemp);
+			// vrev16q_u8 operates on uint8x16_t; GCC rejects the implicit
+			// vector conversion that clang allows, so reinterpret explicitly.
+			mTemp = vreinterpretq_u16_u8(vrev16q_u8(vreinterpretq_u8_u16(mTemp)));
 			mMin = vminq_u16(mMin, mTemp);
 			mMax = vmaxq_u16(mMax, mTemp);
 			vst1q_u16((uint16*)mOutputIndices, mTemp);
@@ -633,7 +635,8 @@ void LatteIndices_fastConvertU32_NEON(const void* indexDataInput, void* indexDat
 		{
 			mTemp = vld1q_u32((uint32*)mRawIndices);
 			mRawIndices++;
-			mTemp = vrev32q_u8(mTemp);
+			// Same as the u16 path: reinterpret through uint8x16_t for GCC.
+			mTemp = vreinterpretq_u32_u8(vrev32q_u8(vreinterpretq_u8_u32(mTemp)));
 			mMin = vminq_u32(mMin, mTemp);
 			mMax = vmaxq_u32(mMax, mTemp);
 			vst1q_u32((uint32*)mOutputIndices, mTemp);

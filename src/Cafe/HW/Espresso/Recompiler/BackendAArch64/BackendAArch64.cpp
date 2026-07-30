@@ -32,12 +32,15 @@ struct FPReg
 	{
 	}
 	const size_t index;
-	const VReg VReg;
-	const QReg QReg;
-	const DReg DReg;
-	const SReg SReg;
-	const HReg HReg;
-	const BReg BReg;
+	// Types are fully qualified so the unqualified names below only ever refer
+	// to these members; otherwise the member declarations change the meaning of
+	// the type names in class scope, which GCC rejects (-Wchanges-meaning).
+	const Xbyak_aarch64::VReg VReg;
+	const Xbyak_aarch64::QReg QReg;
+	const Xbyak_aarch64::DReg DReg;
+	const Xbyak_aarch64::SReg SReg;
+	const Xbyak_aarch64::HReg HReg;
+	const Xbyak_aarch64::BReg BReg;
 };
 
 struct GPReg
@@ -47,8 +50,9 @@ struct GPReg
 	{
 	}
 	const size_t index;
-	const XReg XReg;
-	const WReg WReg;
+	// Fully qualified for the same reason as in FPReg above.
+	const Xbyak_aarch64::XReg XReg;
+	const Xbyak_aarch64::WReg WReg;
 };
 
 static const XReg HCPU_REG{HCPU_REG_ID}, PPC_REC_INSTANCE_REG{PPC_RECOMPILER_INSTANCE_DATA_REG_ID}, MEM_BASE_REG{MEMORY_BASE_REG_ID};

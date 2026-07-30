@@ -92,9 +92,17 @@ if(ENABLE_LIBRETRO)
 		CemuUtil
 		CemuResource
 		SDL2::SDL2
-		SPIRV-Tools
-		SPIRV-Tools-opt
 	)
+
+	# glslang built without its 'opt' feature does not reference SPIRV-Tools at
+	# all (its own config guards find_dependency behind if(OFF)), and the vcpkg
+	# port then never installs those libraries. Only link them when present.
+	find_library(SPIRV_TOOLS_LIBRARY NAMES SPIRV-Tools)
+	find_library(SPIRV_TOOLS_OPT_LIBRARY NAMES SPIRV-Tools-opt)
+	if(SPIRV_TOOLS_LIBRARY AND SPIRV_TOOLS_OPT_LIBRARY)
+		target_link_libraries(cemu_libretro PRIVATE
+			${SPIRV_TOOLS_LIBRARY} ${SPIRV_TOOLS_OPT_LIBRARY})
+	endif()
 
 	if(UNIX AND NOT APPLE)
 		target_link_libraries(cemu_libretro PRIVATE GL EGL X11)
