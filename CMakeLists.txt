@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 3.21.1)
 
 option(ENABLE_VCPKG "Enable the vcpkg package manager" ON)
+# Declared here as well as below because the vcpkg manifest features have to be
+# selected before project() is called.
+option(ENABLE_LIBRETRO "Build as libretro core" OFF)
 option(MACOS_BUNDLE "The executable when built on macOS will be created as an application bundle" OFF)
 option(ALLOW_PORTABLE "Allow Cemu to be run in portable mode" ON)
 
@@ -42,6 +45,11 @@ if (ENABLE_VCPKG)
 		set(VCPKG_OVERLAY_PORTS "${CMAKE_CURRENT_LIST_DIR}/dependencies/vcpkg_overlay_ports_mac;${CMAKE_CURRENT_LIST_DIR}/dependencies/vcpkg_overlay_ports")
 	else()
 		set(VCPKG_OVERLAY_PORTS "${CMAKE_CURRENT_LIST_DIR}/dependencies/vcpkg_overlay_ports_win;${CMAKE_CURRENT_LIST_DIR}/dependencies/vcpkg_overlay_ports")
+	endif()
+	# The libretro core forces ENABLE_WXWIDGETS OFF, so keep wxWidgets and its
+	# gtk3/cairo/... dependency tree out of the install plan for that build.
+	if (NOT ENABLE_LIBRETRO)
+		list(APPEND VCPKG_MANIFEST_FEATURES "gui")
 	endif()
 	set(CMAKE_TOOLCHAIN_FILE "${CMAKE_CURRENT_SOURCE_DIR}/dependencies/vcpkg/scripts/buildsystems/vcpkg.cmake"
 		CACHE STRING "Vcpkg toolchain file")

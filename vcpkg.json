@@ -34,7 +34,6 @@
       "default-features": false
     },
     "zstd",
-    "wxwidgets",
     "openssl",
     {
       "name": "curl",
@@ -58,6 +57,14 @@
     },
     "libusb"
   ],
+  "features": {
+    "gui": {
+      "description": "wxWidgets desktop UI (not built by the libretro core)",
+      "dependencies": [
+        "wxwidgets"
+      ]
+    }
+  },
   "overrides": [
     {
       "name": "glslang",
