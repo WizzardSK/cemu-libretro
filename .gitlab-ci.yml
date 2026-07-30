@@ -1,0 +1,68 @@
+# DESCRIPTION: GitLab CI/CD for libRetro (NOT FOR GitLab-proper)
+
+##############################################################################
+################################# BOILERPLATE ################################
+##############################################################################
+
+# Core definitions
+.core-defs:
+  variables:
+    CORENAME: cemu
+    # CMake writes cemu_libretro.so to <source>/bin (see src/CMakeLists.txt),
+    # which is outside of BUILD_DIR, so climb back out of build/linux-$ARCH.
+    EXTRA_PATH: ../../bin
+    CORE_ARGS: >-
+      -DENABLE_LIBRETRO=ON
+      -DENABLE_BLUEZ=OFF
+      -DENABLE_FERAL_GAMEMODE=OFF
+    # Cemu is C++20; the image default compiler is too old for it.
+    CC: gcc-12
+    CXX: g++-12
+    # arm64-linux is a community triplet - vcpkg ships no prebuilt tools for it
+    # and has to use the ones from the image.
+    VCPKG_FORCE_SYSTEM_BINARIES: 1
+
+variables:
+  GIT_SUBMODULE_STRATEGY: recursive
+
+# Inclusion templates, required for the build to work
+include:
+  ################################## DESKTOPS ################################
+  # Linux
+  - project: 'libretro-infrastructure/ci-templates'
+    file: '/linux-cmake.yml'
+
+# Stages for building
+stages:
+  - build-prepare
+  - build-shared
+
+##############################################################################
+#################################### STAGES ##################################
+##############################################################################
+#
+################################### DESKTOPS #################################
+# Linux aarch64
+libretro-build-linux-aarch64:
+  extends:
+    - .libretro-linux-cmake-aarch64
+    - .core-defs
+  # vcpkg builds every dependency from source (~30 ports, Boost among them),
+  # which does not fit in the default one hour.
+  timeout: 3h
+  before_script:
+    # Repeated from .libretro-linux-cmake: defining before_script here replaces
+    # the one from the template instead of adding to it.
+    - export NUMPROC=$(($(nproc)/5))
+    - if builtin type -P ccache &> /dev/null; then ccache -V &> /dev/null; fi
+    # glm comes from the system: dependencies/vcpkg_overlay_ports_linux/glm is
+    # an empty package on purpose, so libglm-dev has to be installed. The rest
+    # is what the vcpkg ports (SDL2, dbus, libusb) and the core itself
+    # (GL/EGL/X11) need to be built.
+    - apt-get update -qq
+    - apt-get install -y --no-install-recommends
+      nasm autoconf automake libtool pkg-config python3
+      libglm-dev libgl1-mesa-dev libegl1-mesa-dev
+      libx11-dev libxext-dev libxrandr-dev libxi-dev libxcursor-dev
+      libxss-dev libxkbcommon-dev libwayland-dev wayland-protocols
+      libudev-dev libdbus-1-dev libgcrypt20-dev
