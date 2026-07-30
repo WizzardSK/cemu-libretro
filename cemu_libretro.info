@@ -1,7 +1,7 @@
 # Software Information
 display_name = "Nintendo - Wii U (Cemu)"
 authors = "Cemu Project|WizzardSK"
-supported_extensions = "wud|wux|wua|rpx|elf|wuhb"
+supported_extensions = "wud|wux|wua|iso|rpx|elf|tmd"
 corename = "Cemu"
 manufacturer = "Nintendo"
 categories = "Emulator"
