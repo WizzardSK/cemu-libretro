@@ -114,6 +114,25 @@ void padscoreExport_WPADProbe(PPCInterpreter_t* hCPU)
 	}
 }
 
+void padscoreExport_WPADDisconnect(PPCInterpreter_t* hCPU)
+{
+	ppcDefineParamU32(channel, 0);
+
+	cemuLog_log(LogType::InputAPI, "WPADDisconnect({})", channel);
+
+	if (channel < InputManager::kMaxWPADControllers)
+	{
+		// The alarm handler is what actually tells the game about (dis)connects.
+		// Arm it to report this channel as gone; clearing disconnectCalled makes
+		// it announce the controller again if it comes back.
+		padscore::g_padscore.controller_data[channel].disconnectCalled = false;
+		if (const auto controller = InputManager::instance().get_wpad_controller(channel))
+			controller->m_status = WPADController::ConnectCallbackStatus::ReportDisconnect;
+	}
+
+	osLib_returnFromFunction(hCPU, WPAD_ERR_NONE);
+}
+
 typedef struct
 {
 	uint32be dpd;
@@ -794,6 +813,7 @@ namespace padscore
 		osLib_addFunction("padscore", "WPADIsMotorEnabled", padscoreExport_WPADIsMotorEnabled);
 		osLib_addFunction("padscore", "WPADGetStatus", padscoreExport_WPADGetStatus);
 		osLib_addFunction("padscore", "WPADProbe", padscoreExport_WPADProbe);
+		osLib_addFunction("padscore", "WPADDisconnect", padscoreExport_WPADDisconnect);
 		osLib_addFunction("padscore", "WPADGetInfoAsync", padscoreExport_WPADGetInfoAsync);
 		osLib_addFunction("padscore", "WPADGetInfo", padscoreExport_WPADGetInfo);
 		osLib_addFunction("padscore", "WPADSetConnectCallback", padscoreExport_KPADSetConnectCallback);
