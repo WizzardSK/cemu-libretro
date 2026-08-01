@@ -105,7 +105,12 @@ if(ENABLE_LIBRETRO)
 	endif()
 
 	if(UNIX AND NOT APPLE)
-		target_link_libraries(cemu_libretro PRIVATE GL EGL X11)
+		if(ANDROID)
+			# No desktop GL and no X11 here - GLES/EGL plus the NDK libraries.
+			target_link_libraries(cemu_libretro PRIVATE EGL GLESv3 log android)
+		else()
+			target_link_libraries(cemu_libretro PRIVATE GL EGL X11)
+		endif()
 		# Force all CemuResource symbols (imgui needs fontawesome from resource archive)
 		target_link_options(cemu_libretro PRIVATE "LINKER:--whole-archive" $<TARGET_FILE:CemuResource> "LINKER:--no-whole-archive")
 		target_link_options(cemu_libretro PRIVATE -z noexecstack)

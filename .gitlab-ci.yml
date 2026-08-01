@@ -31,6 +31,10 @@ include:
   # Linux
   - project: 'libretro-infrastructure/ci-templates'
     file: '/linux-cmake.yml'
+  ################################## CELLULAR ################################
+  # Android
+  - project: 'libretro-infrastructure/ci-templates'
+    file: '/android-cmake.yml'
 
 # Stages for building
 stages:
@@ -66,3 +70,44 @@ libretro-build-linux-aarch64:
       libx11-dev libxext-dev libxrandr-dev libxi-dev libxcursor-dev
       libxss-dev libxkbcommon-dev libwayland-dev wayland-protocols
       libudev-dev libdbus-1-dev libgcrypt20-dev
+
+################################### CELLULAR #################################
+# Android is a fresh target for this core: unlike the Linux job it has to build
+# the whole vcpkg dependency set for a cross triplet, and none of it has run
+# before - so keep these from failing the pipeline while they are brought up.
+.core-defs-android:
+  extends: .core-defs
+  allow_failure: true
+  # Same reason as the Linux job, plus a cross toolchain on top.
+  timeout: 3h
+  variables:
+    # The template defaults to API 16, which is nowhere near enough for C++20.
+    API_LEVEL: 24
+    # Cemu's CMakeLists hands the template's NDK toolchain to vcpkg as a
+    # chainload toolchain (see the comment there); this picks the triplet the
+    # ports are built for.
+    VCPKG_DEFAULT_TRIPLET: $VCPKG_TRIPLET
+    CORE_ARGS: >-
+      -DENABLE_LIBRETRO=ON
+      -DENABLE_BLUEZ=OFF
+      -DENABLE_FERAL_GAMEMODE=OFF
+      -DENABLE_WAYLAND=OFF
+      -DENABLE_DISCORD_RPC=OFF
+      -DVCPKG_TARGET_TRIPLET=$VCPKG_TRIPLET
+      -DVCPKG_HOST_TRIPLET=x64-linux
+
+# Android aarch64
+android-arm64-v8a:
+  extends:
+    - .libretro-android-cmake-arm64-v8a
+    - .core-defs-android
+  variables:
+    VCPKG_TRIPLET: arm64-android
+
+# Android x86_64
+android-x86_64:
+  extends:
+    - .libretro-android-cmake-x86_64
+    - .core-defs-android
+  variables:
+    VCPKG_TRIPLET: x64-android

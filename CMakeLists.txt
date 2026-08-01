@@ -39,7 +39,19 @@ if (ENABLE_VCPKG)
 		)
 	endif()
 
-	if(UNIX AND NOT APPLE)
+	# Android: the libretro CI template passes the NDK toolchain as
+	# CMAKE_TOOLCHAIN_FILE, which would bypass vcpkg entirely and leave every
+	# find_package() below unsatisfied. Hand it to vcpkg as a chainload
+	# toolchain instead and let vcpkg's own toolchain take the primary slot.
+	if(CMAKE_TOOLCHAIN_FILE MATCHES "android.toolchain.cmake$" AND NOT VCPKG_CHAINLOAD_TOOLCHAIN_FILE)
+		set(VCPKG_CHAINLOAD_TOOLCHAIN_FILE "${CMAKE_TOOLCHAIN_FILE}" CACHE STRING "" FORCE)
+		unset(CMAKE_TOOLCHAIN_FILE CACHE)
+		set(CEMU_TARGET_ANDROID ON)
+	endif()
+
+	if(CEMU_TARGET_ANDROID)
+		set(VCPKG_OVERLAY_PORTS "${CMAKE_CURRENT_LIST_DIR}/dependencies/vcpkg_overlay_ports")
+	elseif(UNIX AND NOT APPLE)
 		set(VCPKG_OVERLAY_PORTS "${CMAKE_CURRENT_LIST_DIR}/dependencies/vcpkg_overlay_ports_linux;${CMAKE_CURRENT_LIST_DIR}/dependencies/vcpkg_overlay_ports")
 	elseif(APPLE)
 		set(VCPKG_OVERLAY_PORTS "${CMAKE_CURRENT_LIST_DIR}/dependencies/vcpkg_overlay_ports_mac;${CMAKE_CURRENT_LIST_DIR}/dependencies/vcpkg_overlay_ports")
