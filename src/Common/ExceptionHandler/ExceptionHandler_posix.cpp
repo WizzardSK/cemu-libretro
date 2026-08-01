@@ -1,5 +1,7 @@
 #include <signal.h>
+#ifndef __ANDROID__
 #include <execinfo.h>
+#endif
 #include <string.h>
 #include <string>
 #include "config/CemuConfig.h"
@@ -92,7 +94,12 @@ void handlerDumpingSignal(int sig, siginfo_t *info, void *context)
 	size_t size;
 
 	// get void*'s for all entries on the stack
+#ifdef __ANDROID__
+	// bionic ships no execinfo.h - no backtrace() there.
+	size = 0;
+#else
 	size = backtrace(backtraceArray, 128);
+#endif
     // replace the deepest entry with the actual crash address
 #if defined(ARCH_X86_64) && BOOST_OS_LINUX > 0
     ucontext_t *uc = (ucontext_t *)context;
@@ -101,7 +108,9 @@ void handlerDumpingSignal(int sig, siginfo_t *info, void *context)
 
     CrashLog_WriteLine(fmt::format("Error: signal {}:", sig));
 
-#if BOOST_OS_LINUX
+#if defined(__ANDROID__)
+	CrashLog_WriteLine("Backtrace unavailable on Android");
+#elif BOOST_OS_LINUX
 	char** symbol_trace = backtrace_symbols(backtraceArray, size);
 
 	if (symbol_trace)
