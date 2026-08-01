@@ -262,6 +262,24 @@ void LoadOpenGLImports()
 #include "Common/GLInclude/glFunctions.h"
 #undef GLFUNC
 }
+#elif defined(__ANDROID__)
+#include <dlfcn.h>
+
+// Android has no GLX, so everything is resolved through EGL. Cemu's GL renderer
+// needs desktop OpenGL, which Android does not have - Vulkan is the renderer
+// there - but the imports still have to resolve for the build.
+void LoadOpenGLImports()
+{
+	void* libEGL = dlopen("libEGL.so", RTLD_NOW | RTLD_GLOBAL);
+	auto _eglGetProcAddress = (GL_IMPORT(*)(const char*))(libEGL ? dlsym(libEGL, "eglGetProcAddress") : nullptr);
+
+#define GLFUNC(__type, __name)	__name = (__type)(_eglGetProcAddress ? _eglGetProcAddress(STRINGIFY(__name)) : nullptr);
+#define EGLFUNC(__type, __name)	__name = (__type)(libEGL ? dlsym(libEGL, STRINGIFY(__name)) : nullptr);
+#include "Common/GLInclude/glFunctions.h"
+#undef GLFUNC
+#undef EGLFUNC
+}
+
 #elif BOOST_OS_LINUX || BOOST_OS_BSD
 GL_IMPORT _GetOpenGLFunction(void* hLib, PFNGLXGETPROCADDRESSPROC func, const char* name)
 {

@@ -18,6 +18,10 @@ elseif(UNIX)
 			VK_USE_PLATFORM_MACOS_MVK
 			VK_USE_PLATFORM_METAL_EXT
 		)
+	elseif(ANDROID)
+		# there is no X11 or Wayland here, and the Vulkan headers would go
+		# looking for xcb/xcb.h if the desktop surfaces stayed on
+		add_compile_definitions(VK_USE_PLATFORM_ANDROID_KHR)
 	else()
 		add_compile_definitions(
 			VK_USE_PLATFORM_XLIB_KHR # legacy. Do we need to support XLIB surfaces?

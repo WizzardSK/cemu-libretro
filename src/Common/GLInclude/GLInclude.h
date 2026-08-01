@@ -8,6 +8,14 @@
 
 #if ( BOOST_OS_LINUX || BOOST_OS_BSD ) > 0
 
+#define EGL_EGL_PROTOTYPES 0
+#include "egl.h"
+#undef EGL_EGL_PROTOTYPES
+
+// Android is BOOST_OS_LINUX as well, but it has no X11 and therefore no GLX -
+// the function loader goes through EGL there.
+#if !defined(__ANDROID__)
+
 // from Xlib
 #define Bool int
 #define Status int
@@ -24,15 +32,14 @@ typedef XID GLXFBConfigID;
 typedef struct __GLXcontextRec *GLXContext;
 typedef struct __GLXFBConfigRec *GLXFBConfig;
 
-#define EGL_EGL_PROTOTYPES 0
-#include "egl.h"
-#undef EGL_EGL_PROTOTYPES
 #include "glxext.h"
 
 #undef Bool
 #undef Status
 #undef True
 #undef False
+
+#endif // !__ANDROID__
 
 #endif
 
