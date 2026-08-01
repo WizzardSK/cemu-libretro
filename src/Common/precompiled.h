@@ -15,7 +15,10 @@
 #include <fmt/core.h>
 #include <fmt/format.h>
 #include <fmt/ranges.h>
-#if FMT_VERSION > 80000
+#if FMT_VERSION > 80000 && !defined(__ANDROID__)
+// xchar.h pulls in fmt/color.h, whose inline vprint() uses FMT_STRING() - and
+// that is what the NDK's clang rejects ("call to consteval function ... is not a
+// constant expression"). Nothing on Android formats wchar_t, so skip it there.
 #include <fmt/xchar.h> // needed for wchar_t support
 #endif
 

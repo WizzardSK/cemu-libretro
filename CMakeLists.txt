@@ -228,14 +228,6 @@ if (ENABLE_VULKAN)
 	include_directories("dependencies/Vulkan-Headers/include")
 endif()
 
-if (ANDROID)
-	# The NDK's clang rejects fmt's own FMT_STRING() uses inside format-inl.h
-	# ("call to consteval function ... is not a constant expression"). Turning
-	# fmt's consteval usage off makes those compile-time checks runtime ones,
-	# which is what older compilers get anyway.
-	add_compile_definitions(FMT_USE_CONSTEVAL=0)
-endif()
-
 if (ENABLE_OPENGL AND NOT ANDROID)
 	# Android has no desktop OpenGL, only GLES/EGL - the core uses Vulkan there.
 	find_package(OpenGL REQUIRED)
