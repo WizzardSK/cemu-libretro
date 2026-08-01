@@ -1340,7 +1340,8 @@ void OpenGLRenderer::draw_init()
 #if BOOST_OS_WINDOWS
 	indexState.mappedIndexBuffer = (uint8*)_aligned_malloc(GPU7_INDEX_BUFFER_CACHE_SIZE_DEPR, 256);
 #elif defined(__ANDROID__)
-	// bionic only declares aligned_alloc from API 28, and the core targets 24
+	// bionic only declares aligned_alloc from API 28; posix_memalign keeps this
+	// working whatever platform level the core is built against
 	void* alignedIndexBuffer = nullptr;
 	if (posix_memalign(&alignedIndexBuffer, 256, GPU7_INDEX_BUFFER_CACHE_SIZE_DEPR) != 0)
 		alignedIndexBuffer = nullptr;

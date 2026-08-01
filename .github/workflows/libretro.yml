@@ -144,9 +144,10 @@ jobs:
         run: bash ./dependencies/vcpkg/bootstrap-vcpkg.sh
 
       - name: "Configure"
-        # API level 24, as in the GitLab job: the template's default of 16 is
-        # useless for C++20. CMAKE_TOOLCHAIN_FILE is the NDK's - the top-level
-        # CMakeLists turns it into a vcpkg chainload toolchain.
+        # API level 28, as in the GitLab job: bionic gained iconv (which SDL2
+        # links against) and aligned_alloc there, and the template's default of
+        # 16 is useless for C++20 anyway. CMAKE_TOOLCHAIN_FILE is the NDK's -
+        # the top-level CMakeLists turns it into a vcpkg chainload toolchain.
         run: |
           cmake -DCMAKE_BUILD_TYPE=Release \
             -DENABLE_LIBRETRO=ON \
@@ -156,7 +157,7 @@ jobs:
             -DENABLE_DISCORD_RPC=OFF \
             -DVCPKG_TARGET_TRIPLET=${{ matrix.triplet }} \
             -DVCPKG_HOST_TRIPLET=x64-linux \
-            -DANDROID_PLATFORM=android-24 \
+            -DANDROID_PLATFORM=android-28 \
             -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK_LATEST_HOME/build/cmake/android.toolchain.cmake \
             -DANDROID_STL=c++_static \
             -DANDROID_ABI=${{ matrix.abi }} \

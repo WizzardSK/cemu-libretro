@@ -82,7 +82,9 @@ libretro-build-linux-aarch64:
   timeout: 3h
   variables:
     # The template defaults to API 16, which is nowhere near enough for C++20.
-    API_LEVEL: 24
+    # 28 is the floor that works: bionic only got iconv (SDL2 links it) and
+    # aligned_alloc there.
+    API_LEVEL: 28
     # Cemu's CMakeLists hands the template's NDK toolchain to vcpkg as a
     # chainload toolchain (see the comment there); this picks the triplet the
     # ports are built for.
