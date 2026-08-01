@@ -780,14 +780,9 @@ void OpenGLRenderer::rendertarget_deleteCachedFBO(LatteCachedFBO* cfbo)
 #ifdef ENABLE_LIBRETRO
 // In libretro, FBO 0 has no drawable surface (shared context).
 // We create our own FBO with a color renderbuffer to serve as the "backbuffer".
-// Need GL prototypes for renderbuffer functions
-extern "C" {
-void glGenRenderbuffers(GLsizei n, GLuint *renderbuffers);
-void glDeleteRenderbuffers(GLsizei n, const GLuint *renderbuffers);
-void glBindRenderbuffer(GLenum target, GLuint renderbuffer);
-void glRenderbufferStorage(GLenum target, GLenum internalformat, GLsizei width, GLsizei height);
-void glFramebufferRenderbuffer(GLenum target, GLenum attachment, GLenum renderbuffertarget, GLuint renderbuffer);
-}
+// The renderbuffer entry points come from glFunctions.h like every other modern
+// GL function; declaring them here as real symbols only linked on Linux, where
+// libGL exports them - opengl32.dll does not.
 static GLuint s_libretro_fbo = 0;
 static GLuint s_libretro_rbo = 0;
 static int s_libretro_fbo_w = 0;

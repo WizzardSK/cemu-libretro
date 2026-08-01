@@ -131,6 +131,15 @@ GLFUNC(PFNGLCHECKFRAMEBUFFERSTATUSPROC, glCheckFramebufferStatus)
 GLFUNC(PFNGLINVALIDATEFRAMEBUFFERPROC, glInvalidateFramebuffer)
 GLFUNC(PFNGLDELETEFRAMEBUFFERSPROC, glDeleteFramebuffers)
 
+// Renderbuffers. These were missing here: on Linux they resolve straight out of
+// libGL, but opengl32.dll only exports GL 1.1, so on Windows they have to be
+// loaded like every other modern entry point.
+GLFUNC(PFNGLGENRENDERBUFFERSPROC, glGenRenderbuffers)
+GLFUNC(PFNGLBINDRENDERBUFFERPROC, glBindRenderbuffer)
+GLFUNC(PFNGLRENDERBUFFERSTORAGEPROC, glRenderbufferStorage)
+GLFUNC(PFNGLFRAMEBUFFERRENDERBUFFERPROC, glFramebufferRenderbuffer)
+GLFUNC(PFNGLDELETERENDERBUFFERSPROC, glDeleteRenderbuffers)
+
 //GLFUNC(PFNGLNAMEDFRAMEBUFFERTEXTUREPROC, glNamedFramebufferTexture)
 GLFUNC(PFNGLNAMEDFRAMEBUFFERTEXTURE2DEXTPROC, glNamedFramebufferTexture2DEXT)
 GLFUNC(PFNGLNAMEDFRAMEBUFFERTEXTURELAYERPROC, glNamedFramebufferTextureLayer)
