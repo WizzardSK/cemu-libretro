@@ -18,7 +18,12 @@
  * Originally developed and contributed by Ittiam Systems Pvt. Ltd, Bangalore
 */
 #ifdef __ANDROID__
-#include <log/log.h>
+// <log/log.h> is an AOSP-internal header and is not part of the NDK; the NDK
+// ships <android/log.h> instead. ALOGE() comes from the former, so map it.
+#include <android/log.h>
+#ifndef ALOGE
+#define ALOGE(...) __android_log_print(ANDROID_LOG_ERROR, "ih264d", __VA_ARGS__)
+#endif
 #endif
 #include "ih264_typedefs.h"
 #include "ih264_macros.h"
