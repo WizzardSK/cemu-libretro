@@ -29,6 +29,8 @@ public:
 
 	static bool ForceInterpreter() { return s_force_interpreter; };
 	static bool ForceMultiCoreInterpreter() { return s_force_multicore_interpreter; }
+	// the libretro core has no command line, so its CPU Mode option sets this directly
+	static void SetForceMultiCoreInterpreter(bool force) { s_force_multicore_interpreter = force; }
 
 	static std::optional<uint32> GetPersistentId() { return s_persistent_id; }
 

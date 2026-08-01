@@ -822,7 +822,18 @@ static std::optional<CPUMode> libretro_parse_cpu_mode(const char* v)
 	if (libretro_iequals(v, "singlecore_interpreter")) return CPUMode::SinglecoreInterpreter;
 	if (libretro_iequals(v, "singlecore_recompiler")) return CPUMode::SinglecoreRecompiler;
 	if (libretro_iequals(v, "multicore_recompiler")) return CPUMode::MulticoreRecompiler;
+	// CPUMode has no multi-core interpreter member, and adding one would leak into
+	// settings.xml and the GUI. The scheduler and the recompiler both already look
+	// at LaunchSettings::ForceMultiCoreInterpreter(), so that flag carries it and
+	// the mode itself stays MulticoreRecompiler (which is what the scheduler wants
+	// to see for three cores).
+	if (libretro_iequals(v, "multicore_interpreter")) return CPUMode::MulticoreRecompiler;
 	return std::nullopt;
+}
+
+static bool libretro_is_multicore_interpreter(const char* v)
+{
+	return v && libretro_iequals(v, "multicore_interpreter");
 }
 
 static std::optional<PrecompiledShaderOption> libretro_parse_precompiled_shaders(const char* v)
@@ -919,7 +930,11 @@ static void libretro_apply_core_options()
 	}
 
 	// CPU mode & precompiled shaders (ActiveSettings overrides)
-	ActiveSettings::SetLibretroCPUModeOverride(libretro_parse_cpu_mode(libretro_get_option_value("cemu_cpu_mode")));
+	const char* cpuModeValue = libretro_get_option_value("cemu_cpu_mode");
+	ActiveSettings::SetLibretroCPUModeOverride(libretro_parse_cpu_mode(cpuModeValue));
+	// Read once at game start by OSSchedulerBegin() and PPCRecompiler_init(), so a
+	// change here only takes effect on the next content load.
+	LaunchSettings::SetForceMultiCoreInterpreter(libretro_is_multicore_interpreter(cpuModeValue));
 	ActiveSettings::SetLibretroPrecompiledShadersOverride(libretro_parse_precompiled_shaders(libretro_get_option_value("cemu_precompiled_shaders")));
 
 	// DRC (GamePad) display mode
@@ -1039,7 +1054,7 @@ RETRO_API void retro_set_environment(retro_environment_t cb)
 
 	// Set up core options (matching danprice/Cemu-Libretro Windows core where applicable)
 	static const struct retro_variable variables[] = {
-		{"cemu_cpu_mode", "CPU Mode; auto|singlecore_interpreter|singlecore_recompiler|multicore_recompiler"},
+		{"cemu_cpu_mode", "CPU Mode; auto|singlecore_interpreter|singlecore_recompiler|multicore_recompiler|multicore_interpreter"},
 		{"cemu_console_language", "Console Language; English|Japanese|French|German|Italian|Spanish|Chinese|Korean|Dutch|Portuguese|Russian|Taiwanese"},
 		{"cemu_async_shader_compile", "Async Shader Compile; enabled|disabled"},
 		{"cemu_gx2drawdone_sync", "GX2DrawDone Sync; enabled|disabled"},
