@@ -120,6 +120,14 @@ namespace coreinit
 		uint8  padding[1024 * 128];
 		PPCInterpreter_t ppcInstance;
 		uint32 selectedCore;
+		// The host thread this fiber may resume on, once it has run for the
+		// first time. On AArch64 the thread pointer lives in a register and the
+		// compiler keeps it in a callee-saved one across calls, so a fiber that
+		// suspends on one host thread and resumes on another reads its
+		// thread_local variables through the wrong pointer and crashes. x86-64
+		// addresses TLS through fs: on every access and does not care, which is
+		// why this only shows up here.
+		sint32 m_ownerCore = -1;
 	};
 
 	std::unordered_map<OSThread_t*, OSHostThread*> s_threadToFiber;
@@ -1095,6 +1103,9 @@ namespace coreinit
 		cemu_assert_debug(s_threadToFiber.find(thread) != s_threadToFiber.end());
 
 		OSHostThread* hostThread = s_threadToFiber.find(thread)->second;
+		// claims the fiber for this core, or follows the thread if its affinity
+		// no longer allows the core that owned it
+		hostThread->m_ownerCore = (sint32)coreIndex;
 		hostThread->selectedCore = coreIndex;
 		Fiber::Switch(hostThread->m_fiber);
 	}
@@ -1229,18 +1240,34 @@ namespace coreinit
 		// pick thread, then remove from run queue
 		OSThreadQueue* runQueue = g_coreRunQueue.GetPtr() + coreIndex;
 
+		// A fiber that has already run belongs to one host thread (see
+		// OSHostThread::m_ownerCore); leave it for that core to pick up. The
+		// owner keeps it in its own run queue as long as the affinity mask
+		// still covers that core - if the title narrows the affinity so that it
+		// does not, the thread is taken here rather than left to starve.
+		auto isRunnableHere = [&](OSThread_t* thread) -> bool
+		{
+			if (!g_isMulticoreMode)
+				return true;
+			auto itr = s_threadToFiber.find(thread);
+			if (itr == s_threadToFiber.end())
+				return true;
+			const sint32 ownerCore = itr->second->m_ownerCore;
+			if (ownerCore < 0 || ownerCore == (sint32)coreIndex)
+				return true;
+			return !thread->context.hasCoreAffinitySet(ownerCore);
+		};
+
 		OSThread_t* threadItr = runQueue->head.GetPtr();
 		OSThread_t* selectedThread = nullptr;
-		if (!threadItr)
-			return nullptr;
-		selectedThread = threadItr;
-
 		while (threadItr)
 		{
-			if (threadItr->effectivePriority < selectedThread->effectivePriority)
+			if (isRunnableHere(threadItr) && (!selectedThread || threadItr->effectivePriority < selectedThread->effectivePriority))
 				selectedThread = threadItr;
 			threadItr = threadItr->linkRun[coreIndex].next.GetPtr();
 		}
+		if (!selectedThread)
+			return nullptr;
 
 		cemu_assert_debug(selectedThread->state == OSThread_t::THREAD_STATE::STATE_READY);
 
