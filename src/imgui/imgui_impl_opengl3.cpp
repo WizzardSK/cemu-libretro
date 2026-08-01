@@ -80,7 +80,11 @@
 
 // Auto-detect GL version
 #if !defined(IMGUI_IMPL_OPENGL_ES2) && !defined(IMGUI_IMPL_OPENGL_ES3)
-#if (defined(__APPLE__) && (TARGET_OS_IOS || TARGET_OS_TV)) || (defined(__ANDROID__))
+// Android is deliberately not in this list: this file gets its GL functions
+// from Cemu's own loader (Common/GLInclude), and pulling in <GLES3/gl3.h> would
+// make every gl* call ambiguous against the CemuGL namespace. The GL renderer
+// is desktop-only anyway - Android runs the Vulkan one.
+#if (defined(__APPLE__) && (TARGET_OS_IOS || TARGET_OS_TV))
 #define IMGUI_IMPL_OPENGL_ES3           // iOS, Android  -> GL ES 3, "#version 300 es"
 #undef IMGUI_IMPL_OPENGL_LOADER_GL3W
 #undef IMGUI_IMPL_OPENGL_LOADER_GLEW

@@ -130,7 +130,10 @@ VKFUNC_DEVICE(vkDestroyPipeline);
 VKFUNC_DEVICE(vkCmdBindPipeline);
 
 // swapchain
-#if BOOST_OS_LINUX || BOOST_OS_BSD
+#if defined(__ANDROID__)
+// Android is BOOST_OS_LINUX too, but there is no X11 or Wayland here
+VKFUNC_INSTANCE(vkCreateAndroidSurfaceKHR);
+#elif BOOST_OS_LINUX || BOOST_OS_BSD
 VKFUNC_INSTANCE(vkCreateXlibSurfaceKHR);
 VKFUNC_INSTANCE(vkCreateXcbSurfaceKHR);
 #ifdef HAS_WAYLAND
