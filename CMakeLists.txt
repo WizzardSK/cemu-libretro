@@ -194,7 +194,9 @@ if (NOT TARGET glslang::SPIRV AND TARGET SPIRV)
 	add_library(glslang::SPIRV ALIAS SPIRV)
 endif()
 
-if (UNIX AND NOT APPLE)
+# Android is UNIX as far as CMake is concerned, but has none of this: no X11, no
+# Wayland, no GTK, no BlueZ.
+if (UNIX AND NOT APPLE AND NOT ANDROID)
 	find_package(X11 REQUIRED)
 	if (ENABLE_WAYLAND)
 		find_package(Wayland REQUIRED Client)
@@ -209,7 +211,10 @@ if (UNIX AND NOT APPLE)
 		target_include_directories(CemuWaylandProtocols PRIVATE ${Wayland_INCLUDE_DIRS})
 		add_compile_definitions(HAS_WAYLAND)
 	endif()
-	find_package(GTK3 REQUIRED)
+	# Only CemuWxGui links GTK3::gtk, so a core build does not need it at all.
+	if (ENABLE_WXWIDGETS)
+		find_package(GTK3 REQUIRED)
+	endif()
 
 	if(ENABLE_BLUEZ)
 		find_package(bluez REQUIRED)
