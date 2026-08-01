@@ -5,7 +5,12 @@
 #include "version.h"
 #include "platform.h"
 
+#ifndef __ANDROID__
+// Header-only fmt compiles fmt's own implementation into every TU, and the NDK's
+// clang rejects the FMT_STRING() uses inside format-inl.h. Link vcpkg's compiled
+// fmt there instead - CemuCommon already links fmt::fmt.
 #define FMT_HEADER_ONLY
+#endif
 #define FMT_USE_GRISU 1
 #include <fmt/core.h>
 #include <fmt/format.h>

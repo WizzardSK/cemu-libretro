@@ -24,6 +24,9 @@
 #ifndef ALOGE
 #define ALOGE(...) __android_log_print(ANDROID_LOG_ERROR, "ih264d", __VA_ARGS__)
 #endif
+// android_errorWriteLog() is AOSP's liblog too (it files a security report and
+// is a no-op outside the platform build); drop it.
+#define android_errorWriteLog(tag, subTag) ((void)0)
 #endif
 #include "ih264_typedefs.h"
 #include "ih264_macros.h"
