@@ -16,13 +16,6 @@
 #include <fmt/format.h>
 #include <fmt/ranges.h>
 #if FMT_VERSION > 80000
-#ifdef __ANDROID__
-// xchar.h pulls in fmt/color.h, whose inline vprint() uses FMT_STRING() - which
-// the NDK's clang rejects ("call to consteval function ... is not a constant
-// expression"). wchar_t formatting *is* needed here, so claim color.h's include
-// guard instead: nothing in the tree uses fmt's text styling.
-#define FMT_COLOR_H_
-#endif
 #include <fmt/xchar.h> // needed for wchar_t support
 #endif
 
