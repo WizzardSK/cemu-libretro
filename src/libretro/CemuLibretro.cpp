@@ -165,7 +165,6 @@ static void* cemu_gl_get_proc(const char* name)
 			p = (void*)GetProcAddress(s_opengl32, name);
 	}
 	return p;
-#else
 #elif defined(__ANDROID__)
 	// No GLX; eglGetProcAddress covers both core and extension entry points here.
 	return (void*)eglGetProcAddress(name);
