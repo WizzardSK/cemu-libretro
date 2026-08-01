@@ -11,9 +11,12 @@
 #elif BOOST_OS_BSD
 #include <endian.h>
 #endif
+#ifndef __ANDROID__
+// Android is BOOST_OS_LINUX as well, and has no X11.
 #include <X11/Xlib.h>
 #include <X11/extensions/Xrender.h>
 #include <X11/Xutil.h>
+#endif
 #include "Common/unix/platform.h"
 #elif BOOST_OS_MACOS
 #include <libkern/OSByteOrder.h>

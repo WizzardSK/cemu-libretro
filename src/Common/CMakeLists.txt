@@ -66,7 +66,9 @@ target_link_libraries(CemuCommon PRIVATE
 	glm::glm
 )
 
-if (UNIX AND NOT APPLE)
+# Android is UNIX to CMake but has no X11 - see the find_package() guard in the
+# top-level CMakeLists.
+if (UNIX AND NOT APPLE AND NOT ANDROID)
 	target_link_libraries(CemuCommon PRIVATE X11::X11 X11::Xrender X11::Xutil)
 endif()
 
