@@ -3,11 +3,6 @@ name: Build libretro core
 # Builds cemu_libretro for every target the core currently supports and uploads
 # each result as an artifact, so a release can be assembled from them.
 #
-# Windows is deliberately absent: the core's glue layer is
-# src/libretro/CemuLibretroLinux.cpp, which takes the frontend's GL context over
-# GLX/EGL and pulls in X11 and dlfcn. A Windows core needs a WGL/Win32
-# equivalent of that file first - a CI job would only produce a wall of errors.
-#
 # The Android jobs mirror .gitlab-ci.yml, whose android-cmake template has
 # nowhere to run (this core is not on git.libretro.com).
 
@@ -79,6 +74,42 @@ jobs:
         with:
           name: cemu_libretro-linux-${{ matrix.arch }}
           path: ./bin/cemu_libretro.so
+
+  windows:
+    name: windows-x64
+    runs-on: windows-2022
+    # The WGL path in the glue layer has never been through a compiler; give it
+    # a run without failing the whole workflow over it.
+    continue-on-error: true
+    timeout-minutes: 350
+
+    steps:
+      - name: "Checkout repo"
+        uses: actions/checkout@v4
+        with:
+          submodules: "recursive"
+          fetch-depth: 0
+
+      - name: "Setup cmake"
+        uses: jwlawson/actions-setup-cmake@v2
+        with:
+          cmake-version: '3.29.0'
+
+      - name: "Bootstrap vcpkg"
+        run: ./dependencies/vcpkg/bootstrap-vcpkg.bat
+
+      - name: "Configure"
+        run: |
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DENABLE_LIBRETRO=ON -DENABLE_WXWIDGETS=OFF -DENABLE_DISCORD_RPC=OFF -DENABLE_CUBEB=OFF -DVCPKG_INSTALL_OPTIONS="--clean-after-build"
+
+      - name: "Build"
+        run: cmake --build build --target cemu_libretro --config Release
+
+      - name: "Upload artifact"
+        uses: actions/upload-artifact@v4
+        with:
+          name: cemu_libretro-windows-x64
+          path: ./bin/cemu_libretro.dll
 
   android:
     name: android-${{ matrix.abi }}

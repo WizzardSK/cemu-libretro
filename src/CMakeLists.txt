@@ -57,7 +57,7 @@ if(ENABLE_LIBRETRO)
 	add_library(cemu_libretro SHARED
 		main.cpp
 		mainLLE.cpp
-		libretro/CemuLibretroLinux.cpp
+		libretro/CemuLibretro.cpp
 		libretro/LibretroAudioAPI.cpp
 		libretro/LibretroWindowSystem.cpp
 	)
@@ -102,6 +102,15 @@ if(ENABLE_LIBRETRO)
 	if(SPIRV_TOOLS_LIBRARY AND SPIRV_TOOLS_OPT_LIBRARY)
 		target_link_libraries(cemu_libretro PRIVATE
 			${SPIRV_TOOLS_LIBRARY} ${SPIRV_TOOLS_OPT_LIBRARY})
+	endif()
+
+	if(WIN32)
+		target_link_libraries(cemu_libretro PRIVATE opengl32)
+		# MSVC counterpart of the --whole-archive below: imgui pulls fontawesome
+		# out of the resource archive, so none of it may be dropped.
+		target_link_options(cemu_libretro PRIVATE "/WHOLEARCHIVE:$<TARGET_FILE:CemuResource>")
+		# No version script needed - the retro_* entry points carry RETRO_API,
+		# which is __declspec(dllexport) when building a core on Windows.
 	endif()
 
 	if(UNIX AND NOT APPLE)

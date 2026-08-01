@@ -53,7 +53,20 @@ extern void glReadPixels(int x, int y, int width, int height, unsigned int forma
 #include <condition_variable>
 #include <atomic>
 
-// GLX for shared context creation (Linux)
+// Shared context creation. Linux takes the frontend's GLX (X11) or EGL (Wayland)
+// context; Windows takes its WGL one. Everything platform specific in this file
+// sits behind _WIN32 from here on.
+#ifdef _WIN32
+
+#include <windows.h>
+
+// RetroArch's context, and the one we create for Cemu's GPU thread to share with.
+static HDC s_wgl_frontend_dc = nullptr;
+static HGLRC s_wgl_frontend_context = nullptr;
+static HGLRC s_wgl_shared_context = nullptr;
+
+#else
+
 // X11 Bool conflicts with Cemu enums, so we define it before including GLX
 #ifndef Bool
 #define Bool int
@@ -102,7 +115,6 @@ static Display* s_glx_display = nullptr;
 static GLXDrawable s_glx_drawable = 0;
 static GLXContext s_glx_shared_context = nullptr;  // created for GPU thread
 static GLXContext s_glx_frontend_context = nullptr; // RetroArch's context
-static bool s_gpu_context_made_current = false;
 
 // EGL equivalents (used when the frontend runs on EGL, e.g. Wayland)
 static bool s_use_egl = false;
@@ -126,6 +138,30 @@ static EGLDisplay egl_current_display()
 		if (libegl) fn = (PFN_egl_gcd)dlsym(libegl, "eglGetCurrentDisplay");
 	}
 	return fn ? fn() : EGL_NO_DISPLAY;
+}
+
+#endif // _WIN32
+
+// Set once the GPU thread has our shared context current.
+static bool s_gpu_context_made_current = false;
+
+// GL entry points are resolved through whichever loader the platform provides.
+static void* cemu_gl_get_proc(const char* name)
+{
+#ifdef _WIN32
+	void* p = (void*)wglGetProcAddress(name);
+	if (!p)
+	{
+		// wglGetProcAddress only knows extensions; core 1.1 entry points live in
+		// the DLL itself.
+		static HMODULE s_opengl32 = LoadLibraryA("opengl32.dll");
+		if (s_opengl32)
+			p = (void*)GetProcAddress(s_opengl32, name);
+	}
+	return p;
+#else
+	return (void*)glXGetProcAddress((const GLubyte*)name);
+#endif
 }
 
 // ============================================================================
@@ -557,7 +593,26 @@ public:
 			return false;
 		if (!s_hw_render_initialized || s_shutting_down)
 			return false;
-		// Make our shared GL context current on the GPU thread (EGL on Wayland, GLX on X11)
+		// Make our shared GL context current on the GPU thread (WGL on Windows,
+		// EGL on Wayland, GLX on X11).
+#ifdef _WIN32
+		if (s_wgl_shared_context && s_wgl_frontend_dc && !s_gpu_context_made_current)
+		{
+			if (wglMakeCurrent(s_wgl_frontend_dc, s_wgl_shared_context))
+			{
+				s_gpu_context_made_current = true;
+				if (log_cb)
+					log_cb(RETRO_LOG_INFO, "Cemu: GPU thread WGL context made current successfully\n");
+			}
+			else
+			{
+				if (log_cb)
+					log_cb(RETRO_LOG_ERROR, "Cemu: Failed to make GPU thread WGL context current (%lu)\n",
+						(unsigned long)GetLastError());
+				return false;
+			}
+		}
+#else
 		if (s_use_egl)
 		{
 			if (s_egl_shared_context != EGL_NO_CONTEXT && s_egl_display != EGL_NO_DISPLAY && !s_gpu_context_made_current)
@@ -596,6 +651,7 @@ public:
 				return false;
 			}
 		}
+#endif // _WIN32
 		return true;
 	}
 
@@ -1225,6 +1281,48 @@ static void libretro_launch_game()
 static std::atomic_bool s_launch_thread_running{false};
 
 // Wayland / EGL frontends: build the shared GPU-thread context via EGL instead of GLX.
+#ifdef _WIN32
+
+// Takes RetroArch's WGL context and creates one for Cemu's GPU thread that
+// shares its objects (textures, buffers), the same thing the GLX/EGL paths do.
+static void libretro_create_shared_wgl_context()
+{
+	s_wgl_frontend_dc = wglGetCurrentDC();
+	s_wgl_frontend_context = wglGetCurrentContext();
+	if (!s_wgl_frontend_dc || !s_wgl_frontend_context)
+	{
+		if (log_cb)
+			log_cb(RETRO_LOG_ERROR, "Cemu: Frontend WGL context not current in context_reset\n");
+		return;
+	}
+
+	if (log_cb)
+		log_cb(RETRO_LOG_INFO, "Cemu: Frontend GL context: dc=%p ctx=%p\n",
+			s_wgl_frontend_dc, s_wgl_frontend_context);
+
+	HGLRC shared = wglCreateContext(s_wgl_frontend_dc);
+	if (!shared)
+	{
+		if (log_cb)
+			log_cb(RETRO_LOG_ERROR, "Cemu: wglCreateContext failed (%lu)\n", (unsigned long)GetLastError());
+		return;
+	}
+
+	if (!wglShareLists(s_wgl_frontend_context, shared))
+	{
+		if (log_cb)
+			log_cb(RETRO_LOG_ERROR, "Cemu: wglShareLists failed (%lu)\n", (unsigned long)GetLastError());
+		wglDeleteContext(shared);
+		return;
+	}
+
+	s_wgl_shared_context = shared;
+	if (log_cb)
+		log_cb(RETRO_LOG_INFO, "Cemu: Created shared GL context for GPU thread: %p\n", s_wgl_shared_context);
+}
+
+#else
+
 static void libretro_create_shared_egl_context()
 {
 	s_egl_frontend_context = eglGetCurrentContext();
@@ -1323,7 +1421,7 @@ static void libretro_create_shared_gl_context()
 	// Use glXCreateContextAttribsARB for core profile context
 	typedef GLXContext (*glXCreateContextAttribsARBProc)(Display*, GLXFBConfig, GLXContext, int, const int*);
 	glXCreateContextAttribsARBProc _glXCreateContextAttribsARB =
-		(glXCreateContextAttribsARBProc)glXGetProcAddress((const GLubyte*)"glXCreateContextAttribsARB");
+		(glXCreateContextAttribsARBProc)cemu_gl_get_proc("glXCreateContextAttribsARB");
 
 	if (!_glXCreateContextAttribsARB)
 	{
@@ -1383,6 +1481,8 @@ static void libretro_create_shared_gl_context()
 	}
 }
 
+#endif // _WIN32
+
 static void libretro_context_reset()
 {
 	s_hw_render_initialized = true;
@@ -1395,6 +1495,21 @@ static void libretro_context_reset()
 	// Create or update shared GL context for GPU thread (OpenGL only)
 	if (s_graphics_api == SelectedGraphicsAPI::OpenGL)
 	{
+#ifdef _WIN32
+		if (!s_wgl_shared_context)
+		{
+			libretro_create_shared_wgl_context();
+		}
+		else
+		{
+			// Context restored (e.g. fullscreen toggle) - re-capture the DC and
+			// let the GPU thread make its context current again.
+			s_wgl_frontend_dc = wglGetCurrentDC();
+			s_gpu_context_made_current = false;
+			if (log_cb)
+				log_cb(RETRO_LOG_INFO, "Cemu: WGL context restored, dc=%p\n", s_wgl_frontend_dc);
+		}
+#else
 		const bool haveSharedContext = s_use_egl ? (s_egl_shared_context != EGL_NO_CONTEXT)
 		                                          : (s_glx_shared_context != nullptr);
 		if (!haveSharedContext)
@@ -1420,6 +1535,7 @@ static void libretro_context_reset()
 				log_cb(RETRO_LOG_INFO, "Cemu: Context restored, updating drawable=0x%lx\n",
 					(unsigned long)s_glx_drawable);
 		}
+#endif // _WIN32
 	}
 
 	// Only create renderer on first call - subsequent calls are context restores
@@ -1770,10 +1886,10 @@ static PFNGLBLITFRAMEBUFFERPROC_ s_glBlitFramebuffer = nullptr;
 static void libretro_load_blit_gl_funcs()
 {
 	if (s_glBindFramebuffer) return;
-	s_glBindFramebuffer = (PFNGLBINDFRAMEBUFFERPROC_)glXGetProcAddress((const GLubyte*)"glBindFramebuffer");
-	s_glGenFramebuffers = (PFNGLGENFRAMEBUFFERSPROC_)glXGetProcAddress((const GLubyte*)"glGenFramebuffers");
-	s_glFramebufferRenderbuffer = (PFNGLFRAMEBUFFERRENDERBUFFERPROC_)glXGetProcAddress((const GLubyte*)"glFramebufferRenderbuffer");
-	s_glBlitFramebuffer = (PFNGLBLITFRAMEBUFFERPROC_)glXGetProcAddress((const GLubyte*)"glBlitFramebuffer");
+	s_glBindFramebuffer = (PFNGLBINDFRAMEBUFFERPROC_)cemu_gl_get_proc("glBindFramebuffer");
+	s_glGenFramebuffers = (PFNGLGENFRAMEBUFFERSPROC_)cemu_gl_get_proc("glGenFramebuffers");
+	s_glFramebufferRenderbuffer = (PFNGLFRAMEBUFFERRENDERBUFFERPROC_)cemu_gl_get_proc("glFramebufferRenderbuffer");
+	s_glBlitFramebuffer = (PFNGLBLITFRAMEBUFFERPROC_)cemu_gl_get_proc("glBlitFramebuffer");
 }
 
 #define GL_COLOR_BUFFER_BIT_ 0x00004000
@@ -1861,14 +1977,14 @@ RETRO_API void retro_run()
 
 		if (!_glGenTextures)
 		{
-			_glGenTextures = (PFNGLGENTEXTURESPROC_)glXGetProcAddress((const GLubyte*)"glGenTextures");
-			_glBindTexture = (PFNGLBINDTEXTUREPROC_)glXGetProcAddress((const GLubyte*)"glBindTexture");
-			_glTexImage2D = (PFNGLTEXIMAGE2DPROC_)glXGetProcAddress((const GLubyte*)"glTexImage2D");
-			_glTexParameteri = (PFNGLTEXPARAMETERIPROC_)glXGetProcAddress((const GLubyte*)"glTexParameteri");
-			_glEnable = (PFNGLENABLEPROC_)glXGetProcAddress((const GLubyte*)"glEnable");
-			_glDisable = (PFNGLDISABLEPROC_)glXGetProcAddress((const GLubyte*)"glDisable");
-			_glViewport = (PFNGLVIEWPORTPROC_)glXGetProcAddress((const GLubyte*)"glViewport");
-			_glDrawArrays = (PFNGLDRAWARRAYSPROC_)glXGetProcAddress((const GLubyte*)"glDrawArrays");
+			_glGenTextures = (PFNGLGENTEXTURESPROC_)cemu_gl_get_proc("glGenTextures");
+			_glBindTexture = (PFNGLBINDTEXTUREPROC_)cemu_gl_get_proc("glBindTexture");
+			_glTexImage2D = (PFNGLTEXIMAGE2DPROC_)cemu_gl_get_proc("glTexImage2D");
+			_glTexParameteri = (PFNGLTEXPARAMETERIPROC_)cemu_gl_get_proc("glTexParameteri");
+			_glEnable = (PFNGLENABLEPROC_)cemu_gl_get_proc("glEnable");
+			_glDisable = (PFNGLDISABLEPROC_)cemu_gl_get_proc("glDisable");
+			_glViewport = (PFNGLVIEWPORTPROC_)cemu_gl_get_proc("glViewport");
+			_glDrawArrays = (PFNGLDRAWARRAYSPROC_)cemu_gl_get_proc("glDrawArrays");
 		}
 
 		if (!s_glBindFramebuffer) libretro_load_blit_gl_funcs();
@@ -1901,7 +2017,7 @@ RETRO_API void retro_run()
 				typedef void (*PFNGLFRAMEBUFFERTEXTURE2DPROC_)(unsigned int, unsigned int, unsigned int, unsigned int, int);
 				static PFNGLFRAMEBUFFERTEXTURE2DPROC_ _glFramebufferTexture2D = nullptr;
 				if (!_glFramebufferTexture2D)
-					_glFramebufferTexture2D = (PFNGLFRAMEBUFFERTEXTURE2DPROC_)glXGetProcAddress((const GLubyte*)"glFramebufferTexture2D");
+					_glFramebufferTexture2D = (PFNGLFRAMEBUFFERTEXTURE2DPROC_)cemu_gl_get_proc("glFramebufferTexture2D");
 
 				s_glBindFramebuffer(GL_READ_FRAMEBUFFER_EXT, s_frontend_read_fbo);
 				if (_glFramebufferTexture2D)
