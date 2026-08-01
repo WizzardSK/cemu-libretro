@@ -67,6 +67,7 @@ static HGLRC s_wgl_shared_context = nullptr;
 
 #else
 
+#ifndef __ANDROID__
 // X11 Bool conflicts with Cemu enums, so we define it before including GLX
 #ifndef Bool
 #define Bool int
@@ -77,6 +78,7 @@ static HGLRC s_wgl_shared_context = nullptr;
 #ifdef CEMU_DEFINED_BOOL
 #undef Bool
 #endif
+#endif // __ANDROID__
 #include <dlfcn.h>
 
 // EGL fallback for Wayland sessions: RetroArch uses EGL there, so glXGetCurrentContext()
@@ -108,13 +110,17 @@ EGLBoolean eglQueryContext(EGLDisplay dpy, EGLContext ctx, EGLint attribute, EGL
 EGLBoolean eglChooseConfig(EGLDisplay dpy, const EGLint* attrib_list, EGLConfig* configs, EGLint config_size, EGLint* num_config);
 EGLContext eglCreateContext(EGLDisplay dpy, EGLConfig config, EGLContext share_context, const EGLint* attrib_list);
 EGLBoolean eglMakeCurrent(EGLDisplay dpy, EGLSurface draw, EGLSurface read, EGLContext ctx);
+__eglMustCastToProperFunctionPointerType eglGetProcAddress(const char* procname);
 }
 
-// Shared GL context for Cemu GPU thread
+// Shared GL context for Cemu GPU thread. Android has no GLX - it always goes
+// through EGL, so the frontend context is captured there instead.
+#ifndef __ANDROID__
 static Display* s_glx_display = nullptr;
 static GLXDrawable s_glx_drawable = 0;
 static GLXContext s_glx_shared_context = nullptr;  // created for GPU thread
 static GLXContext s_glx_frontend_context = nullptr; // RetroArch's context
+#endif
 
 // EGL equivalents (used when the frontend runs on EGL, e.g. Wayland)
 static bool s_use_egl = false;
@@ -159,6 +165,10 @@ static void* cemu_gl_get_proc(const char* name)
 			p = (void*)GetProcAddress(s_opengl32, name);
 	}
 	return p;
+#else
+#elif defined(__ANDROID__)
+	// No GLX; eglGetProcAddress covers both core and extension entry points here.
+	return (void*)eglGetProcAddress(name);
 #else
 	return (void*)glXGetProcAddress((const GLubyte*)name);
 #endif
@@ -635,6 +645,7 @@ public:
 				}
 			}
 		}
+#ifndef __ANDROID__
 		else if (s_glx_shared_context && s_glx_display && s_glx_drawable && !s_gpu_context_made_current)
 		{
 			int result = glXMakeCurrent(s_glx_display, s_glx_drawable, s_glx_shared_context);
@@ -651,6 +662,7 @@ public:
 				return false;
 			}
 		}
+#endif // __ANDROID__
 #endif // _WIN32
 		return true;
 	}
@@ -1391,6 +1403,11 @@ static void libretro_create_shared_egl_context()
 
 static void libretro_create_shared_gl_context()
 {
+#ifdef __ANDROID__
+	// No GLX here at all - the frontend context is always EGL.
+	libretro_create_shared_egl_context();
+	return;
+#else
 	// Capture the frontend's GL context. Prefer GLX (X11); on Wayland the frontend
 	// runs on EGL and glXGetCurrentContext() returns NULL, so fall back to EGL.
 	s_glx_frontend_context = glXGetCurrentContext();
@@ -1479,6 +1496,7 @@ static void libretro_create_shared_gl_context()
 		if (log_cb)
 			log_cb(RETRO_LOG_ERROR, "Cemu: Failed to create shared GL context\n");
 	}
+#endif // __ANDROID__
 }
 
 #endif // _WIN32
@@ -1510,8 +1528,12 @@ static void libretro_context_reset()
 				log_cb(RETRO_LOG_INFO, "Cemu: WGL context restored, dc=%p\n", s_wgl_frontend_dc);
 		}
 #else
+#ifdef __ANDROID__
+		const bool haveSharedContext = (s_egl_shared_context != EGL_NO_CONTEXT);
+#else
 		const bool haveSharedContext = s_use_egl ? (s_egl_shared_context != EGL_NO_CONTEXT)
 		                                          : (s_glx_shared_context != nullptr);
+#endif
 		if (!haveSharedContext)
 		{
 			libretro_create_shared_gl_context();
@@ -1525,6 +1547,7 @@ static void libretro_context_reset()
 			if (log_cb)
 				log_cb(RETRO_LOG_INFO, "Cemu: EGL context restored, surface=%p\n", s_egl_surface);
 		}
+#ifndef __ANDROID__
 		else
 		{
 			// Context restored (e.g. fullscreen toggle) - update drawable for MakeCurrent
@@ -1535,6 +1558,7 @@ static void libretro_context_reset()
 				log_cb(RETRO_LOG_INFO, "Cemu: Context restored, updating drawable=0x%lx\n",
 					(unsigned long)s_glx_drawable);
 		}
+#endif // __ANDROID__
 #endif // _WIN32
 	}
 

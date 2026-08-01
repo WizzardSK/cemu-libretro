@@ -228,7 +228,8 @@ if (ENABLE_VULKAN)
 	include_directories("dependencies/Vulkan-Headers/include")
 endif()
 
-if (ENABLE_OPENGL)
+if (ENABLE_OPENGL AND NOT ANDROID)
+	# Android has no desktop OpenGL, only GLES/EGL - the core uses Vulkan there.
 	find_package(OpenGL REQUIRED)
 endif()
 
