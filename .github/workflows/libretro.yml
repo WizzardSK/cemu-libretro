@@ -1,0 +1,144 @@
+name: Build libretro core
+
+# Builds cemu_libretro for every target the core currently supports and uploads
+# each result as an artifact, so a release can be assembled from them.
+#
+# Windows is deliberately absent: the core's glue layer is
+# src/libretro/CemuLibretroLinux.cpp, which takes the frontend's GL context over
+# GLX/EGL and pulls in X11 and dlfcn. A Windows core needs a WGL/Win32
+# equivalent of that file first - a CI job would only produce a wall of errors.
+#
+# The Android jobs mirror .gitlab-ci.yml, whose android-cmake template has
+# nowhere to run (this core is not on git.libretro.com).
+
+on:
+  push:
+    branches:
+      - libretro
+    paths-ignore:
+      - '**.md'
+  workflow_dispatch:
+
+env:
+  VCPKG_ROOT: "${{github.workspace}}/dependencies/vcpkg"
+
+jobs:
+  linux:
+    name: linux-${{ matrix.arch }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 350
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-22.04
+            arch: x64
+          - os: ubuntu-22.04-arm
+            arch: arm64
+
+    steps:
+      - name: "Checkout repo"
+        uses: actions/checkout@v4
+        with:
+          submodules: "recursive"
+          fetch-depth: 0
+
+      - name: "Install dependencies"
+        run: |
+          sudo apt update -qq
+          sudo apt install -y --no-install-recommends \
+            cmake ninja-build nasm autoconf automake libtool pkg-config python3 \
+            libglm-dev libgl1-mesa-dev libegl1-mesa-dev freeglut3-dev \
+            libx11-dev libxext-dev libxrandr-dev libxi-dev libxcursor-dev \
+            libxss-dev libxkbcommon-dev libwayland-dev wayland-protocols \
+            libudev-dev libdbus-1-dev libgcrypt20-dev libpulse-dev \
+            libsecret-1-dev libsystemd-dev libbluetooth-dev
+
+      - name: "Bootstrap vcpkg"
+        run: bash ./dependencies/vcpkg/bootstrap-vcpkg.sh
+
+      - name: "Configure"
+        # Flags as documented in LIBRETRO.md, plus the two the GitLab job turns
+        # off because the core does not use them.
+        run: |
+          cmake -S . -B build -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DENABLE_LIBRETRO=ON \
+            -DENABLE_WXWIDGETS=OFF \
+            -DENABLE_DISCORD_RPC=OFF \
+            -DENABLE_CUBEB=OFF \
+            -DENABLE_BLUEZ=OFF \
+            -DENABLE_FERAL_GAMEMODE=OFF \
+            -DCMAKE_POSITION_INDEPENDENT_CODE=ON
+
+      - name: "Build"
+        run: cmake --build build --target cemu_libretro -- -j $(nproc)
+
+      - name: "Upload artifact"
+        uses: actions/upload-artifact@v4
+        with:
+          name: cemu_libretro-linux-${{ matrix.arch }}
+          path: ./bin/cemu_libretro.so
+
+  android:
+    name: android-${{ matrix.abi }}
+    runs-on: ubuntu-22.04
+    # This target has never been built: the whole vcpkg set has to come up for a
+    # cross triplet first, so do not fail the run over it.
+    continue-on-error: true
+    timeout-minutes: 350
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - abi: arm64-v8a
+            triplet: arm64-android
+          - abi: x86_64
+            triplet: x64-android
+
+    steps:
+      - name: "Checkout repo"
+        uses: actions/checkout@v4
+        with:
+          submodules: "recursive"
+          fetch-depth: 0
+
+      - name: "Install host dependencies"
+        run: |
+          sudo apt update -qq
+          sudo apt install -y --no-install-recommends \
+            nasm autoconf automake libtool pkg-config python3 ninja-build
+
+      - name: "Bootstrap vcpkg"
+        run: bash ./dependencies/vcpkg/bootstrap-vcpkg.sh
+
+      - name: "Configure"
+        # API level 24, as in the GitLab job: the template's default of 16 is
+        # useless for C++20. CMAKE_TOOLCHAIN_FILE is the NDK's - the top-level
+        # CMakeLists turns it into a vcpkg chainload toolchain.
+        run: |
+          cmake -DCMAKE_BUILD_TYPE=Release \
+            -DENABLE_LIBRETRO=ON \
+            -DENABLE_BLUEZ=OFF \
+            -DENABLE_FERAL_GAMEMODE=OFF \
+            -DENABLE_WAYLAND=OFF \
+            -DENABLE_DISCORD_RPC=OFF \
+            -DVCPKG_TARGET_TRIPLET=${{ matrix.triplet }} \
+            -DVCPKG_HOST_TRIPLET=x64-linux \
+            -DANDROID_PLATFORM=android-24 \
+            -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK_LATEST_HOME/build/cmake/android.toolchain.cmake \
+            -DANDROID_STL=c++_static \
+            -DANDROID_ABI=${{ matrix.abi }} \
+            . -Bbuild/android-${{ matrix.abi }}
+
+      - name: "Build"
+        run: cmake --build build/android-${{ matrix.abi }} --target cemu_libretro --config Release -- -j $(nproc)
+
+      - name: "Prepare artifact"
+        run: mv bin/cemu_libretro.so cemu_libretro_android.so
+
+      - name: "Upload artifact"
+        uses: actions/upload-artifact@v4
+        with:
+          name: cemu_libretro-android-${{ matrix.abi }}
+          path: ./cemu_libretro_android.so
