@@ -4,6 +4,7 @@
 #include "util/helpers/helpers.h"
 
 #include <zarchive/zarchivereader.h>
+#include "Cafe/Filesystem/ZArchiveVFS.h"
 
 bool sTLInitialized{ false };
 fs::path sTLCacheFilePath;
@@ -216,7 +217,7 @@ void CafeTitleList::AddTitleFromPath(fs::path path)
 {
 	if (path.has_extension() && boost::iequals(_pathToUtf8(path.extension()), ".wua"))
 	{
-		ZArchiveReader* zar = ZArchiveReader::OpenFromFile(path);
+		ZArchiveReader* zar = ZArchive_OpenFromPath(path);
 		if (!zar)
 		{
 			cemuLog_log(LogType::Force, "Found {} but it is not a valid Wii U archive file", _pathToUtf8(path));

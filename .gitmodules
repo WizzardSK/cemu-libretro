@@ -1,7 +1,8 @@
 [submodule "dependencies/ZArchive"]
 	path = dependencies/ZArchive
-	url = https://github.com/Exzap/ZArchive
+	url = https://github.com/WizzardSK/ZArchive
 	shallow = true
+	branch = vfs-file-access
 [submodule "dependencies/cubeb"]
 	path = dependencies/cubeb
 	url = https://github.com/mozilla/cubeb

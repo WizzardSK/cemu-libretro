@@ -12,6 +12,7 @@ add_library(CemuCafe
   Filesystem/fscDeviceWud.cpp
   Filesystem/fscDeviceWuhb.cpp
   Filesystem/fsc.h
+  Filesystem/ZArchiveVFS.h
   Filesystem/FST/FST.cpp
   Filesystem/FST/FST.h
   Filesystem/FST/fstUtil.h

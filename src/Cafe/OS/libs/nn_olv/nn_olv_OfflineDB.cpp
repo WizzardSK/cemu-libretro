@@ -8,6 +8,7 @@
 #include <pugixml.hpp>
 #include <zlib.h>
 #include <zarchive/zarchivereader.h>
+#include "Cafe/Filesystem/ZArchiveVFS.h"
 
 namespace nn
 {
@@ -23,7 +24,7 @@ namespace nn
 			if(g_offlineDBInitialized)
 				return;
 			// open archive
-			g_offlineDBArchive = ZArchiveReader::OpenFromFile(ActiveSettings::GetUserDataPath("resources/miiverse/OfflineDB.zar"));
+			g_offlineDBArchive = ZArchive_OpenFromPath(ActiveSettings::GetUserDataPath("resources/miiverse/OfflineDB.zar"));
 			if(!g_offlineDBArchive)
 				cemuLog_log(LogType::Force, "Offline miiverse posts are not available");
 			g_offlineDBInitialized = true;
