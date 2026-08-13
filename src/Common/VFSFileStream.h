@@ -6,8 +6,16 @@ struct retro_vfs_interface;
 class VFSFileStream
 {
 public:
-	static void SetVFSInterface(struct retro_vfs_interface* vfs_interface);
-	
+	// The frontend reports which version of the VFS API it implements, and the
+	// struct grows with it: truncate arrived in v2, stat in v3. Anything past
+	// the version we were handed must not be touched.
+	static void SetVFSInterface(struct retro_vfs_interface* vfs_interface, uint32 version);
+	static bool UsesVFS();
+
+	// Same question std::filesystem answers, asked of the frontend instead: a
+	// path the frontend hands us does not have to be one the OS can open.
+	static bool IsRegularFile(const fs::path& path);
+
 	static VFSFileStream* openFile(std::string_view path);
 	static VFSFileStream* openFile(const wchar_t* path, bool allowWrite = false);
 	static VFSFileStream* openFile2(const fs::path& path, bool allowWrite = false);
@@ -49,7 +57,8 @@ private:
 	VFSFileStream(class FileStream* native_stream);
 
 	static struct retro_vfs_interface* s_vfs_interface;
-	
+	static uint32 s_vfs_version;
+
 	bool m_isValid{};
 	bool m_useVFS{};
 	struct retro_vfs_file_handle* m_vfsHandle{};

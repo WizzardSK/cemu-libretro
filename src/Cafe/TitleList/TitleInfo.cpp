@@ -4,6 +4,7 @@
 #include "Cafe/Filesystem/FST/FST.h"
 #include "pugixml.hpp"
 #include "Common/FileStream.h"
+#include "Common/VFSFileStream.h"
 #include <zarchive/zarchivereader.h>
 #include "util/IniParser/IniParser.h"
 #include "util/crypto/crc32.h"
@@ -13,7 +14,7 @@
 // detect format by reading file header/footer
 CafeTitleFileType DetermineCafeSystemFileType(fs::path filePath)
 {
-	std::unique_ptr<FileStream> fs(FileStream::openFile2(filePath));
+	std::unique_ptr<VFSFileStream> fs(VFSFileStream::openFile2(filePath));
 	if (!fs)
 		return CafeTitleFileType::UNKNOWN;
 	// very small files (<32 bytes) are always considered unknown
@@ -179,8 +180,10 @@ bool TitleInfo::ParseWuaTitleFolderName(std::string_view name, TitleId& titleIdO
 
 bool TitleInfo::DetectFormat(const fs::path& path, fs::path& pathOut, TitleDataFormat& formatOut)
 {
-	std::error_code ec;
-	if (path.has_extension() && fs::is_regular_file(path, ec))
+	// A path does not have to be one std::filesystem can see: a libretro
+	// frontend may hand over something only it can open, and such a path
+	// carries no usable extension either, so the contents decide below.
+	if (VFSFileStream::IsRegularFile(path))
 	{
 		std::string filenameStr = _pathToUtf8(path.filename());
 		if (boost::iends_with(filenameStr, ".rpx"))
@@ -269,6 +272,18 @@ bool TitleInfo::DetectFormat(const fs::path& path, fs::path& pathOut, TitleDataF
 			formatOut = TitleDataFormat::WUD;
 			pathOut = path;
 			return true;
+		}
+		// WUHB carries its own magic value, so the reader can answer for a file
+		// whose name told us nothing
+		if (fileType == CafeTitleFileType::UNKNOWN && !boost::iends_with(filenameStr, ".wuhb"))
+		{
+			std::unique_ptr<WUHBReader> reader{WUHBReader::FromPath(path)};
+			if (reader)
+			{
+				formatOut = TitleDataFormat::WUHB;
+				pathOut = path;
+				return true;
+			}
 		}
 	}
 	else

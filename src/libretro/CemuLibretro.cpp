@@ -27,6 +27,7 @@
 
 #include "Common/ExceptionHandler/ExceptionHandler.h"
 #include "Common/cpu_features.h"
+#include "Common/VFSFileStream.h"
 
 #include "util/crypto/aes128.h"
 #include "util/helpers/helpers.h"
@@ -1048,6 +1049,39 @@ RETRO_API void retro_set_environment(retro_environment_t cb)
 {
 	environ_cb = cb;
 
+	// Set up logging first so everything below can report what it got
+	struct retro_log_callback logging;
+	if (cb(RETRO_ENVIRONMENT_GET_LOG_INTERFACE, &logging))
+		log_cb = logging.log;
+
+	// Ask for the frontend's file system before anything else looks at a path.
+	// On Android the Play Store build reaches storage through SAF, so the path
+	// handed to retro_load_game is a content:// URI that no open() will take -
+	// only the frontend can turn it into a readable file. Ask for the newest
+	// interface and walk down: v3 brings stat, v2 truncate, and VFSFileStream
+	// keeps to whichever version answers.
+	{
+		static const uint32_t vfs_versions[] = { 3, 2, 1 };
+		for (uint32_t wanted : vfs_versions)
+		{
+			struct retro_vfs_interface_info vfs_info{};
+			vfs_info.required_interface_version = wanted;
+			vfs_info.iface = nullptr;
+			if (cb(RETRO_ENVIRONMENT_GET_VFS_INTERFACE, &vfs_info) && vfs_info.iface)
+			{
+				// The frontend reports its own version here, which is at least
+				// the one we asked for.
+				uint32_t version = std::max<uint32_t>(wanted, vfs_info.required_interface_version);
+				VFSFileStream::SetVFSInterface(vfs_info.iface, version);
+				if (log_cb)
+					log_cb(RETRO_LOG_INFO, "Cemu: using the frontend's VFS interface (v%u)\n", version);
+				break;
+			}
+		}
+		if (!VFSFileStream::UsesVFS() && log_cb)
+			log_cb(RETRO_LOG_INFO, "Cemu: no VFS interface offered, reading files directly\n");
+	}
+
 	// Declare that we need a game file
 	bool no_game = false;
 	cb(RETRO_ENVIRONMENT_SET_SUPPORT_NO_GAME, &no_game);
@@ -1081,11 +1115,6 @@ RETRO_API void retro_set_environment(retro_environment_t cb)
 		{nullptr, nullptr},
 	};
 	s_core_options_supported = cb(RETRO_ENVIRONMENT_SET_VARIABLES, (void*)variables);
-
-	// Set up logging
-	struct retro_log_callback logging;
-	if (cb(RETRO_ENVIRONMENT_GET_LOG_INTERFACE, &logging))
-		log_cb = logging.log;
 }
 
 RETRO_API void retro_set_video_refresh(retro_video_refresh_t cb) { video_cb = cb; }

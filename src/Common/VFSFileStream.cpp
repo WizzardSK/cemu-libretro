@@ -7,10 +7,45 @@
 #endif
 
 struct retro_vfs_interface* VFSFileStream::s_vfs_interface = nullptr;
+uint32 VFSFileStream::s_vfs_version = 0;
 
-void VFSFileStream::SetVFSInterface(struct retro_vfs_interface* vfs_interface)
+void VFSFileStream::SetVFSInterface(struct retro_vfs_interface* vfs_interface, uint32 version)
 {
 	s_vfs_interface = vfs_interface;
+	s_vfs_version = vfs_interface ? version : 0;
+}
+
+bool VFSFileStream::UsesVFS()
+{
+#ifdef RETRO_CORE
+	return s_vfs_interface && s_vfs_interface->open;
+#else
+	return false;
+#endif
+}
+
+bool VFSFileStream::IsRegularFile(const fs::path& path)
+{
+#ifdef RETRO_CORE
+	if (UsesVFS())
+	{
+		if (s_vfs_version >= 3 && s_vfs_interface->stat)
+		{
+			int32_t flags = s_vfs_interface->stat(path.string().c_str(), nullptr);
+			return (flags & RETRO_VFS_STAT_IS_VALID) != 0 && (flags & RETRO_VFS_STAT_IS_DIRECTORY) == 0;
+		}
+		// Without stat the only question the frontend answers is whether it can
+		// open the path, which is the one that matters here anyway.
+		struct retro_vfs_file_handle* handle = s_vfs_interface->open(path.string().c_str(), RETRO_VFS_FILE_ACCESS_READ, RETRO_VFS_FILE_ACCESS_HINT_NONE);
+		if (!handle)
+			return false;
+		s_vfs_interface->close(handle);
+		return true;
+	}
+#endif
+
+	std::error_code ec;
+	return fs::is_regular_file(path, ec);
 }
 
 VFSFileStream::VFSFileStream(struct retro_vfs_file_handle* vfs_handle)
@@ -40,9 +75,11 @@ VFSFileStream* VFSFileStream::openFile(const wchar_t* path, bool allowWrite)
 VFSFileStream* VFSFileStream::openFile2(const fs::path& path, bool allowWrite)
 {
 #ifdef RETRO_CORE
-	if (s_vfs_interface && s_vfs_interface->open)
+	if (UsesVFS())
 	{
-		unsigned int mode = allowWrite ? (RETRO_VFS_FILE_ACCESS_READ | RETRO_VFS_FILE_ACCESS_WRITE) : RETRO_VFS_FILE_ACCESS_READ;
+		// UPDATE_EXISTING is what separates opening a file from creating one:
+		// without it the frontend discards whatever the file already held.
+		unsigned int mode = allowWrite ? (RETRO_VFS_FILE_ACCESS_READ | RETRO_VFS_FILE_ACCESS_WRITE | RETRO_VFS_FILE_ACCESS_UPDATE_EXISTING) : RETRO_VFS_FILE_ACCESS_READ;
 		struct retro_vfs_file_handle* handle = s_vfs_interface->open(path.string().c_str(), mode, RETRO_VFS_FILE_ACCESS_HINT_NONE);
 		if (handle)
 			return new VFSFileStream(handle);
@@ -70,9 +107,11 @@ VFSFileStream* VFSFileStream::createFile(std::string_view path)
 VFSFileStream* VFSFileStream::createFile2(const fs::path& path)
 {
 #ifdef RETRO_CORE
-	if (s_vfs_interface && s_vfs_interface->open)
+	if (UsesVFS())
 	{
-		unsigned int mode = RETRO_VFS_FILE_ACCESS_READ | RETRO_VFS_FILE_ACCESS_WRITE | RETRO_VFS_FILE_ACCESS_UPDATE_EXISTING;
+		// No UPDATE_EXISTING here: creating a file means starting from empty,
+		// which is what FileStream::createFile2() does.
+		unsigned int mode = RETRO_VFS_FILE_ACCESS_READ | RETRO_VFS_FILE_ACCESS_WRITE;
 		struct retro_vfs_file_handle* handle = s_vfs_interface->open(path.string().c_str(), mode, RETRO_VFS_FILE_ACCESS_HINT_NONE);
 		if (handle)
 			return new VFSFileStream(handle);
@@ -137,7 +176,8 @@ uint64 VFSFileStream::GetSize()
 #ifdef RETRO_CORE
 	if (m_useVFS && s_vfs_interface && s_vfs_interface->size)
 	{
-		return (uint64)s_vfs_interface->size(m_vfsHandle);
+		int64_t size = s_vfs_interface->size(m_vfsHandle);
+		return size < 0 ? 0 : (uint64)size;
 	}
 #endif
 	
@@ -153,9 +193,11 @@ bool VFSFileStream::SetEndOfFile()
 		return false;
 		
 #ifdef RETRO_CORE
-	if (m_useVFS && s_vfs_interface && s_vfs_interface->truncate)
+	if (m_useVFS && s_vfs_version >= 2 && s_vfs_interface && s_vfs_interface->truncate)
 	{
 		int64_t currentPos = s_vfs_interface->tell(m_vfsHandle);
+		if (currentPos < 0)
+			return false;
 		return s_vfs_interface->truncate(m_vfsHandle, currentPos) == 0;
 	}
 #endif
@@ -202,7 +244,19 @@ uint32 VFSFileStream::readData(void* data, uint32 length)
 #ifdef RETRO_CORE
 	if (m_useVFS && s_vfs_interface && s_vfs_interface->read)
 	{
-		return (uint32)s_vfs_interface->read(m_vfsHandle, data, (uint64_t)length);
+		// A read is allowed to come back short - the frontend may be reading a
+		// stream rather than a file - while every caller here expects readData()
+		// to fill the buffer the way FileStream does, so keep asking.
+		uint8* out = (uint8*)data;
+		uint32 total = 0;
+		while (total < length)
+		{
+			int64_t bytesRead = s_vfs_interface->read(m_vfsHandle, out + total, (uint64_t)(length - total));
+			if (bytesRead <= 0)
+				break;
+			total += (uint32)bytesRead;
+		}
+		return total;
 	}
 #endif
 	
@@ -255,7 +309,16 @@ sint32 VFSFileStream::writeData(const void* data, sint32 length)
 #ifdef RETRO_CORE
 	if (m_useVFS && s_vfs_interface && s_vfs_interface->write)
 	{
-		return (sint32)s_vfs_interface->write(m_vfsHandle, data, (uint64_t)length);
+		const uint8* in = (const uint8*)data;
+		sint32 total = 0;
+		while (total < length)
+		{
+			int64_t bytesWritten = s_vfs_interface->write(m_vfsHandle, in + total, (uint64_t)(length - total));
+			if (bytesWritten <= 0)
+				break;
+			total += (sint32)bytesWritten;
+		}
+		return total;
 	}
 #endif
 	
