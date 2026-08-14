@@ -101,6 +101,14 @@ libretro-build-linux-aarch64:
     # instead of being held to the image's. That flag belongs to the aarch64
     # Linux job, where the community triplet has no prebuilt tools to fetch.
     - unset VCPKG_FORCE_SYSTEM_BINARIES
+    # The ports are built with vcpkg's own scripts/toolchains/android.cmake -
+    # the chainload set in CMakeLists only covers the core's own build - and
+    # that file looks the NDK up in ANDROID_NDK_HOME, falling back to Windows
+    # paths that do not exist here. The image calls it NDK_ROOT instead, so
+    # "Detecting compiler hash for triplet arm64-android" dies right there.
+    # (GitHub Actions runners set ANDROID_NDK_HOME, hence the green build.)
+    - export ANDROID_NDK_HOME="$NDK_ROOT"
+    - export ANDROID_NDK_ROOT="$NDK_ROOT"
   variables:
     # The template defaults to API 16, which is nowhere near enough for C++20.
     # 28 is the floor that works: bionic only got iconv (SDL2 links it) and
