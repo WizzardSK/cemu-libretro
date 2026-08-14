@@ -80,6 +80,27 @@ libretro-build-linux-aarch64:
   allow_failure: true
   # Same reason as the Linux job, plus a cross toolchain on top.
   timeout: 3h
+  before_script:
+    # Repeated from the template, whose before_script this one replaces.
+    - export NUMPROC=$(($(nproc)/5))
+    # The Android image carries the SDK and the NDK and not much else, while
+    # vcpkg needs a host compiler for the x64-linux ports it builds first, the
+    # autotools most of its ports configure with, and make - the generator the
+    # template's cmake line falls back to. Without these the job dies in
+    # "Detecting compiler hash for triplet x64-linux" before anything is built.
+    - apt-get update -qq
+    - apt-get install -y --no-install-recommends
+      build-essential make ninja-build nasm autoconf automake libtool
+      pkg-config python3 zip unzip curl git ca-certificates
+    # .core-defs asks for gcc-12, which the Linux image has and this one does
+    # not. The host triplet only builds vcpkg's own helper tools, so whatever
+    # compiler the image ships is good enough for it.
+    - export CC=$(command -v gcc-12 || command -v gcc)
+    - export CXX=$(command -v g++-12 || command -v g++)
+    # The host here is x86_64, so vcpkg can fetch its own cmake and ninja
+    # instead of being held to the image's. That flag belongs to the aarch64
+    # Linux job, where the community triplet has no prebuilt tools to fetch.
+    - unset VCPKG_FORCE_SYSTEM_BINARIES
   variables:
     # The template defaults to API 16, which is nowhere near enough for C++20.
     # 28 is the floor that works: bionic only got iconv (SDL2 links it) and
