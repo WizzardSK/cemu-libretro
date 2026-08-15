@@ -72,10 +72,10 @@ stages:
     # Repeated from .libretro-linux-cmake, whose before_script this replaces.
     - export NUMPROC=$(($(nproc)/5))
     - if builtin type -P ccache &> /dev/null; then ccache -V &> /dev/null; fi
-    # glm comes from the system: dependencies/vcpkg_overlay_ports_linux/glm is
-    # an empty package on purpose, so libglm-dev has to be installed. The rest
-    # is what the vcpkg ports (SDL2, dbus, libusb) and the core itself
-    # (GL/EGL/X11) need to be built.
+    # libdbus-1-dev is not optional here: dependencies/vcpkg_overlay_ports_linux/dbus
+    # is an empty package on purpose (see the portfile), so sdl2[dbus] has only
+    # the system headers to build against. The rest is what the other vcpkg
+    # ports (SDL2, libusb) and the core itself (GL/EGL/X11) need.
     - apt-get update -qq
     - apt-get install -y --no-install-recommends
       nasm autoconf automake libtool pkg-config python3
