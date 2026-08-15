@@ -57,6 +57,17 @@ stages:
   # vcpkg builds every dependency from source (~30 ports, Boost among them),
   # which does not fit in the default one hour.
   timeout: 3h
+  variables:
+    # Wayland is dead weight in a core build and the x86_64 image cannot even
+    # satisfy it: find_package(WaylandProtocols 1.15) fails there against the
+    # image's 1.13. HAS_WAYLAND only reaches wxgui - which ENABLE_LIBRETRO
+    # forces off - and VulkanRenderer's surface creation, which returns before
+    # any of it in libretro mode, where the frontend hands the core a surface.
+    CORE_ARGS: >-
+      -DENABLE_LIBRETRO=ON
+      -DENABLE_BLUEZ=OFF
+      -DENABLE_FERAL_GAMEMODE=OFF
+      -DENABLE_WAYLAND=OFF
   before_script:
     # Repeated from .libretro-linux-cmake, whose before_script this replaces.
     - export NUMPROC=$(($(nproc)/5))
@@ -127,6 +138,20 @@ libretro-build-windows-x64:
     - apt-get update -qq
     - apt-get install -y --no-install-recommends
       nasm autoconf automake libtool pkg-config python3
+    # vcpkg builds the ports with its own scripts/toolchains/mingw.cmake (the
+    # chainload set in CMakeLists only covers the core's own build), and that
+    # file looks the compiler up as x86_64-w64-mingw32-gcc. MXE spells its
+    # tools x86_64-w64-mingw32.static-gcc, so the find_program() comes up empty
+    # and CMake falls back to the host cc/c++ - which is then handed MinGW link
+    # flags and dies on "ld: unrecognized option '--major-image-version'"
+    # before the first port is built. Give every MXE tool the name vcpkg looks
+    # for.
+    - |
+      for tool in /usr/lib/mxe/usr/bin/x86_64-w64-mingw32.static-*; do
+        [ -e "$tool" ] || continue
+        name=$(basename "$tool")
+        ln -sf "$tool" "/usr/local/bin/${name/.static-/-}"
+      done
   variables:
     # CMakeLists picks x64-windows-static as soon as WIN32 is set, which is an
     # MSVC triplet; MinGW needs its own. A -D from the command line wins over
