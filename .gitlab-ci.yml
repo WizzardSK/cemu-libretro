@@ -93,10 +93,15 @@ libretro-build-linux-aarch64:
       build-essential make ninja-build nasm autoconf automake libtool
       pkg-config python3 zip unzip curl git ca-certificates
     # .core-defs asks for gcc-12, which the Linux image has and this one does
-    # not. The host triplet only builds vcpkg's own helper tools, so whatever
-    # compiler the image ships is good enough for it.
-    - export CC=$(command -v gcc-12 || command -v gcc)
-    - export CXX=$(command -v g++-12 || command -v g++)
+    # not. Leaving CC/CXX set to anything at all is worse than dropping them:
+    # the cmake ports ignore them and take the NDK's clang, but openssl builds
+    # with its own Configure and a makefile, which honours $CC and so feeds the
+    # clang flags to the host gcc ("unrecognized command-line option
+    # '--target=aarch64-none-linux-android28'"). Unset, openssl picks up the
+    # NDK clang the port puts on PATH and the host triplet - which only builds
+    # vcpkg's own helper tools - finds the image's cc, the same as on GitHub
+    # Actions, where neither variable is set to begin with.
+    - unset CC CXX
     # The host here is x86_64, so vcpkg can fetch its own cmake and ninja
     # instead of being held to the image's. That flag belongs to the aarch64
     # Linux job, where the community triplet has no prebuilt tools to fetch.
