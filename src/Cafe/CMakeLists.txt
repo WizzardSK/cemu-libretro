@@ -641,7 +641,12 @@ if (ENABLE_WAYLAND)
 endif()
 
 if (ENABLE_VCPKG)
-  if(WIN32)
+  # CMAKE_HOST_WIN32, not WIN32: cross-compiling to Windows from Linux (the
+  # MXE/MinGW buildbot job) sets WIN32 too, and there this points at a .exe that
+  # both cannot be run and is never installed - the tools come from the host
+  # triplet. Leaving PKG_CONFIG_EXECUTABLE alone there lets find_package pick
+  # up MXE's own x86_64-w64-mingw32.static-pkg-config.
+  if(CMAKE_HOST_WIN32)
     set(PKG_CONFIG_EXECUTABLE "${VCPKG_INSTALLED_DIR}/x64-windows/tools/pkgconf/pkgconf.exe")
   endif()
   find_package(PkgConfig REQUIRED)

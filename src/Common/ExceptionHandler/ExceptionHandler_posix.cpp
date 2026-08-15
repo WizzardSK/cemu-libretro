@@ -2,6 +2,13 @@
 #ifndef __ANDROID__
 #include <execinfo.h>
 #endif
+
+// glibc only exposes TRAP_HWBKPT from 2.28 onwards, and the buildbot's x86_64
+// image is older than that. The kernel constant it stands for is fixed by the
+// uapi headers, so define it rather than lose hardware breakpoints there.
+#ifndef TRAP_HWBKPT
+#define TRAP_HWBKPT 4
+#endif
 #include <string.h>
 #include <string>
 #include "config/CemuConfig.h"
