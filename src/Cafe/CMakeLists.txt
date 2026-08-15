@@ -644,14 +644,39 @@ if (ENABLE_VCPKG)
   # CMAKE_HOST_WIN32, not WIN32: cross-compiling to Windows from Linux (the
   # MXE/MinGW buildbot job) sets WIN32 too, and there this points at a .exe that
   # both cannot be run and is never installed - the tools come from the host
-  # triplet. Leaving PKG_CONFIG_EXECUTABLE alone there lets find_package pick
-  # up MXE's own x86_64-w64-mingw32.static-pkg-config.
+  # triplet.
   if(CMAKE_HOST_WIN32)
     set(PKG_CONFIG_EXECUTABLE "${VCPKG_INSTALLED_DIR}/x64-windows/tools/pkgconf/pkgconf.exe")
+  elseif(MINGW)
+    # MXE's x86_64-w64-mingw32.static-pkg-config - which its toolchain file
+    # hands to FindPkgConfig - is a wrapper that wipes PKG_CONFIG_PATH and pins
+    # PKG_CONFIG_LIBDIR to MXE's own tree, so vcpkg's libusb-1.0.pc is invisible
+    # to it however the environment is set up ("Package 'libusb-1.0', required
+    # by 'world', not found"). Use the host's plain pkg-config with the search
+    # path pinned to the target triplet's vcpkg prefix instead: that is where
+    # the .pc files this build wants live, and pinning LIBDIR rather than
+    # appending to PATH keeps the host's own Linux .pc files from being picked
+    # up for a Windows build.
+    # NO_CMAKE_FIND_ROOT_PATH: this one is a host tool, whatever the cross
+    # toolchain's find_program rerooting says.
+    find_program(HOST_PKG_CONFIG_EXECUTABLE NAMES pkg-config pkgconf
+                 NO_CMAKE_FIND_ROOT_PATH REQUIRED)
+    set(PKG_CONFIG_EXECUTABLE "${HOST_PKG_CONFIG_EXECUTABLE}")
+    set(vcpkg_pkgconfig_dir "${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}")
+    set(saved_pkg_config_libdir "$ENV{PKG_CONFIG_LIBDIR}")
+    set(ENV{PKG_CONFIG_LIBDIR} "${vcpkg_pkgconfig_dir}/lib/pkgconfig:${vcpkg_pkgconfig_dir}/share/pkgconfig")
+    # The mingw triplets used here are static ones, so the dependencies listed
+    # in Libs.private have to be on the link line as well.
+    if(VCPKG_TARGET_TRIPLET MATCHES "static")
+      set(PKG_CONFIG_ARGN --static)
+    endif()
   endif()
   find_package(PkgConfig REQUIRED)
   pkg_check_modules(libusb REQUIRED IMPORTED_TARGET libusb-1.0)
   target_link_libraries(CemuCafe PRIVATE PkgConfig::libusb)
+  if(DEFINED saved_pkg_config_libdir)
+    set(ENV{PKG_CONFIG_LIBDIR} "${saved_pkg_config_libdir}")
+  endif()
 else ()
   find_package(libusb MODULE REQUIRED)
   target_link_libraries(CemuCafe PRIVATE libusb::libusb)
