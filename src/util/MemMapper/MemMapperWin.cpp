@@ -1,6 +1,6 @@
 #include "util/MemMapper/MemMapper.h"
 
-#include <Windows.h>
+#include <windows.h>
 
 namespace MemMapper
 {

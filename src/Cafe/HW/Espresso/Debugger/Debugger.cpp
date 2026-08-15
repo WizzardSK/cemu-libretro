@@ -10,7 +10,7 @@
 #include "util/helpers/helpers.h"
 
 #if BOOST_OS_WINDOWS
-#include <Windows.h>
+#include <windows.h>
 #endif
 
 DebuggerDispatcher g_debuggerDispatcher;

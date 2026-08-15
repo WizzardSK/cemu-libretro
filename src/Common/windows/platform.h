@@ -6,7 +6,7 @@
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
 #endif
-#include <Windows.h>
+#include <windows.h>
 
 #define AF_BLUETOOTH AF_BTH
 #define BTPROTO_RFCOMM BT_PORT_ANY

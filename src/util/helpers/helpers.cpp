@@ -13,7 +13,7 @@
 
 
 #if BOOST_OS_WINDOWS
-#include <TlHelp32.h>
+#include <tlhelp32.h>
 #endif
 
 std::string& ltrim(std::string& str, const std::string& chars)

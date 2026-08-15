@@ -1,5 +1,5 @@
 #include "Fiber.h"
-#include <Windows.h>
+#include <windows.h>
 
 thread_local Fiber* sCurrentFiber{};
 

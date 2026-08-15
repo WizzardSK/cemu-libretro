@@ -6,7 +6,7 @@
 
 // for inet_pton:
 #if BOOST_OS_WINDOWS
-#include <WS2tcpip.h>
+#include <ws2tcpip.h>
 #else
 #include <arpa/inet.h>
 #endif

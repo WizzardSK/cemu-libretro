@@ -1519,7 +1519,7 @@ namespace coreinit
 			prctl(PR_SET_PTRACER, PR_SET_PTRACER_ANY);
 		}
 
-		pid_t tid = gettid();
+		pid_t tid = cemu_gettid();
 		{
 			std::lock_guard schedulerThreadIdsLockGuard(g_schedulerThreadIdsLock);
 			g_schedulerThreadIds.emplace_back(tid);

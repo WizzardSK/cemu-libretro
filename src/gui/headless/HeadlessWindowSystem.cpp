@@ -5,7 +5,7 @@
 #include <optional>
 
 #if BOOST_OS_WINDOWS
-#include <Windows.h>
+#include <windows.h>
 #endif
 
 namespace WindowSystem

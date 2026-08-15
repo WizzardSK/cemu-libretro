@@ -2,7 +2,7 @@
 
 #if BOOST_OS_WINDOWS
 
-#include <WinSock2.h>
+#include <winsock2.h>
 typedef int socklen_t;
 
 #else

@@ -30,7 +30,7 @@ void _SetDR(pid_t tid, int drIndex, DRType newValue)
 
 DRType _ReadDR6()
 {
-	pid_t tid = gettid();
+	pid_t tid = cemu_gettid();
 
 	// linux doesn't let us attach to the current thread / threads in the current thread group
 	// we have to create a child process which then modifies the debug registers and quits

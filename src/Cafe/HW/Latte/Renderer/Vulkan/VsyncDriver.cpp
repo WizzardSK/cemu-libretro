@@ -1,6 +1,6 @@
 #if BOOST_OS_WINDOWS
 
-#include <Windows.h>
+#include <windows.h>
 
 #include "WindowSystem.h"
 

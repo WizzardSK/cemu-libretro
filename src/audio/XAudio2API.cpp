@@ -12,8 +12,8 @@
 #include "XAudio2API.h"
 #include "util/helpers/helpers.h"
 
-#include <WbemCli.h>
-#include <OleAuto.h>
+#include <wbemcli.h>
+#include <oleauto.h>
 #include <system_error>
 
 // guid from mmdeviceapi.h

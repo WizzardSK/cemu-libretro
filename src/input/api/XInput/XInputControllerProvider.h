@@ -2,7 +2,7 @@
 #if BOOST_OS_WINDOWS
 #include "input/api/ControllerProvider.h"
 
-#include <Xinput.h>
+#include <xinput.h>
 
 #ifndef HAS_XINPUT
 #define HAS_XINPUT 1

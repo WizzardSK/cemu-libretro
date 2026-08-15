@@ -1,4 +1,4 @@
-#include <Windows.h>
+#include <windows.h>
 
 #include "input/api/XInput/XInputControllerProvider.h"
 #include "input/api/XInput/XInputController.h"
