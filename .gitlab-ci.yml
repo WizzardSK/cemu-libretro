@@ -31,6 +31,9 @@ include:
   # Linux
   - project: 'libretro-infrastructure/ci-templates'
     file: '/linux-cmake.yml'
+  # Windows
+  - project: 'libretro-infrastructure/ci-templates'
+    file: '/windows-cmake-mingw.yml'
   ################################## CELLULAR ################################
   # Android
   - project: 'libretro-infrastructure/ci-templates'
@@ -46,17 +49,16 @@ stages:
 ##############################################################################
 #
 ################################### DESKTOPS #################################
-# Linux aarch64
-libretro-build-linux-aarch64:
-  extends:
-    - .libretro-linux-cmake-aarch64
-    - .core-defs
+# Both Linux jobs want the same packages and the same extra time, and a job
+# defining before_script replaces the template's instead of adding to it - so
+# the repeated part lives here.
+.core-defs-linux:
+  extends: .core-defs
   # vcpkg builds every dependency from source (~30 ports, Boost among them),
   # which does not fit in the default one hour.
   timeout: 3h
   before_script:
-    # Repeated from .libretro-linux-cmake: defining before_script here replaces
-    # the one from the template instead of adding to it.
+    # Repeated from .libretro-linux-cmake, whose before_script this replaces.
     - export NUMPROC=$(($(nproc)/5))
     - if builtin type -P ccache &> /dev/null; then ccache -V &> /dev/null; fi
     # glm comes from the system: dependencies/vcpkg_overlay_ports_linux/glm is
@@ -70,6 +72,73 @@ libretro-build-linux-aarch64:
       libx11-dev libxext-dev libxrandr-dev libxi-dev libxcursor-dev
       libxss-dev libxkbcommon-dev libwayland-dev wayland-protocols
       libudev-dev libdbus-1-dev libgcrypt20-dev
+
+# Linux aarch64
+libretro-build-linux-aarch64:
+  extends:
+    - .libretro-linux-cmake-aarch64
+    - .core-defs-linux
+
+# Linux x86_64
+libretro-build-linux-x64:
+  extends:
+    - .libretro-linux-cmake-x86_64
+    - .core-defs-linux
+  # The template's x86_64 image is Ubuntu Xenial with GCC 9, which cannot build
+  # C++20 at all; backports is the same family of image with newer compilers,
+  # gcc-12 among them (the same one the aarch64 image is held to).
+  image: $CI_SERVER_HOST:5050/libretro-infrastructure/libretro-build-amd64-ubuntu:backports
+  before_script:
+    - !reference [.core-defs-linux, before_script]
+    # x64-linux is a first-class triplet, so let vcpkg fetch its own cmake and
+    # ninja rather than holding it to whatever the image ships. That variable
+    # belongs to the aarch64 job, where the community triplet has no prebuilt
+    # tools to fetch; here it only gets in the way.
+    - unset VCPKG_FORCE_SYSTEM_BINARIES
+
+# Windows x86_64
+# Windows has only ever been built with MSVC so far (the GitHub Actions workflow
+# does that on windows-2022, and the CMakeLists' Windows bits - SEH exception
+# handler, /WHOLEARCHIVE, the MSVC runtime property - are written for it). This
+# cross build with MXE's MinGW is new ground, on top of a vcpkg dependency set
+# that has never been brought up for the mingw triplet, so keep it from failing
+# the pipeline while it is worked out.
+libretro-build-windows-x64:
+  extends:
+    - .libretro-windows-cmake-x86_64
+    - .core-defs
+  allow_failure: true
+  # Same reason as the Linux jobs: everything is built from source.
+  timeout: 3h
+  before_script:
+    # Repeated from .libretro-windows-cmake, whose before_script this replaces.
+    - export NUMPROC=$(($(nproc)/5))
+    - if builtin type -P ccache &> /dev/null; then ccache -V &> /dev/null; fi
+    # The host here is x86_64 Linux, the same as in the Linux x64 job above.
+    - unset VCPKG_FORCE_SYSTEM_BINARIES
+    # .core-defs asks for gcc-12, a package name from the Ubuntu images. The
+    # compilers here come from MXE's cmake wrapper
+    # (x86_64-w64-mingw32.static-cmake), which the top-level CMakeLists hands to
+    # vcpkg as a chainload toolchain; leaving CC/CXX set would only mislead the
+    # ports that build with their own configure scripts.
+    - unset CC CXX
+    # What the ports configure with; the MXE image carries the cross toolchain
+    # and not much else.
+    - apt-get update -qq
+    - apt-get install -y --no-install-recommends
+      nasm autoconf automake libtool pkg-config python3
+  variables:
+    # CMakeLists picks x64-windows-static as soon as WIN32 is set, which is an
+    # MSVC triplet; MinGW needs its own. A -D from the command line wins over
+    # the set(... CACHE) there, and the triplet is also what tells that code
+    # which port overlay to use, as WIN32 is not set yet on a Unix host.
+    CORE_ARGS: >-
+      -DENABLE_LIBRETRO=ON
+      -DENABLE_WXWIDGETS=OFF
+      -DENABLE_DISCORD_RPC=OFF
+      -DENABLE_CUBEB=OFF
+      -DVCPKG_TARGET_TRIPLET=x64-mingw-static
+      -DVCPKG_HOST_TRIPLET=x64-linux
 
 ################################### CELLULAR #################################
 # Android is a fresh target for this core: unlike the Linux job it has to build

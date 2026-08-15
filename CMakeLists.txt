@@ -39,18 +39,28 @@ if (ENABLE_VCPKG)
 		)
 	endif()
 
-	# Android: the libretro CI template passes the NDK toolchain as
-	# CMAKE_TOOLCHAIN_FILE, which would bypass vcpkg entirely and leave every
-	# find_package() below unsatisfied. Hand it to vcpkg as a chainload
-	# toolchain instead and let vcpkg's own toolchain take the primary slot.
-	if(CMAKE_TOOLCHAIN_FILE MATCHES "android.toolchain.cmake$" AND NOT VCPKG_CHAINLOAD_TOOLCHAIN_FILE)
+	# Cross builds hand cmake a toolchain file of their own - the NDK's on
+	# Android, MXE's for the MinGW Windows build - which would bypass vcpkg
+	# entirely and leave every find_package() below unsatisfied. Hand it to
+	# vcpkg as a chainload toolchain instead and let vcpkg's own toolchain take
+	# the primary slot. (A cache entry set from the command line wins over the
+	# plain set() below, so this has to be done here rather than there.)
+	if(CMAKE_TOOLCHAIN_FILE AND NOT VCPKG_CHAINLOAD_TOOLCHAIN_FILE
+	   AND NOT CMAKE_TOOLCHAIN_FILE MATCHES "vcpkg.cmake$")
+		if(CMAKE_TOOLCHAIN_FILE MATCHES "android.toolchain.cmake$")
+			set(CEMU_TARGET_ANDROID ON)
+		endif()
 		set(VCPKG_CHAINLOAD_TOOLCHAIN_FILE "${CMAKE_TOOLCHAIN_FILE}" CACHE STRING "" FORCE)
 		unset(CMAKE_TOOLCHAIN_FILE CACHE)
-		set(CEMU_TARGET_ANDROID ON)
 	endif()
 
 	if(CEMU_TARGET_ANDROID)
 		set(VCPKG_OVERLAY_PORTS "${CMAKE_CURRENT_LIST_DIR}/dependencies/vcpkg_overlay_ports_android;${CMAKE_CURRENT_LIST_DIR}/dependencies/vcpkg_overlay_ports")
+	elseif(VCPKG_TARGET_TRIPLET MATCHES "mingw")
+		# Cross-compiling to Windows from a Unix host: WIN32 is not set yet (no
+		# project() call so far, and the host is what counts before it), so the
+		# triplet is what tells the Windows overlay apart from the Linux one.
+		set(VCPKG_OVERLAY_PORTS "${CMAKE_CURRENT_LIST_DIR}/dependencies/vcpkg_overlay_ports_win;${CMAKE_CURRENT_LIST_DIR}/dependencies/vcpkg_overlay_ports")
 	elseif(UNIX AND NOT APPLE)
 		set(VCPKG_OVERLAY_PORTS "${CMAKE_CURRENT_LIST_DIR}/dependencies/vcpkg_overlay_ports_linux;${CMAKE_CURRENT_LIST_DIR}/dependencies/vcpkg_overlay_ports")
 	elseif(APPLE)
