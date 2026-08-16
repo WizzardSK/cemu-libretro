@@ -242,11 +242,15 @@ inline sint16 _swapEndianS16(sint16 v)
     return (sint16)(((uint16)v >> 8) | ((uint16)v << 8));
 }
 
+// MinGW has this one in <intrin.h> (which fast_float pulls in), so it is only ours
+// to define away from Windows.
+#if !BOOST_OS_WINDOWS
 inline uint64 _umul128(uint64 multiplier, uint64 multiplicand, uint64 *highProduct) {
     unsigned __int128 x = (unsigned __int128)multiplier * (unsigned __int128)multiplicand;
     *highProduct = (x >> 64);
     return x & 0xFFFFFFFFFFFFFFFF;
 }
+#endif
 
 // Stand-ins for the Windows types the rest of the code uses. Not-MSVC does not
 // mean not Windows: under MinGW windows.h has already defined all of these
