@@ -1,7 +1,9 @@
 #pragma once
 
-#if BOOST_OS_WINDOWS
+#if HAS_DIRECTINPUT
 #include "input/api/DirectInput/DirectInputControllerProvider.h"
+#endif
+#if BOOST_OS_WINDOWS
 #include "input/api/XInput/XInputControllerProvider.h"
 #endif
 

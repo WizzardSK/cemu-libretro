@@ -1,6 +1,6 @@
 #include "IAudioAPI.h"
 
-#if BOOST_OS_WINDOWS
+#if HAS_DIRECTX_AUDIO
 #include "XAudio2API.h"
 #include "XAudio27API.h"
 #include "DirectSoundAPI.h"
@@ -41,7 +41,7 @@ void IAudioAPI::PrintLogging()
 
 void IAudioAPI::InitWFX(sint32 samplerate, sint32 channels, sint32 bits_per_sample)
 {
-#if BOOST_OS_WINDOWS
+#if HAS_DIRECTX_AUDIO
 	// move this to Windows-specific audio API implementations and use a cross-platform format here
 	m_wfx.Format.wFormatTag = WAVE_FORMAT_EXTENSIBLE;
 	m_wfx.Format.nChannels = channels;
@@ -78,7 +78,7 @@ void IAudioAPI::InitializeStatic()
 {
 	s_audioDelay = GetConfig().audio_delay;
 
-#if BOOST_OS_WINDOWS
+#if HAS_DIRECTX_AUDIO
 	s_availableApis[DirectSound] = true;
 	s_availableApis[XAudio2] = XAudio2API::InitializeStatic();
 	if (!s_availableApis[XAudio2]) // don't try to initialize the older lib if the newer version is available
@@ -140,7 +140,7 @@ AudioAPIPtr IAudioAPI::CreateDevice(AudioAPI api, const DeviceDescriptionPtr& de
 
 	switch (api)
 	{
-#if BOOST_OS_WINDOWS
+#if HAS_DIRECTX_AUDIO
 	case DirectSound:
 	{
 		const auto tmp = std::dynamic_pointer_cast<DirectSoundAPI::DirectSoundDeviceDescription>(device);
@@ -176,7 +176,7 @@ std::vector<IAudioAPI::DeviceDescriptionPtr> IAudioAPI::GetDevices(AudioAPI api)
 
 	switch (api)
 	{
-#if BOOST_OS_WINDOWS
+#if HAS_DIRECTX_AUDIO
 	case DirectSound:
 	{
 		return DirectSoundAPI::GetDevices();

@@ -52,13 +52,15 @@ if(WIN32)
 		api/XInput/XInputController.h
 	)
 
-	# DirectInput
-	target_sources(CemuInput PRIVATE
-		api/DirectInput/DirectInputControllerProvider.cpp
-		api/DirectInput/DirectInputController.h
-		api/DirectInput/DirectInputControllerProvider.h
-		api/DirectInput/DirectInputController.cpp
-	)
+	# DirectInput (MSVC only - see ENABLE_DIRECTINPUT in the top-level CMakeLists)
+	if (ENABLE_DIRECTINPUT)
+		target_sources(CemuInput PRIVATE
+			api/DirectInput/DirectInputControllerProvider.cpp
+			api/DirectInput/DirectInputController.h
+			api/DirectInput/DirectInputControllerProvider.h
+			api/DirectInput/DirectInputController.cpp
+		)
+	endif()
 endif()
 
 if (SUPPORTS_WIIMOTE)

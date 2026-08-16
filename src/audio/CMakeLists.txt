@@ -7,7 +7,12 @@ add_library(CemuAudio
 
 set_property(TARGET CemuAudio PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
-if(WIN32)
+# DirectSound and XAudio2 are written against the MSVC DirectX SDK: the bundled
+# XAudio 2.7 headers use MSVC-only GUID macros, and DirectSoundAPI hands
+# std::thread::native_handle() to a Win32 API expecting a HANDLE, which only
+# holds for the MSVC standard library. Neither builds with MinGW, and the
+# libretro core takes its audio from the frontend regardless.
+if(WIN32 AND MSVC)
 	target_sources(CemuAudio PRIVATE
 		DirectSoundAPI.cpp
 		DirectSoundAPI.h
@@ -16,6 +21,7 @@ if(WIN32)
 		XAudio27API.cpp
 		XAudio27API.h
 	)
+	target_compile_definitions(CemuAudio PUBLIC HAS_DIRECTX_AUDIO)
 endif()
 
 if(ENABLE_CUBEB)

@@ -19,7 +19,7 @@
 #include "config/NetworkSettings.h"
 
 #include "audio/IAudioAPI.h"
-#if BOOST_OS_WINDOWS
+#if HAS_DIRECTX_AUDIO
 #include "audio/DirectSoundAPI.h"
 #include "audio/XAudio27API.h"
 #endif

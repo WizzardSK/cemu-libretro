@@ -8,7 +8,13 @@
 #include "util/math/vector2.h"
 #include "util/math/vector3.h"
 
-#ifdef __clang__
+#include <charconv>
+
+// libc++ (clang/macOS) has no floating-point std::from_chars, and neither does
+// libstdc++ as MinGW ships it - __cpp_lib_to_chars is only defined once both the
+// integer and the floating-point overloads are there.
+#if !defined(__cpp_lib_to_chars)
+#define CEMU_NO_FP_FROM_CHARS 1
 #include "Common/unix/fast_float.h"
 #endif
 
@@ -156,7 +162,7 @@ T ConvertString(std::string_view str)
 	{
 		// from_chars can't deal with float conversation starting with "+"
 		ltrim(str, "+");
-#ifdef __clang__
+#ifdef CEMU_NO_FP_FROM_CHARS
 		if (fast_float::from_chars(str.data(), str.data() + str.size(), result).ec == std::errc())
 			return result;
 #else

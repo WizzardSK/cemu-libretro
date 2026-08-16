@@ -12,6 +12,8 @@
 
 #if BOOST_OS_WINDOWS
 #include "input/api/XInput/XInputController.h"
+#endif
+#if HAS_DIRECTINPUT
 #include "input/api/DirectInput/DirectInputController.h"
 #endif
 

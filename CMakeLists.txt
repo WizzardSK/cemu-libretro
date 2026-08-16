@@ -150,8 +150,18 @@ endif()
 # input backends
 if (WIN32)
 	option(ENABLE_XINPUT "Enables the usage of XInput" ON)
-	option(ENABLE_DIRECTINPUT "Enables the usage of DirectInput" ON)
-	add_compile_definitions(HAS_DIRECTINPUT)
+	# DirectInput reaches for GetdfDIJoystick(), which comes with the MSVC DirectX SDK;
+	# MinGW's dinput.h only has the c_dfDIJoystick data it wraps. Same story for the
+	# DirectSound/XAudio2 audio backends below, so all of them are MSVC-only. Nothing is
+	# lost in the libretro build, where input and audio belong to the frontend anyway.
+	if (MSVC)
+		option(ENABLE_DIRECTINPUT "Enables the usage of DirectInput" ON)
+	else()
+		set(ENABLE_DIRECTINPUT OFF)
+	endif()
+	if (ENABLE_DIRECTINPUT)
+		add_compile_definitions(HAS_DIRECTINPUT)
+	endif()
 endif()
 
 option(ENABLE_HIDAPI "Build with HIDAPI" ON)

@@ -11,7 +11,10 @@
 #include "boost/functional/hash_fwd.hpp"
 #include <fmt/format.h>
 
-#ifdef __clang__
+#include <charconv>
+
+// See helpers.h: no floating-point std::from_chars on libc++ or on MinGW's libstdc++.
+#if !defined(__cpp_lib_to_chars)
 #include "Common/unix/fast_float.h"
  #define _EP_FROM_CHARS_DBL(...) _convFastFloatResult(fast_float::from_chars(__VA_ARGS__))
 
