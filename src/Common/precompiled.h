@@ -197,7 +197,8 @@ inline uint64 _swapEndianU64(uint64 v)
     return bswap64(v);
 #endif
 #else
-    return bswap_64(v);
+    // bswap_64 is glibc's <byteswap.h>; the builtin is also what MinGW has.
+    return __builtin_bswap64(v);
 #endif
 }
 
@@ -212,7 +213,7 @@ inline uint32 _swapEndianU32(uint32 v)
     return bswap32(v);
 #endif
 #else
-    return bswap_32(v);
+    return __builtin_bswap32(v);
 #endif
 }
 
@@ -227,7 +228,7 @@ inline sint32 _swapEndianS32(sint32 v)
     return (sint32)bswap32((uint32)v);
 #endif
 #else
-    return (sint32)bswap_32((uint32)v);
+    return (sint32)__builtin_bswap32((uint32)v);
 #endif
 }
 
@@ -246,6 +247,11 @@ inline uint64 _umul128(uint64 multiplier, uint64 multiplicand, uint64 *highProdu
     *highProduct = (x >> 64);
     return x & 0xFFFFFFFFFFFFFFFF;
 }
+
+// Stand-ins for the Windows types the rest of the code uses. Not-MSVC does not
+// mean not Windows: under MinGW windows.h has already defined all of these
+// (platform.h pulls it in), and redefining them is a hard error there.
+#if !BOOST_OS_WINDOWS
 
 typedef uint8_t BYTE;
 typedef uint32_t DWORD;
@@ -272,7 +278,9 @@ typedef union _LARGE_INTEGER {
     inline T& operator|= (T& a, T b) { return reinterpret_cast<T&>( reinterpret_cast<std::underlying_type<T>::type&>(a) |= static_cast<std::underlying_type<T>::type>(b) ); }   \
     inline T& operator&= (T& a, T b) { return reinterpret_cast<T&>( reinterpret_cast<std::underlying_type<T>::type&>(a) &= static_cast<std::underlying_type<T>::type>(b) ); }   \
     inline T& operator^= (T& a, T b) { return reinterpret_cast<T&>( reinterpret_cast<std::underlying_type<T>::type&>(a) ^= static_cast<std::underlying_type<T>::type>(b) ); }
-#endif
+
+#endif // !BOOST_OS_WINDOWS
+#endif // _MSC_VER
 
 template<typename T>
 inline T GetBits(T value, uint32 index, uint32 numBits)
@@ -316,9 +324,13 @@ inline uint64 _udiv128(uint64 highDividend, uint64 lowDividend, uint64 divisor, 
 
 #if defined(_MSC_VER)
     #define DEBUG_BREAK __debugbreak()
+#elif BOOST_OS_WINDOWS
+    // MinGW's <csignal> has no SIGTRAP; this is the Windows equivalent, and
+    // like raise(SIGTRAP) it is continuable under a debugger.
+    #define DEBUG_BREAK DebugBreak()
 #else
     #include <csignal>
-    #define DEBUG_BREAK raise(SIGTRAP) 
+    #define DEBUG_BREAK raise(SIGTRAP)
 #endif
 
 #if defined(_MSC_VER)
@@ -486,7 +498,8 @@ bool match_any_of(T1&& value, Types&&... others)
 // we cache the frequency in a static variable
 [[nodiscard]] static std::chrono::high_resolution_clock::time_point now_cached() noexcept
 {
-#ifdef _WIN32
+// _Query_perf_* are MSVC STL internals, so MinGW takes the portable path.
+#if defined(_MSC_VER)
     // get current time
 	static const long long _Freq = _Query_perf_frequency();	// doesn't change after system boot
 	const long long _Ctr = _Query_perf_counter();
@@ -501,7 +514,8 @@ bool match_any_of(T1&& value, Types&&... others)
 
 [[nodiscard]] static std::chrono::steady_clock::time_point tick_cached() noexcept
 {
-#if BOOST_OS_WINDOWS
+// Same as above: this is the MSVC path, not the Windows one.
+#if defined(_MSC_VER)
     // get current time
 	static const long long _Freq = _Query_perf_frequency();	// doesn't change after system boot
 	const long long _Ctr = _Query_perf_counter();
@@ -509,6 +523,9 @@ bool match_any_of(T1&& value, Types&&... others)
 	const long long _Whole = (_Ctr / _Freq) * std::nano::den;
 	const long long _Part = (_Ctr % _Freq) * std::nano::den / _Freq;
 	return (std::chrono::steady_clock::time_point(std::chrono::nanoseconds(_Whole + _Part)));
+#elif BOOST_OS_WINDOWS
+	// MinGW: steady_clock is QueryPerformanceCounter-backed there anyway.
+	return std::chrono::steady_clock::now();
 #elif BOOST_OS_LINUX
 	struct timespec tp;
 	clock_gettime(CLOCK_MONOTONIC_RAW, &tp);

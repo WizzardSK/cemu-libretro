@@ -7,7 +7,9 @@ using namespace Latte;
 namespace LatteAddrLib
 {
 
-#if BOOST_OS_LINUX || BOOST_OS_MACOS || BOOST_OS_BSD
+// Not just the Unixes: MinGW has no _BitScanReverse intrinsic either, that
+// one comes with MSVC.
+#if !defined(_MSC_VER)
 	unsigned char _BitScanReverse(uint32* _Index, uint32 _Mask)
 	{
 		if (!_Mask)
