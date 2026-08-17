@@ -158,11 +158,12 @@ uint32 LatteTexture_CalculateTextureDataHash(LatteTexture* hostTexture)
 					readPtr += (288 / 32);
 					h256 = _mm256_xor_si256(h256, temp);
 				}
-#ifdef __clang__
-				hashVal = h256[0] + h256[1] + h256[2] + h256[3] + h256[4] + h256[5] + h256[6] + h256[7];
-#else
-				hashVal = h256.m256i_u32[0] + h256.m256i_u32[1] + h256.m256i_u32[2] + h256.m256i_u32[3] + h256.m256i_u32[4] + h256.m256i_u32[5] + h256.m256i_u32[6] + h256.m256i_u32[7];
-#endif
+				// m256i_u32 is an MSVC extension and subscripting __m256i gives 64-bit
+				// lanes on GCC/clang, so neither spelling travels. Store the lanes out
+				// and add them up, which every compiler agrees on.
+				alignas(32) uint32 lanes[8];
+				_mm256_store_si256(reinterpret_cast<__m256i*>(lanes), h256);
+				hashVal = lanes[0] + lanes[1] + lanes[2] + lanes[3] + lanes[4] + lanes[5] + lanes[6] + lanes[7];
 			}
 #else
 			if( false ) {}
