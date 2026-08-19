@@ -35,6 +35,12 @@ if(WIN32)
 		windows/FileStream_win32.cpp
 		ExceptionHandler/ExceptionHandler_win32.cpp
 	)
+	if(NOT MSVC)
+		# Same story as ntdll in CemuUtil: MiniDumpWriteDump() and the Sym* calls
+		# come from dbghelp, and the #pragma comment(lib) asking for it is a
+		# no-op outside MSVC.
+		target_link_libraries(CemuCommon PRIVATE dbghelp)
+	endif()
 else()
 target_sources(CemuCommon
 PRIVATE

@@ -110,9 +110,13 @@ if(ENABLE_LIBRETRO)
 
 	if(WIN32)
 		target_link_libraries(cemu_libretro PRIVATE opengl32)
-		# MSVC counterpart of the --whole-archive below: imgui pulls fontawesome
-		# out of the resource archive, so none of it may be dropped.
-		target_link_options(cemu_libretro PRIVATE "/WHOLEARCHIVE:$<TARGET_FILE:CemuResource>")
+		# imgui pulls fontawesome out of the resource archive, so none of it may
+		# be dropped. link.exe and the MinGW ld spell that differently.
+		if(MSVC)
+			target_link_options(cemu_libretro PRIVATE "/WHOLEARCHIVE:$<TARGET_FILE:CemuResource>")
+		else()
+			target_link_options(cemu_libretro PRIVATE "LINKER:--whole-archive" $<TARGET_FILE:CemuResource> "LINKER:--no-whole-archive")
+		endif()
 		# No version script needed - the retro_* entry points carry RETRO_API,
 		# which is __declspec(dllexport) when building a core on Windows.
 	endif()

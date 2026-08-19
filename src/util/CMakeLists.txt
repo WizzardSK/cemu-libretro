@@ -74,6 +74,11 @@ if(WIN32)
 	target_sources(CemuUtil PRIVATE Fiber/FiberWin.cpp)
 	target_sources(CemuUtil PRIVATE MemMapper/MemMapperWin.cpp)
 	target_sources(CemuUtil PRIVATE SystemInfo/SystemInfoWin.cpp)
+	if(NOT MSVC)
+		# SystemInfoWin.cpp asks for ntdll with #pragma comment(lib), which only
+		# MSVC honours, and it takes GetProcessMemoryInfo() from psapi.
+		target_link_libraries(CemuUtil PRIVATE ntdll psapi)
+	endif()
 elseif(ANDROID)
 	# no ucontext in bionic, so Android switches stacks with Boost.Context
 	target_sources(CemuUtil PRIVATE Fiber/FiberAndroid.cpp)
