@@ -85,6 +85,15 @@ endif()
 
 project(Cemu VERSION 2.0.0)
 
+# vcpkg hangs an applocal.ps1 post-build step on every Windows target, to copy
+# the DLLs it built next to the binary. That is a PowerShell script, and the
+# MinGW job cross-compiles on Linux, where linking cemu_libretro.dll then ends
+# in "/bin/sh: 1: powershell.exe: not found" with everything else already done.
+# A static triplet has no DLLs to copy anyway.
+if(WIN32 AND NOT MSVC)
+	set(VCPKG_APPLOCAL_DEPS OFF)
+endif()
+
 list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
 
 set(CMAKE_CXX_STANDARD 20)
