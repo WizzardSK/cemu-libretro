@@ -32,8 +32,14 @@ public:
 		if (!pfnD3DKMTOpenAdapterFromHdc)
 		{
 			HMODULE hModuleGDI = LoadLibraryA("gdi32.dll");
-			*(void**)&pfnD3DKMTOpenAdapterFromHdc = GetProcAddress(hModuleGDI, "D3DKMTOpenAdapterFromHdc");
-			*(void**)&pfnD3DKMTWaitForVerticalBlankEvent = GetProcAddress(hModuleGDI, "D3DKMTWaitForVerticalBlankEvent");
+			// GetProcAddress() hands back a FARPROC, which is a function
+			// pointer; writing it through a void** is an MSVC courtesy that
+			// GCC will not extend. Convert between the two function pointer
+			// types instead, which needs no such courtesy.
+			pfnD3DKMTOpenAdapterFromHdc = reinterpret_cast<decltype(pfnD3DKMTOpenAdapterFromHdc)>(
+				GetProcAddress(hModuleGDI, "D3DKMTOpenAdapterFromHdc"));
+			pfnD3DKMTWaitForVerticalBlankEvent = reinterpret_cast<decltype(pfnD3DKMTWaitForVerticalBlankEvent)>(
+				GetProcAddress(hModuleGDI, "D3DKMTWaitForVerticalBlankEvent"));
 		}
 		m_thd = std::thread(&DeviceVsyncHandler::vsyncThread, this);
 	}

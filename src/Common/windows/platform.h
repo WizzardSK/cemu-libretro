@@ -8,6 +8,9 @@
 #endif
 #include <windows.h>
 
+// MinGW builds land here too, and its CRT has no two-argument strcpy_s.
+#include "Common/StringSafeFuncs.h"
+
 #define AF_BLUETOOTH AF_BTH
 #define BTPROTO_RFCOMM BT_PORT_ANY
 
