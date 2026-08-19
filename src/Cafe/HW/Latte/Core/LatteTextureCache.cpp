@@ -39,6 +39,32 @@ uint32 _quickStochasticHash(void* texData, uint32 memRange)
 	return (uint32)hashVal ^ (uint32)(hashVal >> 32);
 }
 
+#if BOOST_OS_WINDOWS
+// MSVC emits AVX2 intrinsics anywhere, but GCC and clang only do so in a function
+// that was compiled with AVX2 enabled, which is why the loop lives on its own here
+// instead of inside LatteTexture_CalculateTextureDataHash().
+#if defined(__GNUC__) || defined(__clang__)
+__attribute__((target("avx2")))
+#endif
+static uint32 _hashTextureDataAVX2(const uint32* texData, uint32 blockCount)
+{
+	__m256i h256 = _mm256_setzero_si256();
+	const __m256i* readPtr = (const __m256i*)texData;
+	while (blockCount--)
+	{
+		__m256i temp = _mm256_load_si256(readPtr);
+		readPtr += (288 / 32);
+		h256 = _mm256_xor_si256(h256, temp);
+	}
+	// m256i_u32 is an MSVC extension and subscripting __m256i gives 64-bit lanes on
+	// GCC/clang, so neither spelling travels. Store the lanes out and add them up,
+	// which every compiler agrees on.
+	alignas(32) uint32 lanes[8];
+	_mm256_store_si256(reinterpret_cast<__m256i*>(lanes), h256);
+	return lanes[0] + lanes[1] + lanes[2] + lanes[3] + lanes[4] + lanes[5] + lanes[6] + lanes[7];
+}
+#endif
+
 uint32 LatteTexture_CalculateTextureDataHash(LatteTexture* hostTexture)
 {
 	if( hostTexture->texDataPtrHigh == hostTexture->texDataPtrLow )
@@ -149,21 +175,8 @@ uint32 LatteTexture_CalculateTextureDataHash(LatteTexture* hostTexture)
 #if BOOST_OS_WINDOWS
 			if (g_CPUFeatures.x86.avx2)
 			{
-				__m256i h256 = { 0 };
-				__m256i* readPtr = (__m256i*)texDataU32;
 				memRange /= (288);
-				while (memRange--)
-				{
-					__m256i temp = _mm256_load_si256(readPtr);
-					readPtr += (288 / 32);
-					h256 = _mm256_xor_si256(h256, temp);
-				}
-				// m256i_u32 is an MSVC extension and subscripting __m256i gives 64-bit
-				// lanes on GCC/clang, so neither spelling travels. Store the lanes out
-				// and add them up, which every compiler agrees on.
-				alignas(32) uint32 lanes[8];
-				_mm256_store_si256(reinterpret_cast<__m256i*>(lanes), h256);
-				hashVal = lanes[0] + lanes[1] + lanes[2] + lanes[3] + lanes[4] + lanes[5] + lanes[6] + lanes[7];
+				hashVal = _hashTextureDataAVX2(texDataU32, memRange);
 			}
 #else
 			if( false ) {}
