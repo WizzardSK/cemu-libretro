@@ -115,7 +115,10 @@ struct LatteDecompilerCFInstruction
 		cemu_assert_debug(!(instructionsALU.size() != 0 && instructionsTEX.size() != 0)); // make sure we haven't accidentally added the wrong instruction type
 	}
 
-#if BOOST_OS_WINDOWS
+	// The non-const copy constructor is an MSVC accommodation, not a Windows one:
+	// libstdc++ copies vector elements through a const iterator, so on MinGW it
+	// leaves the type not copy-constructible and std::vector<> fails to compile.
+#if defined(_MSC_VER)
 	LatteDecompilerCFInstruction(LatteDecompilerCFInstruction& mE) = default;
 	LatteDecompilerCFInstruction(LatteDecompilerCFInstruction&& mE) = default;
 #else

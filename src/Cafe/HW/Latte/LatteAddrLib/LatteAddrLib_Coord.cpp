@@ -10,11 +10,17 @@ namespace LatteAddrLib
 // Not just the Unixes: MinGW has no _BitScanReverse intrinsic either, that
 // one comes with MSVC.
 #if !defined(_MSC_VER)
-	unsigned char _BitScanReverse(uint32* _Index, uint32 _Mask)
+	// DWORD, because that is what the call sites cast to and what MSVC's own
+	// intrinsic takes - it is 32 bits wide on Windows but our own stand-in
+	// typedef elsewhere, so spelling it uint32 here only matched off Windows.
+	unsigned char _BitScanReverse(DWORD* _Index, uint32 _Mask)
 	{
 		if (!_Mask)
 			return 0;
-		*_Index = 31 - __builtin_clzl(_Mask);
+		// clzl counts leading zeros in a 64-bit long off Windows, which put the
+		// result 32 too low. Every user shifts by it, and x86 and arm64 both mask
+		// the shift count, so it went unnoticed - but say what we mean.
+		*_Index = 31 - __builtin_clz(_Mask);
 		return 1;
 	}
 #endif
