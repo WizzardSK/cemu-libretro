@@ -4,6 +4,14 @@
 #include "Cafe/OS/libs/coreinit/coreinit_Thread.h"
 #include "Cafe/OS/RPL/rpl.h"
 
+// MinGW's CRT spells its own stdin/stdout/stderr table as
+// "#define _iob __iob_func()", which turns the GHS runtime's unrelated _iob
+// member below into a function call. The guest's table is what this file is
+// about, so the host's name has to go.
+#ifdef _iob
+#undef _iob
+#endif
+
 namespace coreinit
 {
 	struct iobbuf
