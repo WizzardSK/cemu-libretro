@@ -440,6 +440,20 @@ void padscoreExport_KPADSetConnectCallback(PPCInterpreter_t* hCPU)
 
 	const auto old_callback = padscore::g_padscore.controller_data[channel].connectCallback;
 	padscore::g_padscore.controller_data[channel].connectCallback = callback;
+
+	// A controller announces itself to the game through this callback, and
+	// TickFunction only ever fires it on a state change. Whatever the state was
+	// before the game registered here is of no use to it - what it is waiting
+	// for is to be told what is connected now - so line the sequence up again:
+	// the next tick reports the channel as empty, the one after it reports the
+	// controller. That is the same order a remote syncing at runtime produces.
+	if (callback != MPTR_NULL)
+	{
+		padscore::g_padscore.controller_data[channel].disconnectCalled = false;
+		if (const auto controller = InputManager::instance().get_wpad_controller(channel))
+			controller->m_status = WPADController::ConnectCallbackStatus::ReportConnect;
+	}
+
 	osLib_returnFromFunction(hCPU, old_callback.GetMPTR());
 }
 
@@ -494,6 +508,9 @@ sint32 _KPADRead(uint32 channel, KPADStatus_t* samplingBufs, uint32 length, bety
 		const auto btn_repeat = padscore::g_padscore.controller_data[channel].btn_repeat;
 		controller->KPADRead(*samplingBufs, btn_repeat);
 	}
+
+	cemuLog_log(LogType::InputAPI, "KPADRead({}) devType={} hold=0x{:x}", channel,
+		(uint32)samplingBufs->devType, (uint32)samplingBufs->hold);
 
 	if (errResult)
 		*errResult = KPAD_ERROR::NONE;

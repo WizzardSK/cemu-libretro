@@ -1301,7 +1301,10 @@ static void libretro_setup_wiimotes()
 
 		remote->set_mapping(WiimoteController::kButtonId_Plus, pad, kButton0 + RETRO_DEVICE_ID_JOYPAD_START);
 		remote->set_mapping(WiimoteController::kButtonId_Minus, pad, kButton0 + RETRO_DEVICE_ID_JOYPAD_SELECT);
-		remote->set_mapping(WiimoteController::kButtonId_Home, pad, kButton0 + RETRO_DEVICE_ID_JOYPAD_R3);
+		// Home on L, not on a stick click: pressing Home is how a game is asked
+		// to bring up its controller screen, and L is bound out of the box in
+		// RetroArch's default keyboard and pad layouts where L3 is not.
+		remote->set_mapping(WiimoteController::kButtonId_Home, pad, kButton0 + RETRO_DEVICE_ID_JOYPAD_L);
 
 		remote->set_mapping(WiimoteController::kButtonId_Up, pad, kButton0 + RETRO_DEVICE_ID_JOYPAD_UP);
 		remote->set_mapping(WiimoteController::kButtonId_Down, pad, kButton0 + RETRO_DEVICE_ID_JOYPAD_DOWN);
