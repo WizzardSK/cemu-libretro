@@ -39,6 +39,7 @@ enum class MMU_MEM_AREA_ID
 	CPU_PER_CORE,
 
 	CEMU_PRIVATE,
+	NULL_GUARD,
 };
 
 struct MMURange
