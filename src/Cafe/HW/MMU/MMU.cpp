@@ -108,6 +108,15 @@ void MMURange::unmapMem()
 	m_isMapped = false;
 }
 
+// Covers the previously-unmapped gap below CODE_LOW0. A null (or near-null, e.g. a bad
+// pointer plus a small struct-member offset) guest address here used to be a raw
+// access into reserved-but-never-committed memory, which segfaults the whole process
+// instead of just corrupting emulated state the way a null deref does on real hardware
+// or under a full MMU with DSI exceptions - both the interpreter (PPCItpCafeOSUsermode,
+// which has allowDSI = false) and the recompiler's JIT-generated code dereference
+// memory_base + address directly with no validation, so committing this page is the one
+// fix that covers both instead of patching every load/store call site in either backend.
+MMURange mmuRange_NULLGUARD			{ 0x00000000, 0x00010000, MMU_MEM_AREA_ID::NULL_GUARD, "NULL_GUARD", MMURange::MFLAG::FLAG_MAP_EARLY };
 MMURange mmuRange_LOW0					{ 0x00010000, 0x000F0000, MMU_MEM_AREA_ID::CODE_LOW0, "CODE_LOW0" }; // code cave (Cemuhook)
 MMURange mmuRange_TRAMPOLINE_AREA		{ 0x00E00000, 0x00200000, MMU_MEM_AREA_ID::CODE_TRAMPOLINE, "TRAMPOLINE_AREA" }; // code area for trampolines and imports
 MMURange mmuRange_CODECAVE				{ 0x01800000, 0x00400000, MMU_MEM_AREA_ID::CODE_CAVE, "CODECAVE" }; // code cave area (4MiB)
