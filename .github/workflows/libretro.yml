@@ -99,17 +99,22 @@ jobs:
         run: ./dependencies/vcpkg/bootstrap-vcpkg.bat
 
       - name: "Configure"
+        # RelWithDebInfo instead of Release: same optimization level for MSVC,
+        # but keeps a PDB around so a crash dump/live debug session resolves to
+        # real function names instead of the nearest export + a huge offset.
         run: |
-          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DENABLE_LIBRETRO=ON -DENABLE_WXWIDGETS=OFF -DENABLE_DISCORD_RPC=OFF -DENABLE_CUBEB=OFF -DVCPKG_INSTALL_OPTIONS="--clean-after-build"
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=RelWithDebInfo -DENABLE_LIBRETRO=ON -DENABLE_WXWIDGETS=OFF -DENABLE_DISCORD_RPC=OFF -DENABLE_CUBEB=OFF -DVCPKG_INSTALL_OPTIONS="--clean-after-build"
 
       - name: "Build"
-        run: cmake --build build --target cemu_libretro --config Release
+        run: cmake --build build --target cemu_libretro --config RelWithDebInfo
 
       - name: "Upload artifact"
         uses: actions/upload-artifact@v4
         with:
           name: cemu_libretro-windows-x64
-          path: ./bin/cemu_libretro.dll
+          path: |
+            ./bin/cemu_libretro.dll
+            ./bin/cemu_libretro.pdb
 
   android:
     name: android-${{ matrix.abi }}
