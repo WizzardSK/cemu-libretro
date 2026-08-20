@@ -204,6 +204,13 @@ static retro_log_printf_t log_cb = nullptr;
 static bool s_game_loaded = false;
 static bool s_initialized = false;
 static bool s_emu_initialized = false;
+// Set as soon as a Vulkan/OpenGL device or renderer has been created, i.e. as soon as
+// normal C++ static-destructor teardown of this DLL becomes unsafe (see retro_unload_game /
+// retro_deinit). This is intentionally separate from s_emu_initialized/s_game_loaded, which
+// are only set once the whole title has finished loading - a load failure that happens after
+// the GPU context is created but before that point used to skip the _exit(0) safety net below
+// and fall through to a DllMain/static-destructor deadlock on unload.
+static std::atomic_bool s_gpu_context_created{false};
 static std::string s_game_path;
 
 // Frontend GL objects for blitting (reset on context destroy/resize)
@@ -1650,6 +1657,12 @@ static void libretro_context_reset()
 		}
 	}
 
+	// From this point on a GPU device/renderer may exist and normal C++ static-destructor
+	// teardown of this DLL is unsafe (see retro_unload_game / retro_deinit). Mark it so a
+	// later load failure still takes the _exit(0) escape hatch instead of deadlocking on unload.
+	if (g_renderer)
+		s_gpu_context_created = true;
+
 	// Set window info
 	auto& windowInfo = WindowSystem::GetWindowInfo();
 	windowInfo.width = SCREEN_WIDTH;
@@ -1809,7 +1822,10 @@ RETRO_API bool retro_load_game_special(unsigned game_type, const struct retro_ga
 
 RETRO_API void retro_unload_game()
 {
-	if (!s_game_loaded)
+	// A GPU device/renderer may have been created even if the title failed to finish loading
+	// (s_game_loaded false). In that case normal teardown is still unsafe, so we must still
+	// take the _exit(0) path below instead of returning early into a DllMain deadlock.
+	if (!s_game_loaded && !s_gpu_context_created)
 		return;
 
 #ifdef ENABLE_VULKAN
@@ -1833,8 +1849,9 @@ RETRO_API void retro_unload_game()
 
 RETRO_API void retro_deinit()
 {
-	// If unload didn't fully clean up, force exit
-	if (s_emu_initialized)
+	// If unload didn't fully clean up, force exit. Also covers the case where the title
+	// failed to load after a GPU context was already created (see s_gpu_context_created).
+	if (s_emu_initialized || s_gpu_context_created)
 		_exit(0);
 	s_initialized = false;
 }
