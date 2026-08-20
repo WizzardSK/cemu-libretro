@@ -9,13 +9,34 @@ public:
 	static const bool allowSupervisorMode = false;
 	static const bool allowDSI = false;
 
+	// This interpreter skips MMU/DSI handling (see allowDSI above) and turns every guest
+	// memory access directly into memory_base + address, so a null or near-null guest
+	// pointer (e.g. from a game hitting an unimplemented/misbehaving HLE call) reads or
+	// writes into the unmapped low end of the reserved 4GB region and crashes the whole
+	// process with an access violation instead of just corrupting emulated state, which is
+	// what real hardware / a full MMU would do. Guard against that specific case: treat the
+	// low guest page as unmapped, log it once per occurrence, and degrade instead of dying.
+	static const uint32 GUARD_LOW_ADDRESS_LIMIT = 0x1000;
+
+	inline static bool isGuardedLowAddress(PPCInterpreter_t* hCPU, uint32 address, const char* accessKind)
+	{
+		if (address >= GUARD_LOW_ADDRESS_LIMIT)
+			return false;
+		cemuLog_logDebug(LogType::Force, "Ignoring {} of near-null guest address {:#x} at PC {:#08x}\n", accessKind, address, (unsigned int)hCPU->instructionPointer);
+		return true;
+	}
+
 	inline static uint32 memory_readCodeU32(PPCInterpreter_t* hCPU, uint32 address)
 	{
+		if (isGuardedLowAddress(hCPU, address, "code read"))
+			return 0;
 		return _swapEndianU32(*(uint32*)(memory_base + address));
 	}
 
 	inline static void ppcMem_writeDataDouble(PPCInterpreter_t* hCPU, uint32 address, double vf)
 	{
+		if (isGuardedLowAddress(hCPU, address, "write"))
+			return;
 		uint64 v = *(uint64*)&vf;
 		uint32 v1 = v & 0xFFFFFFFF;
 		uint32 v2 = v >> 32;
@@ -26,26 +47,36 @@ public:
 
 	inline static void ppcMem_writeDataU64(PPCInterpreter_t* hCPU, uint32 address, uint64 v)
 	{
+		if (isGuardedLowAddress(hCPU, address, "write"))
+			return;
 		*(uint64*)(memory_getPointerFromVirtualOffset(address)) = CPU_swapEndianU64(v);
 	}
 
 	inline static void ppcMem_writeDataU32(PPCInterpreter_t* hCPU, uint32 address, uint32 v)
 	{
+		if (isGuardedLowAddress(hCPU, address, "write"))
+			return;
 		*(uint32*)(memory_getPointerFromVirtualOffset(address)) = CPU_swapEndianU32(v);
 	}
 
 	inline static void ppcMem_writeDataU16(PPCInterpreter_t* hCPU, uint32 address, uint16 v)
 	{
+		if (isGuardedLowAddress(hCPU, address, "write"))
+			return;
 		*(uint16*)(memory_getPointerFromVirtualOffset(address)) = CPU_swapEndianU16(v);
 	}
 
 	inline static void ppcMem_writeDataU8(PPCInterpreter_t* hCPU, uint32 address, uint8 v)
 	{
+		if (isGuardedLowAddress(hCPU, address, "write"))
+			return;
 		*(uint8*)(memory_getPointerFromVirtualOffset(address)) = v;
 	}
-	
+
 	inline static double ppcMem_readDataDouble(PPCInterpreter_t* hCPU, uint32 address)
 	{
+		if (isGuardedLowAddress(hCPU, address, "read"))
+			return 0.0;
 		uint32 v[2];
 		v[1] = *(uint32*)(memory_getPointerFromVirtualOffset(address));
 		v[0] = *(uint32*)(memory_getPointerFromVirtualOffset(address) + 4);
@@ -56,6 +87,8 @@ public:
 
 	inline static float ppcMem_readDataFloat(PPCInterpreter_t* hCPU, uint32 address)
 	{
+		if (isGuardedLowAddress(hCPU, address, "read"))
+			return 0.0f;
 		uint32 v = *(uint32*)(memory_getPointerFromVirtualOffset(address));
 		v = CPU_swapEndianU32(v);
 		return *(float*)&v;
@@ -63,34 +96,46 @@ public:
 
 	inline static uint64 ppcMem_readDataU64(PPCInterpreter_t* hCPU, uint32 address)
 	{
+		if (isGuardedLowAddress(hCPU, address, "read"))
+			return 0;
 		uint64 v = *(uint64*)(memory_getPointerFromVirtualOffset(address));
 		return CPU_swapEndianU64(v);
 	}
 
 	inline static uint32 ppcMem_readDataU32(PPCInterpreter_t* hCPU, uint32 address)
 	{
+		if (isGuardedLowAddress(hCPU, address, "read"))
+			return 0;
 		uint32 v = *(uint32*)(memory_getPointerFromVirtualOffset(address));
 		return CPU_swapEndianU32(v);
 	}
 
 	inline static uint16 ppcMem_readDataU16(PPCInterpreter_t* hCPU, uint32 address)
 	{
+		if (isGuardedLowAddress(hCPU, address, "read"))
+			return 0;
 		uint16 v = *(uint16*)(memory_getPointerFromVirtualOffset(address));
 		return CPU_swapEndianU16(v);
 	}
 
 	inline static uint8 ppcMem_readDataU8(PPCInterpreter_t* hCPU, uint32 address)
 	{
+		if (isGuardedLowAddress(hCPU, address, "read"))
+			return 0;
 		return *(uint8*)(memory_getPointerFromVirtualOffset(address));
 	}
 
 	inline static uint64 ppcMem_readDataFloatEx(PPCInterpreter_t* hCPU, uint32 addr)
 	{
+		if (isGuardedLowAddress(hCPU, addr, "read"))
+			return 0;
 		return ConvertToDoubleNoFTZ(_swapEndianU32(*(uint32*)(memory_base + addr)));
 	}
 
 	inline static void ppcMem_writeDataFloatEx(PPCInterpreter_t* hCPU, uint32 addr, uint64 value)
 	{
+		if (isGuardedLowAddress(hCPU, addr, "write"))
+			return;
 		*(uint32*)(memory_base + addr) = _swapEndianU32(ConvertToSingleNoFTZ(value));
 	}
 
