@@ -20,6 +20,7 @@
 #if HAS_WIIMOTE
 #include "input/api/Wiimote/NativeWiimoteController.h"
 #endif
+#include "input/api/Libretro/LibretroController.h"
 
 ControllerPtr ControllerFactory::CreateController(InputAPI::Type api, std::string_view uuid,
                                                   std::string_view display_name)
@@ -29,6 +30,16 @@ ControllerPtr ControllerFactory::CreateController(InputAPI::Type api, std::strin
 #if HAS_KEYBOARD
 	case InputAPI::Keyboard:
 		return std::make_shared<KeyboardController>();
+#endif
+#if HAS_LIBRETRO
+	case InputAPI::Libretro:
+		{
+			const auto port = ConvertString<uint32>(uuid);
+			if (port >= kLibretroMaxPorts)
+				throw std::invalid_argument(fmt::format("invalid libretro port: {}", uuid));
+
+			return std::make_shared<LibretroController>(port);
+		}
 #endif
 #if HAS_DIRECTINPUT
 	case InputAPI::DirectInput:
@@ -138,6 +149,10 @@ ControllerProviderPtr ControllerFactory::CreateControllerProvider(InputAPI::Type
 #if HAS_KEYBOARD
 	case InputAPI::Keyboard:
 		return std::make_shared<KeyboardControllerProvider>();
+#endif
+#if HAS_LIBRETRO
+	case InputAPI::Libretro:
+		return std::make_shared<LibretroControllerProvider>();
 #endif
 #if HAS_SDL
 	case InputAPI::SDLController:

@@ -28,6 +28,9 @@ InputManager::InputManager()
 #if HAS_KEYBOARD
 	create_provider<KeyboardControllerProvider>();
 #endif
+#if HAS_LIBRETRO
+	create_provider<LibretroControllerProvider>();
+#endif
 #if HAS_SDL
 	create_provider<SDLControllerProvider>();
 #endif

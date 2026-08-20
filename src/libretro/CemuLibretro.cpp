@@ -24,6 +24,8 @@
 #include "audio/IAudioAPI.h"
 #include "input/InputManager.h"
 #include "input/emulated/VPADController.h"
+#include "input/emulated/WiimoteController.h"
+#include "input/api/Libretro/LibretroController.h"
 
 #include "Common/ExceptionHandler/ExceptionHandler.h"
 #include "Common/cpu_features.h"
@@ -711,6 +713,18 @@ struct LibretroInputState
 
 static LibretroInputState s_input_state;
 
+// Raw per-port RetroPad state. The GamePad above is built from port 0 only;
+// this is what LibretroController hands to Cemu's InputManager, which is what
+// drives the Wii Remotes.
+struct LibretroPortState
+{
+	int16_t buttons[16]{};
+	int16_t left_x = 0, left_y = 0;
+	int16_t right_x = 0, right_y = 0;
+};
+
+static LibretroPortState s_port_state[kLibretroMaxPorts];
+
 // ============================================================================
 // Forward declarations from main.cpp
 // ============================================================================
@@ -1116,6 +1130,7 @@ RETRO_API void retro_set_environment(retro_environment_t cb)
 		{"cemu_skip_draw_on_dupe", "Skip Draw on Duplicate Frames; disabled|enabled"},
 		{"cemu_drc_mode", "DRC Display Mode; disabled|toggle|side_by_side|top_bottom|picture_in_picture"},
 		{"cemu_drc_position", "DRC Position; normal|swapped"},
+		{"cemu_wiimote_input", "Wii Remote input; port1_shared|ports2_4|disabled"},
 #ifdef ENABLE_VULKAN
 		{"cemu_gpu_api", "Graphics API (restart); OpenGL|Vulkan"},
 #endif
@@ -1240,6 +1255,64 @@ RETRO_API void retro_reset()
 	_exit(0);
 }
 
+
+// Wii Remotes. The GamePad reads libretro input directly (see vpad.cpp), but the
+// remotes have to go through Cemu's InputManager: padscore only tells a game that
+// a remote is connected when it finds a WPAD controller there (TickFunction in
+// padscore.cpp), and a game that is never told will not read one either.
+static void libretro_setup_wiimotes()
+{
+	// Player index 0 is the GamePad; remotes take the ones after it.
+	constexpr size_t kWiimotePlayerIndexBase = 1;
+
+	std::string_view mode = "port1_shared";
+	if (const char* v = libretro_get_option_value("cemu_wiimote_input"))
+		mode = v;
+
+	if (mode == "disabled")
+	{
+		if (log_cb)
+			log_cb(RETRO_LOG_INFO, "Cemu: Wii Remote input disabled\n");
+		return;
+	}
+
+	// port1_shared: port 1 drives the GamePad and the first remote at the same
+	// time, so a single pad also gets past screens that ask for a remote
+	// ("Press 2"). ports2_4: remotes start at port 2 and port 1 stays GamePad
+	// only, which is what a real multiplayer setup wants.
+	const uint32_t firstPort = (mode == "ports2_4") ? 1 : 0;
+
+	auto& inputManager = InputManager::instance();
+	size_t channel = 0;
+	for (uint32_t port = firstPort; port < kLibretroMaxPorts; ++port, ++channel)
+	{
+		auto pad = std::make_shared<LibretroController>(port);
+		auto remote = inputManager.set_controller(kWiimotePlayerIndexBase + channel,
+			EmulatedController::Type::Wiimote, pad);
+		if (!remote)
+			continue;
+
+		// RetroPad -> Wii Remote. B and A keep the meaning they already have on
+		// the GamePad (B confirms), 1 and 2 take the two remaining face buttons.
+		remote->set_mapping(WiimoteController::kButtonId_A, pad, kButton0 + RETRO_DEVICE_ID_JOYPAD_B);
+		remote->set_mapping(WiimoteController::kButtonId_B, pad, kButton0 + RETRO_DEVICE_ID_JOYPAD_A);
+		remote->set_mapping(WiimoteController::kButtonId_1, pad, kButton0 + RETRO_DEVICE_ID_JOYPAD_Y);
+		remote->set_mapping(WiimoteController::kButtonId_2, pad, kButton0 + RETRO_DEVICE_ID_JOYPAD_X);
+
+		remote->set_mapping(WiimoteController::kButtonId_Plus, pad, kButton0 + RETRO_DEVICE_ID_JOYPAD_START);
+		remote->set_mapping(WiimoteController::kButtonId_Minus, pad, kButton0 + RETRO_DEVICE_ID_JOYPAD_SELECT);
+		remote->set_mapping(WiimoteController::kButtonId_Home, pad, kButton0 + RETRO_DEVICE_ID_JOYPAD_R3);
+
+		remote->set_mapping(WiimoteController::kButtonId_Up, pad, kButton0 + RETRO_DEVICE_ID_JOYPAD_UP);
+		remote->set_mapping(WiimoteController::kButtonId_Down, pad, kButton0 + RETRO_DEVICE_ID_JOYPAD_DOWN);
+		remote->set_mapping(WiimoteController::kButtonId_Left, pad, kButton0 + RETRO_DEVICE_ID_JOYPAD_LEFT);
+		remote->set_mapping(WiimoteController::kButtonId_Right, pad, kButton0 + RETRO_DEVICE_ID_JOYPAD_RIGHT);
+
+		if (log_cb)
+			log_cb(RETRO_LOG_INFO, "Cemu: Wii Remote %u on RetroPad port %u\n",
+				(unsigned)channel + 1, (unsigned)port + 1);
+	}
+}
 static void libretro_launch_game()
 {
 	if (s_game_path.empty() || s_emu_initialized)
@@ -1274,6 +1347,9 @@ static void libretro_launch_game()
 
 	// Init audio through libretro
 	libretro_init_audio();
+
+	// Hand the Wii Remote channels a libretro pad each
+	libretro_setup_wiimotes();
 
 	// Prepare the game
 	fs::path gamePath = s_game_path;
@@ -1902,6 +1978,19 @@ static void libretro_poll_input()
 	state.right_x = input_state_cb(0, RETRO_DEVICE_ANALOG, RETRO_DEVICE_INDEX_ANALOG_RIGHT, RETRO_DEVICE_ID_ANALOG_X);
 	state.right_y = input_state_cb(0, RETRO_DEVICE_ANALOG, RETRO_DEVICE_INDEX_ANALOG_RIGHT, RETRO_DEVICE_ID_ANALOG_Y);
 
+	// Raw pad state for every port, for the Wii Remotes behind InputManager
+	for (uint32_t port = 0; port < kLibretroMaxPorts; ++port)
+	{
+		auto& pad = s_port_state[port];
+		for (uint32_t id = 0; id < 16; ++id)
+			pad.buttons[id] = input_state_cb(port, RETRO_DEVICE_JOYPAD, 0, id);
+
+		pad.left_x = input_state_cb(port, RETRO_DEVICE_ANALOG, RETRO_DEVICE_INDEX_ANALOG_LEFT, RETRO_DEVICE_ID_ANALOG_X);
+		pad.left_y = input_state_cb(port, RETRO_DEVICE_ANALOG, RETRO_DEVICE_INDEX_ANALOG_LEFT, RETRO_DEVICE_ID_ANALOG_Y);
+		pad.right_x = input_state_cb(port, RETRO_DEVICE_ANALOG, RETRO_DEVICE_INDEX_ANALOG_RIGHT, RETRO_DEVICE_ID_ANALOG_X);
+		pad.right_y = input_state_cb(port, RETRO_DEVICE_ANALOG, RETRO_DEVICE_INDEX_ANALOG_RIGHT, RETRO_DEVICE_ID_ANALOG_Y);
+	}
+
 	// Touchscreen (mouse/pointer mapped to GamePad touchscreen)
 	state.touch_pressed = input_state_cb(0, RETRO_DEVICE_POINTER, 0, RETRO_DEVICE_ID_POINTER_PRESSED) != 0;
 	if (state.touch_pressed)
@@ -1919,6 +2008,30 @@ bool libretro_get_button_state(uint32_t button_id)
 	if (button_id >= 16)
 		return false;
 	return s_input_state.buttons[button_id] != 0;
+}
+
+// Expose the raw per-port state to LibretroController (src/input/api/Libretro)
+
+bool libretro_get_joypad_button(uint32_t port, uint32_t retro_id)
+{
+	if (port >= kLibretroMaxPorts || retro_id >= 16)
+		return false;
+	return s_port_state[port].buttons[retro_id] != 0;
+}
+
+void libretro_get_joypad_analog(uint32_t port, float* lx, float* ly, float* rx, float* ry)
+{
+	if (port >= kLibretroMaxPorts)
+	{
+		*lx = *ly = *rx = *ry = 0.0f;
+		return;
+	}
+
+	const auto& pad = s_port_state[port];
+	*lx = pad.left_x / 32767.0f;
+	*ly = -(pad.left_y / 32767.0f);
+	*rx = pad.right_x / 32767.0f;
+	*ry = -(pad.right_y / 32767.0f);
 }
 
 void libretro_get_analog_state(float* lx, float* ly, float* rx, float* ry)

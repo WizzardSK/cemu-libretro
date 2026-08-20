@@ -23,6 +23,10 @@ add_library(CemuInput
 	api/Keyboard/KeyboardControllerProvider.cpp
 	api/Keyboard/KeyboardController.cpp
 	api/Keyboard/KeyboardController.h
+	api/Libretro/LibretroControllerProvider.h
+	api/Libretro/LibretroControllerProvider.cpp
+	api/Libretro/LibretroController.cpp
+	api/Libretro/LibretroController.h
 	api/GameCube/GameCubeController.cpp
 	api/GameCube/GameCubeControllerProvider.h
 	api/GameCube/GameCubeControllerProvider.cpp

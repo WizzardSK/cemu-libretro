@@ -15,6 +15,7 @@
 
 #include "input/api/SDL/SDLControllerProvider.h"
 #include "input/api/Keyboard/KeyboardControllerProvider.h"
+#include "input/api/Libretro/LibretroControllerProvider.h"
 #include "input/api/DSU/DSUControllerProvider.h"
 #include "input/api/GameCube/GameCubeControllerProvider.h"
 
