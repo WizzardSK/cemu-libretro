@@ -1454,6 +1454,11 @@ void LatteCP_ProcessRingbuffer()
 	uint32be tmpBuffer[128];
 	while (true)
 	{
+#ifdef ENABLE_LIBRETRO
+		// command boundary: safe place to stand still while the frontend
+		// rebuilds its graphics context
+		Latte_GpuPauseGate();
+#endif
 		uint32 itHeader = LatteCP_readU32Deprc();
 		uint32 itHeaderType = (itHeader >> 30) & 3;
 		if (itHeaderType == 3)

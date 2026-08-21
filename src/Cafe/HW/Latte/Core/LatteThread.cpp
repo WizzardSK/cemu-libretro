@@ -1,3 +1,5 @@
+#include <condition_variable>
+#include <mutex>
 #include "Cafe/HW/Latte/ISA/RegDefines.h"
 #include "Cafe/OS/libs/gx2/GX2.h" // todo - remove dependency
 #include "Cafe/HW/Latte/Core/Latte.h"
@@ -35,6 +37,44 @@ static bool LatteThread_libretro_debug_enabled()
 LatteGPUState_t LatteGPUState = {};
 
 std::atomic_bool sLatteThreadRunning = false;
+
+#ifdef ENABLE_LIBRETRO
+static std::atomic_bool sGpuPauseRequested{false};
+static std::atomic_bool sGpuParked{false};
+static std::mutex sGpuPauseMutex;
+static std::condition_variable sGpuPauseCv;
+
+void Latte_RequestGpuPause()
+{
+	sGpuPauseRequested.store(true, std::memory_order_release);
+}
+
+void Latte_ReleaseGpuPause()
+{
+	{
+		std::lock_guard<std::mutex> lock(sGpuPauseMutex);
+		sGpuPauseRequested.store(false, std::memory_order_release);
+	}
+	sGpuPauseCv.notify_all();
+}
+
+bool Latte_IsGpuParked()
+{
+	return sGpuParked.load(std::memory_order_acquire);
+}
+
+void Latte_GpuPauseGate()
+{
+	if (!sGpuPauseRequested.load(std::memory_order_acquire)) [[likely]]
+		return;
+	std::unique_lock<std::mutex> lock(sGpuPauseMutex);
+	sGpuParked.store(true, std::memory_order_release);
+	sGpuPauseCv.wait(lock, [] {
+		return !sGpuPauseRequested.load(std::memory_order_acquire) || Latte_GetStopSignal();
+	});
+	sGpuParked.store(false, std::memory_order_release);
+}
+#endif
 std::atomic_bool sLatteThreadFinishedInit = false;
 
 void LatteThread_Exit();

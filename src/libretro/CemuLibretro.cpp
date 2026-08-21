@@ -1,6 +1,8 @@
 // Cemu libretro core - main implementation
 // Routes video/audio/input through libretro frontend callbacks
 
+#include <thread>
+#include <chrono>
 #include "libretro.h"
 
 #include "config/CemuConfig.h"
@@ -1649,6 +1651,9 @@ static void libretro_context_reset()
 {
 	s_hw_render_initialized = true;
 
+	// the frontend's context is back - let the GPU thread run again
+	Latte_ReleaseGpuPause();
+
 	// Reset frontend GL objects - context was recreated, old objects are invalid
 	s_frontend_read_fbo = 0;
 	s_frontend_read_rbo_attached = 0;
@@ -1780,6 +1785,20 @@ static void libretro_context_reset()
 
 static void libretro_context_destroy()
 {
+	// The frontend is about to take its graphics context apart while the title
+	// keeps running (a fullscreen toggle does exactly this). Park the GPU thread
+	// at a command boundary first: it renders through the frontend's Vulkan
+	// device, and carrying on through the teardown either wedges it on a lock or
+	// faults inside the driver.
+	//
+	// Bounded: if the GPU thread is stuck somewhere it cannot reach the gate,
+	// a frozen frontend would be worse than the race we are closing.
+	Latte_RequestGpuPause();
+	for (int i = 0; i < 500 && !Latte_IsGpuParked(); i++)
+		std::this_thread::sleep_for(std::chrono::milliseconds(1));
+	if (log_cb && !Latte_IsGpuParked())
+		log_cb(RETRO_LOG_WARN, "Cemu: GPU thread did not park before the context went away\n");
+
 	s_hw_render_initialized = false;
 	s_frontend_read_fbo = 0;
 	s_frontend_read_rbo_attached = 0;

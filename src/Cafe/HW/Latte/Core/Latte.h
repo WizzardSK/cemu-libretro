@@ -184,4 +184,15 @@ void LatteRenderTarget_updateViewport();
 void Latte_Start();
 void Latte_Stop();
 bool Latte_GetStopSignal(); // returns true if stop was requested or if in stopped state
+
+#ifdef ENABLE_LIBRETRO
+// The frontend can tear its graphics context down under a running title (a
+// fullscreen toggle does). Nothing may touch its Vulkan objects while that
+// happens, so the GPU thread parks itself at a command boundary until the
+// context is back.
+void Latte_RequestGpuPause();
+void Latte_ReleaseGpuPause();
+bool Latte_IsGpuParked();
+void Latte_GpuPauseGate(); // called by the command processor
+#endif
 void LatteThread_Exit();

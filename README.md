@@ -75,10 +75,7 @@ cp cemu_libretro.info ~/.config/retroarch/cores/libcemu_libretro.info
 - Core loads in RetroArch, games boot and run with full rendering
 - OpenGL 4.5 Core Profile with shared GLX context for GPU thread
 - Vulkan HW context via `RETRO_HW_CONTEXT_VULKAN` + context-negotiation interface; `VulkanRenderer` built on the shared instance/device/queue from RetroArch (Linux path)
-- Video output with correct orientation. Fullscreen/windowed toggles are
-  survivable because the Vulkan present path re-queries the frontend's HW render
-  interface every frame - RetroArch frees the one it handed over when it rebuilds
-  its video driver, without calling `context_destroy` or `context_reset`
+- Video output with correct orientation
 - GL_QUADS -> GL_TRIANGLES conversion with proper index buffer mapping
 - Input: joypad buttons, analog sticks, touchscreen (mouse -> GamePad touch; in SBS/TopBottom/PiP only clicks inside the DRC sub-rect register, mapped sub-rect-relative to the GamePad's 853x479 touch space)
 - Audio routing via lock-free ring-buffer `LibretroAudioAPI` (drains full ring per `retro_run` so the frontend rate-controls)
@@ -89,6 +86,18 @@ cp cemu_libretro.info ~/.config/retroarch/cores/libcemu_libretro.info
 - DRC (GamePad) screen rendering with multiple layouts: disabled, toggle, side-by-side, top-bottom, picture-in-picture. The OpenGL path composites via `ShouldRenderScreen`/`AdjustScreenViewport` canvas callbacks. The Vulkan path overrides `IsPadWindowActive()` so DRC scan-outs (and the existing libretro auto-mirror fallback) reach `DrawBackbufferQuad`, then blits TV + DRC into different sub-regions of the shared present image using the same `LibretroDRC_ComputeViewport` helper. `LatteRenderTarget_itHLECopyColorBufferToScanBuffer` bypasses the standalone showDRC toggle-swap in composite modes and caches the latest TV/DRC texViews per frame so they always dispatch TV-then-DRC (PiP's DRC overlay would otherwise lose to the full-image TV blit when the game scans DRC first). `DrawBackbufferQuad` clears `m_presentImage` to opaque black on the first blit of each frame (detected via `LatteGPUState.frameCounter`) so SBS/TopBottom gaps are deterministic regardless of TV/DRC scan order.
 
 ### Known Issues
+- **Toggling fullscreen while a title runs breaks it** - RetroArch rebuilds its
+  video driver, and the emulator keeps running through the teardown. Before the
+  upstream sync this wedged the GPU thread on a lock; now it faults. The core
+  parks its GPU thread at a command boundary for the duration
+  (`Latte_RequestGpuPause` from `context_destroy`, released in `context_reset`,
+  bounded so a stuck GPU thread cannot freeze the frontend), and the Vulkan
+  present path re-queries the frontend's render interface every frame rather
+  than trusting the pointer from `context_reset` - RetroArch frees that one
+  without notifying the core. Neither is enough on its own: with the GPU thread
+  parked the title keeps executing, its GX2 calls go unanswered, and it
+  eventually jumps off a cliff. Suspending the emulated CPU for the teardown
+  window is the missing piece. Until then, set fullscreen before loading a game.
 - **Some games may crash** - depends on game complexity and required HLE functions
 - **Save states are not supported** - Cemu has no savestate infrastructure (no serialization of PPC/MMU/GPU/HLE state). `retro_serialize_size` returns 0 by design.
 - **OpenGL path on Wayland renders black (work in progress)** - The core now has an EGL fallback for the shared GPU-thread context (GLX is still used on X11). On a Wayland/EGL session it no longer crashes and gets much further: the EGL frontend context is captured, a shared GL 4.5 context is created, and the GPU thread makes it current surfaceless (`EGL_NO_SURFACE`, since the frontend holds the window surface on another thread). However the video pipeline still produces a black screen on Wayland - frames rendered on the GPU thread aren't reaching the presented framebuffer (cross-context object sharing / blit on EGL is still being investigated). **Use the Vulkan path (`cemu_gpu_api = "Vulkan"`) on Wayland** - it is fully working. The OpenGL path works on X11 (GLX).
