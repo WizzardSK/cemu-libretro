@@ -86,6 +86,18 @@ void handlerDumpingSignal(int sig, siginfo_t *info, void *context)
     if(!CrashLog_Create())
         return; // give up if crashlog was already created
 
+#if defined(__linux__) && defined(__aarch64__)
+	// backtrace() cannot unwind past the signal frame here, so record the
+	// registers that actually say where this came from: lr is the return
+	// address of the call that faulted.
+	{
+		const mcontext_t& mc = static_cast<ucontext_t*>(context)->uc_mcontext;
+		CrashLog_WriteLine(fmt::format("fault={:#x} pc={:#x} lr={:#x} sp={:#x}",
+			(uint64)(uintptr_t)(info ? info->si_addr : nullptr), (uint64)mc.pc,
+			(uint64)mc.regs[30], (uint64)mc.sp));
+	}
+#endif
+
     char* sigName = strsignal(sig);
 	if (sigName)
 	{

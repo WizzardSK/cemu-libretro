@@ -880,6 +880,20 @@ VulkanRenderer::VulkanRenderer(VkInstance instance, VkPhysicalDevice physDevice,
 	DetermineVendor();
 	GetDeviceFeatures();
 
+	// The device is the frontend's, so an extension the GPU advertises is not
+	// necessarily enabled on it - vkGetDeviceProcAddr then returns null and the
+	// first draw jumps through it (crash in draw_setRenderPass). Trust the entry
+	// points that actually loaded rather than the physical device's capability.
+	if (!vkCmdSetAttachmentFeedbackLoopEnableEXT)
+	{
+		m_featureControl.deviceExtensions.attachment_feedback_loop_dynamic_state = false;
+		m_featureControl.deviceExtensions.attachment_feedback_loop_layout = false;
+	}
+	if (!vkCmdBeginRenderingKHR || !vkCmdEndRenderingKHR)
+		m_featureControl.deviceExtensions.dynamic_rendering = false;
+	if (!vkCmdPipelineBarrier2KHR)
+		m_featureControl.deviceExtensions.synchronization2 = false;
+
 	memoryManager.reset(new VKRMemoryManager(this));
 
 	// Same init as normal constructor from here
