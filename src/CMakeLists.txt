@@ -89,7 +89,10 @@ if(ENABLE_LIBRETRO)
 	# upstream moved the common declarations (uint32, std::span, the _mm_pause
 	# shim) behind precompiled.h and force-includes it per target; without this
 	# the core's own translation units no longer see them
-	cemu_use_precompiled_header(cemu_libretro)
+	# not cemu_use_precompiled_header(): on MSVC that reuses CemuCommon's PCH, and
+	# since this target links CemuCommon too the pch object lands in the link
+	# twice (C4727, then LNK1257 in code generation). Give it its own.
+	target_precompile_headers(cemu_libretro PRIVATE "${CMAKE_SOURCE_DIR}/src/Common/precompiled.h")
 
 	if(ENABLE_VULKAN)
 		target_compile_definitions(cemu_libretro PRIVATE ENABLE_VULKAN)
