@@ -13,6 +13,8 @@
 #include <string>
 #include "config/CemuConfig.h"
 #include "util/helpers/StringHelpers.h"
+#include "Cafe/HW/Espresso/PPCState.h"
+#include "Cafe/HW/Espresso/PPCCallback.h"
 #include "ExceptionHandler.h"
 
 #include "Cafe/HW/Espresso/Debugger/GDBStub.h"
@@ -97,6 +99,19 @@ void handlerDumpingSignal(int sig, siginfo_t *info, void *context)
 			(uint64)mc.regs[30], (uint64)mc.sp));
 	}
 #endif
+
+	// Written here for the same reason as the registers: the host backtrace
+	// below can fault and take the rest of the report with it, and on a crash
+	// that came out of emulated code this is the part that says where.
+	if (PPCInterpreter_t* hCPU = PPCInterpreter_getCurrentInstance())
+	{
+		CrashLog_WriteLine(fmt::format("guest: IP {:08x} LR {:08x}",
+			hCPU->instructionPointer, (uint32)hCPU->spr.LR));
+	}
+	else
+	{
+		CrashLog_WriteLine("guest: no PPC instance on this thread");
+	}
 
     char* sigName = strsignal(sig);
 	if (sigName)

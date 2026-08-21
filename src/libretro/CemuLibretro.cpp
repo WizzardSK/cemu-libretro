@@ -1834,7 +1834,11 @@ RETRO_API bool retro_load_game(const struct retro_game_info* game)
 		s_hw_render.version_minor = VK_API_VERSION_MINOR(VK_API_VERSION_1_1);
 		s_hw_render.context_reset = libretro_context_reset;
 		s_hw_render.context_destroy = libretro_context_destroy;
-		s_hw_render.cache_context = false;
+		// Keep the context across a video driver rebuild (fullscreen toggle,
+		// av_info change). Every Vulkan object the renderer owns lives on the
+		// frontend's device, so letting RetroArch throw that away mid-title
+		// leaves the driver calling through freed memory.
+		s_hw_render.cache_context = true;
 		s_hw_render.debug_context = false;
 
 		if (environ_cb(RETRO_ENVIRONMENT_SET_HW_RENDER, &s_hw_render))
