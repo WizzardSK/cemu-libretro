@@ -237,7 +237,7 @@ bool FSTVolume::FindDiscKey(const fs::path& path, NCrypto::AesKey& discTitleKey)
 	// check for a key file next to the WUD file
 	fs::path keyPath = path;
 	keyPath.replace_extension("key");
-	std::unique_ptr<FileStream> keyFile(FileStream::openFile2(keyPath));
+	std::unique_ptr<VFSFileStream> keyFile(VFSFileStream::openFile2(keyPath));
 	return keyFile && keyFile->readData(discTitleKey.b, sizeof(discTitleKey.b)) == sizeof(discTitleKey.b);
 }
 

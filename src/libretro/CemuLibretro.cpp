@@ -180,12 +180,22 @@ static void* cemu_gl_get_proc(const char* name)
 // CafeSystem implementation for libretro
 // ============================================================================
 
+static std::atomic<bool> s_ppc_process_exited{false};
+
 class LibretroSystemImplementation : public CafeSystem::SystemImplementation
 {
 public:
 	void CafeRecreateCanvas() override
 	{
 		// In libretro, the canvas is managed by the frontend - nothing to do
+	}
+
+	void CafePPCProcessExit() override
+	{
+		// Called on the emulated PPC thread - only record it here and let
+		// retro_run ask the frontend to unload us, the same reason upstream's
+		// wx frontend queues an event instead of acting directly.
+		s_ppc_process_exited.store(true, std::memory_order_release);
 	}
 };
 
@@ -1024,8 +1034,13 @@ static void libretro_apply_core_options()
 		bool enabled;
 		if (libretro_parse_enabled_disabled(v, enabled))
 		{
+#ifdef ENABLE_METAL
 			if (g_current_game_profile)
 				g_current_game_profile->SetShaderFastMath(enabled);
+#else
+			// upstream keeps shader fast math as a Metal-only game profile knob
+			(void)enabled;
+#endif
 		}
 	}
 
@@ -2103,6 +2118,12 @@ extern GLuint libretro_getBackbufferRBO();
 
 RETRO_API void retro_run()
 {
+	if (s_ppc_process_exited.exchange(false, std::memory_order_acq_rel) && environ_cb)
+	{
+		cemuLog_log(LogType::Force, "[Libretro] emulated process exited, asking the frontend to shut down");
+		environ_cb(RETRO_ENVIRONMENT_SHUTDOWN, nullptr);
+	}
+
 	if (!s_game_loaded)
 	{
 		video_cb(NULL, SCREEN_WIDTH, SCREEN_HEIGHT, 0);

@@ -86,6 +86,11 @@ if(ENABLE_LIBRETRO)
 		${CMAKE_CURRENT_SOURCE_DIR}/libretro
 	)
 
+	# upstream moved the common declarations (uint32, std::span, the _mm_pause
+	# shim) behind precompiled.h and force-includes it per target; without this
+	# the core's own translation units no longer see them
+	cemu_use_precompiled_header(cemu_libretro)
+
 	if(ENABLE_VULKAN)
 		target_compile_definitions(cemu_libretro PRIVATE ENABLE_VULKAN)
 	endif()
