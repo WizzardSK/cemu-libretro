@@ -2153,8 +2153,26 @@ RETRO_API void retro_run()
 	{
 		if (s_vk_interface)
 		{
+			// RetroArch rebuilds its video driver behind the core's back (a
+			// fullscreen toggle does exactly that) and frees the interface it
+			// handed over, without calling context_destroy or context_reset. Ask
+			// for the current one every frame instead of presenting through the
+			// pointer cached when the renderer was created.
+			{
+				const struct retro_hw_render_interface* cur_iface = nullptr;
+				if (environ_cb(RETRO_ENVIRONMENT_GET_HW_RENDER_INTERFACE, &cur_iface) && cur_iface &&
+					cur_iface->interface_type == RETRO_HW_RENDER_INTERFACE_VULKAN)
+				{
+					s_vk_interface = (const struct retro_hw_render_interface_vulkan*)cur_iface;
+				}
+				else
+				{
+					s_vk_interface = nullptr;
+				}
+			}
+
 			auto* vkRenderer = VulkanRenderer::GetInstance();
-			if (vkRenderer && vkRenderer->m_presentImageView)
+			if (vkRenderer && vkRenderer->m_presentImageView && s_vk_interface && s_vk_interface->set_image)
 			{
 				// Set the presentation image for RetroArch to display
 				s_vk_present_image.image_view = vkRenderer->m_presentImageView;

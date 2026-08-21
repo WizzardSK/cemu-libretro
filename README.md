@@ -1,66 +1,144 @@
-# **Cemu - Wii U emulator**
+# Cemu Libretro
 
-[![Build Process](https://github.com/cemu-project/Cemu/actions/workflows/build.yml/badge.svg)](https://github.com/cemu-project/Cemu/actions/workflows/build.yml)
-[![Discord](https://img.shields.io/discord/286429969104764928?label=Cemu&logo=discord&logoColor=FFFFFF)](https://discord.gg/5psYsup)
-[![Matrix Server](https://img.shields.io/matrix/cemu:cemu.info?server_fqdn=matrix.cemu.info&label=cemu:cemu.info&logo=matrix&logoColor=FFFFFF)](https://matrix.to/#/#cemu:cemu.info)
+Cemu (Wii U emulator) as a libretro core for RetroArch.
 
-This is the code repository of Cemu, a Wii U emulator that is able to run most Wii U games and homebrew in a playable state.
-It's written in C/C++ and is being actively developed with new features and fixes.
+## Build
 
-Cemu is currently only available for 64-bit Windows, Linux & macOS devices.
+```bash
+# Install dependencies (Ubuntu/Debian)
+sudo apt install -y cmake gcc g++ ninja-build nasm libpulse-dev libgtk-3-dev \
+  libsecret-1-dev libgcrypt20-dev libsystemd-dev libbluetooth-dev freeglut3-dev
 
-### Links:
- - [Open Source Announcement](https://www.reddit.com/r/cemu/comments/wwa22c/cemu_20_announcement_linux_builds_opensource_and/)
- - [Official Website](https://cemu.info)
- - [Compatibility List/Wiki](https://wiki.cemu.info/wiki/Main_Page)
- - [Official Subreddit](https://reddit.com/r/Cemu)
- - [Official Discord](https://discord.gg/5psYsup)
- - [Official Matrix Server](https://matrix.to/#/#cemu:cemu.info)
- - [Setup Guide](https://cemu.cfw.guide)
+# Clone with submodules - vcpkg lives in one of them, and configure fails with
+# "Could not find toolchain file .../dependencies/vcpkg/..." without it. On an
+# existing clone: git submodule update --init --recursive
+git clone --recursive https://github.com/WizzardSK/cemu-libretro.git
+cd cemu-libretro
 
-#### Other relevant repositories:
- - [Cemu-Language](https://github.com/cemu-project/Cemu-Language)
- - [Cemu's Community Graphic Packs](https://github.com/cemu-project/cemu_graphic_packs)
+# Configure (vcpkg handles dependencies automatically)
+cmake -S . -B build -DCMAKE_BUILD_TYPE=release \
+  -DCMAKE_C_COMPILER=/usr/bin/gcc -DCMAKE_CXX_COMPILER=/usr/bin/g++ \
+  -G Ninja -DENABLE_LIBRETRO=ON -DENABLE_WXWIDGETS=OFF \
+  -DENABLE_DISCORD_RPC=OFF -DENABLE_CUBEB=OFF \
+  -DCMAKE_POSITION_INDEPENDENT_CODE=ON
 
-## Download
+# Add -DENABLE_BLUEZ=OFF -DENABLE_FERAL_GAMEMODE=OFF where those dev packages
+# are missing. On arm64, vcpkg needs VCPKG_FORCE_SYSTEM_BINARIES=1, and
+# VCPKG_MAX_CONCURRENCY is worth capping on low-memory boards.
 
-You can download the latest Cemu releases for Windows, Linux and Mac from the [GitHub Releases](https://github.com/cemu-project/Cemu/releases/). For Linux you can also find Cemu on [flathub](https://flathub.org/apps/info.cemu.Cemu).
+# Build
+cmake --build build --target cemu_libretro
 
-On Windows, Cemu is available both as an installer and in a portable format, where no installation is required besides extracting it in a safe place.
+# Result: bin/cemu_libretro.so
+```
 
-The native macOS build is currently purely experimental and should not be considered stable or ready for issue-free gameplay. There are also known issues with degraded performance due to the use of MoltenVK and Rosetta for ARM Macs. We appreciate your patience while we improve Cemu for macOS.
+## Install
 
-Pre-2.0 releases can be found on Cemu's [changelog page](https://cemu.info/changelog.html).
+```bash
+cp bin/cemu_libretro.so ~/.config/retroarch/cores/libcemu_libretro.so
+cp cemu_libretro.info ~/.config/retroarch/cores/libcemu_libretro.info
+```
 
-## Build Instructions
+## Setup
 
-To compile Cemu yourself on Windows, Linux or macOS, view [BUILD.md](/BUILD.md).
+- Place `keys.txt` in RetroArch system directory under `Cemu/` (e.g. `~/.config/retroarch/system/Cemu/keys.txt`)
+- MLC storage is at `<system_dir>/Cemu/mlc01/`
+- Shared fonts: place `CafeStd.ttf`, `CafeCn.ttf`, `CafeKr.ttf`, `CafeTw.ttf` in `<system_dir>/Cemu/resources/sharedFonts/`
+- Graphic packs: place in `<system_dir>/Cemu/graphicPacks/` (symlinks supported)
+  - Packs with `default = 1` are auto-enabled (e.g. NSMBU crash fix)
+- Supported formats: `.wud`, `.wux`, `.wua`, `.rpx`, `.elf`
 
-## Issues
+## Architecture
 
-Issues with the emulator should be filed using [GitHub Issues](https://github.com/cemu-project/Cemu/issues).  
-The old bug tracker can be found at [bugs.cemu.info](https://bugs.cemu.info) and still contains relevant issues and feature suggestions.
+- Uses OpenGL 4.5 Core Profile HW rendering via `RETRO_ENVIRONMENT_SET_HW_RENDER`
+- Creates a separate shared GL context for Cemu's GPU thread (GLX on X11, EGL fallback on Wayland)
+- Video pipeline: GPU thread renders to custom FBO -> `glReadPixels` to CPU buffer -> frontend thread uploads to texture -> `glBlitFramebuffer` to RetroArch FBO
+- GL_QUADS/GL_QUAD_STRIP converted to triangles for Core Profile compatibility (indexed quads use `glMapBuffer`)
+- Audio routed through `LibretroAudioAPI` (accumulates samples, flushed each frame)
+- Input: libretro joypad -> VPAD (GamePad) buttons + analog sticks + touchscreen (RETRO_DEVICE_POINTER)
+- Graphic packs loaded and auto-enabled (default=1) at startup
+- The Vulkan device belongs to the frontend, so after Cemu's own feature
+  detection the core reconciles the extension flags with the entry points that
+  actually loaded (attachment feedback loop, dynamic rendering,
+  synchronization2). An extension the GPU advertises is not necessarily enabled
+  on a device RetroArch created, and `vkGetDeviceProcAddr` then returns null -
+  the first draw would jump straight through it.
+- When the emulated process exits, `CafePPCProcessExit` only records it; the
+  `RETRO_ENVIRONMENT_SHUTDOWN` request goes out from `retro_run`, because the
+  callback fires on the emulated PPC thread
+- SDL3 (upstream migrated from SDL2); the core links `SDL3::SDL3` behind
+  `ENABLE_SDL`
 
-## Contributing
+## Current Status (2026-08-21)
 
-Pull requests are very welcome. For easier coordination you can visit the developer discussion channel on [Discord](https://discord.gg/5psYsup) or alternatively the [Matrix Server](https://matrix.to/#/#cemu:cemu.info).
-Before submitting a pull request, please read and follow our code style guidelines listed in [CODING_STYLE.md](/CODING_STYLE.md).
+### Working
+- Core loads in RetroArch, games boot and run with full rendering
+- OpenGL 4.5 Core Profile with shared GLX context for GPU thread
+- Vulkan HW context via `RETRO_HW_CONTEXT_VULKAN` + context-negotiation interface; `VulkanRenderer` built on the shared instance/device/queue from RetroArch (Linux path)
+- Video output with correct orientation. Fullscreen/windowed toggles are
+  survivable because the Vulkan present path re-queries the frontend's HW render
+  interface every frame - RetroArch frees the one it handed over when it rebuilds
+  its video driver, without calling `context_destroy` or `context_reset`
+- GL_QUADS -> GL_TRIANGLES conversion with proper index buffer mapping
+- Input: joypad buttons, analog sticks, touchscreen (mouse -> GamePad touch; in SBS/TopBottom/PiP only clicks inside the DRC sub-rect register, mapped sub-rect-relative to the GamePad's 853x479 touch space)
+- Audio routing via lock-free ring-buffer `LibretroAudioAPI` (drains full ring per `retro_run` so the frontend rate-controls)
+- Graphic packs loading with workaround patches (NSMBU crash fix etc.)
+- Shared fonts for Japanese/CJK text
+- Clean exit via Esc key
+- Core options registered via `RETRO_ENVIRONMENT_SET_CORE_OPTIONS_V2` (CPU mode, internal resolution up to 4K, thread quantum, audio latency, vsync, async shader compile, upscale/downscale filter, DRC mode/position, account, network service, USB peripherals, …)
+- DRC (GamePad) screen rendering with multiple layouts: disabled, toggle, side-by-side, top-bottom, picture-in-picture. The OpenGL path composites via `ShouldRenderScreen`/`AdjustScreenViewport` canvas callbacks. The Vulkan path overrides `IsPadWindowActive()` so DRC scan-outs (and the existing libretro auto-mirror fallback) reach `DrawBackbufferQuad`, then blits TV + DRC into different sub-regions of the shared present image using the same `LibretroDRC_ComputeViewport` helper. `LatteRenderTarget_itHLECopyColorBufferToScanBuffer` bypasses the standalone showDRC toggle-swap in composite modes and caches the latest TV/DRC texViews per frame so they always dispatch TV-then-DRC (PiP's DRC overlay would otherwise lose to the full-image TV blit when the game scans DRC first). `DrawBackbufferQuad` clears `m_presentImage` to opaque black on the first blit of each frame (detected via `LatteGPUState.frameCounter`) so SBS/TopBottom gaps are deterministic regardless of TV/DRC scan order.
 
-If coding isn't your thing, testing games and making detailed bug reports or updating the (usually outdated) compatibility wiki is also appreciated!
+### Known Issues
+- **Some games may crash** - depends on game complexity and required HLE functions
+- **Save states are not supported** - Cemu has no savestate infrastructure (no serialization of PPC/MMU/GPU/HLE state). `retro_serialize_size` returns 0 by design.
+- **OpenGL path on Wayland renders black (work in progress)** - The core now has an EGL fallback for the shared GPU-thread context (GLX is still used on X11). On a Wayland/EGL session it no longer crashes and gets much further: the EGL frontend context is captured, a shared GL 4.5 context is created, and the GPU thread makes it current surfaceless (`EGL_NO_SURFACE`, since the frontend holds the window surface on another thread). However the video pipeline still produces a black screen on Wayland - frames rendered on the GPU thread aren't reaching the presented framebuffer (cross-context object sharing / blit on EGL is still being investigated). **Use the Vulkan path (`cemu_gpu_api = "Vulkan"`) on Wayland** - it is fully working. The OpenGL path works on X11 (GLX).
 
-Questions about Cemu's software architecture can also be answered on Discord (or through the Matrix bridge).
+### TODO
+1. Test with more games
 
-#### AI generated contributions:
+### Key files
+- `src/libretro/CemuLibretro.cpp` - the libretro core on every platform: `retro_*` exports, GL/Vulkan context negotiation, input, video pipeline (the separate `CemuLibretroLinux.cpp` is gone, it was merged into this one)
+- `src/audio/LibretroAudioAPI.{h,cpp}` - Audio backend (lock-free ring buffer)
+- `src/libretro/LibretroWindowSystem.cpp` - WindowSystem without wxWidgets
+- `src/Cafe/HW/Latte/Renderer/OpenGL/OpenGLRendererCore.cpp` - GL_QUADS to triangles conversion
+- `src/Cafe/OS/libs/vpad/vpad.cpp` - Libretro input integration (buttons + touch)
+- `src/Cafe/GraphicPack/GraphicPack2.cpp` - Symlink-aware graphic pack loading
 
-We ask that all code submitted is written and understood by a human. You can use AI for planning, designing, reviewing and for asking questions about the codebase, but the code itself needs to be written by you. As a small exception you can use intellisense-style AI code autocompletion for pure boilerplate code as long as it's only a small part of your submission. To further clarify, when we ask for "human written" that excludes letting an AI write the code and then paraphrasing it. In other words, we are asking for human effort.
+## Syncing with upstream Cemu
 
-Why this policy exists:
+Upstream is [cemu-project/Cemu](https://github.com/cemu-project/Cemu) and its
+branch is `main`, not `master`:
 
-We have relatively low reviewing capacity and requiring human-written code increases the quality and trustworthyness of submitted pull requests. There are also general concerns with AI usage in emulation:
-- LLMs tend to make up solutions that work on the surface but are generally not accurate in the emulation sense
-- There is evidence that LLMs have been trained on leaked proprietary SDKs and we cannot verify the origin of the knowledge. This is especially a problem for core emulation logic
+```sh
+git remote add cemuup https://github.com/cemu-project/Cemu.git   # once
+git fetch cemuup main
+git merge cemuup/main
+```
 
-Please keep these points in mind when contributing to Cemu. Contributions that do not follow this policy may be rejected.
+Last sync: upstream `f6a8883` (18 Aug 2026).
 
-## License
-Cemu is licensed under [Mozilla Public License 2.0](/LICENSE.txt). Exempt from this are all files in the dependencies directory for which the licenses of the original code apply as well as some individual files in the src folder, as specified in those file headers respectively.
+The fork's own `main` is deliberately **not** kept in sync with upstream. It is
+not a mirror - it carries the commits this port started from - and upstream's
+`build_check.yml` triggers on pushes to `main`, which would run Cemu's whole
+build matrix in the fork.
+
+What tends to break on a sync, none of which the conflict resolution shows:
+
+- **Precompiled headers.** Upstream force-includes `precompiled.h` per target
+  via `cemu_use_precompiled_header()`. Targets this fork adds (`cemu_libretro`,
+  `CemuHeadlessGui`) have to call it too, or they lose `uint32`, `std::span`
+  and the `_mm_pause` shim.
+- **Copied functions drifting.** The libretro `VulkanRenderer` constructor is a
+  copy of upstream's adapted for the shared device; upstream keeps changing the
+  original underneath it.
+- **Extension gating.** See the note above - upstream adds calls guarded by
+  device extension flags, and those flags cannot be trusted on a device the
+  frontend created.
+- **File access.** Upstream code that opens files with `FileStream` has to go
+  through `VFSFileStream` here, otherwise the frontend's VFS (and Android SAF)
+  is bypassed.
+
+Debugging a crash on aarch64: `backtrace()` cannot unwind past the signal frame,
+so the posix handler also records `fault/pc/lr/sp` into `<system>/Cemu/log.txt`.
+Convert `lr` with the module base from that log's `cemu_libretro.so(+0xOFFSET)
+[0xABSOLUTE]` line and run `addr2line -Cfie bin/cemu_libretro.so <offset>`.

@@ -53,7 +53,7 @@ jobs:
         run: bash ./dependencies/vcpkg/bootstrap-vcpkg.sh
 
       - name: "Configure"
-        # Flags as documented in LIBRETRO.md, plus the two the GitLab job turns
+        # Flags as documented in README.md, plus the two the GitLab job turns
         # off because the core does not use them.
         run: |
           cmake -S . -B build -G Ninja \
