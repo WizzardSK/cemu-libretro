@@ -1,9 +1,19 @@
 #pragma once
+#include "config/CemuConfig.h"
 #include <wx/collpane.h>
 #include <wx/propgrid/propgrid.h>
 #include <Cafe/Account/Account.h>
 
+class wxCheckBox;
+class wxChoice;
 class wxColourPickerCtrl;
+class wxListBox;
+class wxNotebook;
+class wxRadioBox;
+class wxSlider;
+class wxSpinCtrl;
+class wxSpinCtrlDouble;
+class wxStaticText;
 
 wxDECLARE_EVENT(wxEVT_ACCOUNTLIST_REFRESH, wxCommandEvent);
 
@@ -27,6 +37,7 @@ private:
 	bool m_game_launched;
 
 	bool m_has_account_change = false; // keep track of dirty state of accounts
+	std::vector<GraphicAPI> m_api_map; // map from dropdown index to GraphicsAPISetting, used in HandleGraphicsApiSelection
 
 
 	wxPanel* AddGeneralPage(wxNotebook* notebook);
@@ -61,7 +72,10 @@ private:
 	wxSpinCtrlDouble* m_userDisplayGamma;
 	wxCheckBox* m_userDisplayisSRGB;
 
-	wxCheckBox *m_async_compile, *m_gx2drawdone_sync, *m_force_mesh_shaders;
+	wxCheckBox *m_async_compile, *m_gx2drawdone_sync;
+#ifdef ENABLE_METAL
+	wxCheckBox *m_force_mesh_shaders;
+#endif
 	wxRadioBox* m_upscale_filter, *m_downscale_filter, *m_fullscreen_scaling;
 	wxChoice* m_overlay_position, *m_notification_position, *m_overlay_scale, *m_notification_scale;
 	wxCheckBox* m_controller_profile_name, *m_controller_low_battery, *m_shader_compiling, *m_friends_data;
@@ -87,8 +101,10 @@ private:
 	// Debug
 	wxChoice* m_crash_dump;
 	wxSpinCtrl* m_gdb_port;
+#ifdef ENABLE_METAL
 	wxTextCtrl* m_gpu_capture_dir;
 	wxCheckBox* m_framebuffer_fetch;
+#endif
 
 	void OnAccountCreate(wxCommandEvent& event);
 	void OnAccountDelete(wxCommandEvent& event);

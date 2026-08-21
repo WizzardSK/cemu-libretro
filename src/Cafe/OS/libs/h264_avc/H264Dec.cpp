@@ -39,7 +39,7 @@ namespace H264
 		struct
 		{
 			MEMPTR<void> outputFunc{ nullptr };
-			uint8be outputPerFrame{ 0 }; // whats the default?
+			uint8be outputPerFrame{ 0 }; // default is 0
 			MEMPTR<void> userMemoryParam{ nullptr };
 		}Param;
 		// misc
@@ -49,21 +49,23 @@ namespace H264
 		struct
 		{
 			uint32 numFramesInFlight{0};
+			bool isFirstBegin{true};
+			bool isTryingToRecover{false};
 		}decoderState;
 	};
 
-	uint32 H264DECMemoryRequirement(uint32 codecProfile, uint32 codecLevel, uint32 width, uint32 height, uint32be* sizeRequirementOut)
+	H264DEC_STATUS H264DECMemoryRequirement(uint32 codecProfile, uint32 codecLevel, uint32 width, uint32 height, uint32be* sizeRequirementOut)
 	{
 		if (H264_IsBotW())
 		{
 			static_assert(sizeof(H264Context) < 256);
 			*sizeRequirementOut = 256;
-			return 0;
+			return H264DEC_STATUS::SUCCESS;
 		}
 
 		// note: On console this seems to check if maxWidth or maxHeight < 64 but Pikmin 3 passes 32x32 and crashes if this function fails ?
-		if (width < 0x20 || height < 0x20 || width > 2800 || height > 1408 || sizeRequirementOut == MPTR_NULL || codecLevel >= 52 || (codecProfile != 0x42 && codecProfile != 0x4D && codecProfile != 0x64))
-			return 0x1010000;
+		if (width < 32 || height < 32 || width > 2800 || height > 1408 || !sizeRequirementOut || codecLevel >= 52 || (codecProfile != 66 && codecProfile != 77 && codecProfile != 100))
+			return H264DEC_STATUS::INVALID_PARAM;
 
 		uint32 workbufferSize = 0;
 		if (codecLevel < 0xB)
@@ -112,7 +114,7 @@ namespace H264
 		}
 		workbufferSize += 0x447;
 		*sizeRequirementOut = workbufferSize;
-		return 0;
+		return H264DEC_STATUS::SUCCESS;
 	}
 
 	uint32 H264DECCheckMemSegmentation(MPTR memory, uint32 size)
@@ -189,16 +191,120 @@ namespace H264
 		return H264DEC_STATUS::BAD_STREAM;
 	}
 
-	H264DEC_STATUS H264DECGetImageSize(uint8* stream, uint32 length, uint32 offset, uint32be* outputWidth, uint32be* outputHeight)
+	struct H264Dec_SeqParameterSet
 	{
-		if(!stream || length < 4 || !outputWidth || !outputHeight)
+		// for now this contains only the fields we care about
+		uint32 pic_width_in_luma_samples{};
+		uint32 pic_height_in_map_units_x16{};
+		uint8 frame_mbs_only_flag{};
+	};
+
+	void H264Dec_parseScalingList(RBSPInputBitstream& stream, sint32 size)
+	{
+		sint32 lastScale = 8;
+		sint32 nextScale = 8;
+		for (sint32 i = 0; i < size; i++)
+		{
+			if (nextScale != 0)
+			{
+				sint32 deltaScale = stream.readSV_E();
+				nextScale = (lastScale + deltaScale + 256) % 256;
+			}
+			if (nextScale != 0)
+				lastScale = nextScale;
+		}
+	}
+
+	bool H264Dec_parseSequencePS(RBSPInputBitstream& stream, H264Dec_SeqParameterSet& ps)
+	{
+		ps = {};
+		uint32 profileIdc = stream.readBits<8>();
+		if (profileIdc != 66 && profileIdc != 77 && profileIdc != 100)
+			return false;
+		stream.readBits<8>(); // constraint_set flags
+		stream.readBits<8>(); // level_idc
+		uint32 seqParameterSetId = stream.readUV_E();
+		if (seqParameterSetId >= 32)
+			return false;
+		if (profileIdc == 100)
+		{
+			uint32 chromaFormatIdc = stream.readUV_E();
+			if (chromaFormatIdc > 1)
+				return false;
+			stream.readUV_E(); // bit_depth_luma_minus8
+			stream.readUV_E(); // bit_depth_chroma_minus8
+			stream.readBit(); // qpprime_y_zero_transform_bypass_flag
+			if (stream.readBit()) // seq_scaling_matrix_present_flag
+			{
+				for (sint32 i = 0; i < 8; i++)
+				{
+					if (stream.readBit())
+						H264Dec_parseScalingList(stream, i < 6 ? 16 : 64);
+				}
+			}
+		}
+		uint32 log2MaxFrameNumMinus4 = stream.readUV_E();
+		if (log2MaxFrameNumMinus4 > 12)
+			return false;
+		uint32 picOrderCntType = stream.readUV_E();
+		if (picOrderCntType > 2)
+			return false;
+		if (picOrderCntType == 0)
+		{
+			uint32 log2MaxPicOrderCntLsbMinus4 = stream.readUV_E();
+			if (log2MaxPicOrderCntLsbMinus4 > 12)
+				return false;
+		}
+		else if (picOrderCntType == 1)
+		{
+			stream.readBit(); // delta_pic_order_always_zero_flag
+			stream.readSV_E(); // offset_for_non_ref_pic
+			stream.readSV_E(); // offset_for_top_to_bottom_field
+			uint32 numRefFramesInPicOrderCntCycle = stream.readUV_E();
+			if (numRefFramesInPicOrderCntCycle > 0xFF)
+				return false;
+			for (uint32 i = 0; i < numRefFramesInPicOrderCntCycle; i++)
+				stream.readSV_E();
+		}
+		uint32 maxNumRefFrames = stream.readUV_E();
+		if (maxNumRefFrames > 16)
+			return false;
+		stream.readBit(); // gaps_in_frame_num_value_allowed_flag
+		uint32 picWidthInMbsMinus1 = stream.readUV_E();
+		uint32 width = 16 * (picWidthInMbsMinus1 + 1);
+		if ((width & 0xFFF0) < 0x10)
+			return false;
+		uint32 picHeightInMapUnitsMinus1 = stream.readUV_E();
+		uint32 heightInMapUnitsX16 = 16 * (picHeightInMapUnitsMinus1 + 1);
+		if ((heightInMapUnitsX16 & 0xFFF0) < 0x10)
+			return false;
+		ps.pic_width_in_luma_samples = width;
+		ps.pic_height_in_map_units_x16 = heightInMapUnitsX16;
+		ps.frame_mbs_only_flag = stream.readBit();
+		if (!ps.frame_mbs_only_flag)
+			stream.readBit(); // mb_adaptive_frame_field_flag
+		stream.readBit(); // direct_8x8_inference_flag
+		if (stream.readBit()) // frame_cropping_flag
+		{
+			stream.readUV_E(); // frame_crop_left_offset
+			stream.readUV_E(); // frame_crop_right_offset
+			stream.readUV_E(); // frame_crop_top_offset
+			stream.readUV_E(); // frame_crop_bottom_offset
+		}
+		stream.readBit(); // vui_parameters_present_flag
+		// vui parsing unnecessary as we currently dont need any of the fields
+		return true;
+	}
+
+	H264DEC_STATUS H264DECGetImageSize(uint8* stream, sint32 streamSize, sint32 offset, uint32be* outputWidth, uint32be* outputHeight)
+	{
+		if (!stream || streamSize < 4 || offset < 0 || !outputWidth || !outputHeight || offset >= streamSize)
 			return H264DEC_STATUS::INVALID_PARAM;
-		if( (offset+4) > length )
+		if ( (offset+4) >= streamSize )
 			return H264DEC_STATUS::INVALID_PARAM;
 		uint8* cur = stream + offset;
-		uint8* end = stream + length;
-		cur += 2; // we access cur[-2] and cur[-1] so we need to start at offset 2
-		while(cur < end-2)
+		uint8* end = stream + streamSize;
+		while (cur < end-2)
 		{
 			// check for start code
 			if(*cur != 1)
@@ -207,7 +313,7 @@ namespace H264
 				continue;
 			}
 			// check if this is a valid NAL header
-			if(cur[-2] != 0 || cur[-1] != 0 || cur[0] != 1)
+			if(cur[-2] != 0 || cur[-1] != 0 || cur[0] != 1) // if offset is < 2, this will read out of bounds. The console implementation has this behavior too so we have to replicate this bug
 			{
 				cur++;
 				continue;
@@ -218,15 +324,26 @@ namespace H264
 				cur++;
 				continue;
 			}
-			h264State_seq_parameter_set_t psp;
-			bool r = h264Parser_ParseSPS(cur+2, end-cur-2, psp);
+			uint8* spsStart = cur + 2;
+			uint32 spsLength = (uint32)(end - spsStart);
+			H264Dec_SeqParameterSet psp;
+			RBSPInputBitstream rbspStream(spsStart, spsLength, false);
+			bool r = H264Dec_parseSequencePS(rbspStream, psp);
 			if(!r)
 			{
+				cemuLog_log(LogType::Force, "H264DECGetImageSize: Invalid SPS data");
 				cemu_assert_suspicious(); // should not happen
 				return H264DEC_STATUS::BAD_STREAM;
 			}
-			*outputWidth = (psp.pic_width_in_mbs_minus1 + 1) * 16;
-			*outputHeight = (psp.pic_height_in_map_units_minus1 + 1) * 16; // affected by frame_mbs_only_flag?
+			*outputWidth = psp.pic_width_in_luma_samples;
+			*outputHeight = psp.pic_height_in_map_units_x16;
+			if (!psp.frame_mbs_only_flag)
+				*outputHeight *= 2;
+			if (!*outputHeight || !*outputWidth)
+				return H264DEC_STATUS::BAD_STREAM;
+			// BotW 1080p video support
+			if (H264_IsBotW() && *outputWidth == 1920 && *outputHeight == 1088)
+				*outputHeight = 1080;
 			return H264DEC_STATUS::SUCCESS;
 		}
 		return H264DEC_STATUS::BAD_STREAM;
@@ -315,8 +432,14 @@ namespace H264
 			cemuLog_log(LogType::Force, "H264DECBegin(): Invalid session");
 			return 0;
 		}
-		session->Init(ctx->Param.outputPerFrame == 0);
-		ctx->decoderState.numFramesInFlight = 0;
+		if (ctx->decoderState.isFirstBegin)
+		{
+			session->Init(ctx->Param.outputPerFrame == 0);
+			ctx->decoderState.isFirstBegin = false;
+		}
+		else
+			ctx->decoderState.isTryingToRecover = true;
+		//ctx->decoderState.numFramesInFlight = 0;
 		_ReleaseDecoderSession(session);
 		return 0;
 	}
@@ -347,6 +470,7 @@ namespace H264
 		}
 		cemu_assert_debug(ctx->decoderState.numFramesInFlight == 0); // no frames should be in flight anymore. Exact behavior is not well understood but we may have to output dummy frames if necessary
 		_ReleaseDecoderSession(session);
+		// does not destroy decoder session, keeps it mostly intact so playback can resume after the next H264DECBegin call (potentially at a different location in the stream)
 		return H264DEC_STATUS::SUCCESS;
 	}
 
@@ -483,8 +607,35 @@ namespace H264
 		}
 	}
 
+	// find the first framedata slice (if there is any) and check if the type is idr
+	bool IsIDRSlice(uint8* streamData, sint32 length)
+	{
+		NALInputBitstream nalStream(streamData, length);
+		RBSPInputBitstream rbspStream;
+		while (nalStream.getNextRBSP(rbspStream))
+		{
+			// parse NAL header
+			uint8 nalHeaderByte = rbspStream.readU8();
+			if ((nalHeaderByte & 0x80) == 0)
+			{
+				uint8 nal_unit_type = (nalHeaderByte >> 0) & 0x1f;
+				if (nal_unit_type == 1) // non-idr
+					return false;
+				else if (nal_unit_type == 5) // idr
+					return true;
+			}
+			else
+			{
+				cemu_assert_suspicious();
+				return false; // corrupted stream?
+			}
+		}
+		return false;
+	}
+
 	uint32 H264DECExecute(void* workMemory, void* imageOutput)
 	{
+		cemuLog_log(LogType::Force, "H264DECExecute(): [BEGIN]");
 		BenchmarkTimer bt;
 		bt.Start();
 		H264Context* ctx = (H264Context*)workMemory;
@@ -493,6 +644,19 @@ namespace H264
 		{
 			cemuLog_log(LogType::Force, "H264DECExecute(): Invalid session");
 			return 0;
+		}
+		// if in recovery mode then return an error until we reach a IDR frame
+		if (ctx->decoderState.isTryingToRecover)
+		{
+			bool isIDR = IsIDRSlice((uint8*)ctx->BitStream.ptr.GetPtr(), ctx->BitStream.length);
+			if (isIDR)
+			{
+				ctx->decoderState.isTryingToRecover = false;
+			}
+			else
+			{
+				return 0x400; // error (figure out exact error code. Bit 0x80 indicates presence of frame?)
+			}
 		}
 		// feed data to backend
 		session->QueueForDecode((uint8*)ctx->BitStream.ptr.GetPtr(), ctx->BitStream.length, ctx->BitStream.timestamp, imageOutput);
@@ -617,28 +781,42 @@ namespace H264
 		return H264DEC_STATUS::BAD_STREAM;
 	}
 
-	void Initialize()
+	class : public COSModule
 	{
-		cafeExportRegister("h264", H264DECCheckMemSegmentation, LogType::H264);
-		cafeExportRegister("h264", H264DECMemoryRequirement, LogType::H264);
-		cafeExportRegister("h264", H264DECFindDecstartpoint, LogType::H264);
-		cafeExportRegister("h264", H264DECFindIdrpoint, LogType::H264);
-		cafeExportRegister("h264", H264DECGetImageSize, LogType::H264);
+		public:
+		std::string_view GetName() override
+		{
+			return "h264";
+		}
 
-		cafeExportRegister("h264", H264DECInitParam, LogType::H264);
-		cafeExportRegister("h264", H264DECOpen, LogType::H264);
-		cafeExportRegister("h264", H264DECClose, LogType::H264);
-		cafeExportRegister("h264", H264DECBegin, LogType::H264);
-		cafeExportRegister("h264", H264DECEnd, LogType::H264);
+		void RPLMapped() override
+		{
+			cafeExportRegister("h264", H264DECCheckMemSegmentation, LogType::H264);
+			cafeExportRegister("h264", H264DECMemoryRequirement, LogType::H264);
+			cafeExportRegister("h264", H264DECFindDecstartpoint, LogType::H264);
+			cafeExportRegister("h264", H264DECFindIdrpoint, LogType::H264);
+			cafeExportRegister("h264", H264DECGetImageSize, LogType::H264);
 
-		cafeExportRegister("h264", H264DECSetParam_FPTR_OUTPUT, LogType::H264);
-		cafeExportRegister("h264", H264DECSetParam_OUTPUT_PER_FRAME, LogType::H264);
-		cafeExportRegister("h264", H264DECSetParam_USER_MEMORY, LogType::H264);
-		cafeExportRegister("h264", H264DECSetParam, LogType::H264);
+			cafeExportRegister("h264", H264DECInitParam, LogType::H264);
+			cafeExportRegister("h264", H264DECOpen, LogType::H264);
+			cafeExportRegister("h264", H264DECClose, LogType::H264);
+			cafeExportRegister("h264", H264DECBegin, LogType::H264);
+			cafeExportRegister("h264", H264DECEnd, LogType::H264);
 
-		cafeExportRegister("h264", H264DECSetBitstream, LogType::H264);
-		cafeExportRegister("h264", H264DECExecute, LogType::H264);
+			cafeExportRegister("h264", H264DECSetParam_FPTR_OUTPUT, LogType::H264);
+			cafeExportRegister("h264", H264DECSetParam_OUTPUT_PER_FRAME, LogType::H264);
+			cafeExportRegister("h264", H264DECSetParam_USER_MEMORY, LogType::H264);
+			cafeExportRegister("h264", H264DECSetParam, LogType::H264);
 
-		cafeExportRegister("h264", H264DECCheckDecunitLength, LogType::H264);
+			cafeExportRegister("h264", H264DECSetBitstream, LogType::H264);
+			cafeExportRegister("h264", H264DECExecute, LogType::H264);
+
+			cafeExportRegister("h264", H264DECCheckDecunitLength, LogType::H264);
+		};
+	}s_COSh264Module;
+
+	COSModule* GetModule()
+	{
+		return &s_COSh264Module;
 	}
 }

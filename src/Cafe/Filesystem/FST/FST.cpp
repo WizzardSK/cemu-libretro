@@ -209,7 +209,7 @@ bool FSTVolume::FindDiscKey(const fs::path& path, NCrypto::AesKey& discTitleKey)
 	}
 	cemuLog_log(LogType::Force, "[FST] FindDiscKey: read header bytes ok (size={})", (sint32)sizeof(header));
 
-	// try all the keys
+	// try all the keys in the key cache
 	uint8 headerDecrypted[sizeof(header)-16];
 	sint32 triedKeys = 0;
 	for (sint32 i = 0; i < 0x7FFFFFFF; i++)
@@ -232,8 +232,13 @@ bool FSTVolume::FindDiscKey(const fs::path& path, NCrypto::AesKey& discTitleKey)
 			return true;
 		}
 	}
-	cemuLog_log(LogType::Force, "[FST] FindDiscKey: NO KEY FOUND (keys_tried={})", triedKeys);
-	return false;
+	cemuLog_log(LogType::Force, "[FST] FindDiscKey: no key in the keycache (keys_tried={}), trying a key file", triedKeys);
+
+	// check for a key file next to the WUD file
+	fs::path keyPath = path;
+	keyPath.replace_extension("key");
+	std::unique_ptr<FileStream> keyFile(FileStream::openFile2(keyPath));
+	return keyFile && keyFile->readData(discTitleKey.b, sizeof(discTitleKey.b)) == sizeof(discTitleKey.b);
 }
 
 // open WUD image using key cache

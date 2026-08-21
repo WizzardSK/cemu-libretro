@@ -67,6 +67,12 @@ LatteTextureVk::LatteTextureVk(class VulkanRenderer* vkRenderer, Latte::E_DIM di
 			imageInfo.usage |= VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 	}
 
+	if (m_vkr->UseAttachmentFeedbackLoop() && (imageInfo.usage & (VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT)) != 0)
+	{
+		imageInfo.usage |= VK_IMAGE_USAGE_ATTACHMENT_FEEDBACK_LOOP_BIT_EXT;
+		m_defaultLayout = VK_IMAGE_LAYOUT_ATTACHMENT_FEEDBACK_LOOP_OPTIMAL_EXT;
+	}
+
 	if (dim == Latte::E_DIM::DIM_2D)
 		imageInfo.imageType = VK_IMAGE_TYPE_2D;
 	else if (dim == Latte::E_DIM::DIM_1D)
@@ -94,7 +100,7 @@ LatteTextureVk::LatteTextureVk(class VulkanRenderer* vkRenderer, Latte::E_DIM di
 		objName.objectType = VK_OBJECT_TYPE_IMAGE;
 		objName.pNext = nullptr;
 		objName.objectHandle = (uint64_t)vkObjTex->m_image;
-		auto objNameStr = fmt::format("tex_{:08x}_fmt{:04x}", physAddress, (uint32)format);
+		auto objNameStr = fmt::format("tex_{:08x}_fmt{:04x}_tm{:x}", physAddress, (uint32)format, (uint32)tileMode);
 		objName.pObjectName = objNameStr.c_str();
 		vkSetDebugUtilsObjectNameEXT(m_vkr->GetLogicalDevice(), &objName);
 	}

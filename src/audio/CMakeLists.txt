@@ -7,6 +7,8 @@ add_library(CemuAudio
 
 set_property(TARGET CemuAudio PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
+cemu_use_precompiled_header(CemuAudio)
+
 # DirectSound and XAudio2 are written against the MSVC DirectX SDK: the bundled
 # XAudio 2.7 headers use MSVC-only GUID macros, and DirectSoundAPI hands
 # std::thread::native_handle() to a Win32 API expecting a HANDLE, which only

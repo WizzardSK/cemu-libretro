@@ -10,7 +10,9 @@
 #include "Cafe/HW/Latte/Core/FetchShader.h"
 #include "Cafe/HW/Latte/Core/LattePerformanceMonitor.h"
 #include "Cafe/HW/Latte/Renderer/Renderer.h"
+#ifdef ENABLE_VULKAN
 #include "Cafe/HW/Latte/Renderer/Vulkan/VulkanRenderer.h"
+#endif
 #include "util/helpers/helpers.h"
 
 // parse instruction and if valid append it to instructionList
@@ -1036,7 +1038,7 @@ void _LatteDecompiler_GenerateDataForFastAccess(LatteDecompilerShader* shader)
 		else
 		{
 			LatteFastAccessRemappedUniformEntry_buffer_t entryBuf;
-			uint32 kcacheBankIdOffset = entry->kcacheBankId* (7 * 4);
+			uint32 kcacheBankIdOffset = entry->kcacheBankId * (7 * 4);
 			entryBuf.indexOffset = entry->index * 16;
 			entryBuf.mappedIndexOffset = entry->mappedIndex * 16;
 			// find or create buffer group
@@ -1047,7 +1049,7 @@ void _LatteDecompiler_GenerateDataForFastAccess(LatteDecompilerShader* shader)
 			}
 			else
 			{
-				shader->list_remappedUniformEntries_bufferGroups.emplace_back(kcacheBankIdOffset).entries.emplace_back(entryBuf);
+				shader->list_remappedUniformEntries_bufferGroups.emplace_back(entry->kcacheBankId, kcacheBankIdOffset).entries.emplace_back(entryBuf);
 			}
 		}
 	}
@@ -1069,12 +1071,18 @@ void _LatteDecompiler_Process(LatteDecompilerShaderContext* shaderContext, uint8
 	// emit code
 	if (shaderContext->shader->hasError == false)
 	{
-	    if (g_renderer->GetType() == RendererAPI::OpenGL || g_renderer->GetType() == RendererAPI::Vulkan)
-	        LatteDecompiler_emitGLSLShader(shaderContext, shaderContext->shader);
-#if ENABLE_METAL
-		else
-		    LatteDecompiler_emitMSLShader(shaderContext, shaderContext->shader);
+		if (g_renderer->GetType() == RendererAPI::OpenGL || g_renderer->GetType() == RendererAPI::Vulkan)
+		{
+#if defined(ENABLE_OPENGL) || defined(ENABLE_VULKAN)
+			LatteDecompiler_emitGLSLShader(shaderContext, shaderContext->shader);
 #endif
+		}
+		if (g_renderer->GetType() == RendererAPI::Metal)
+		{
+#ifdef ENABLE_METAL
+			LatteDecompiler_emitMSLShader(shaderContext, shaderContext->shader);
+#endif
+		}
 	}
 	LatteDecompiler_cleanup(shaderContext);
 	// fast access

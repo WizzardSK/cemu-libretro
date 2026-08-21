@@ -19,7 +19,6 @@
 
 #include "util/helpers/helpers.h"
 #include "config/ActiveSettings.h"
-#include "Cafe/HW/Latte/Renderer/Vulkan/VsyncDriver.h"
 
 #include "Cafe/IOSU/legacy/iosu_crypto.h"
 #include "Cafe/OS/libs/vpad/vpad.h"
@@ -30,8 +29,11 @@
 #pragma comment(lib,"Dbghelp.lib")
 #endif
 
+#ifdef HAS_SDL
 #define SDL_MAIN_HANDLED
-#include <SDL.h>
+#include <SDL3/SDL.h>
+#include <SDL3/SDL_main.h>
+#endif
 
 #if BOOST_OS_LINUX
 #define _putenv(__s) putenv((char*)(__s))
@@ -67,7 +69,8 @@ void _putenvSafe(const char* c)
 
 void reconfigureGLDrivers()
 {
-	// reconfigure GL drivers to store 
+#ifdef ENABLE_OPENGL
+	// reconfigure GL drivers to store
 	const fs::path nvCacheDir = ActiveSettings::GetCachePath("shaderCache/driver/nvidia/");
 
 	std::error_code err;
@@ -83,13 +86,15 @@ void reconfigureGLDrivers()
     _putenvSafe(nvCacheDirEnvOption.c_str());
 #endif
     _putenvSafe("__GL_SHADER_DISK_CACHE_SKIP_CLEANUP=1");
-
+#endif
 }
 
 void reconfigureVkDrivers()
 {
+#ifdef ENABLE_VULKAN
     _putenvSafe("DISABLE_LAYER_AMD_SWITCHABLE_GRAPHICS_1=1");
     _putenvSafe("DISABLE_VK_LAYER_VALVE_steam_fossilize_1=1");
+#endif
 }
 
 void WindowsInitCwd()
@@ -167,18 +172,28 @@ void UnitTests()
 bool isConsoleConnected = false;
 void requireConsole()
 {
-	#if BOOST_OS_WINDOWS
-	if (isConsoleConnected)
-		return;
+    #if BOOST_OS_WINDOWS
+    if (isConsoleConnected)
+        return;
 
-	if (AttachConsole(ATTACH_PARENT_PROCESS) != FALSE)
-	{
-		freopen("CONIN$", "r", stdin);
-		freopen("CONOUT$", "w", stdout);
-		freopen("CONOUT$", "w", stderr);
-		isConsoleConnected = true;
-	}
-	#endif
+    HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
+    DWORD dwFileType = GetFileType(hOut);
+
+    if (dwFileType == FILE_TYPE_UNKNOWN || dwFileType == FILE_TYPE_CHAR)
+    {
+        if (AttachConsole(ATTACH_PARENT_PROCESS) != FALSE)
+        {
+            freopen("CONOUT$", "w", stdout);
+            freopen("CONOUT$", "w", stderr);
+            freopen("CONIN$", "r", stdin);
+            isConsoleConnected = true;
+        }
+    }
+    else
+    {
+        isConsoleConnected = true; 
+    }
+    #endif
 }
 
 void HandlePostUpdate()
@@ -227,9 +242,12 @@ int wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int
 {
 	if (FAILED(CoInitializeEx(nullptr, COINIT_MULTITHREADED | COINIT_DISABLE_OLE1DDE)))
 		cemuLog_log(LogType::Force, "CoInitializeEx() failed");
+#ifdef HAS_SDL
 	SDL_SetMainReady();
-	if (!LaunchSettings::HandleCommandline(lpCmdLine))
-		return 0;
+#endif
+	auto parse_rc = LaunchSettings::HandleCommandline(lpCmdLine);
+	if (parse_rc.has_value())
+		return *parse_rc;
 	WindowSystem::Create();
 	return 0;
 }
@@ -239,22 +257,32 @@ int main(int argc, char* argv[])
 {
 	if (FAILED(CoInitializeEx(nullptr, COINIT_MULTITHREADED | COINIT_DISABLE_OLE1DDE)))
 		cemuLog_log(LogType::Force, "CoInitializeEx() failed");
+#ifdef HAS_SDL
 	SDL_SetMainReady();
-	if (!LaunchSettings::HandleCommandline(argc, argv))
-		return 0;
+#endif
+	auto parse_rc = LaunchSettings::HandleCommandline(argc, argv);
+	if (parse_rc.has_value())
+		return *parse_rc;
 	WindowSystem::Create();
 	return 0;
 }
 
 #else
 
+int BreathOfTheWildChildProcessMain();
 int main(int argc, char *argv[])
 {
+#if BOOST_OS_LINUX && defined(ENABLE_VULKAN)
+	if (getenv("CEMU_DETECT_RADV") != nullptr)
+		return BreathOfTheWildChildProcessMain();
+#endif
+
 #if BOOST_OS_LINUX || BOOST_OS_BSD
     XInitThreads();
 #endif
-    if (!LaunchSettings::HandleCommandline(argc, argv))
-		return 0;
+	auto parse_rc = LaunchSettings::HandleCommandline(argc, argv);
+  if (parse_rc.has_value())
+		return *parse_rc;
 	WindowSystem::Create();
 	return 0;
 }

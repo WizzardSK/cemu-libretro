@@ -1,10 +1,7 @@
 #include "config/CemuConfig.h"
-#include "WindowSystem.h"
-
 #include "util/helpers/helpers.h"
 #include "config/ActiveSettings.h"
-
-#include "ActiveSettings.h"
+#include "Cafe/Account/Account.h"
 
 void CemuConfig::SetMLCPath(fs::path path, bool save)
 {
@@ -126,8 +123,12 @@ XMLConfigParser CemuConfig::Load(XMLConfigParser& parser)
 
 	// graphics
 	auto graphic = parser.get("Graphic");
-	graphic_api = graphic.get("api", kOpenGL);
-	graphic.get("vkDevice", vk_graphic_device_uuid);
+	graphic_api = graphic.get("api", kDefaultGraphicsAPI);
+	graphic.get("device", legacy_graphic_device_uuid);
+	if (graphic.get("vkDevice").valid())
+		graphic.get("vkDevice", vk_graphic_device_uuid);
+	else
+		vk_graphic_device_uuid = legacy_graphic_device_uuid;
 	mtl_graphic_device_uuid = graphic.get("mtlDevice", 0);
 	vsync = graphic.get("VSync", 0);
 	overrideAppGammaPreference = graphic.get("OverrideAppGammaPreference", false);
@@ -143,7 +144,9 @@ XMLConfigParser CemuConfig::Load(XMLConfigParser& parser)
 	fullscreen_scaling = graphic.get("FullscreenScaling", kKeepAspectRatio);
 	async_compile = graphic.get("AsyncCompile", async_compile);
 	vk_accurate_barriers = graphic.get("vkAccurateBarriers", true); // this used to be "VulkanAccurateBarriers" but because we changed the default to true in 1.27.1 the option name had to be changed
+#ifdef ENABLE_METAL
 	force_mesh_shaders = graphic.get("ForceMeshShaders", false);
+#endif
 
 	auto overlay_node = graphic.get("Overlay");
 	if(overlay_node.valid())
@@ -270,8 +273,10 @@ XMLConfigParser CemuConfig::Load(XMLConfigParser& parser)
 	crash_dump = debug.get("CrashDumpUnix", crash_dump);
 #endif
 	gdb_port = debug.get("GDBPort", 1337);
+#ifdef ENABLE_METAL
 	gpu_capture_dir = debug.get("GPUCaptureDir", "");
 	framebuffer_fetch = debug.get("FramebufferFetch", true);
+#endif
 
 	// input
 	auto input = parser.get("Input");
@@ -355,6 +360,7 @@ XMLConfigParser CemuConfig::Save(XMLConfigParser& parser)
 	// graphics
 	auto graphic = config.set("Graphic");
 	graphic.set("api", graphic_api);
+	graphic.set("device", legacy_graphic_device_uuid);
 	graphic.set("vkDevice", vk_graphic_device_uuid);
 	graphic.set("mtlDevice", mtl_graphic_device_uuid);
 	graphic.set("VSync", vsync);
@@ -362,7 +368,9 @@ XMLConfigParser CemuConfig::Save(XMLConfigParser& parser)
 	graphic.set("OverrideGammaValue", overrideGammaValue);
 	graphic.set("UserDisplayGamma", userDisplayGamma);
 	graphic.set("GX2DrawdoneSync", gx2drawdone_sync);
+#ifdef ENABLE_METAL
 	graphic.set("ForceMeshShaders", force_mesh_shaders);
+#endif
 	//graphic.set("PrecompiledShaders", precompiled_shaders.GetValue());
 	graphic.set("UpscaleFilter", upscale_filter);
 	graphic.set("DownscaleFilter", downscale_filter);
@@ -429,8 +437,10 @@ XMLConfigParser CemuConfig::Save(XMLConfigParser& parser)
 	debug.set("CrashDumpUnix", crash_dump.GetValue());
 #endif
 	debug.set("GDBPort", gdb_port);
+#ifdef ENABLE_METAL
 	debug.set("GPUCaptureDir", gpu_capture_dir);
 	debug.set("FramebufferFetch", framebuffer_fetch);
+#endif
 
 	// input
 	auto input = config.set("Input");

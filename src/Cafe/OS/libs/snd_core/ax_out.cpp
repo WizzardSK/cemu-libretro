@@ -465,9 +465,6 @@ namespace snd_core
 			catch (std::runtime_error& ex)
 			{
 				cemuLog_log(LogType::Force, "can't initialize tv audio: {}", ex.what());
-#ifndef RETRO_CORE
-				exit(0);
-#endif
 			}
 		}
 
@@ -485,9 +482,6 @@ namespace snd_core
 			catch (std::runtime_error& ex)
 			{
 				cemuLog_log(LogType::Force, "can't initialize pad audio: {}", ex.what());
-#ifndef RETRO_CORE
-				exit(0);
-#endif
 			}
 		}
 	}

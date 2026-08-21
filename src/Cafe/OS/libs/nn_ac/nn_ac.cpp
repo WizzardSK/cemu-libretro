@@ -1,9 +1,13 @@
 #include "Cafe/OS/common/OSCommon.h"
 #include "Cafe/OS/libs/nn_common.h"
 #include "nn_ac.h"
+#include "Common/socket.h"
 
 #if BOOST_OS_WINDOWS
 #include <iphlpapi.h>
+#elif BOOST_OS_LINUX
+#include <ifaddrs.h>
+#include <net/if.h>
 #endif
 
 // AC lib (manages internet connection)
@@ -76,6 +80,40 @@ void _GetLocalIPAndSubnetMask(uint32& localIp, uint32& subnetMask)
 			return;
 		}
 		currentAddress = currentAddress->Next;
+	}
+	cemuLog_logDebug(LogType::Force, "_GetLocalIPAndSubnetMask(): Failed to find network IP and subnet mask");
+	_GetLocalIPAndSubnetMaskFallback(localIp, subnetMask);
+}
+#elif BOOST_OS_LINUX
+void _GetLocalIPAndSubnetMask(uint32& localIp, uint32& subnetMask)
+{
+	struct ifaddrs *ifaddr;
+	if (getifaddrs(&ifaddr) == -1)
+	{
+		cemuLog_log(LogType::Force, "Failed to acquire local IP and subnet mask");
+		_GetLocalIPAndSubnetMaskFallback(localIp, subnetMask);
+	}
+	stdx::scope_exit _ifa([&]{ freeifaddrs(ifaddr); });
+
+	for (const struct ifaddrs* ifa = ifaddr; ifa != nullptr; ifa = ifa->ifa_next)
+	{
+		if (ifa->ifa_addr == nullptr || ifa->ifa_addr->sa_family != AF_INET)
+			continue;
+
+		if (!(ifa->ifa_flags & IFF_UP) || !(ifa->ifa_flags & IFF_RUNNING))
+			continue;
+
+		if (ifa->ifa_flags & IFF_LOOPBACK || ifa->ifa_flags & IFF_POINTOPOINT)
+			continue;
+
+		if (boost::starts_with(ifa->ifa_name, "br-") || boost::starts_with(ifa->ifa_name, "docker"))
+			continue;
+
+		const auto* addr_in = reinterpret_cast<struct sockaddr_in*>(ifa->ifa_addr);
+		localIp = ntohl(addr_in->sin_addr.s_addr);
+		const auto* mask_in = reinterpret_cast<struct sockaddr_in*>(ifa->ifa_netmask);
+		subnetMask = ntohl(mask_in->sin_addr.s_addr);
+		return;
 	}
 	cemuLog_logDebug(LogType::Force, "_GetLocalIPAndSubnetMask(): Failed to find network IP and subnet mask");
 	_GetLocalIPAndSubnetMaskFallback(localIp, subnetMask);
@@ -279,14 +317,36 @@ namespace nn_ac
 
 void nnAc_load()
 {
-	osLib_addFunction("nn_ac", "GetAssignedAddress__Q2_2nn2acFPUl", nnAcExport_GetAssignedAddress);
-	osLib_addFunction("nn_ac", "GetAssignedSubnet__Q2_2nn2acFPUl", nnAcExport_GetAssignedSubnet);
 
-	osLib_addFunction("nn_ac", "IsSystemConnected__Q2_2nn2acFPbPQ3_2nn2ac6ApType", nnAcExport_IsSystemConnected);
+}
 
-	osLib_addFunction("nn_ac", "IsConfigExisting__Q2_2nn2acFQ3_2nn2ac11ConfigIdNumPb", nnAcExport_IsConfigExisting);
+namespace nn::ac
+{
+	class : public COSModule
+	{
+		public:
+		std::string_view GetName() override
+		{
+			return "nn_ac";
+		}
 
-	osLib_addFunction("nn_ac", "ACGetAssignedAddress", nnAcExport_ACGetAssignedAddress);
+		void RPLMapped() override
+		{
+			osLib_addFunction("nn_ac", "GetAssignedAddress__Q2_2nn2acFPUl", nnAcExport_GetAssignedAddress);
+			osLib_addFunction("nn_ac", "GetAssignedSubnet__Q2_2nn2acFPUl", nnAcExport_GetAssignedSubnet);
 
-	nn_ac::load();
+			osLib_addFunction("nn_ac", "IsSystemConnected__Q2_2nn2acFPbPQ3_2nn2ac6ApType", nnAcExport_IsSystemConnected);
+
+			osLib_addFunction("nn_ac", "IsConfigExisting__Q2_2nn2acFQ3_2nn2ac11ConfigIdNumPb", nnAcExport_IsConfigExisting);
+
+			osLib_addFunction("nn_ac", "ACGetAssignedAddress", nnAcExport_ACGetAssignedAddress);
+
+			nn_ac::load();
+		};
+	}s_COSnnAcModule;
+
+	COSModule* GetModule()
+	{
+		return &s_COSnnAcModule;
+	}
 }

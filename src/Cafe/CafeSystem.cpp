@@ -38,35 +38,10 @@
 #include "Cafe/IOSU/ccr_nfc/iosu_ccr_nfc.h"
 #include "Cafe/IOSU/nn/boss/boss_service.h"
 
-#include <cstdlib>
-
-#include <functional>
-#include <thread>
-
 // IOSU initializer functions
 #include "Cafe/IOSU/kernel/iosu_kernel.h"
 #include "Cafe/IOSU/fsa/iosu_fsa.h"
 #include "Cafe/IOSU/ODM/iosu_odm.h"
-
-static bool CafeSystem_libretro_debug_enabled()
-{
-	static int s_cached = -1;
-	if (s_cached == -1)
-	{
-		const char* env = std::getenv("CEMU_LIBRETRO_DEBUG");
-		s_cached = (env && env[0] != '\0' && env[0] != '0') ? 1 : 0;
-	}
-	return s_cached != 0;
-}
-
-static uint64 CafeSystem_get_tid()
-{
-#ifdef _WIN32
-	return (uint64)GetCurrentThreadId();
-#else
-	return (uint64)std::hash<std::thread::id>{}(std::this_thread::get_id());
-#endif
-}
 
 // Cafe OS initializer and shutdown functions
 #include "Cafe/OS/libs/avm/avm.h"
@@ -190,7 +165,7 @@ void LoadMainExecutable()
 	else
 	{
 		// RPX
-		RPLLoader_AddDependency(_pathToExecutable.c_str());
+		RPLLoader_AddDependency(_pathToExecutable.c_str(), true);
 		applicationRPX = RPLLoader_LoadFromMemory(rpxData, rpxSize, (char*)_pathToExecutable.c_str());
 		if (!applicationRPX)
 		{
@@ -226,7 +201,6 @@ fs::path getTitleSavePath()
 
 void InfoLog_TitleLoaded()
 {
-	cemuLog_createLogFile(false);
 	uint64 titleId = CafeSystem::GetForegroundTitleId();
 	cemuLog_log(LogType::Force, "------- Loaded title -------");
 	cemuLog_log(LogType::Force, "TitleId: {:08x}-{:08x}", (uint32)(titleId >> 32), (uint32)(titleId & 0xFFFFFFFF));
@@ -277,6 +251,7 @@ void InfoLog_PrintActiveSettings()
 		if (!GetConfig().vk_accurate_barriers.GetValue())
 			cemuLog_log(LogType::Force, "Accurate barriers are disabled!");
 	}
+#ifdef ENABLE_METAL
 	else if (ActiveSettings::GetGraphicsAPI() == GraphicAPI::kMetal)
 	{
 	    cemuLog_log(LogType::Force, "Async compile: {}", GetConfig().async_compile.GetValue() ? "true" : "false");
@@ -287,6 +262,7 @@ void InfoLog_PrintActiveSettings()
 		if (!GetConfig().vk_accurate_barriers.GetValue())
 			cemuLog_log(LogType::Force, "Accurate barriers are disabled!");
 	}
+#endif
 	cemuLog_log(LogType::Force, "Console language: {}", stdx::to_underlying(config.console_language.GetValue()));
 }
 
@@ -387,19 +363,12 @@ uint32 LoadSharedData()
 	return mmuRange_SHARED_AREA.getBase() + sizeof(SharedDataEntry) * numEntries;
 }
 
-static std::atomic<uint32> s_cemuInitForGameStage = 0;
-
 void cemu_initForGame()
 {
-	s_cemuInitForGameStage.store(1, std::memory_order_relaxed);
 	WindowSystem::UpdateWindowTitles(false, true, 0.0);
-	s_cemuInitForGameStage.store(2, std::memory_order_relaxed);
+	cemuLog_createLogFile(false);
 	// input manager apply game profile
 	InputManager::instance().apply_game_profile();
-	s_cemuInitForGameStage.store(3, std::memory_order_relaxed);
-	// log info for launched title
-	InfoLog_TitleLoaded();
-	s_cemuInitForGameStage.store(4, std::memory_order_relaxed);
 	// determine cycle offset since 1.1.2000
 	uint64 secondsSince2000_UTC = (uint64)(time(NULL) - 946684800);
 	ppcCyclesSince2000_UTC = secondsSince2000_UTC * (uint64)ESPRESSO_CORE_CLOCK;
@@ -414,20 +383,17 @@ void cemu_initForGame()
 	}
 	ppcCyclesSince2000 = theTime * (uint64)ESPRESSO_CORE_CLOCK;
 	ppcCyclesSince2000TimerClock = ppcCyclesSince2000 / 20ULL;
-	s_cemuInitForGameStage.store(5, std::memory_order_relaxed);
 	PPCTimer_start();
-	s_cemuInitForGameStage.store(6, std::memory_order_relaxed);
-	// this must happen after the RPX/RPL files are mapped to memory (coreinit sets up heaps so that they don't overwrite RPX/RPL data)
-	osLib_load();
-	s_cemuInitForGameStage.store(7, std::memory_order_relaxed);
+	// coreinit is bootstrapped first and then the main game executable is loaded
+	RPLLoader_LoadCoreinit();
+	LoadMainExecutable();
+	// log info for launched title
+	InfoLog_TitleLoaded();
 	// link all modules
 	uint32 linkTimeStart = GetTickCount();
 	RPLLoader_UpdateDependencies();
-	s_cemuInitForGameStage.store(8, std::memory_order_relaxed);
 	RPLLoader_Link();
-	s_cemuInitForGameStage.store(9, std::memory_order_relaxed);
 	RPLLoader_NotifyControlPassedToApplication();
-	s_cemuInitForGameStage.store(10, std::memory_order_relaxed);
 	uint32 linkTime = GetTickCount() - linkTimeStart;
 	cemuLog_log(LogType::Force, "RPL link time: {}ms", linkTime);
 	// for HBL ELF: Setup OS-specifics struct
@@ -441,12 +407,9 @@ void cemu_initForGame()
 		// replace any known function signatures with our HLE implementations and patch bugs in the games
 		GamePatch_scan();
 	}
-	s_cemuInitForGameStage.store(11, std::memory_order_relaxed);
 	LatteGPUState.isDRCPrimary = ActiveSettings::DisplayDRCEnabled();
 	InfoLog_PrintActiveSettings();
-	s_cemuInitForGameStage.store(12, std::memory_order_relaxed);
 	Latte_Start();
-	s_cemuInitForGameStage.store(13, std::memory_order_relaxed);
 	// check for debugger entrypoint bp
     if (g_gdbstub)
     {
@@ -454,11 +417,9 @@ void cemu_initForGame()
         g_gdbstub->Initialize();
     }
 	debugger_handleEntryBreakpoint(_entryPoint);
-	s_cemuInitForGameStage.store(14, std::memory_order_relaxed);
 	// load graphic packs
 	cemuLog_log(LogType::Force, "------- Activate graphic packs -------");
 	GraphicPack2::ActivateForCurrentTitle();
-	s_cemuInitForGameStage.store(15, std::memory_order_relaxed);
 	// print audio log
 	IAudioAPI::PrintLogging();
 	IAudioInputAPI::PrintLogging();
@@ -466,20 +427,14 @@ void cemu_initForGame()
 	cemuLog_log(LogType::Force, "------- Run title -------");
 	// wait till GPU thread is initialized
 	while (g_isGPUInitFinished == false) std::this_thread::sleep_for(std::chrono::milliseconds(50));
-	s_cemuInitForGameStage.store(16, std::memory_order_relaxed);
-	// init initial thread
-	OSThread_t* initialThread = coreinit::OSGetDefaultThread(1);
-	coreinit::OSSetThreadPriority(initialThread, 16);
-	coreinit::OSRunThread(initialThread, PPCInterpreter_makeCallableExportDepr(coreinit_start), 0, nullptr);
-	s_cemuInitForGameStage.store(17, std::memory_order_relaxed);
+	// run coreinit rpl_entry
+	RPLLoader_CallCoreinitEntrypoint();
 	// init AX and start AX I/O thread
 	snd_core::AXOut_init();
-	s_cemuInitForGameStage.store(18, std::memory_order_relaxed);
 }
 
 namespace CafeSystem
 {
-	static std::atomic<uint32> s_launchThreadStage = 0;
 	void InitVirtualMlcStorage();
 	void MlcStorageMountTitle(TitleInfo& titleInfo);
     void MlcStorageUnmountAllTitles();
@@ -488,11 +443,13 @@ namespace CafeSystem
 	static SystemImplementation* s_implementation{nullptr};
     bool sLaunchModeIsStandalone = false;
 	std::optional<std::vector<std::string>> s_overrideArgs;
+	std::optional<sint32> s_foregroundReturnStatus;
 
 	bool sSystemRunning = false;
 	TitleId sForegroundTitleId = 0;
 
 	GameInfo2 sGameInfo_ForegroundTitle;
+
 
 	static void _CheckForWine()
 	{
@@ -543,21 +500,43 @@ namespace CafeSystem
 	std::string GetWindowsNamedVersion(uint32& buildNumber)
 	{
 		char productName[256];
+		char buildNumberStr[32];
+		char featureVersion[32];
 		HKEY hKey;
 		DWORD dwType = REG_SZ;
 		DWORD dwSize = sizeof(productName);
+		buildNumber = 0;
+		featureVersion[0] = '\0';
 		if (RegOpenKeyExA(HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion", 0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
 		{
 			if (RegQueryValueExA(hKey, "ProductName", NULL, &dwType, (LPBYTE)productName, &dwSize) != ERROR_SUCCESS)
 				strcpy(productName, "Windows");
+			dwType = REG_SZ;
+			dwSize = sizeof(buildNumberStr);
+			if (RegQueryValueExA(hKey, "CurrentBuildNumber", NULL, &dwType, (LPBYTE)buildNumberStr, &dwSize) == ERROR_SUCCESS)
+				buildNumber = (uint32)atoi(buildNumberStr);
+			dwType = REG_SZ;
+			dwSize = sizeof(featureVersion);
+			if (RegQueryValueExA(hKey, "DisplayVersion", NULL, &dwType, (LPBYTE)featureVersion, &dwSize) != ERROR_SUCCESS)
+			{
+				dwType = REG_SZ;
+				dwSize = sizeof(featureVersion);
+				if (RegQueryValueExA(hKey, "ReleaseId", NULL, &dwType, (LPBYTE)featureVersion, &dwSize) != ERROR_SUCCESS)
+					featureVersion[0] = '\0';
+			}
 			RegCloseKey(hKey);
 		}
-		OSVERSIONINFO osvi;
-		ZeroMemory(&osvi, sizeof(OSVERSIONINFO));
-		osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
-		GetVersionEx(&osvi);
-		buildNumber = osvi.dwBuildNumber;
-		return std::string(productName);
+		std::string result(productName);
+		// ProductName still reads as "Windows 10" on Windows 11. Find and replace with "Windows 11" based on build number.
+		if (buildNumber >= 22000)
+		{
+			size_t pos = result.find("Windows 10");
+			if (pos != std::string::npos)
+				result.replace(pos, 10, "Windows 11");
+		}
+		if (featureVersion[0] != '\0')
+			result += fmt::format(" {}", featureVersion);
+		return result;
 	}
 	#endif
 
@@ -583,7 +562,23 @@ namespace CafeSystem
 		else
 			platform = "Linux";
 		#elif BOOST_OS_MACOS
-		platform = "MacOS";
+		char productVersion[256]{};
+		size_t productVersionSize = sizeof(productVersion);
+		const int productVersionResult = sysctlbyname("kern.osproductversion", productVersion, &productVersionSize, nullptr, 0);
+
+		char buildVersion[256]{};
+		size_t buildVersionSize = sizeof(buildVersion);
+		const int buildVersionResult = sysctlbyname("kern.osversion", buildVersion, &buildVersionSize, nullptr, 0);
+
+		if (productVersionResult == 0 && buildVersionResult == 0)
+			buffer = fmt::format("macOS {} ({})", productVersion, buildVersion);
+		else if (productVersionResult == 0)
+			buffer = fmt::format("macOS {}", productVersion);
+		else
+			buffer = "macOS";
+
+		platform = buffer.c_str();
+		
 		#elif BOOST_OS_BSD
 		#if defined(__FreeBSD__)
 		platform = "FreeBSD";
@@ -647,21 +642,6 @@ namespace CafeSystem
 		iosu::iosuAcp_init();
 		iosu::nim::Initialize();
 		iosu::odm::Initialize();
-		// init Cafe OS
-		avm::Initialize();
-		drmapp::Initialize();
-		TCL::Initialize();
-		nn::cmpt::Initialize();
-		nn::ccr::Initialize();
-		nn::temp::Initialize();
-		nn::aoc::Initialize();
-		nn::pdm::Initialize();
-		snd::user::Initialize();
-		H264::Initialize();
-		snd_core::Initialize();
-		mic::Initialize();
-		nfc::Initialize();
-		ntag::Initialize();
 		// init hardware register interfaces
 		HW_SI::Initialize();
 	}
@@ -705,6 +685,22 @@ namespace CafeSystem
         fsc_unmount("/vol/storage_mlc01/", FSC_PRIORITY_BASE);
         fsc_unmount("/cemuBossStorage/", FSC_PRIORITY_BASE);
     }
+
+	void MountExtras()
+	{
+		for (const auto& [host_path, emulatedPath] : LaunchSettings::CosMounts())
+		{
+			FSCDeviceHostFS_Mount(boost::nowide::narrow(emulatedPath), _pathToUtf8(host_path), FSC_PRIORITY_BASE);
+		}
+	}
+
+	void UnmountExtras()
+	{
+		for (const auto& [_, emulatedPath] : LaunchSettings::CosMounts())
+		{
+			fsc_unmount(boost::nowide::narrow(emulatedPath), FSC_PRIORITY_BASE);
+		}
+	}
 
 	PREPARE_STATUS_CODE LoadAndMountForegroundTitle(TitleId titleId)
 	{
@@ -792,7 +788,7 @@ namespace CafeSystem
         }
     }
 
-	PREPARE_STATUS_CODE SetupExecutable()
+	PREPARE_STATUS_CODE PrepareExecutable()
 	{
 		// set rpx path from cos.xml if available
 		_pathToBaseExecutable = _pathToExecutable;
@@ -823,7 +819,6 @@ namespace CafeSystem
 				}
 			}
 		}
-		LoadMainExecutable();
 		return PREPARE_STATUS_CODE::SUCCESS;
 	}
 
@@ -840,10 +835,9 @@ namespace CafeSystem
 
 	PREPARE_STATUS_CODE PrepareForegroundTitle(TitleId titleId)
 	{
-		if (CafeSystem_libretro_debug_enabled())
-			cemuLog_log(LogType::Force, "[CafeSystem] PrepareForegroundTitle begin tid={} titleId={:016x}", (unsigned long long)CafeSystem_get_tid(), (uint64)titleId);
 		CafeTitleList::WaitForMandatoryScan();
 		sLaunchModeIsStandalone = false;
+		s_foregroundReturnStatus = std::nullopt;
         _pathToExecutable.clear();
 		TitleIdParser tip(titleId);
 		if (tip.GetType() == TitleIdParser::TITLE_TYPE::AOC || tip.GetType() == TitleIdParser::TITLE_TYPE::BASE_TITLE_UPDATE)
@@ -853,31 +847,18 @@ namespace CafeSystem
         // mount title folders
 		PREPARE_STATUS_CODE r = LoadAndMountForegroundTitle(titleId);
 		if (r != PREPARE_STATUS_CODE::SUCCESS)
-		{
-			if (CafeSystem_libretro_debug_enabled())
-				cemuLog_log(LogType::Force, "[CafeSystem] PrepareForegroundTitle mount failed tid={} titleId={:016x} status={}", (unsigned long long)CafeSystem_get_tid(), (uint64)titleId, (int)r);
 			return r;
-		}
 		gameProfile_load();
 		// setup memory space and PPC recompiler
         SetupMemorySpace();
         PPCRecompiler_init();
-		r = SetupExecutable(); // load RPX
+		r = PrepareExecutable(); // load RPX
 		if (r != PREPARE_STATUS_CODE::SUCCESS)
-		{
-			if (CafeSystem_libretro_debug_enabled())
-				cemuLog_log(LogType::Force, "[CafeSystem] PrepareForegroundTitle SetupExecutable failed tid={} titleId={:016x} status={}", (unsigned long long)CafeSystem_get_tid(), (uint64)titleId, (int)r);
 			return r;
-		}
 		InitVirtualMlcStorage();
-		if (CafeSystem_libretro_debug_enabled())
-			cemuLog_log(LogType::Force, "[CafeSystem] PrepareForegroundTitle end tid={} titleId={:016x}", (unsigned long long)CafeSystem_get_tid(), (uint64)titleId);
+		MountExtras();
 		return PREPARE_STATUS_CODE::SUCCESS;
 	}
-
-	#ifdef RETRO_CORE
-	static std::atomic<bool> s_libretro_use_multicore{true};
-	#endif
 
 	PREPARE_STATUS_CODE PrepareForegroundTitleFromStandaloneRPX(const fs::path& path)
 	{
@@ -917,105 +898,38 @@ namespace CafeSystem
         SetupMemorySpace();
         PPCRecompiler_init();
         // load executable
-        SetupExecutable();
+        PrepareExecutable();
 		InitVirtualMlcStorage();
+		MountExtras();
 		return PREPARE_STATUS_CODE::SUCCESS;
 	}
 
 	void _LaunchTitleThread()
 	{
-		s_launchThreadStage.store(1, std::memory_order_relaxed);
-		try
-		{
-			for(auto& module : s_iosuModules)
-				module->TitleStart();
-			s_launchThreadStage.store(2, std::memory_order_relaxed);
-			cemu_initForGame();
-			s_launchThreadStage.store(3, std::memory_order_relaxed);
-			// enter scheduler
-			s_launchThreadStage.store(4, std::memory_order_relaxed);
-			#ifdef RETRO_CORE
-			// Libretro: multi-core is now default, can be disabled via core option
-			if (s_libretro_use_multicore.load(std::memory_order_relaxed) && (ActiveSettings::GetCPUMode() == CPUMode::MulticoreRecompiler || LaunchSettings::ForceMultiCoreInterpreter()) && !LaunchSettings::ForceInterpreter())
-			{
-				cemuLog_log(LogType::Force, "[Libretro] Multi-core mode enabled");
-				coreinit::OSSchedulerBegin(3);
-			}
-			else
-			{
-				cemuLog_log(LogType::Force, "[Libretro] Single-core mode");
-				coreinit::OSSchedulerBegin(1);
-			}
-			#else
-			if ((ActiveSettings::GetCPUMode() == CPUMode::MulticoreRecompiler || LaunchSettings::ForceMultiCoreInterpreter()) && !LaunchSettings::ForceInterpreter())
-				coreinit::OSSchedulerBegin(3);
-			else
-				coreinit::OSSchedulerBegin(1);
-			#endif
-			s_launchThreadStage.store(5, std::memory_order_relaxed);
-		}
-		catch (const std::exception& e)
-		{
-			s_launchThreadStage.store(0xFFFFFFFFu, std::memory_order_relaxed);
-			cemuLog_log(LogType::Force, "Launch thread exception: {}", e.what());
-		}
-		catch (...)
-		{
-			s_launchThreadStage.store(0xFFFFFFFFu, std::memory_order_relaxed);
-			cemuLog_log(LogType::Force, "Launch thread unknown exception");
-		}
+		for(auto& module : s_iosuModules)
+			module->TitleStart();
+		cemu_initForGame();
+		// enter scheduler
+		if ((ActiveSettings::GetCPUMode() == CPUMode::MulticoreRecompiler || LaunchSettings::ForceMultiCoreInterpreter()) && !LaunchSettings::ForceInterpreter())
+			coreinit::OSSchedulerBegin(3);
+		else
+			coreinit::OSSchedulerBegin(1);
 	}
 
 	void LaunchForegroundTitle()
 	{
-		if (CafeSystem_libretro_debug_enabled())
-			cemuLog_log(LogType::Force, "[CafeSystem] LaunchForegroundTitle begin tid={} titleId={:016x}", (unsigned long long)CafeSystem_get_tid(), (uint64)GetForegroundTitleId());
 		PPCTimer_waitForInit();
 		// start system
 		sSystemRunning = true;
 		WindowSystem::NotifyGameLoaded();
-		s_launchThreadStage.store(0, std::memory_order_relaxed);
 		std::thread t(_LaunchTitleThread);
 		t.detach();
-		if (CafeSystem_libretro_debug_enabled())
-			cemuLog_log(LogType::Force, "[CafeSystem] LaunchForegroundTitle end tid={} launchThreadStage={}", (unsigned long long)CafeSystem_get_tid(), (unsigned)GetLaunchThreadStage());
-	}
-
-	#ifdef RETRO_CORE
-	static Semaphore s_libretro_frame_gate;
-	
-	void SetLibretroMultiCoreEnabled(bool enabled)
-	{
-		s_libretro_use_multicore.store(enabled, std::memory_order_relaxed);
-	}
-	#endif
-
-	uint32 GetLaunchThreadStage()
-	{
-		return s_launchThreadStage.load(std::memory_order_relaxed);
-	}
-
-	uint32 GetCemuInitForGameStage()
-	{
-		return ::s_cemuInitForGameStage.load(std::memory_order_relaxed);
 	}
 
 	bool IsTitleRunning()
 	{
 		return sSystemRunning;
 	}
-	
-#ifdef RETRO_CORE
-	void CafeSystem_WaitForFrameAdvance()
-	{
-		s_libretro_frame_gate.wait();
-	}
-	
-	void CafeSystem_SignalFrameAdvance()
-	{
-		s_libretro_frame_gate.notify();
-	}
-#endif
 
 	TitleId GetForegroundTitleId()
 	{
@@ -1066,6 +980,9 @@ namespace CafeSystem
 
 	std::string GetForegroundTitleArgStr()
 	{
+		auto optional_arguments = LaunchSettings::CosArgstr();
+		if (optional_arguments.has_value())
+			return *optional_arguments;
 		if (sLaunchModeIsStandalone)
 			return "";
 		auto& update = sGameInfo_ForegroundTitle.GetUpdate();
@@ -1078,19 +995,30 @@ namespace CafeSystem
 	{
 		if (sLaunchModeIsStandalone)
 			return CosCapabilityBits::All;
+
+		CosCapabilityBits resultMask = static_cast<CosCapabilityBits>(0);
+		for (const auto& pack : GraphicPack2::GetActiveGraphicPacks())
+		{
+			for (const auto& permissionOverrides : pack->GetPermissionOverrides()) 
+			{
+				if (permissionOverrides.first == group)
+					resultMask |= static_cast<CosCapabilityBits>(permissionOverrides.second);
+			}
+		}
+
 		auto& update = sGameInfo_ForegroundTitle.GetUpdate();
 		if (update.IsValid())
 		{
 			ParsedCosXml* cosXml = update.GetCosInfo();
 			if (cosXml)
-				return cosXml->GetCapabilityBits(group);
+				return cosXml->GetCapabilityBits(group) | resultMask;
 		}
 		auto& base = sGameInfo_ForegroundTitle.GetBase();
 		if(base.IsValid())
 		{
 			ParsedCosXml* cosXml = base.GetCosInfo();
 			if (cosXml)
-				return cosXml->GetCapabilityBits(group);
+				return cosXml->GetCapabilityBits(group) | resultMask;
 		}
 		return CosCapabilityBits::All;
 	}
@@ -1137,46 +1065,29 @@ namespace CafeSystem
 
 	void ShutdownTitle()
 	{
-		if (CafeSystem_libretro_debug_enabled())
-			cemuLog_log(LogType::Force, "[CafeSystem] ShutdownTitle begin tid={} running={} launchStage={} cemuInitStage={} titleId={:016x}",
-				(unsigned long long)CafeSystem_get_tid(),
-				sSystemRunning ? 1 : 0,
-				(unsigned)GetLaunchThreadStage(),
-				(unsigned)GetCemuInitForGameStage(),
-				(uint64)GetForegroundTitleId());
 		if(!sSystemRunning)
 			return;
 		coreinit::OSSchedulerEnd();
-		if (CafeSystem_libretro_debug_enabled())
-			cemuLog_log(LogType::Force, "[CafeSystem] ShutdownTitle after OSSchedulerEnd");
 		Latte_Stop();
-		if (CafeSystem_libretro_debug_enabled())
-			cemuLog_log(LogType::Force, "[CafeSystem] ShutdownTitle after Latte_Stop");
-        // reset Cafe OS userspace modules
-        snd_core::reset();
-		if (CafeSystem_libretro_debug_enabled())
-			cemuLog_log(LogType::Force, "[CafeSystem] ShutdownTitle after snd_core::reset");
-        coreinit::OSAlarm_Shutdown();
-        GX2::_GX2DriverReset();
-        nn::save::ResetToDefaultState();
-        coreinit::__OSDeleteAllActivePPCThreads();
-        RPLLoader_ResetState();
-		if (CafeSystem_libretro_debug_enabled())
-			cemuLog_log(LogType::Force, "[CafeSystem] ShutdownTitle after PPC thread delete + RPLLoader_ResetState");
+		// reset Cafe OS userspace modules
+		snd_core::reset();
+		coreinit::OSAlarm_Shutdown();
+		GX2::_GX2DriverReset();
+		nn::save::ResetToDefaultState();
+		coreinit::__OSDeleteAllActivePPCThreads();
+		RPLLoader_UnloadAll();
 		for(auto it = s_iosuModules.rbegin(); it != s_iosuModules.rend(); ++it)
 			(*it)->TitleStop();
-        // reset Cemu subsystems
-        PPCRecompiler_Shutdown();
-		if (CafeSystem_libretro_debug_enabled())
-			cemuLog_log(LogType::Force, "[CafeSystem] ShutdownTitle after PPCRecompiler_Shutdown");
-        GraphicPack2::Reset();
-        UnmountCurrentTitle();
-        MlcStorageUnmountAllTitles();
-        UnmountBaseDirectories();
-        DestroyMemorySpace();
+		// reset Cemu subsystems
+		PPCRecompiler_Shutdown();
+		GraphicPack2::Reset();
+		UnmountCurrentTitle();
+		UnmountExtras();
+		MlcStorageUnmountAllTitles();
+		UnmountBaseDirectories();
+		DestroyMemorySpace();
+		LaunchSettings::ClearCosArgstr();
 		sSystemRunning = false;
-		if (CafeSystem_libretro_debug_enabled())
-			cemuLog_log(LogType::Force, "[CafeSystem] ShutdownTitle end tid={}", (unsigned long long)CafeSystem_get_tid());
 	}
 
 	/* Virtual mlc storage */
@@ -1275,6 +1186,17 @@ namespace CafeSystem
 	void RequestRecreateCanvas()
 	{
 		s_implementation->CafeRecreateCanvas();
+	}
+
+	void NotifyPPCProcessExit(sint32 status)
+	{
+		s_foregroundReturnStatus = status;
+		s_implementation->CafePPCProcessExit();
+	}
+
+	std::optional<sint32> GetForegroundTitleReturnStatus()
+	{
+		return s_foregroundReturnStatus;
 	}
 
 }

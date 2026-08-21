@@ -1,8 +1,8 @@
 vcpkg_from_github(
     OUT_SOURCE_PATH SOURCE_PATH
     REPO wxWidgets/wxWidgets
-    REF "bfd436b"
-    SHA512 bd3fd6d0d0db3b6fa34eceae1119e21ffd2f62221dcd249f8b8b82a6e65d83a05101e4e1e4ca9b9c4d7937add73b113bb029b03b05d2c3d87d17c1922d800a24
+    REF "v${VERSION}"
+    SHA512 c497d6642d6f9fb7f190ab725e3c5ee0e67e96c883eebbe2d7fa7e0b3dec9847871010e53e23c5d46b9158b8a045f162592d0c25f524daedeaca8c1caa555a5a
     HEAD_REF master
     PATCHES
         install-layout.patch
@@ -18,8 +18,8 @@ vcpkg_from_github(
 vcpkg_from_github(
     OUT_SOURCE_PATH lexilla_SOURCE_PATH
     REPO wxWidgets/lexilla
-    REF "27c20a6ae5eebf418debeac0166052ed6fb653bc"
-    SHA512 7e5de7f664509473b691af8261fca34c2687772faca7260eeba5f2984516e6f8edf88c27192e056c9dda996e2ad2c20f6d1dff1c4bd2f3c0d74852cb50ca424a
+    REF "bf6ad20062b98808ffa21419263942a427c150a9"
+    SHA512 08360fcd29e6c021857928375509ea48b9c8a02407bcb3c01865f57734c449fc6ff24afbe011f218b7145116e1805f8c9b4a2e3ec26f4a6298dca9453f610887
     HEAD_REF wx
 )
 file(COPY "${lexilla_SOURCE_PATH}/" DESTINATION "${SOURCE_PATH}/src/stc/lexilla")
@@ -40,8 +40,12 @@ vcpkg_check_features(
         secretstore wxUSE_SECRETSTORE
         sound   wxUSE_SOUND
         webview wxUSE_WEBVIEW
-        webview wxUSE_WEBVIEW_EDGE
 )
+
+# Only use wxUSE_WEBVIEW_EDGE on Windows (webview2)
+if(VCPKG_TARGET_IS_WINDOWS AND "webview" IN_LIST FEATURES)
+    list(APPEND FEATURE_OPTIONS "-DwxUSE_WEBVIEW_EDGE=ON")
+endif()
 
 set(OPTIONS_RELEASE "")
 if(NOT "debug-support" IN_LIST FEATURES)
@@ -69,8 +73,8 @@ if(VCPKG_TARGET_IS_WINDOWS)
     endif()
 endif()
 
-if("webview" IN_LIST FEATURES AND VCPKG_LIBRARY_LINKAGE STREQUAL "static")
-  list(APPEND OPTIONS -DwxUSE_WEBVIEW_EDGE_STATIC=ON)
+if(VCPKG_TARGET_IS_WINDOWS AND "webview" IN_LIST FEATURES AND VCPKG_LIBRARY_LINKAGE STREQUAL "static")
+    list(APPEND OPTIONS -DwxUSE_WEBVIEW_EDGE_STATIC=ON)
 endif()
 
 vcpkg_find_acquire_program(PKGCONFIG)
@@ -93,6 +97,7 @@ vcpkg_cmake_configure(
     SOURCE_PATH "${SOURCE_PATH}"
     OPTIONS
         ${FEATURE_OPTIONS}
+        -DwxBUILD_INSTALL_USE_SYMLINK=OFF
         -DwxUSE_REGEX=sys
         -DwxUSE_ZLIB=sys
         -DwxUSE_EXPAT=sys
@@ -218,30 +223,12 @@ endif()
 
 if("example" IN_LIST FEATURES)
     file(INSTALL
-            "${CMAKE_CURRENT_LIST_DIR}/minimal_example/CMakeLists.txt"
-            "${SOURCE_PATH}/samples/minimal/minimal.cpp"
-            "${SOURCE_PATH}/samples/sample.xpm"
-            "${SOURCE_PATH}/samples/sample.rc"
-            DESTINATION "${CURRENT_PACKAGES_DIR}/share/${PORT}/minimal_example"
-    )
-
-    vcpkg_replace_string("${CURRENT_PACKAGES_DIR}/share/${PORT}/minimal_example/minimal.cpp" "../sample.xpm" "sample.xpm")
-endif()
-
-if("example" IN_LIST FEATURES)
-    file(INSTALL
-        "${CMAKE_CURRENT_LIST_DIR}/listctrl_example/CMakeLists.txt"
-        "${SOURCE_PATH}/samples/listctrl/listtest.cpp"
-        "${SOURCE_PATH}/samples/listctrl/listtest.h"
-        "${SOURCE_PATH}/samples/listctrl/listtest.rc"
+        "${CMAKE_CURRENT_LIST_DIR}/example/CMakeLists.txt"
+        "${SOURCE_PATH}/samples/popup/popup.cpp"
         "${SOURCE_PATH}/samples/sample.xpm"
-        "${SOURCE_PATH}/samples/sample.rc"
-        "${SOURCE_PATH}/samples/listctrl/bitmaps"
-        DESTINATION "${CURRENT_PACKAGES_DIR}/share/${PORT}/listctrl_example"
+        DESTINATION "${CURRENT_PACKAGES_DIR}/share/${PORT}/example"
     )
-
-    vcpkg_replace_string("${CURRENT_PACKAGES_DIR}/share/${PORT}/listctrl_example/listtest.cpp" "../sample.xpm" "sample.xpm")
-    vcpkg_replace_string("${CURRENT_PACKAGES_DIR}/share/${PORT}/listctrl_example/listtest.rc" "../sample.rc" "sample.rc")
+    vcpkg_replace_string("${CURRENT_PACKAGES_DIR}/share/${PORT}/example/popup.cpp" "../sample.xpm" "sample.xpm")
 endif()
 
 configure_file("${CMAKE_CURRENT_LIST_DIR}/vcpkg-cmake-wrapper.cmake" "${CURRENT_PACKAGES_DIR}/share/${PORT}/vcpkg-cmake-wrapper.cmake" @ONLY)

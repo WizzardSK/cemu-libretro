@@ -66,26 +66,30 @@ namespace TCL
 
 	std::atomic<uint32> tclRingBufferA[TCL_RING_BUFFER_SIZE];
 	std::atomic<uint32> tclRingBufferA_readIndex{0};
-	uint32 tclRingBufferA_writeIndex{0};
+	std::atomic<uint32> tclRingBufferA_writeIndex{0};
 
 	// GPU code calls this to grab the next command word
 	bool TCLGPUReadRBWord(uint32& cmdWord)
 	{
-		if (tclRingBufferA_readIndex == tclRingBufferA_writeIndex)
+		uint32 readIndex = tclRingBufferA_readIndex.load(std::memory_order::relaxed);
+		uint32 writeIndex = tclRingBufferA_writeIndex.load(std::memory_order::acquire);
+		if (readIndex == writeIndex)
 			return false;
-		cmdWord = tclRingBufferA[tclRingBufferA_readIndex];
-		tclRingBufferA_readIndex = (tclRingBufferA_readIndex+1) % TCL_RING_BUFFER_SIZE;
+		cmdWord = tclRingBufferA[readIndex].load(std::memory_order::relaxed);
+		tclRingBufferA_readIndex.store((readIndex + 1) % TCL_RING_BUFFER_SIZE, std::memory_order::release);
 		return true;
 	}
 
 	void TCLWaitForRBSpace(uint32be numU32s)
 	{
-		while ( true )
+		uint32 writeIndex = tclRingBufferA_writeIndex.load(std::memory_order::relaxed);
+		while (true)
 		{
-			uint32 distance = (tclRingBufferA_readIndex + TCL_RING_BUFFER_SIZE - tclRingBufferA_writeIndex) & (TCL_RING_BUFFER_SIZE - 1);
-			if (tclRingBufferA_writeIndex == tclRingBufferA_readIndex) // buffer completely empty
+			uint32 readIndex = tclRingBufferA_readIndex.load(std::memory_order::acquire);
+			uint32 distance = (readIndex + TCL_RING_BUFFER_SIZE - writeIndex) & (TCL_RING_BUFFER_SIZE - 1);
+			if (writeIndex == readIndex) // buffer completely empty
 				distance = TCL_RING_BUFFER_SIZE;
-			if (distance >= numU32s+1) // assume distance minus one, because we are never allowed to completely wrap around
+			if (distance >= numU32s + 1) // assume distance minus one, because we are never allowed to completely wrap around
 				break;
 			_mm_pause();
 		}
@@ -94,14 +98,18 @@ namespace TCL
 	// this function assumes that TCLWaitForRBSpace was called and that there is enough space
 	void TCLWriteCmd(uint32be* cmd, uint32 cmdLen)
 	{
+		uint32 writeIndex = tclRingBufferA_writeIndex.load(std::memory_order::relaxed);
+
 		while (cmdLen > 0)
 		{
-			tclRingBufferA[tclRingBufferA_writeIndex] = *cmd;
-			tclRingBufferA_writeIndex++;
-			tclRingBufferA_writeIndex &= (TCL_RING_BUFFER_SIZE - 1);
+			tclRingBufferA[writeIndex].store(*cmd, std::memory_order::relaxed);
+			writeIndex++;
+			writeIndex &= (TCL_RING_BUFFER_SIZE - 1);
 			cmd++;
 			cmdLen--;
 		}
+
+		tclRingBufferA_writeIndex.store(writeIndex, std::memory_order::release);
 	}
 
 	#define EVENT_TYPE_TS		5
@@ -148,14 +156,39 @@ namespace TCL
 		return 0;
 	}
 
-	void Initialize()
+	class : public COSModule
 	{
-		cafeExportRegister("TCL", TCLSubmitToRing, LogType::Placeholder);
-		cafeExportRegister("TCL", TCLTimestamp, LogType::Placeholder);
-		cafeExportRegister("TCL", TCLWaitTimestamp, LogType::Placeholder);
+		public:
+		std::string_view GetName() override
+		{
+			return "tcl";
+		}
 
-		s_currentRetireMarker = 0;
-		s_tclStatePPC->gpuRetireMarker = 0;
-		coreinit::OSInitEvent(s_updateRetirementEvent.GetPtr(), coreinit::OSEvent::EVENT_STATE::STATE_NOT_SIGNALED, coreinit::OSEvent::EVENT_MODE::MODE_AUTO);
+		void RPLMapped() override
+		{
+			cafeExportRegister("TCL", TCLSubmitToRing, LogType::Placeholder);
+			cafeExportRegister("TCL", TCLTimestamp, LogType::Placeholder);
+			cafeExportRegister("TCL", TCLWaitTimestamp, LogType::Placeholder);
+		};
+
+		void rpl_entry(uint32 moduleHandle, coreinit::RplEntryReason reason) override
+		{
+			if (reason == coreinit::RplEntryReason::Loaded)
+			{
+				s_currentRetireMarker = 0;
+				s_tclStatePPC->gpuRetireMarker = 0;
+				coreinit::OSInitEvent(s_updateRetirementEvent.GetPtr(), coreinit::OSEvent::EVENT_STATE::STATE_NOT_SIGNALED, coreinit::OSEvent::EVENT_MODE::MODE_AUTO);
+			}
+			else if (reason == coreinit::RplEntryReason::Unloaded)
+			{
+				s_currentRetireMarker = 0;
+				s_tclStatePPC->gpuRetireMarker = 0;
+			}
+		}
+	}s_COStclModule;
+
+	COSModule* GetModule()
+	{
+		return &s_COStclModule;
 	}
 }

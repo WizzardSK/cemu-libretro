@@ -6,9 +6,15 @@
 
 #include "config/ActiveSettings.h"
 #include "Cafe/OS/libs/swkbd/swkbd.h"
+#ifdef ENABLE_OPENGL
 #include "wxgui/canvas/OpenGLCanvas.h"
+#endif
+#ifdef ENABLE_VULKAN
 #include "wxgui/canvas/VulkanCanvas.h"
+#endif
+#ifdef ENABLE_METAL
 #include "wxgui/canvas/MetalCanvas.h"
+#endif
 #include "config/CemuConfig.h"
 #include "wxgui/MainWindow.h"
 #include "wxgui/helpers/wxHelpers.h"
@@ -73,16 +79,21 @@ void PadViewFrame::InitializeRenderCanvas()
 {
 	auto sizer = new wxBoxSizer(wxVERTICAL);
 	{
+		#ifdef ENABLE_VULKAN
 		if (ActiveSettings::GetGraphicsAPI() == kVulkan)
 			m_render_canvas = new VulkanCanvas(this, wxSize(854, 480), false);
-		else if (ActiveSettings::GetGraphicsAPI() == kOpenGL)
+		#endif
+		#ifdef ENABLE_OPENGL
+		if (ActiveSettings::GetGraphicsAPI() == kOpenGL)
 			m_render_canvas = GLCanvas_Create(this, wxSize(854, 480), false);
-#if ENABLE_METAL
-		else
-		    m_render_canvas = new MetalCanvas(this, wxSize(854, 480), false);
-#endif
+		#endif
+		#ifdef ENABLE_METAL
+		if (ActiveSettings::GetGraphicsAPI() == kMetal)
+			m_render_canvas = new MetalCanvas(this, wxSize(854, 480), false);
+		#endif
 		sizer->Add(m_render_canvas, 1, wxEXPAND, 0, nullptr);
 	}
+	cemu_assert(m_render_canvas != nullptr);
 	SetSizer(sizer);
 	Layout();
 
@@ -226,6 +237,6 @@ void PadViewFrame::OnSetWindowTitle(wxCommandEvent& event)
 void PadViewFrame::AsyncSetTitle(std::string_view windowTitle)
 {
 	wxCommandEvent set_title_event(wxEVT_SET_WINDOW_TITLE);
-	set_title_event.SetString(wxHelper::FromUtf8(windowTitle));
+	set_title_event.SetString(wxString::FromUTF8(windowTitle));
 	QueueEvent(set_title_event.Clone());
 }

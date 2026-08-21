@@ -59,8 +59,6 @@ public:
 	OpenGLRenderer();
 	~OpenGLRenderer();
 
-	RendererAPI GetType() override { return RendererAPI::OpenGL; }
-
 	static OpenGLRenderer* GetInstance();
 
 	// imgui
@@ -183,7 +181,7 @@ public:
 	void draw_init();
 
 	void draw_beginSequence() override;
-	void draw_execute(uint32 baseVertex, uint32 baseInstance, uint32 instanceCount, uint32 count, MPTR indexDataMPTR, Latte::LATTE_VGT_DMA_INDEX_TYPE::E_INDEX_TYPE indexType, bool isFirst) override;
+	void draw_execute(uint32 baseVertex, uint32 baseInstance, uint32 instanceCount, uint32 count, MPTR indexDataMPTR, Latte::LATTE_VGT_DMA_INDEX_TYPE::E_INDEX_TYPE indexType, const LatteDrawcallContext& drawcallContext) override;
 	void draw_endSequence() override;
 
 	template<bool TIsMinimal, bool THasProfiling>
@@ -232,6 +230,9 @@ private:
 
 	sint32 activeTextureUnit = 0;
 	void* m_latteBoundTextures[Latte::GPU_LIMITS::NUM_TEXTURES_PER_STAGE * 3]{};
+
+	// backbuffer blit
+	GLuint m_backbufferBlit_uniformBuffer;
 
 	// attribute stream
 	GLuint glAttributeCacheAB{};

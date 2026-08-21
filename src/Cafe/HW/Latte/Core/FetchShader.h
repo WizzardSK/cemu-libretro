@@ -42,6 +42,7 @@ struct LatteFetchShader
 	std::vector<LatteParsedFetchShaderBufferGroup_t> bufferGroupsInvalid; // groups with buffer index not being a valid buffer (dst components of these can affect shader code, but no actual vertex imports are done)
 
 	uint64 key{};
+	uint32 attributeBufferMask{}; // mask of buffers sourced by this fetch shader
 
 	// Vulkan
 	uint64 vkPipelineHashFragment{}; // hash of all fetch shader state that influences the Vulkan graphics pipeline
@@ -55,17 +56,20 @@ struct LatteFetchShader
 
 	void CalculateFetchShaderVkHash();
 
+#ifdef ENABLE_METAL
 	void CheckIfVerticesNeedManualFetchMtl(uint32* contextRegister);
+#endif
 
 	uint64 getVkPipelineHashFragment() const { return vkPipelineHashFragment; };
 
 	static bool isValidBufferIndex(const uint32 index) { return index < 0x10; };
 
-	// cache
-	LatteFetchShader* RegisterInCache(CacheHash fsHash); // Fails if another fetch shader object is already registered with the same fsHash. Returns the previously registered fetch shader or null
-	void UnregisterInCache();
+	// keys in shader state cache
+	std::vector<uint64> m_shaderStateCacheKeys;
 
 	// fetch shader cache (move these to separate Cache class?)
+	LatteFetchShader* RegisterInCache(CacheHash fsHash); // fails if another fetch shader object is already registered with the same fsHash. Returns the previously registered fetch shader or null
+	void UnregisterInCache();
 	static CacheHash CalculateCacheHash(void* programCode, uint32 programSize);
 	static LatteFetchShader* FindInCacheByHash(CacheHash fsHash);
 	static LatteFetchShader* FindByGPUState();

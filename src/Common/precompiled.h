@@ -80,11 +80,11 @@
 #include <optional>
 #include <span>
 #include <ranges>
+#include <variant>
 
 #include <boost/predef.h>
 #include <boost/nowide/convert.hpp>
 #include <boost/algorithm/string.hpp>
-#include <boost/asio.hpp>
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
 
@@ -651,7 +651,7 @@ inline uint32 GetTitleIdLow(uint64 titleId)
 #include "Cafe/HW/Espresso/PPCCallback.h"
 
 // PPC stack trace printer
-void DebugLogStackTrace(struct OSThread_t* thread, MPTR sp, bool printSymbols = false);
+void DebugLogStackTrace(struct OSThread_t* thread, MPTR sp);
 
 // generic formatter for enums (to underlying)
 template <typename Enum>

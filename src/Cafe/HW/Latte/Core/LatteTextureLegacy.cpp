@@ -4,9 +4,11 @@
 
 #include "Cafe/HW/Latte/Renderer/Renderer.h"
 
+#ifdef ENABLE_OPENGL
 #include "Cafe/HW/Latte/Renderer/OpenGL/OpenGLRenderer.h"
 #include "Cafe/HW/Latte/Renderer/OpenGL/LatteTextureGL.h"
 #include "Cafe/HW/Latte/Renderer/OpenGL/LatteTextureViewGL.h"
+#endif
 
 struct TexScaleXY
 {
@@ -140,6 +142,8 @@ void LatteTexture_updateTexturesForStage(LatteDecompilerShader* shaderContext, u
 				depth = 1;
 		}
 		uint32 height = word1.get_HEIGHT() + 1;
+		if (dim == Latte::E_DIM::DIM_1D || dim == Latte::E_DIM::DIM_1D_ARRAY)
+			height = 1;
 		if (Latte::IsCompressedFormat(word1.get_DATA_FORMAT()))
 			pitch /= 4;
 		// view slice
@@ -190,6 +194,7 @@ void LatteTexture_updateTexturesForStage(LatteDecompilerShader* shaderContext, u
 			LatteGPUState.repeatTextureInitialization = true;
 		}
 
+#ifdef ENABLE_OPENGL
 		if (g_renderer->GetType() == RendererAPI::OpenGL)
 		{
 			// on OpenGL, texture views and sampler parameters are tied together (we are avoiding sampler objects due to driver bugs)
@@ -212,6 +217,8 @@ void LatteTexture_updateTexturesForStage(LatteDecompilerShader* shaderContext, u
 			textureView->lastTextureBindIndex = LatteGPUState.textureBindCounter;
 			rendererGL->renderstate_updateTextureSettingsGL(shaderContext, textureView, textureIndex + glBackendBaseTexUnit, word4, textureIndex, isDepthSampler);
 		}
+#endif
+
 		g_renderer->texture_setLatteTexture(textureView, textureIndex + glBackendBaseTexUnit);
 		// update if data changed
 		bool swizzleChanged = false;

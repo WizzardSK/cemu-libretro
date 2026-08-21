@@ -12,6 +12,8 @@ set(EMULATOR_VERSION_MAJOR "0" CACHE STRING "")
 set(EMULATOR_VERSION_MINOR "0" CACHE STRING "")
 set(EMULATOR_VERSION_PATCH "0" CACHE STRING "")
 
+set(THREADS_PREFER_PTHREAD_FLAG true) # needs to be set before vcpkg
+
 execute_process(
 		COMMAND git log --format=%h -1
 		WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
@@ -130,6 +132,10 @@ if (MSVC)
 	add_compile_options($<$<CONFIG:Release,RelWithDebInfo>:/Ot>) # favor speed
 endif()
 
+if(CMAKE_GENERATOR STREQUAL "Xcode")
+	set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY XCODE_STARTUP_PROJECT CemuBin)
+endif()
+
 if (APPLE)
     enable_language(OBJC OBJCXX)
     set(CMAKE_OSX_DEPLOYMENT_TARGET "13.4")
@@ -143,11 +149,13 @@ endif()
 
 if (APPLE)
     set(ENABLE_METAL_DEFAULT ON)
+	set(ENABLE_OPENGL_DEFAULT OFF)
 else()
     set(ENABLE_METAL_DEFAULT OFF)
+	set(ENABLE_OPENGL_DEFAULT ON)
 endif()
 
-option(ENABLE_OPENGL "Enables the OpenGL backend" ON)
+option(ENABLE_OPENGL "Enables the OpenGL backend" ${ENABLE_OPENGL_DEFAULT})
 option(ENABLE_VULKAN "Enables the Vulkan backend" ON)
 option(ENABLE_METAL "Enables the Metal backend" ${ENABLE_METAL_DEFAULT})
 option(ENABLE_DISCORD_RPC "Enables the Discord Rich Presence feature" ON)
@@ -175,6 +183,11 @@ endif()
 
 option(ENABLE_HIDAPI "Build with HIDAPI" ON)
 option(ENABLE_SDL "Enables the SDLController backend" ON)
+option(ENABLE_LIBUSB "Build with libusb support" ON)
+
+if (ENABLE_LIBUSB)
+	add_compile_definitions(HAS_LIBUSB)
+endif()
 
 # audio backends
 if (WIN32)
@@ -202,9 +215,7 @@ if(ENABLE_LIBRETRO)
 	set(ENABLE_CUBEB OFF CACHE BOOL "" FORCE)
 endif()
 
-set(THREADS_PREFER_PTHREAD_FLAG true)
 find_package(Threads REQUIRED)
-find_package(SDL2 REQUIRED)
 find_package(CURL REQUIRED)
 find_package(pugixml REQUIRED)
 find_package(RapidJSON REQUIRED)
@@ -220,8 +231,13 @@ find_package(ZLIB REQUIRED)
 find_package(zstd MODULE REQUIRED) # MODULE so that zstd::zstd is available
 find_package(OpenSSL COMPONENTS Crypto SSL REQUIRED)
 find_package(glm REQUIRED)
-find_package(fmt 9 REQUIRED)
+find_package(fmt 12.1 REQUIRED)
 find_package(PNG REQUIRED)
+
+if(ENABLE_SDL)
+	find_package(SDL3 REQUIRED CONFIG REQUIRED COMPONENTS SDL3)
+	add_compile_definitions(HAS_SDL)
+endif()
 
 # glslang versions older than 11.11.0 define targets without a namespace
 if (NOT TARGET glslang::SPIRV AND TARGET SPIRV)
@@ -260,17 +276,20 @@ endif()
 
 if (ENABLE_VULKAN)
 	include_directories("dependencies/Vulkan-Headers/include")
+	add_compile_definitions(ENABLE_VULKAN)
+	add_compile_definitions(VK_NO_PROTOTYPES)
 endif()
 
 if (ENABLE_OPENGL AND NOT ANDROID)
 	# Android has no desktop OpenGL, only GLES/EGL - the core uses Vulkan there.
 	find_package(OpenGL REQUIRED)
+	add_compile_definitions(ENABLE_OPENGL)
 endif()
 
 if (ENABLE_METAL)
     include_directories(${CMAKE_SOURCE_DIR}/dependencies/metal-cpp)
 
-    add_definitions(-DENABLE_METAL=1)
+    add_compile_definitions(ENABLE_METAL)
 endif()
 
 if (ENABLE_DISCORD_RPC)
@@ -278,7 +297,6 @@ if (ENABLE_DISCORD_RPC)
 endif()
 
 if (ENABLE_HIDAPI)
-	find_package(hidapi REQUIRED)
 	set(SUPPORTS_WIIMOTE ON)
 	add_compile_definitions(HAS_HIDAPI)
 endif ()
@@ -322,7 +340,7 @@ if(CEMU_ARCHITECTURE MATCHES "(aarch64)|(AARCH64)|(arm64)|(ARM64)")
 	add_subdirectory("dependencies/xbyak_aarch64" EXCLUDE_FROM_ALL)
 endif()
 
-find_package(ZArchive)
+find_package(ZArchive QUIET)
 if (NOT ZArchive_FOUND)
 	add_subdirectory("dependencies/ZArchive" EXCLUDE_FROM_ALL)
 endif()

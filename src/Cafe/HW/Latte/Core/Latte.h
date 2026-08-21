@@ -70,6 +70,20 @@ struct LatteGPUState_t
 
 extern LatteGPUState_t LatteGPUState;
 
+// drawcall context
+
+struct LatteDrawcallContext
+{
+	bool isFirst{}; // first _execute() in current sequence
+	// these are only valid if isFirst is false:
+	mutable uint32 vertexBufferDirtyMask{}; // mask of vertex buffer indices which have been modified since last draw execute
+	uint32 vsUniformBufferDirtyMask{}; // mask of uniform buffer indices which have been modified (changed address or size) since last draw execute
+	uint32 psUniformBufferDirtyMask{};
+	uint32 gsUniformBufferDirtyMask{};
+	bool aluConstVSDirty{};
+	bool aluConstPSDirty{};
+};
+
 // texture
 
 #include "Cafe/HW/Latte/Core/LatteTexture.h"
@@ -98,10 +112,6 @@ void LatteRenderTarget_itHLECopyColorBufferToScanBuffer(MPTR colorBufferPtr, uin
 
 void LatteRenderTarget_unloadAll();
 
-// surface copy
-
-void LatteSurfaceCopy_copySurfaceNew(MPTR srcPhysAddr, MPTR srcMipAddr, uint32 srcSwizzle, Latte::E_GX2SURFFMT srcSurfaceFormat, sint32 srcWidth, sint32 srcHeight, sint32 srcDepth, uint32 srcPitch, sint32 srcSlice, Latte::E_DIM srcDim, Latte::E_HWTILEMODE srcTilemode, sint32 srcAA, sint32 srcLevel, MPTR dstPhysAddr, MPTR dstMipAddr, uint32 dstSwizzle, Latte::E_GX2SURFFMT dstSurfaceFormat, sint32 dstWidth, sint32 dstHeight, sint32 dstDepth, uint32 dstPitch, sint32 dstSlice, Latte::E_DIM dstDim, Latte::E_HWTILEMODE dstTilemode, sint32 dstAA, sint32 dstLevel);
-
 // texture cache
 
 void LatteTC_Init();
@@ -129,6 +139,7 @@ void LatteTextureReadback_StartTransfer(LatteTextureView* textureView);
 bool LatteTextureReadback_Update(bool forceStart = false);
 void LatteTextureReadback_NotifyTextureDeletion(LatteTexture* texture);
 void LatteTextureReadback_UpdateFinishedTransfers(bool forceFinish);
+bool LatteTextureReadback_ReadbackToLinearBlocking(LatteTextureView* sourceView, uint8* dstPtr, uint32 dstWidth, uint32 dstHeight, uint32 dstPitch);
 
 // query
 
@@ -157,8 +168,8 @@ void LatteCP_ProcessRingbuffer();
 
 // buffer cache
 
-bool LatteBufferCache_Sync(uint32 minIndex, uint32 maxIndex, uint32 baseInstance, uint32 instanceCount);
-void LatteBufferCache_LoadRemappedUniforms(struct LatteDecompilerShader* shader, float* uniformData);
+void LatteBufferCache_Sync(uint32 maxIndex, uint32 baseInstance, uint32 instanceCount, uint32 attribBufferDirtyMask, uint32 vsUniformBufferDirtyMask, uint32 psUniformBufferDirtyMask, uint32 gsUniformBufferDirtyMask, uint8& stageUniformModifiedMask, bool isIncremental = false);
+bool LatteBufferCache_LoadRemappedUniforms(struct LatteDecompilerShader* shader, float* uniformData, bool aluConstDirty, uint32 uniformBufferDirtyMask);
 
 void LatteRenderTarget_updateViewport();
 

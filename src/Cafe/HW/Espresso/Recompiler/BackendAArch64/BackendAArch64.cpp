@@ -1608,11 +1608,13 @@ bool PPCRecompiler_generateAArch64Code(struct PPCRecFunction_t* PPCRecFunction, 
 		return false;
 	}
 
+	const size_t codeSize = aarch64GenContext.getSize();
 	if (!aarch64GenContext.processAllJumps())
 	{
 		cemuLog_log(LogType::Recompiler, "PPCRecompiler_generateAArch64Code(): some jumps exceeded the +/-128MB offset.");
 		return false;
 	}
+	aarch64GenContext.setSize(codeSize);
 
 	aarch64GenContext.readyRE();
 

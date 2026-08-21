@@ -33,7 +33,7 @@ extern bool hasValidFramebufferAttached;
 
 float supportBufferData[512 * 4];
 
-// Defined in the OpenGL renderer
+// Defined in the Common renderer
 void LatteDraw_handleSpecialState8_clearAsDepth();
 
 std::vector<MetalRenderer::DeviceInfo> MetalRenderer::GetDevices()
@@ -50,7 +50,7 @@ std::vector<MetalRenderer::DeviceInfo> MetalRenderer::GetDevices()
     return result;
 }
 
-MetalRenderer::MetalRenderer()
+MetalRenderer::MetalRenderer() : Renderer(RendererAPI::Metal)
 {
     // Options
 
@@ -745,6 +745,31 @@ void MetalRenderer::texture_clearSlice(LatteTexture* hostTexture, sint32 sliceIn
     }
 }
 
+MTL::BlitOption GetBlitOptionForTexture(const LatteTextureMtl* texture) {
+    switch (texture->GetTexture()->pixelFormat()) {
+        case MTL::PixelFormatDepth16Unorm:
+        case MTL::PixelFormatDepth32Float:
+            return MTL::BlitOptionDepthFromDepthStencil;
+
+        case MTL::PixelFormatStencil8:
+            return MTL::BlitOptionStencilFromDepthStencil;
+
+        case MTL::PixelFormatDepth24Unorm_Stencil8:
+        case MTL::PixelFormatDepth32Float_Stencil8:
+            // Can't copy both in one call — caller must specify.
+            // Default to depth
+            return MTL::BlitOptionDepthFromDepthStencil;
+
+        default:
+            return MTL::BlitOptionNone;
+    }
+}
+
+bool IsDepthStencilFormat(MTL::PixelFormat format) {
+    return format == MTL::PixelFormatDepth24Unorm_Stencil8 ||
+           format == MTL::PixelFormatDepth32Float_Stencil8;
+}
+
 // TODO: do a cpu copy on Apple Silicon?
 void MetalRenderer::texture_loadSlice(LatteTexture* hostTexture, sint32 width, sint32 height, sint32 depth, void* pixelData, sint32 sliceIndex, sint32 mipIndex, uint32 compressedImageSize)
 {
@@ -774,9 +799,14 @@ void MetalRenderer::texture_loadSlice(LatteTexture* hostTexture, sint32 width, s
     memcpy(allocation.memPtr, pixelData, compressedImageSize);
     bufferAllocator.FlushReservation(allocation);
 
-    // TODO: specify blit options when copying to a depth stencil texture?
     // Copy the data from the temporary buffer to the texture
-    blitCommandEncoder->copyFromBuffer(allocation.mtlBuffer, allocation.bufferOffset, bytesPerRow, 0, MTL::Size(width, height, 1), textureMtl->GetTexture(), sliceIndex, mipIndex, MTL::Origin(0, 0, offsetZ));
+	if (IsDepthStencilFormat(textureMtl->GetTexture()->pixelFormat())) {
+        // Metal doesn't allow copying depth and stencil data at the same time, so we need to do two copies for combined depth/stencil formats
+        blitCommandEncoder->copyFromBuffer(allocation.mtlBuffer, allocation.bufferOffset, bytesPerRow, 0, MTL::Size(width, height, 1), textureMtl->GetTexture(), sliceIndex, mipIndex, MTL::Origin(0, 0, offsetZ), MTL::BlitOptionDepthFromDepthStencil);
+        blitCommandEncoder->copyFromBuffer(allocation.mtlBuffer, allocation.bufferOffset, bytesPerRow, 0, MTL::Size(width, height, 1), textureMtl->GetTexture(), sliceIndex, mipIndex, MTL::Origin(0, 0, offsetZ), MTL::BlitOptionStencilFromDepthStencil);
+    } else {
+        blitCommandEncoder->copyFromBuffer(allocation.mtlBuffer, allocation.bufferOffset, bytesPerRow, 0, MTL::Size(width, height, 1), textureMtl->GetTexture(), sliceIndex, mipIndex, MTL::Origin(0, 0, offsetZ), GetBlitOptionForTexture(textureMtl));
+    }
     //}
 }
 
@@ -1067,7 +1097,7 @@ void MetalRenderer::draw_beginSequence()
 		m_state.m_skipDrawSequence = true;
 }
 
-void MetalRenderer::draw_execute(uint32 baseVertex, uint32 baseInstance, uint32 instanceCount, uint32 count, MPTR indexDataMPTR, Latte::LATTE_VGT_DMA_INDEX_TYPE::E_INDEX_TYPE indexType, bool isFirst)
+void MetalRenderer::draw_execute(uint32 baseVertex, uint32 baseInstance, uint32 instanceCount, uint32 count, MPTR indexDataMPTR, Latte::LATTE_VGT_DMA_INDEX_TYPE::E_INDEX_TYPE indexType, const LatteDrawcallContext& drawcallContext)
 {
     if (m_state.m_skipDrawSequence)
 	{
@@ -1142,10 +1172,9 @@ void MetalRenderer::draw_execute(uint32 baseVertex, uint32 baseInstance, uint32 
 	// Index buffer
 	Renderer::INDEX_TYPE hostIndexType;
 	uint32 hostIndexCount;
-	uint32 indexMin = 0;
 	uint32 indexMax = 0;
 	Renderer::IndexAllocation indexAllocation;
-	LatteIndices_decode(memory_getPointerFromVirtualOffset(indexDataMPTR), indexType, count, primitiveMode, indexMin, indexMax, hostIndexType, hostIndexCount, indexAllocation);
+	LatteIndices_decode(memory_getPointerFromVirtualOffset(indexDataMPTR), indexType, count, primitiveMode, indexMax, hostIndexType, hostIndexCount, indexAllocation);
 	auto indexAllocationMtl = static_cast<MetalSynchronizedHeapAllocator::AllocatorReservation*>(indexAllocation.rendererInternal);
 
 	// Buffer cache
@@ -1164,7 +1193,8 @@ void MetalRenderer::draw_execute(uint32 baseVertex, uint32 baseInstance, uint32 
 	{
     	// synchronize vertex and uniform cache and update buffer bindings
     	// We need to call this before getting the render command encoder, since it can cause buffer copies
-    	LatteBufferCache_Sync(indexMin + baseVertex, indexMax + baseVertex, baseInstance, instanceCount);
+		uint8 stageUniformModifiedMask = 0;
+    	LatteBufferCache_Sync(indexMax + baseVertex, baseInstance, instanceCount, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, stageUniformModifiedMask);
 	}
 
 	// Render pass
@@ -1690,7 +1720,9 @@ MTL::CommandBuffer* MetalRenderer::GetCommandBuffer()
         // Debug
         //m_commandQueue->insertDebugCaptureBoundary();
 
-	    MTL::CommandBuffer* mtlCommandBuffer = m_commandQueue->commandBuffer();
+        auto pool = NS::AutoreleasePool::alloc()->init();
+	    MTL::CommandBuffer* mtlCommandBuffer = m_commandQueue->commandBuffer()->retain();
+		pool->release();
 		m_currentCommandBuffer = {mtlCommandBuffer};
 
 		// Wait for the previous command buffer
@@ -1717,7 +1749,9 @@ MTL::RenderCommandEncoder* MetalRenderer::GetTemporaryRenderCommandEncoder(MTL::
 
     auto commandBuffer = GetCommandBuffer();
 
-    auto renderCommandEncoder = commandBuffer->renderCommandEncoder(renderPassDescriptor);
+    auto pool = NS::AutoreleasePool::alloc()->init();
+    auto renderCommandEncoder = commandBuffer->renderCommandEncoder(renderPassDescriptor)->retain();
+    pool->release();
 #ifdef CEMU_DEBUG_ASSERT
     renderCommandEncoder->setLabel(GetLabel("Temporary render command encoder", renderCommandEncoder));
 #endif
@@ -1780,7 +1814,9 @@ MTL::RenderCommandEncoder* MetalRenderer::GetRenderCommandEncoder(bool forceRecr
 
     auto commandBuffer = GetCommandBuffer();
 
-    auto renderCommandEncoder = commandBuffer->renderCommandEncoder(m_state.m_activeFBO.m_fbo->GetRenderPassDescriptor());
+    auto pool = NS::AutoreleasePool::alloc()->init();
+    auto renderCommandEncoder = commandBuffer->renderCommandEncoder(m_state.m_activeFBO.m_fbo->GetRenderPassDescriptor())->retain();
+    pool->release();
 #ifdef CEMU_DEBUG_ASSERT
     renderCommandEncoder->setLabel(GetLabel("Render command encoder", renderCommandEncoder));
 #endif
@@ -1813,7 +1849,9 @@ MTL::ComputeCommandEncoder* MetalRenderer::GetComputeCommandEncoder()
 
     auto commandBuffer = GetCommandBuffer();
 
-    auto computeCommandEncoder = commandBuffer->computeCommandEncoder();
+    auto pool = NS::AutoreleasePool::alloc()->init();
+    auto computeCommandEncoder = commandBuffer->computeCommandEncoder()->retain();
+    pool->release();
     m_commandEncoder = computeCommandEncoder;
     m_encoderType = MetalEncoderType::Compute;
 
@@ -1836,7 +1874,9 @@ MTL::BlitCommandEncoder* MetalRenderer::GetBlitCommandEncoder()
 
     auto commandBuffer = GetCommandBuffer();
 
-    auto blitCommandEncoder = commandBuffer->blitCommandEncoder();
+    auto pool = NS::AutoreleasePool::alloc()->init();
+    auto blitCommandEncoder = commandBuffer->blitCommandEncoder()->retain();
+    pool->release();
     m_commandEncoder = blitCommandEncoder;
     m_encoderType = MetalEncoderType::Blit;
 
@@ -1986,7 +2026,7 @@ void MetalRenderer::BindStageResources(MTL::RenderCommandEncoder* renderCommandE
     sint32 textureCount = shader->resourceMapping.getTextureCount();
 	for (int i = 0; i < textureCount; ++i)
 	{
-		const auto relative_textureUnit = shader->resourceMapping.getTextureUnitFromBindingPoint(i);
+		const auto relative_textureUnit = shader->resourceMapping.getRelativeTextureUnitFromRelativeBindingPoint(i);
 		auto hostTextureUnit = relative_textureUnit;
 
 		// Don't bind textures that are accessed with a framebuffer fetch
@@ -2128,7 +2168,7 @@ void MetalRenderer::BindStageResources(MTL::RenderCommandEncoder* renderCommandE
 		}
 		if (shader->uniform.loc_remapped >= 0)
 		{
-			LatteBufferCache_LoadRemappedUniforms(shader, GET_UNIFORM_DATA_PTR(shader->uniform.loc_remapped));
+			LatteBufferCache_LoadRemappedUniforms(shader, GET_UNIFORM_DATA_PTR(shader->uniform.loc_remapped), true, (1<<LATTE_NUM_MAX_UNIFORM_BUFFERS)-1);
 		}
 		if (shader->uniform.loc_uniformRegister >= 0)
 		{

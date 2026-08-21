@@ -11,7 +11,10 @@
       "default-features": false
     },
     "rapidjson",
-    "sdl2",
+    {
+      "name": "sdl3",
+      "default-features": false
+    },
     "boost-tokenizer",
     "boost-container",
     "boost-context",
@@ -26,8 +29,10 @@
     "boost-property-tree",
     "boost-static-string",
     "boost-random",
-    "fmt",
-    "hidapi",
+    {
+      "name": "fmt",
+      "version>=": "12.1.0"
+    },
     "libpng",
     "glm",
     {
@@ -62,7 +67,13 @@
     "gui": {
       "description": "wxWidgets desktop UI (not built by the libretro core)",
       "dependencies": [
-        "wxwidgets"
+        {
+          "name": "wxwidgets",
+          "default-features": false,
+          "features": [
+            "debug-support"
+          ]
+        }
       ]
     }
   },
@@ -72,12 +83,12 @@
       "version": "15.1.0"
     },
     {
-      "name": "sdl2",
-      "version": "2.32.8"
+      "name": "sdl3",
+      "version": "3.4.10"
     },
     {
       "name": "wxwidgets",
-      "version": "3.3.1"
+      "version": "3.3.3"
     }
   ]
 }

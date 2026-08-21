@@ -42,6 +42,7 @@ enum
 	OP_FORM_OP3_A_IMM, // rA, rS, rB is imm - has RC bit
 	OP_FORM_BRANCH_S16,
 	OP_FORM_BRANCH_S24,
+	OP_FORM_BRANCH_BCCLR, // conditional BLR
 	OP_FORM_OP2_D_HSIMM, // rD, signed imm shifted imm (high half)
 	OP_FORM_RLWINM,
 	OP_FORM_RLWINM_EXTENDED, // alternative mnemonics of rlwinm
@@ -306,6 +307,9 @@ const char* ppcAssembler_getInstructionName(uint32 ppcAsmOp)
 	case PPCASM_OP_MTLR: return "MTLR";
 	case PPCASM_OP_MFCTR: return "MFCTR";
 	case PPCASM_OP_MTCTR: return "MTCTR";
+	case PPCASM_OP_MFCR: return "MFCR";
+	case PPCASM_OP_MTCRF: return "MTCRF";
+	case PPCASM_OP_MCRF: return "MCRF";
 
 	case PPCASM_OP_CROR: return "CROR";
 	case PPCASM_OP_CRNOR: return "CRNOR";
@@ -543,6 +547,40 @@ private:
 	uint8 m_bitPos;
 };
 
+class EncodedOperand_CR
+{
+public:
+	EncodedOperand_CR(uint8 bitPos) : m_bitPos(bitPos) {}
+
+	bool AssembleOperand(PPCAssemblerContext* assemblerCtx, PPCInstructionDef* iDef, uint32& opcode, size_t index)
+	{
+		if (index >= assemblerCtx->listOperandStr.size())
+		{
+			ppcAssembler_setError(assemblerCtx->ctx, "Missing operand");
+			return false;
+		}
+		sint32 crIndex = _parseRegIndex(assemblerCtx->listOperandStr[index].str, "cr");
+		if (crIndex < 0 || crIndex >= 8)
+		{
+			ppcAssembler_setError(assemblerCtx->ctx, fmt::format("Operand \"{}\" is not a valid CR field (expected cr0 - cr7)", assemblerCtx->listOperandStr[index].str));
+			return false;
+		}
+		opcode &= ~((uint32)0x1F << m_bitPos);
+		opcode |= ((uint32)(crIndex << 2) << m_bitPos);
+		return true;
+	}
+
+	void DisassembleOperand(PPCDisassembledInstruction* disInstr, PPCInstructionDef* iDef, const uint32 opcode, size_t index)
+	{
+		uint32 crField = (opcode >> m_bitPos) & 0x1F;
+		disInstr->operandMask |= (1 << index);
+		disInstr->operand[index].type = PPCASM_OPERAND_TYPE_CR;
+		disInstr->operand[index].registerIndex = crField >> 2;
+	}
+private:
+	uint8 m_bitPos;
+};
+
 class EncodedOperand_SPR
 {
 public:
@@ -632,12 +670,6 @@ public:
 		std::string_view svExpressionPart(startPtr, endPtr - startPtr);
 		std::string_view svRegPart(memoryRegBegin, memoryRegEnd - memoryRegBegin);
 		sint32 memGpr = _parseRegIndex(svRegPart, "r");
-		//if (_ppcAssembler_parseRegister(svRegPart, "r", memGpr) == false || (memGpr < 0 || memGpr >= 32))
-		//{
-		//	sprintf(_assemblerErrorMessageDepr, "\'%.*s\' is not a valid GPR", (int)(memoryRegEnd - memoryRegBegin), memoryRegBegin);
-		//	ppcAssembler_setError(internalCtx.ctx, _assemblerErrorMessageDepr);
-		//	return false;
-		//}
 		if (memGpr < 0 || memGpr >= 32)
 		{
 			ppcAssembler_setError(assemblerCtx->ctx, fmt::format("Memory operand register \"{}\" is not a valid GPR (expected r0 - r31)", svRegPart));
@@ -1035,7 +1067,7 @@ struct PPCInstructionDef
 	uint32 compareBits;
 	bool(*extraCheck)(uint32 opcode); // used for unique criteria (e.g. SRWI checks SH/mask) -> Replaced by constraints
 
-	std::array<std::variant<EncodedOperand_None, EncodedOperand_GPR<false>, EncodedOperand_GPR<true>, EncodedOperand_FPR, EncodedOperand_SPR, EncodedOperand_IMM, EncodedOperand_U5Reverse, EncodedOperand_MemLoc>, 4> encodedOperands{}; // note: The default constructor of std::variant will default-construct the first type (which we want to be EncodedOperand_None)
+	std::array<std::variant<EncodedOperand_None, EncodedOperand_GPR<false>, EncodedOperand_GPR<true>, EncodedOperand_FPR, EncodedOperand_CR, EncodedOperand_SPR, EncodedOperand_IMM, EncodedOperand_U5Reverse, EncodedOperand_MemLoc>, 4> encodedOperands{}; // note: The default constructor of std::variant will default-construct the first type (which we want to be EncodedOperand_None)
 	std::array<std::variant<EncodedConstraint_None, EncodedConstraint_MirrorRegister, EncodedConstraint_MirrorReverseU5, EncodedConstraint_FixedRegister, EncodedConstraint_FixedSPR, EncodedConstraint_CheckSignBit>, 3> constraints{};
 };
 
@@ -1089,12 +1121,12 @@ PPCInstructionDef ppcInstructionTable[] =
 
 	{PPCASM_OP_BLR, 0, 19, 16, OPC_NONE, OP_FORM_NO_OPERAND, FLG_DEFAULT, C_MASK_BO | C_MASK_LK, C_BIT_BO_ALWAYS, nullptr},
 
-	{PPCASM_OP_BLTLR, 0, 19, 16, OPC_NONE, OP_FORM_NO_OPERAND, FLG_DEFAULT, C_MASK_BO | C_MASK_BI_CRBIT | C_MASK_LK, C_BIT_BO_TRUE | C_BITS_BI_LT, nullptr}, // less
-	{PPCASM_OP_BGTLR, 0, 19, 16, OPC_NONE, OP_FORM_NO_OPERAND, FLG_DEFAULT, C_MASK_BO | C_MASK_BI_CRBIT | C_MASK_LK, C_BIT_BO_TRUE | C_BITS_BI_GT, nullptr}, // greater
-	{PPCASM_OP_BEQLR, 0, 19, 16, OPC_NONE, OP_FORM_NO_OPERAND, FLG_DEFAULT, C_MASK_BO | C_MASK_BI_CRBIT | C_MASK_LK, C_BIT_BO_TRUE | C_BITS_BI_EQ, nullptr}, // equal
-	{PPCASM_OP_BLELR, 0, 19, 16, OPC_NONE, OP_FORM_NO_OPERAND, FLG_DEFAULT, C_MASK_BO | C_MASK_BI_CRBIT | C_MASK_LK, C_BIT_BO_FALSE | C_BITS_BI_GT, nullptr}, // less or equal (not greater)
-	{PPCASM_OP_BGELR, 0, 19, 16, OPC_NONE, OP_FORM_NO_OPERAND, FLG_DEFAULT, C_MASK_BO | C_MASK_BI_CRBIT | C_MASK_LK, C_BIT_BO_FALSE | C_BITS_BI_LT, nullptr}, // greater or equal (not less)
-	{PPCASM_OP_BNELR, 0, 19, 16, OPC_NONE, OP_FORM_NO_OPERAND, FLG_DEFAULT, C_MASK_BO | C_MASK_BI_CRBIT | C_MASK_LK, C_BIT_BO_FALSE | C_BITS_BI_EQ, nullptr}, // not equal
+	{PPCASM_OP_BLTLR, 0, 19, 16, OPC_NONE, OP_FORM_BRANCH_BCCLR, FLG_DEFAULT, C_MASK_BO | C_MASK_BI_CRBIT | C_MASK_LK, C_BIT_BO_TRUE | C_BITS_BI_LT, nullptr}, // less
+	{PPCASM_OP_BGTLR, 0, 19, 16, OPC_NONE, OP_FORM_BRANCH_BCCLR, FLG_DEFAULT, C_MASK_BO | C_MASK_BI_CRBIT | C_MASK_LK, C_BIT_BO_TRUE | C_BITS_BI_GT, nullptr}, // greater
+	{PPCASM_OP_BEQLR, 0, 19, 16, OPC_NONE, OP_FORM_BRANCH_BCCLR, FLG_DEFAULT, C_MASK_BO | C_MASK_BI_CRBIT | C_MASK_LK, C_BIT_BO_TRUE | C_BITS_BI_EQ, nullptr}, // equal
+	{PPCASM_OP_BLELR, 0, 19, 16, OPC_NONE, OP_FORM_BRANCH_BCCLR, FLG_DEFAULT, C_MASK_BO | C_MASK_BI_CRBIT | C_MASK_LK, C_BIT_BO_FALSE | C_BITS_BI_GT, nullptr}, // less or equal (not greater)
+	{PPCASM_OP_BGELR, 0, 19, 16, OPC_NONE, OP_FORM_BRANCH_BCCLR, FLG_DEFAULT, C_MASK_BO | C_MASK_BI_CRBIT | C_MASK_LK, C_BIT_BO_FALSE | C_BITS_BI_LT, nullptr}, // greater or equal (not less)
+	{PPCASM_OP_BNELR, 0, 19, 16, OPC_NONE, OP_FORM_BRANCH_BCCLR, FLG_DEFAULT, C_MASK_BO | C_MASK_BI_CRBIT | C_MASK_LK, C_BIT_BO_FALSE | C_BITS_BI_EQ, nullptr}, // not equal
 
 	{PPCASM_OP_ISYNC, 0, 19, 150, OPC_NONE, OP_FORM_NO_OPERAND, FLG_DEFAULT, 0, 0, nullptr},
 
@@ -1197,6 +1229,9 @@ PPCInstructionDef ppcInstructionTable[] =
 	{PPCASM_OP_MTLR, 0, 31, 467, OPC_NONE, OP_FORM_DYNAMIC, FLG_DEFAULT, 0, 0, nullptr, {EncodedOperand_GPR(21)}, {EncodedConstraint_FixedSPR(8)} },
 	{PPCASM_OP_MFCTR, 0, 31, 339, OPC_NONE, OP_FORM_DYNAMIC, FLG_DEFAULT, 0, 0, nullptr, {EncodedOperand_GPR(21)}, {EncodedConstraint_FixedSPR(9)} },
 	{PPCASM_OP_MTCTR, 0, 31, 467, OPC_NONE, OP_FORM_DYNAMIC, FLG_DEFAULT, 0, 0, nullptr, {EncodedOperand_GPR(21)}, {EncodedConstraint_FixedSPR(9)} },
+	{PPCASM_OP_MFCR,  0, 31, 19,  OPC_NONE, OP_FORM_DYNAMIC, FLG_DEFAULT, 0, 0, nullptr, {EncodedOperand_GPR(21)}},
+	{PPCASM_OP_MTCRF, 0, 31, 144, OPC_NONE, OP_FORM_DYNAMIC, FLG_DEFAULT, 0, 0, nullptr, {EncodedOperand_IMM(12, 8, false), EncodedOperand_GPR(21)}},
+	{PPCASM_OP_MCRF,  0, 19, 0,   OPC_NONE, OP_FORM_DYNAMIC, FLG_DEFAULT, 0, 0, nullptr, {EncodedOperand_CR(21), EncodedOperand_CR(16)}},
 
 	{PPCASM_OP_ADD, 0, 31, 266, OPC_NONE, OP_FORM_DYNAMIC, FLG_DEFAULT, C_MASK_RC, 0, nullptr, {EncodedOperand_GPR(21), EncodedOperand_GPR(16), EncodedOperand_GPR(11)} },
 	{PPCASM_OP_ADD_, 0, 31, 266, OPC_NONE, OP_FORM_DYNAMIC, FLG_DEFAULT, C_MASK_RC, C_BIT_RC, nullptr, {EncodedOperand_GPR(21), EncodedOperand_GPR(16), EncodedOperand_GPR(11)} },
@@ -1603,6 +1638,18 @@ void ppcAssembler_disassemble(uint32 virtualAddress, uint32 opcode, PPCDisassemb
 			// operand 0
 			disInstr->operand[0].type = PPCASM_OPERAND_TYPE_CIMM;
 			disInstr->operand[0].immU32 = dest;
+		}
+		else if (iDef->instructionForm == OP_FORM_BRANCH_BCCLR)
+		{
+			uint32 BO, BI, BD;
+			PPC_OPC_TEMPL_XL(opcode, BO, BI, BD);
+			uint32 crIndex = BI/4;
+			if (crIndex != 0) // cr0 is implicit
+			{
+				disInstr->operandMask |= operand0Bit;
+				disInstr->operand[0].type = PPCASM_OPERAND_TYPE_CR;
+				disInstr->operand[0].registerIndex = crIndex;
+			}
 		}
 		else if (iDef->instructionForm == OP_FORM_OP2_D_HSIMM)
 		{
@@ -2286,10 +2333,74 @@ bool _ppcAssembler_emitDataDirective(PPCAssemblerContext& internalInfo, ASM_DATA
 				ppcAssembler_setError(internalInfo.ctx, "String constants must end with a quotation mark. Example: \"text\"");
 				return false;
 			}
+			expressionStr.remove_prefix(1);
+			expressionStr.remove_suffix(1);
+			// unescape C-style characters
+			std::vector<uint8> stringData;
+			stringData.reserve(expressionStr.size());
+			while (!expressionStr.empty())
+			{
+				char c = expressionStr.front();
+				expressionStr.remove_prefix(1);
+				if (c != '\\')
+				{
+					stringData.push_back(c);
+					continue;
+				}
+				if (expressionStr.empty())
+					break;
+				c = expressionStr.front();
+				expressionStr.remove_prefix(1);
+				if (c >= 'A' && c <= 'Z')
+					c -= ('A' - 'a');
+				if (c == '\\')
+					stringData.push_back(c);
+				else if (c == 'n')
+					stringData.push_back('\n');
+				else if (c == 't')
+					stringData.push_back('\t');
+				else if (c == 'r')
+					stringData.push_back('\r');
+				else if (c == '\"')
+					stringData.push_back('\"');
+				else if (c == '\'')
+					stringData.push_back('\'');
+				else if (c == 'x')
+				{
+					uint32 value = 0;
+					bool hasDigits = false;
+					while (!expressionStr.empty())
+					{
+						char h = expressionStr.front();
+						uint32 digit;
+						if (h >= '0' && h <= '9')
+							digit = h - '0';
+						else if (h >= 'a' && h <= 'f')
+							digit = h - 'a' + 10;
+						else if (h >= 'A' && h <= 'F')
+							digit = h - 'A' + 10;
+						else
+							break;
+						hasDigits = true;
+						value = (value << 4) | digit;
+						expressionStr.remove_prefix(1);
+					}
+					if (hasDigits)
+						stringData.push_back((uint8)value);
+					else
+					{
+						ppcAssembler_setError(internalInfo.ctx, "String contains invalid hex escape sequence");
+						return false;
+					}
+					break;
+				}
+				else
+					stringData.push_back('\\'); // output as backward slash if unhandled
+			}
 			// write string bytes + null-termination character
-			size_t strConstantLength = expressionStr.size() - 2;
-			internalInfo.ctx->outputData.insert(internalInfo.ctx->outputData.end(), expressionStr.data() + 1, expressionStr.data() + 1 + strConstantLength);
+			internalInfo.ctx->outputData.insert(internalInfo.ctx->outputData.end(), stringData.data(), stringData.data() + stringData.size());
 			internalInfo.ctx->outputData.emplace_back(0);
+			writeIndex = internalInfo.ctx->outputData.size();
 			continue;
 		}
 		// numeric constants
@@ -2422,6 +2533,16 @@ bool ppcAssembler_assembleSingleInstruction(char const* text, PPCAssemblerInOut*
 	internalInfo.listOperandStr.clear();
 
 	bool isInString = false;
+	auto isEscaped = [](const char* operandStartPtr, const char* ptr)
+	{
+		size_t backslashCount = 0;
+		while (ptr > operandStartPtr && ptr[-1] == '\\')
+		{
+			backslashCount++;
+			ptr--;
+		}
+		return (backslashCount & 1) != 0;
+	};
 
 	while (currentPtr < endPtr)
 	{
@@ -2430,7 +2551,7 @@ bool ppcAssembler_assembleSingleInstruction(char const* text, PPCAssemblerInOut*
 		// find end of operand
 		while (currentPtr < endPtr)
 		{
-			if (*currentPtr == '"')
+			if (*currentPtr == '"' && !isEscaped(startPtr, currentPtr))
 				isInString=!isInString;
 
 			if (*currentPtr == ',' && !isInString)
@@ -2789,6 +2910,16 @@ bool ppcAssembler_assembleSingleInstruction(char const* text, PPCAssemblerInOut*
 	{
 		if (_ppcAssembler_processBranchOperandS26(internalInfo, 0) == false)
 			return false;
+	}
+	else if (iDef->instructionForm == OP_FORM_BRANCH_BCCLR)
+	{
+		// check for implicit cr
+		sint32 crIndex = 0;
+		if (internalInfo.listOperandStr.size() >= 1)
+		{
+			if (_ppcAssembler_processCROperand(internalInfo, 0, 18, false) == false)
+				return false;
+		}
 	}
 	else if (iDef->instructionForm == OP_FORM_XL_CR)
 	{
@@ -3500,6 +3631,24 @@ void ppcAsmTestDisassembler()
 	_testAsm(0x6fe9ff00, "xoris     r9, r31, 0xFF00");
 	_testAsm(0x6fe9ffff, "xoris     r9, r31, 0xFFFF");
 
+	// mfcr / mtcrf
+	_testAsm(0x7D800026, "mfcr r12");
+	disassemble(0x7D800026, PPCASM_OP_MFCR);
+	checkOperandMask(true);
+	checkOpGPR(0, 12);
+
+	_testAsm(0x7D808120, "mtcrf 8, r12");
+	disassemble(0x7D808120, PPCASM_OP_MTCRF);
+	checkOperandMask(true, true);
+	checkOpImm(0, 8);
+	checkOpGPR(1, 12);
+
+	_testAsm(0x4E1C0000, "mcrf cr4, cr7");
+	disassemble(0x4E1C0000, PPCASM_OP_MCRF);
+	checkOperandMask(true, true);
+	checkOpCR(0, 4);
+	checkOpCR(1, 7);
+
 	// data directives
 	_testAsmArray({ 0x00, 0x00, 0x00, 0x01 }, ".int 1");
 	_testAsmArray({ 0x00, 0x00, 0x00, 0x01, 0x11, 0x22, 0x33, 0x44 }, ".int 1, 0x11223344");
@@ -3507,6 +3656,9 @@ void ppcAsmTestDisassembler()
 	_testAsmArray({ 0x7f }, ".byte 0x7f");
 	_testAsmArray({ 0x74, 0x65, 0x73, 0x74, 0x00 }, ".byte \"test\"");
 	_testAsmArray({ 0x41, 0x42, 0x43, 0x00, 0x74, 0x65, 0x73, 0x74, 0x00 }, ".byte \"ABC\", \"test\"");
+	_testAsmArray({ 0x68, 0x65, 0x6c, 0x6c, 0x6f, 0x22, 0x77, 0x6f, 0x72, 0x6c, 0x64, 0x00, 0x00 }, R"(.byte "hello\"world", 0)");
+	_testAsmArray({ 0x61, 0x5c, 0x00, 0x00 }, R"(.byte "a\\", 0)");
+	_testAsmArray({ 0x61, 0x5c, 0x22, 0x62, 0x00, 0x00 }, R"(.byte "a\\\"b", 0)");
 
 }
 

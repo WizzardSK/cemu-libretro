@@ -17,6 +17,7 @@
 #include "Cafe/OS/libs/gx2/GX2.h"
 
 #include "Cafe/GameProfile/GameProfile.h"
+#include "HW/Latte/Renderer/RendererCore.h"
 #include "config/ActiveSettings.h"
 
 
@@ -52,7 +53,7 @@ struct
 	uint32 maxIndex;
 	uint32 minIndex;
 	uint8* indexData;
-	// buffer 
+	// buffer
 	GLuint glIndexCacheBuffer;
 	VirtualBufferHeap_t* indexBufferVirtualHeap;
 	uint8* mappedIndexBuffer;
@@ -371,6 +372,8 @@ void _decodeAndUploadIndexData(indexDataCacheEntry2_t* cacheEntry)
 
 void LatteDraw_cleanupAfterFrame()
 {
+	if (g_renderer->GetType() != RendererAPI::OpenGL)
+		return;
 	// drop everything from cache that is older than 30 frames
 	uint32 frameCounter = LatteGPUState.frameCounter;
 	while (indexDataCacheFirst)
@@ -523,157 +526,6 @@ void LatteDrawGL_prepareIndicesWithGPUCache(MPTR indexDataMPTR, _INDEX_TYPE inde
 	indexState.maxIndex = cacheEntry->maxIndex;
 	indexState.indexData = (uint8*)(size_t)cacheEntry->heapEntry->startOffset;
 }
-
-void LatteDraw_handleSpecialState8_clearAsDepth()
-{
-	if (LatteGPUState.contextNew.GetSpecialStateValues()[0] == 0)
-		cemuLog_logDebug(LogType::Force, "Special state 8 requires special state 0 but it is not set?");
-	// get depth buffer information
-	uint32 regDepthBuffer = LatteGPUState.contextRegister[mmDB_HTILE_DATA_BASE];
-	uint32 regDepthSize = LatteGPUState.contextRegister[mmDB_DEPTH_SIZE];
-	uint32 regDepthBufferInfo = LatteGPUState.contextRegister[mmDB_DEPTH_INFO];
-	// get format and tileMode from info reg
-	uint32 depthBufferTileMode = (regDepthBufferInfo >> 15) & 0xF;
-
-	MPTR depthBufferPhysMem = regDepthBuffer << 8;
-	uint32 depthBufferPitch = (((regDepthSize >> 0) & 0x3FF) + 1);
-	uint32 depthBufferHeight = ((((regDepthSize >> 10) & 0xFFFFF) + 1) / depthBufferPitch);
-	depthBufferPitch <<= 3;
-	depthBufferHeight <<= 3;
-	uint32 depthBufferWidth = depthBufferPitch;
-
-	sint32 sliceIndex = 0; // todo
-	sint32 mipIndex = 0;
-
-	// clear all color buffers that match the format of the depth buffer
-	sint32 searchIndex = 0;
-	bool targetFound = false;
-	while (true)
-	{
-		LatteTextureView* view = LatteTC_LookupTextureByData(depthBufferPhysMem, depthBufferWidth, depthBufferHeight, depthBufferPitch, 0, 1, sliceIndex, 1, &searchIndex);
-		if (!view)
-		{
-			// should we clear in RAM instead?
-			break;
-		}
-		sint32 effectiveClearWidth = view->baseTexture->width;
-		sint32 effectiveClearHeight = view->baseTexture->height;
-		LatteTexture_scaleToEffectiveSize(view->baseTexture, &effectiveClearWidth, &effectiveClearHeight, 0);
-
-		// hacky way to get clear color
-		float* regClearColor = (float*)(LatteGPUState.contextRegister + 0xC000 + 0); // REG_BASE_ALU_CONST
-
-		uint8 clearColor[4] = { 0 };
-		clearColor[0] = (uint8)(regClearColor[0] * 255.0f);
-		clearColor[1] = (uint8)(regClearColor[1] * 255.0f);
-		clearColor[2] = (uint8)(regClearColor[2] * 255.0f);
-		clearColor[3] = (uint8)(regClearColor[3] * 255.0f);
-
-		// todo - use fragment shader software emulation (evoke for one pixel) to determine clear color
-		// todo - dont clear entire slice, use effectiveClearWidth, effectiveClearHeight
-
-		if (g_renderer->GetType() == RendererAPI::OpenGL)
-		{
-			//cemu_assert_debug(false); // implement g_renderer->texture_clearColorSlice properly for OpenGL renderer
-			if (glClearTexSubImage)
-				glClearTexSubImage(((LatteTextureViewGL*)view)->glTexId, mipIndex, 0, 0, 0, effectiveClearWidth, effectiveClearHeight, 1, GL_RGBA, GL_UNSIGNED_BYTE, clearColor);
-		}
-		else
-		{
-			if (view->baseTexture->isDepth)
-				g_renderer->texture_clearDepthSlice(view->baseTexture, sliceIndex + view->firstSlice, mipIndex + view->firstMip, true, view->baseTexture->hasStencil, 0.0f, 0);
-			else
-				g_renderer->texture_clearColorSlice(view->baseTexture, sliceIndex + view->firstSlice, mipIndex + view->firstMip, clearColor[0], clearColor[1], clearColor[2], clearColor[3]);
-		}
-	}
-}
-
-#ifdef ENABLE_LIBRETRO
-// Convert GL_QUADS to GL_TRIANGLES for Core Profile compatibility
-// Each quad (4 vertices: 0,1,2,3) becomes 2 triangles (0,1,2) + (0,2,3)
-static void LatteDrawGL_doDrawQuadsAsTriangles(_INDEX_TYPE indexType, uint32 baseVertex, uint32 baseInstance, uint32 instanceCount, uint32 count)
-{
-	uint32 numQuads = count / 4;
-	if (numQuads == 0)
-		return;
-	uint32 triCount = numQuads * 6;
-
-	if (indexType == _INDEX_TYPE::AUTO)
-	{
-		// Non-indexed quads: generate index buffer to convert quads to triangles
-		static std::vector<uint16> triIndices;
-		triIndices.resize(triCount);
-		for (uint32 q = 0; q < numQuads; q++)
-		{
-			uint32 base = q * 4;
-			triIndices[q * 6 + 0] = base + 0;
-			triIndices[q * 6 + 1] = base + 1;
-			triIndices[q * 6 + 2] = base + 2;
-			triIndices[q * 6 + 3] = base + 0;
-			triIndices[q * 6 + 4] = base + 2;
-			triIndices[q * 6 + 5] = base + 3;
-		}
-		if (instanceCount > 1)
-			glDrawElementsInstancedBaseVertexBaseInstance(GL_TRIANGLES, triCount, GL_UNSIGNED_SHORT, triIndices.data(), instanceCount, baseVertex, baseInstance);
-		else
-			glDrawRangeElements(GL_TRIANGLES, 0, count - 1, triCount, GL_UNSIGNED_SHORT, triIndices.data());
-	}
-	else if (indexType == _INDEX_TYPE::U16_BE)
-	{
-		// Indexed quads (16-bit): map GL buffer to read indices, then remap to triangles
-		static std::vector<uint16> triIndices;
-		triIndices.resize(triCount);
-		const uint16* srcIdx = (const uint16*)glMapBuffer(GL_ELEMENT_ARRAY_BUFFER, GL_READ_ONLY);
-		if (!srcIdx)
-			return;
-		// indexState.indexData is an offset into the buffer
-		size_t byteOffset = (size_t)indexState.indexData;
-		srcIdx = (const uint16*)((const uint8*)srcIdx + byteOffset);
-		for (uint32 q = 0; q < numQuads; q++)
-		{
-			triIndices[q * 6 + 0] = srcIdx[q * 4 + 0];
-			triIndices[q * 6 + 1] = srcIdx[q * 4 + 1];
-			triIndices[q * 6 + 2] = srcIdx[q * 4 + 2];
-			triIndices[q * 6 + 3] = srcIdx[q * 4 + 0];
-			triIndices[q * 6 + 4] = srcIdx[q * 4 + 2];
-			triIndices[q * 6 + 5] = srcIdx[q * 4 + 3];
-		}
-		glUnmapBuffer(GL_ELEMENT_ARRAY_BUFFER);
-		// Unbind element buffer so GL reads from client-side array
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-		if (baseVertex != 0)
-			glDrawRangeElementsBaseVertex(GL_TRIANGLES, indexState.minIndex, indexState.maxIndex, triCount, GL_UNSIGNED_SHORT, triIndices.data(), baseVertex);
-		else
-			glDrawRangeElements(GL_TRIANGLES, indexState.minIndex, indexState.maxIndex, triCount, GL_UNSIGNED_SHORT, triIndices.data());
-		// Re-bind element buffer
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexState.glIndexCacheBuffer);
-	}
-	else if (indexType == _INDEX_TYPE::U32_BE)
-	{
-		// Indexed quads (32-bit): map GL buffer to read indices, then remap to triangles
-		static std::vector<uint32> triIndices;
-		triIndices.resize(triCount);
-		const uint32* srcIdx = (const uint32*)glMapBuffer(GL_ELEMENT_ARRAY_BUFFER, GL_READ_ONLY);
-		if (!srcIdx)
-			return;
-		size_t byteOffset = (size_t)indexState.indexData;
-		srcIdx = (const uint32*)((const uint8*)srcIdx + byteOffset);
-		for (uint32 q = 0; q < numQuads; q++)
-		{
-			triIndices[q * 6 + 0] = srcIdx[q * 4 + 0];
-			triIndices[q * 6 + 1] = srcIdx[q * 4 + 1];
-			triIndices[q * 6 + 2] = srcIdx[q * 4 + 2];
-			triIndices[q * 6 + 3] = srcIdx[q * 4 + 0];
-			triIndices[q * 6 + 4] = srcIdx[q * 4 + 2];
-			triIndices[q * 6 + 5] = srcIdx[q * 4 + 3];
-		}
-		glUnmapBuffer(GL_ELEMENT_ARRAY_BUFFER);
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-		glDrawRangeElementsBaseVertex(GL_TRIANGLES, indexState.minIndex, indexState.maxIndex, triCount, GL_UNSIGNED_INT, triIndices.data(), baseVertex);
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexState.glIndexCacheBuffer);
-	}
-}
-#endif
 
 void LatteDrawGL_doDraw(_INDEX_TYPE indexType, uint32 baseVertex, uint32 baseInstance, uint32 instanceCount, uint32 count)
 {
@@ -850,10 +702,6 @@ void OpenGLRenderer::_setupVertexAttributes()
 	}
 }
 
-void rectsEmulationGS_outputSingleVertex(std::string& gsSrc, LatteDecompilerShader* vertexShader, LatteShaderPSInputTable* psInputTable, sint32 vIdx);
-void rectsEmulationGS_outputGeneratedVertex(std::string& gsSrc, LatteDecompilerShader* vertexShader, LatteShaderPSInputTable* psInputTable, const char* variant);
-void rectsEmulationGS_outputVerticesCode(std::string& gsSrc, LatteDecompilerShader* vertexShader, LatteShaderPSInputTable* psInputTable, sint32 p0, sint32 p1, sint32 p2, sint32 p3, const char* variant, const LatteContextRegister& latteRegister);
-
 std::map<uint64, RendererShaderGL*> g_mapGLRectEmulationGS;
 
 RendererShaderGL* rectsEmulationGS_generateShaderGL(LatteDecompilerShader* vertexShader)
@@ -1026,7 +874,7 @@ void OpenGLRenderer::draw_genericDrawHandler(uint32 baseVertex, uint32 baseInsta
 	}
 	if (LatteGPUState.activeShaderHasError)
 	{
-		debug_printf("Skipped drawcall due to shader error\n");
+		cemuLog_logDebugOnce(LogType::Force, "Skipped drawcall due to shader error\n");
 		return;
 	}
 	// check for blacklisted shaders
@@ -1139,7 +987,8 @@ void OpenGLRenderer::draw_genericDrawHandler(uint32 baseVertex, uint32 baseInsta
 	endPerfMonProfiling(performanceMonitor.gpuTime_dcStageIndexMgr);
 
 	// synchronize vertex and uniform buffers
-	LatteBufferCache_Sync(indexState.minIndex + baseVertex, indexState.maxIndex + baseVertex, baseInstance, instanceCount);
+	uint8 stageUniformModifiedMask = 0;
+	LatteBufferCache_Sync(indexState.maxIndex + baseVertex, baseInstance, instanceCount, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, stageUniformModifiedMask);
 
 	_setupVertexAttributes();
 
@@ -1312,9 +1161,9 @@ void OpenGLRenderer::draw_beginSequence()
 	// no-op
 }
 
-void OpenGLRenderer::draw_execute(uint32 baseVertex, uint32 baseInstance, uint32 instanceCount, uint32 count, MPTR indexDataMPTR, Latte::LATTE_VGT_DMA_INDEX_TYPE::E_INDEX_TYPE indexType, bool isFirst)
+void OpenGLRenderer::draw_execute(uint32 baseVertex, uint32 baseInstance, uint32 instanceCount, uint32 count, MPTR indexDataMPTR, Latte::LATTE_VGT_DMA_INDEX_TYPE::E_INDEX_TYPE indexType, const LatteDrawcallContext& drawcallContext)
 {
-	bool isMinimal = !isFirst;
+	bool isMinimal = !drawcallContext.isFirst;
     if (isMinimal)
         draw_genericDrawHandler<true, false>(baseVertex, baseInstance, instanceCount, count, indexDataMPTR, indexType);
     else

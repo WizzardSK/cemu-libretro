@@ -503,7 +503,9 @@ static_assert(sizeof(OSThread_t) == 0x6A0);
 
 namespace coreinit
 {
+	void MapThreadExports();
 	void InitializeThread();
+
 	void InitializeConcurrency();
 
 	bool __CemuIsMulticoreMode();
@@ -625,6 +627,7 @@ namespace coreinit
 	uint32 OSSchedulerGetPpcFiberLastInstructionPointer(sint32 coreIndex);
 	uint32 OSSchedulerGetPpcFiberLastLR(sint32 coreIndex);
 	uint64 OSSchedulerGetPpcFiberInstructionHeartbeatCount(sint32 coreIndex);
+	bool OSIsSchedulerActive();
 
 	// internal
 	void __OSAddReadyThreadToRunQueue(OSThread_t* thread);

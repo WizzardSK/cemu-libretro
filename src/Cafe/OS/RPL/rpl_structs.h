@@ -113,7 +113,7 @@ typedef struct
 	/* +0x28 */ uint32be sdataBase2;
 	/* +0x2C */ uint32be ukn2C;
 	/* +0x30 */ uint32be ukn30;
-	/* +0x34 */ uint32be ukn34;
+	/* +0x34 */ uint32be flags;
 	/* +0x38 */ uint32be ukn38;
 	/* +0x3C */ uint32be ukn3C;
 	/* +0x40 */ uint32be minimumToolkitVersion;
@@ -156,6 +156,7 @@ struct RPLModule
 	MEMPTR<void> regionMappingBase_text; // base destination address for text region
 	MPTR regionMappingBase_data; // base destination address for data region
 	MPTR regionMappingBase_loaderInfo; // base destination address for loaderInfo region
+	MEMPTR<char> ppcName; // name of the module in PPC memory
 	uint8* tempRegionPtr;
 	uint32 tempRegionAllocSize;
 
@@ -164,14 +165,16 @@ struct RPLModule
 	uint32 exportFCount;
 	rplExportTableEntry_t* exportFDataPtr;
 
-	std::string moduleName2;
+	std::string moduleName;
 	
 	std::vector<rplSectionAddressEntry_t> sectionAddressTable2;
 
 	uint32 tlsStartAddress;
 	uint32 tlsEndAddress;
 	uint32 regionSize_text;
+	uint32 regionOrigAddr_text;
 	uint32 regionSize_data;
+	uint32 regionOrigAddr_data;
 	uint32 regionSize_loaderInfo;
 
 	uint32 patchCRC; // Cemuhook style module crc for patches.txt
@@ -198,6 +201,8 @@ struct RPLModule
 
 		uint32 sdataBase1;
 		uint32 sdataBase2;
+		
+		uint32 flags;
 	}fileInfo;
 	// parsed CRC
 	std::vector<uint32> crcTable;
@@ -207,6 +212,11 @@ struct RPLModule
 		if (sectionIndex >= crcTable.size())
 			return 0;
 		return crcTable[sectionIndex];
+	}
+	
+	bool IsRPX() const
+	{
+	    return fileInfo.flags & 2;
 	}
 
 	// state
@@ -227,11 +237,13 @@ struct RPLModule
 
 struct RPLDependency
 {
-	char modulename[RPL_MODULE_NAME_LENGTH];
-	char filepath[RPL_MODULE_PATH_LENGTH];
-	bool loadAttempted;
-	bool isCafeOSModule; // name is a known Cafe OS RPL
-	RPLModule* rplLoaderContext; // context of loaded module, can be nullptr for HLE COS modules
+	std::string moduleName;
+	bool isMainExecutable{false};
+	bool loadAttempted{false};
+	bool hleEntrypointCalled{false};
+	bool isCafeOSModule{false}; // name is a known Cafe OS system RPL
+	RPLModule* rplLoaderContext{}; // context of loaded module, can be nullptr for HLE COS modules
+	class COSModule* rplHLEModule{}; // set if this is a HLE module
 	sint32 referenceCount;
 	uint32 coreinitHandle; // fake handle for coreinit
 	sint16 tlsModuleIndex; // tls module index assigned to this dependency

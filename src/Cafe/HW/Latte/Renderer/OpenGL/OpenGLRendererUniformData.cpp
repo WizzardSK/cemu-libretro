@@ -1,3 +1,4 @@
+#include "RendererShaderGL.h"
 #include "Cafe/HW/Latte/Renderer/OpenGL/OpenGLRenderer.h"
 #include "Cafe/HW/Latte/Core/LatteShader.h"
 
@@ -28,14 +29,14 @@ void OpenGLRenderer::uniformData_update()
 		if (!shader)
 			continue;
 
-		auto hostShader = shader->shader;
+		auto hostShader = (RendererShaderGL*)shader->shader;
 
 		if (shader->uniformMode == LATTE_DECOMPILER_UNIFORM_MODE_REMAPPED)
 		{
 			auto& list_uniformMapping = shader->list_remappedUniformEntries;
 			cemu_assert_debug(list_uniformMapping.size() <= 256);
 			sint32 remappedArraySize = (sint32)list_uniformMapping.size();
-			LatteBufferCache_LoadRemappedUniforms(shader, (float*)(_gl_remappedUniformData));
+			LatteBufferCache_LoadRemappedUniforms(shader, (float*)(_gl_remappedUniformData), true, (1<<LATTE_NUM_MAX_UNIFORM_BUFFERS)-1);
 			// update values only when the hash changed
 			if (remappedArraySize > 0)
 			{

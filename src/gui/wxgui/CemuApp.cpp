@@ -3,15 +3,19 @@
 #include "wxgui/MainWindow.h"
 #include "wxgui/wxgui.h"
 #include "config/CemuConfig.h"
+#ifdef ENABLE_VULKAN
 #include "Cafe/HW/Latte/Renderer/Vulkan/VulkanAPI.h"
+#endif
 #include "Cafe/HW/Latte/Core/LatteOverlay.h"
 #include "config/ActiveSettings.h"
 #include "config/LaunchSettings.h"
 #include "wxgui/GettingStartedDialog.h"
 #include "input/InputManager.h"
+#include "input/api/SDL/SDLControllerProvider.h"
 #include "wxgui/helpers/wxHelpers.h"
 #include "Cemu/ncrypto/ncrypto.h"
 #include "wxgui/input/HotkeySettings.h"
+#include "wxgui/debugger/DebuggerWindow2.h"
 #include <wx/language.h>
 
 #if ( BOOST_OS_LINUX || BOOST_OS_BSD ) && HAS_WAYLAND
@@ -24,10 +28,13 @@
 #include <wx/image.h>
 #include <wx/filename.h>
 #include <wx/stdpaths.h>
+#include <wx/clipbrd.h>
+#include <wx/timer.h>
 #include "wxHelper.h"
 
 #include "Cafe/TitleList/TitleList.h"
 #include "Cafe/TitleList/SaveList.h"
+#include "Cafe/CafeSystem.h"
 
 wxIMPLEMENT_APP_NO_MAIN(CemuApp);
 
@@ -68,10 +75,9 @@ fs::path GetAppDataRoamingPath()
 {
 	PWSTR path = nullptr;
 	HRESULT result = SHGetKnownFolderPath(FOLDERID_RoamingAppData, 0, nullptr, &path);
-	if (result != S_OK || !path)
+	if (FAILED(result))
 	{
-		if (path)
-			CoTaskMemFree(path);
+		CoTaskMemFree(path);
 		return {};
 	}
 	std::string appDataPath = boost::nowide::narrow(path);
@@ -252,7 +258,7 @@ void CemuApp::InitializeExistingMLCOrFail(fs::path mlc)
 
 std::string TranslationCallback(std::string_view msgId)
 {
-	return wxGetTranslation(to_wxString(msgId)).utf8_string();
+	return wxGetTranslation(wxString::FromUTF8(msgId)).utf8_string();
 }
 
 bool CemuApp::OnInit()
@@ -303,7 +309,7 @@ bool CemuApp::OnInit()
 
 	for (auto&& path : failedWriteAccess)
 	{
-		wxMessageBox(formatWxString(_("Cemu can't write to {}!"), wxString::FromUTF8(_pathToUtf8(path))),
+		wxMessageBox(formatWxString(_("Cemu can't write to {}!"), wxHelper::FromPath(path)),
 					 _("Warning"), wxOK | wxCENTRE | wxICON_EXCLAMATION, nullptr);
 	}
 
@@ -331,7 +337,17 @@ bool CemuApp::OnInit()
 #ifdef CEMU_DEBUG_ASSERT
 	UnitTests();
 #endif
+
+#if BOOST_OS_MACOS
+	SDLControllerProvider::InitSDL();
+#endif
 	CemuCommonInit();
+
+#if BOOST_OS_MACOS
+	m_sdlEventPumpTimer = new wxTimer(this);
+	Bind(wxEVT_TIMER, &CemuApp::OnSDLEventPumpTimer, this);
+	m_sdlEventPumpTimer->Start(5, wxTIMER_CONTINUOUS);
+#endif
 
 	wxInitAllImageHandlers();
 
@@ -348,7 +364,9 @@ bool CemuApp::OnInit()
 			__fastfail(0);
 	}
 #endif
+	#ifdef ENABLE_VULKAN
 	InitializeGlobalVulkan();
+	#endif
 
 	Bind(wxEVT_ACTIVATE_APP, &CemuApp::ActivateApp, this);
 
@@ -388,13 +406,39 @@ bool CemuApp::OnInit()
 
 int CemuApp::OnExit()
 {
+#if BOOST_OS_MACOS
+	if (m_sdlEventPumpTimer)
+	{
+		m_sdlEventPumpTimer->Stop();
+		Unbind(wxEVT_TIMER, &CemuApp::OnSDLEventPumpTimer, this);
+		delete m_sdlEventPumpTimer;
+		m_sdlEventPumpTimer = nullptr;
+	}
+#endif
 	wxApp::OnExit();
+	wxTheClipboard->Flush();
+	InputManager::instance().Shutdown();
+	int retValue = 0;
+	if (auto r = CafeSystem::GetForegroundTitleReturnStatus(); (LaunchSettings::GetLoadFile() || LaunchSettings::GetLoadTitleID()) && r)
+		retValue = *r;
+#if BOOST_OS_MACOS
+	SDLControllerProvider::ShutdownSDL();
+#endif
 #if BOOST_OS_WINDOWS
-	ExitProcess(0);
+	ExitProcess(retValue);
 #else
-	_Exit(0);
+	_Exit(retValue);
 #endif
 }
+
+#if BOOST_OS_MACOS
+void CemuApp::OnSDLEventPumpTimer(wxTimerEvent& event)
+{
+	// this callback is only used on macOS where SDL event functions need to be called on the main thread
+	// on other platforms SDLControllerProvider creates a separate thread for SDL event polling
+	SDLControllerProvider::PumpSDLEvents();
+}
+#endif
 
 #if BOOST_OS_WINDOWS
 void DumpThreadStackTrace();
@@ -431,6 +475,30 @@ int CemuApp::FilterEvent(wxEvent& event)
 		const auto& activate_event = (wxActivateEvent&)event;
 		if(!activate_event.GetActive())
 			g_window_info.set_keystatesup();
+	}
+
+	// track if debugger window or its child windows are focused
+	if (s_debuggerWindow && (event.GetEventType() == wxEVT_SET_FOCUS || event.GetEventType() == wxEVT_ACTIVATE))
+	{
+		wxWindow* target_window = wxDynamicCast(event.GetEventObject(), wxWindow);
+
+		if (target_window && event.GetEventType() == wxEVT_ACTIVATE && !((wxActivateEvent&)event).GetActive())
+			target_window = nullptr;
+
+		if (target_window)
+		{
+			g_window_info.debugger_focused = false;
+			wxWindow* window_it = target_window;
+			while (window_it)
+			{
+				if (window_it == s_debuggerWindow) g_window_info.debugger_focused = true;
+				window_it = window_it->GetParent();
+			}
+		}
+	}
+	else if (!s_debuggerWindow)
+	{
+		g_window_info.debugger_focused = false;
 	}
 
 	return wxApp::FilterEvent(event);

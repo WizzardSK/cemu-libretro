@@ -1,11 +1,10 @@
 #pragma once
 #include "Cafe/OS/RPL/rpl.h"
-#include "util/helpers/Semaphore.h"
 #include "Cafe/TitleList/TitleId.h"
-#include "config/CemuConfig.h"
 
 enum class CosCapabilityBits : uint64;
 enum class CosCapabilityGroup : uint32;
+enum class CafeConsoleRegion;
 
 namespace CafeSystem
 {
@@ -13,6 +12,7 @@ namespace CafeSystem
 	{
 	public:
 		virtual void CafeRecreateCanvas() = 0;
+		virtual void CafePPCProcessExit() = 0; // emulated process exited
 	};
 
 	enum class PREPARE_STATUS_CODE
@@ -29,8 +29,6 @@ namespace CafeSystem
 	PREPARE_STATUS_CODE PrepareForegroundTitle(TitleId titleId);
 	PREPARE_STATUS_CODE PrepareForegroundTitleFromStandaloneRPX(const fs::path& path);
 	void LaunchForegroundTitle();
-	uint32 GetLaunchThreadStage();
-	uint32 GetCemuInitForGameStage();
 	bool IsTitleRunning();
 
 	bool GetOverrideArgStr(std::vector<std::string>& args);
@@ -46,13 +44,10 @@ namespace CafeSystem
 	std::string GetForegroundTitleArgStr();
 	uint32 GetForegroundTitleOlvAccesskey();
 	CosCapabilityBits GetForegroundTitleCosCapabilities(CosCapabilityGroup group);
+	std::optional<sint32> GetForegroundTitleReturnStatus(); // valid once the foreground title exited gracefully via coreinit exit
 
 	void ShutdownTitle();
 
-	// Libretro-specific
-	void SetLibretroMultiCoreEnabled(bool enabled);
-	void CafeSystem_WaitForFrameAdvance();
-	void CafeSystem_SignalFrameAdvance();
 
 	std::string GetMlcStoragePath(TitleId titleId);
 	void MlcStorageMountAllTitles();
@@ -63,6 +58,8 @@ namespace CafeSystem
 	uint32 GetRPXHashUpdated();
 
 	void RequestRecreateCanvas();
+	void NotifyPPCProcessExit(sint32 status);
+
 };
 
 extern RPLModule* applicationRPX;

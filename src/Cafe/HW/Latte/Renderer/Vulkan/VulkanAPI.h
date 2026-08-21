@@ -192,13 +192,11 @@ VKFUNC_DEVICE(vkCmdPipelineBarrier2KHR);
 VKFUNC_DEVICE(vkCmdBeginRenderingKHR);
 VKFUNC_DEVICE(vkCmdEndRenderingKHR);
 
+// ext_attachment_feedback_loop_dynamic_state
+VKFUNC_DEVICE(vkCmdSetAttachmentFeedbackLoopEnableEXT);
+
 // khr_present_wait
 VKFUNC_DEVICE(vkWaitForPresentKHR);
-
-// transform feedback extension
-VKFUNC_DEVICE(vkCmdBindTransformFeedbackBuffersEXT);
-VKFUNC_DEVICE(vkCmdBeginTransformFeedbackEXT);
-VKFUNC_DEVICE(vkCmdEndTransformFeedbackEXT);
 
 // query
 VKFUNC_DEVICE(vkCreateQueryPool);

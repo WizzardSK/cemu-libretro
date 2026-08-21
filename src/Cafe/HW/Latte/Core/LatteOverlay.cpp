@@ -1,11 +1,10 @@
 #include "Cafe/HW/Latte/Core/LatteOverlay.h"
 #include "Cafe/HW/Latte/Core/LattePerformanceMonitor.h"
-#include "WindowSystem.h"
-
-#include "config/CemuConfig.h"
-
 #include "Cafe/HW/Latte/Renderer/Renderer.h"
+#include "Cafe/Account/Account.h"
+#include "config/CemuConfig.h"
 #include "config/ActiveSettings.h"
+#include "WindowSystem.h"
 
 #include <imgui.h>
 #include "resource/IconsFontAwesome5.h"
@@ -36,6 +35,8 @@ struct OverlayStats
 
 extern std::atomic_int g_compiled_shaders_total;
 extern std::atomic_int g_compiled_shaders_async;
+extern std::atomic_int g_shaderStateCacheSetCount;
+extern std::atomic_int g_shaderStateCacheSetAuxCount;
 
 std::atomic_int g_compiling_pipelines;
 std::atomic_int g_compiling_pipelines_async;
@@ -111,6 +112,7 @@ void LatteOverlay_renderOverlay(ImVec2& position, ImVec2& pivot, sint32 directio
 				// general debug info
 				ImGui::Text("--- Debug info ---");
 				ImGui::Text("IndexUploadPerFrame: %dKB", (performanceMonitor.stats.indexDataUploadPerFrame+1023)/1024);
+				ImGui::Text("SHCSets: %d / %d", g_shaderStateCacheSetCount.load(), g_shaderStateCacheSetAuxCount.load());
 				// backend specific info
 				g_renderer->AppendOverlayDebugInfo();
 			}
