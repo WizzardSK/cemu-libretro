@@ -28,7 +28,13 @@ public:
 	static bool ForwardConsoleLogging() { return s_forward_console_logging; }
 	static std::optional<std::string> CosArgstr() { return s_cos_argstr; }
 	static void ClearCosArgstr() { s_cos_argstr.reset(); }
-	static std::unordered_map<fs::path, std::wstring>& CosMounts() { return s_cos_mounts; }
+	struct _path_hash {
+		std::size_t operator()(const fs::path& path) const {
+			return fs::hash_value(path);
+		}
+	};
+
+	static std::unordered_map<fs::path, std::wstring, _path_hash>& CosMounts() { return s_cos_mounts; }
 
 	static bool GDBStubEnabled() { return s_enable_gdbstub; }
 	static bool NSightModeEnabled() { return s_nsight_mode; }
@@ -55,7 +61,7 @@ private:
 
 	inline static bool s_forward_console_logging = false;
 	inline static std::optional<std::string> s_cos_argstr{};
-	inline static std::unordered_map<fs::path, std::wstring> s_cos_mounts{};
+	inline static std::unordered_map<fs::path, std::wstring, _path_hash> s_cos_mounts{};
 
 	inline static bool s_enable_gdbstub = false;
 	inline static bool s_nsight_mode = false;
