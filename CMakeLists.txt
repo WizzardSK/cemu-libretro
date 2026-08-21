@@ -57,7 +57,9 @@ if (ENABLE_VCPKG)
 	endif()
 
 	if(CEMU_TARGET_ANDROID)
-		set(VCPKG_OVERLAY_PORTS "${CMAKE_CURRENT_LIST_DIR}/dependencies/vcpkg_overlay_ports_android;${CMAKE_CURRENT_LIST_DIR}/dependencies/vcpkg_overlay_ports")
+		# no android-specific overlay ports at the moment - vcpkg refuses to start
+		# if an overlay path does not exist, so do not name one that is not there
+		set(VCPKG_OVERLAY_PORTS "${CMAKE_CURRENT_LIST_DIR}/dependencies/vcpkg_overlay_ports")
 	elseif(VCPKG_TARGET_TRIPLET MATCHES "mingw")
 		# Cross-compiling to Windows from a Unix host: WIN32 is not set yet (no
 		# project() call so far, and the host is what counts before it), so the
