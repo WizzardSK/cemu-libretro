@@ -72,6 +72,12 @@ static HGLRC s_wgl_shared_context = nullptr;
 
 #else
 
+// Everything from here to the end of this block talks to GLX or EGL. macOS has
+// neither — Cemu's CMake defaults ENABLE_OPENGL to OFF there and builds Metal and
+// Vulkan instead — so the GL context glue follows the same switch as the backend
+// it exists for. The Vulkan handoff further down is untouched by this.
+#ifdef ENABLE_OPENGL
+
 #ifndef __ANDROID__
 // X11 Bool conflicts with Cemu enums, so we define it before including GLX
 #ifndef Bool
@@ -151,12 +157,14 @@ static EGLDisplay egl_current_display()
 	return fn ? fn() : EGL_NO_DISPLAY;
 }
 
+#endif // ENABLE_OPENGL
 #endif // _WIN32
 
 // Set once the GPU thread has our shared context current.
 static bool s_gpu_context_made_current = false;
 
 // GL entry points are resolved through whichever loader the platform provides.
+#ifdef ENABLE_OPENGL
 static void* cemu_gl_get_proc(const char* name)
 {
 #ifdef _WIN32
@@ -177,6 +185,7 @@ static void* cemu_gl_get_proc(const char* name)
 	return (void*)glXGetProcAddress((const GLubyte*)name);
 #endif
 }
+#endif // ENABLE_OPENGL
 
 // ============================================================================
 // CafeSystem implementation for libretro
@@ -625,8 +634,11 @@ public:
 		if (!s_hw_render_initialized || s_shutting_down)
 			return false;
 		// Make our shared GL context current on the GPU thread (WGL on Windows,
-		// EGL on Wayland, GLX on X11).
-#ifdef _WIN32
+		// EGL on Wayland, GLX on X11). Without the OpenGL backend there is no
+		// such context and nothing calls this.
+#ifndef ENABLE_OPENGL
+		return false;
+#elif defined(_WIN32)
 		if (s_wgl_shared_context && s_wgl_frontend_dc && !s_gpu_context_made_current)
 		{
 			if (wglMakeCurrent(s_wgl_frontend_dc, s_wgl_shared_context))
@@ -1439,6 +1451,7 @@ static void libretro_launch_game()
 static std::atomic_bool s_launch_thread_running{false};
 
 // Wayland / EGL frontends: build the shared GPU-thread context via EGL instead of GLX.
+#ifdef ENABLE_OPENGL
 #ifdef _WIN32
 
 // Takes RetroArch's WGL context and creates one for Cemu's GPU thread that
@@ -1646,6 +1659,7 @@ static void libretro_create_shared_gl_context()
 }
 
 #endif // _WIN32
+#endif // ENABLE_OPENGL
 
 static void libretro_context_reset()
 {
@@ -1660,6 +1674,7 @@ static void libretro_context_reset()
 	s_frontend_upload_tex = 0;
 
 	// Create or update shared GL context for GPU thread (OpenGL only)
+#ifdef ENABLE_OPENGL
 	if (s_graphics_api == SelectedGraphicsAPI::OpenGL)
 	{
 #ifdef _WIN32
@@ -1710,6 +1725,7 @@ static void libretro_context_reset()
 #endif // __ANDROID__
 #endif // _WIN32
 	}
+#endif // ENABLE_OPENGL
 
 	// Only create renderer on first call - subsequent calls are context restores
 	if (!g_renderer)
@@ -1849,14 +1865,25 @@ RETRO_API bool retro_load_game(const struct retro_game_info* game)
 		}
 		else
 		{
+#ifdef ENABLE_OPENGL
 			if (log_cb)
 				log_cb(RETRO_LOG_WARN, "Cemu: Vulkan not supported by frontend, falling back to OpenGL\n");
 			s_graphics_api = SelectedGraphicsAPI::OpenGL;
 			GetConfig().graphic_api = kOpenGL;
+#else
+			// Nothing to fall back to: a build without the OpenGL backend (macOS,
+			// where Cemu uses Metal and Vulkan) has only this path.
+			if (log_cb)
+				log_cb(RETRO_LOG_ERROR, "Cemu: Vulkan not supported by frontend and this core has no OpenGL backend\n");
+			return false;
+#endif
 		}
 	}
+#ifdef ENABLE_OPENGL
 	if (s_graphics_api == SelectedGraphicsAPI::OpenGL)
 #endif
+#endif
+#ifdef ENABLE_OPENGL
 	{
 		// OpenGL path
 		s_hw_render.context_type = RETRO_HW_CONTEXT_OPENGL_CORE;
@@ -1898,6 +1925,7 @@ RETRO_API bool retro_load_game(const struct retro_game_info* game)
 			}
 		}
 	}
+#endif // ENABLE_OPENGL
 
 	// Register input descriptors
 	static const struct retro_input_descriptor input_desc[] = {
@@ -2121,6 +2149,7 @@ static PFNGLGENFRAMEBUFFERSPROC_ s_glGenFramebuffers = nullptr;
 static PFNGLFRAMEBUFFERRENDERBUFFERPROC_ s_glFramebufferRenderbuffer = nullptr;
 static PFNGLBLITFRAMEBUFFERPROC_ s_glBlitFramebuffer = nullptr;
 
+#ifdef ENABLE_OPENGL
 static void libretro_load_blit_gl_funcs()
 {
 	if (s_glBindFramebuffer) return;
@@ -2129,6 +2158,7 @@ static void libretro_load_blit_gl_funcs()
 	s_glFramebufferRenderbuffer = (PFNGLFRAMEBUFFERRENDERBUFFERPROC_)cemu_gl_get_proc("glFramebufferRenderbuffer");
 	s_glBlitFramebuffer = (PFNGLBLITFRAMEBUFFERPROC_)cemu_gl_get_proc("glBlitFramebuffer");
 }
+#endif // ENABLE_OPENGL
 
 #define GL_COLOR_BUFFER_BIT_ 0x00004000
 #define GL_NEAREST_ 0x2600
@@ -2217,6 +2247,7 @@ RETRO_API void retro_run()
 #endif
 
 	// OpenGL: Upload CPU framebuffer (from GPU thread's glReadPixels) to RetroArch's HW FBO
+#ifdef ENABLE_OPENGL
 	{
 		typedef void (*PFNGLGENTEXTURESPROC_)(int, unsigned int*);
 		typedef void (*PFNGLBINDTEXTUREPROC_)(unsigned int, unsigned int);
@@ -2295,6 +2326,7 @@ RETRO_API void retro_run()
 			}
 		}
 	}
+#endif // ENABLE_OPENGL
 
 	video_cb(RETRO_HW_FRAME_BUFFER_VALID, SCREEN_WIDTH, SCREEN_HEIGHT, 0);
 
