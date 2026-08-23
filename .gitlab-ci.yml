@@ -247,6 +247,17 @@ libretro-build-windows-x64:
     # Replaces the osx template's before_script, which uses nproc — a coreutils
     # binary that a stock macOS runner does not have.
     - export NUMPROC=$(($(sysctl -n hw.ncpu)/5))
+    # .core-defs sets this for the arm64-linux community triplet, where vcpkg has
+    # no prebuilt tools to fetch. On macOS it is the opposite: holding vcpkg to
+    # the runner's binaries is what broke detect_compiler ("vcpkg was unable to
+    # detect the active compiler's information"), so let it bring its own.
+    - unset VCPKG_FORCE_SYSTEM_BINARIES
+    # The runner's ninja is on an x86_64 Homebrew path on an arm64 machine and
+    # CMake could not use it; ask for Ninja only if it actually runs here.
+    - |
+      if ninja --version >/dev/null 2>&1; then GEN="-G Ninja"; else GEN=""; fi
+      export GEN
+      echo "generator: ${GEN:-default} (ninja: $(command -v ninja || echo none))" >> ci-macos-debug.log
     - |
       {
         echo "== $CI_JOB_NAME on $(uname -m)"; sw_vers || true; xcode-select -p || true
@@ -279,9 +290,7 @@ libretro-build-windows-x64:
     - |
       set -o pipefail
       {
-        # -G Ninja: both runners have ninja, and the template leaves the
-        # generator at the default, which came up with no make program at all.
-        ${CMAKE} -G Ninja -DCMAKE_BUILD_TYPE=Release $CORE_ARGS "$CMAKE_SOURCE_ROOT" -B$BUILD_DIR $CMAKE_OSX_EXTRA &&
+        ${CMAKE} $GEN -DCMAKE_BUILD_TYPE=Release $CORE_ARGS "$CMAKE_SOURCE_ROOT" -B$BUILD_DIR $CMAKE_OSX_EXTRA &&
         ${CMAKE} --build $BUILD_DIR --target ${CORENAME}_libretro --config Release -- -j $NUMPROC
       } 2>&1 | tail -300 | tee -a ci-macos-debug.log
     # vcpkg builds the dependencies during configure and reports failures by
