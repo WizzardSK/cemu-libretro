@@ -75,6 +75,71 @@ jobs:
           name: cemu_libretro-linux-${{ matrix.arch }}
           path: ./bin/cemu_libretro.so
 
+  macos:
+    name: macos-${{ matrix.arch }}
+    runs-on: macos-14
+    # First macOS build of the core: src/CMakeLists.txt already keeps the X11/GL
+    # link line to `UNIX AND NOT APPLE` and defines VK_USE_PLATFORM_MACOS_MVK,
+    # but nothing here has ever been through a compiler. Same treatment as the
+    # Windows job until it has.
+    continue-on-error: true
+    timeout-minutes: 350
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [arm64, x86_64]
+
+    steps:
+      - name: "Checkout repo"
+        uses: actions/checkout@v4
+        with:
+          submodules: "recursive"
+          fetch-depth: 0
+
+      - name: "Install dependencies"
+        run: brew install nasm automake libtool
+
+      - name: "Install molten-vk"
+        # The Vulkan renderer links against the loader; on macOS that is
+        # MoltenVK. Same release the standalone macOS build in build.yml uses.
+        run: |
+          curl -L -O https://github.com/KhronosGroup/MoltenVK/releases/download/v1.4.1/MoltenVK-macos-privateapi.tar
+          tar xf MoltenVK-macos-privateapi.tar
+          sudo mkdir -p /usr/local/lib
+          sudo cp MoltenVK/MoltenVK/dynamic/dylib/macOS/libMoltenVK.dylib /usr/local/lib
+
+      - name: "Setup cmake"
+        uses: jwlawson/actions-setup-cmake@v2
+        with:
+          cmake-version: '3.29.0'
+
+      - name: "Bootstrap vcpkg"
+        run: bash ./dependencies/vcpkg/bootstrap-vcpkg.sh
+
+      - name: "Configure"
+        # Same flags as the Linux job; BLUEZ and FERAL_GAMEMODE are Linux-only
+        # options that are already off here, and the architecture is passed the
+        # way the standalone macOS build passes it, so vcpkg picks the matching
+        # triplet for the x86_64 slice on this arm64 runner.
+        run: |
+          cmake -S . -B build -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_OSX_ARCHITECTURES=${{ matrix.arch }} \
+            -DENABLE_LIBRETRO=ON \
+            -DENABLE_WXWIDGETS=OFF \
+            -DENABLE_DISCORD_RPC=OFF \
+            -DENABLE_CUBEB=OFF \
+            -DCMAKE_POSITION_INDEPENDENT_CODE=ON
+
+      - name: "Build"
+        run: cmake --build build --target cemu_libretro -- -j $(sysctl -n hw.ncpu)
+
+      - name: "Upload artifact"
+        uses: actions/upload-artifact@v4
+        with:
+          name: cemu_libretro-macos-${{ matrix.arch }}
+          path: ./bin/cemu_libretro.dylib
+
   windows:
     name: windows-x64
     runs-on: windows-2022
