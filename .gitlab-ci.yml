@@ -34,6 +34,11 @@ include:
   # Windows
   - project: 'libretro-infrastructure/ci-templates'
     file: '/windows-cmake-mingw.yml'
+  # macOS
+  - project: 'libretro-infrastructure/ci-templates'
+    file: '/osx-cmake-x86.yml'
+  - project: 'libretro-infrastructure/ci-templates'
+    file: '/osx-cmake-arm64.yml'
   ################################## CELLULAR ################################
   # Android
   - project: 'libretro-infrastructure/ci-templates'
@@ -227,6 +232,64 @@ libretro-build-windows-x64:
       -DVCPKG_HOST_TRIPLET=x64-linux
 
 # Android aarch64
+# macOS. Cemu ships macOS builds of its own and the core now builds for both
+# slices on GitHub Actions runners, so the only unknown left is this buildbot's
+# Macs: the ones pcee2 runs on have cmake, ninja, git and clang but no Homebrew,
+# and several vcpkg ports want nasm or the autotools. Rather than guess, the
+# setup writes down what it finds and the job keeps that as an artifact —
+# traces here need an account to read, artifacts do not.
+.core-defs-macos:
+  extends: .core-defs
+  allow_failure: true
+  # vcpkg builds every dependency from source, as on the other platforms.
+  timeout: 3h
+  before_script:
+    # Replaces the osx template's before_script, which uses nproc — a coreutils
+    # binary that a stock macOS runner does not have.
+    - export NUMPROC=$(($(sysctl -n hw.ncpu)/5))
+    - |
+      {
+        echo "== $CI_JOB_NAME on $(uname -m)"; sw_vers || true; xcode-select -p || true
+        for t in git cmake ninja nasm brew automake autoconf libtool pkg-config python3 clang mono; do
+          printf '%-12s ' "$t"; command -v "$t" || echo MISSING
+        done
+      } > ci-macos-debug.log 2>&1
+    - |
+      {
+        if command -v brew >/dev/null 2>&1; then
+          for pkg in nasm automake libtool; do brew list $pkg >/dev/null 2>&1 || brew install $pkg || echo "brew install $pkg FAILED"; done
+        else
+          echo "no brew on this runner - ports needing nasm or the autotools will say so below"
+        fi
+      } >> ci-macos-debug.log 2>&1
+    # The Vulkan renderer links the loader; on macOS that is MoltenVK, the same
+    # release the standalone macOS build uses.
+    - |
+      {
+        curl -L -o MoltenVK-macos-privateapi.tar https://github.com/KhronosGroup/MoltenVK/releases/download/v1.4.1/MoltenVK-macos-privateapi.tar &&
+        tar xf MoltenVK-macos-privateapi.tar &&
+        mkdir -p "$CI_PROJECT_DIR/deps/lib" &&
+        cp MoltenVK/MoltenVK/dynamic/dylib/macOS/libMoltenVK.dylib /usr/local/lib 2>/dev/null ||
+        cp MoltenVK/MoltenVK/dynamic/dylib/macOS/libMoltenVK.dylib "$CI_PROJECT_DIR/deps/lib"
+      } >> ci-macos-debug.log 2>&1
+    - bash ./dependencies/vcpkg/bootstrap-vcpkg.sh 2>&1 | tail -20 | tee -a ci-macos-debug.log
+  artifacts:
+    when: always
+    expire_in: 1 week
+    paths:
+      - ci-macos-debug.log
+      - $LIBNAME
+
+libretro-build-osx-x64:
+  extends:
+    - .libretro-osx-cmake-x86
+    - .core-defs-macos
+
+libretro-build-osx-arm64:
+  extends:
+    - .libretro-osx-cmake-arm64
+    - .core-defs-macos
+
 android-arm64-v8a:
   extends:
     - .libretro-android-cmake-arm64-v8a
