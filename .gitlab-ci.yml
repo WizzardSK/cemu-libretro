@@ -273,6 +273,16 @@ libretro-build-windows-x64:
         cp MoltenVK/MoltenVK/dynamic/dylib/macOS/libMoltenVK.dylib "$CI_PROJECT_DIR/deps/lib"
       } >> ci-macos-debug.log 2>&1
     - bash ./dependencies/vcpkg/bootstrap-vcpkg.sh 2>&1 | tail -20 | tee -a ci-macos-debug.log
+  # The template's script, with its output appended to the same artifact. The
+  # first run died here, a minute in, and the trace needs an account to read.
+  script:
+    - |
+      set -o pipefail
+      {
+        ${CMAKE} -DCMAKE_BUILD_TYPE=Release $CORE_ARGS "$CMAKE_SOURCE_ROOT" -B$BUILD_DIR $CMAKE_OSX_EXTRA &&
+        ${CMAKE} --build $BUILD_DIR --target ${CORENAME}_libretro --config Release -- -j $NUMPROC
+      } 2>&1 | tail -300 | tee -a ci-macos-debug.log
+    - mv $BUILD_DIR/$EXTRA_PATH/$LIBNAME $LIBNAME
   artifacts:
     when: always
     expire_in: 1 week
