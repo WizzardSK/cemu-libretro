@@ -49,6 +49,14 @@ stages:
   - build-prepare
   - build-shared
 
+# libretro-runner-02 has been dropping jobs within seconds and then running the
+# same job green on the next pipeline with nothing changed — windows-x64 after
+# three 17-minute successes, both android ABIs, linux-x64. Retry rather than let
+# a runner having a bad minute redden the pipeline; anything really broken still
+# fails three times over.
+default:
+  retry: 2
+
 ##############################################################################
 #################################### STAGES ##################################
 ##############################################################################
@@ -328,6 +336,11 @@ libretro-build-osx-x64:
     # -x86_64, not -x86: the latter is the 32-bit profile and sets ARCH=x86.
     - .libretro-osx-cmake-x86_64
     - .core-defs-macos
+  variables:
+    # The template targets 10.9, where std::filesystem does not exist yet, so
+    # glslang stopped on "'path' is unavailable: introduced in macOS 10.15".
+    # The runner is 10.15 itself, so that is the floor worth asking for.
+    MACOSX_DEPLOYMENT_TARGET: "10.15"
 
 libretro-build-osx-arm64:
   extends:
