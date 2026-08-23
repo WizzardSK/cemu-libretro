@@ -252,6 +252,12 @@ libretro-build-windows-x64:
     # the runner's binaries is what broke detect_compiler ("vcpkg was unable to
     # detect the active compiler's information"), so let it bring its own.
     - unset VCPKG_FORCE_SYSTEM_BINARIES
+    # .core-defs asks for gcc-12, which is a package name from the Ubuntu images;
+    # macOS has clang and nothing by that name, so vcpkg's detect_compiler port
+    # failed on "Could not find the compiler specified in the environment
+    # variable CC: gcc-12" before a single dependency was built. The Windows job
+    # unsets these for the same reason.
+    - unset CC CXX
     # The runner's ninja is on an x86_64 Homebrew path on an arm64 machine and
     # CMake could not use it; ask for Ninja only if it actually runs here.
     - |
