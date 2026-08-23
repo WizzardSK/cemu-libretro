@@ -16,7 +16,9 @@
 #include "Cafe/TitleList/SaveList.h"
 #include "Cafe/HW/Latte/Core/Latte.h"
 #include "Cafe/HW/Latte/Renderer/Renderer.h"
+#ifdef ENABLE_OPENGL
 #include "Cafe/HW/Latte/Renderer/OpenGL/OpenGLRenderer.h"
+#endif
 #ifdef ENABLE_VULKAN
 #include "Cafe/HW/Latte/Renderer/Vulkan/VulkanRenderer.h"
 #include "Cafe/HW/Latte/Renderer/Vulkan/VulkanAPI.h"
@@ -44,9 +46,11 @@
 #include "LibretroAudioAPI.h"
 
 // GL function needed for framebuffer readback (glBindFramebuffer is in Cemu's glext.h)
+#ifdef ENABLE_OPENGL
 extern "C" {
 extern void glReadPixels(int x, int y, int width, int height, unsigned int format, unsigned int type, void* pixels);
 }
+#endif
 #ifndef GL_BGRA
 #define GL_BGRA 0x80E1
 #endif
@@ -236,10 +240,12 @@ static bool s_emu_initialized = false;
 static std::atomic_bool s_gpu_context_created{false};
 static std::string s_game_path;
 
-// Frontend GL objects for blitting (reset on context destroy/resize)
-static GLuint s_frontend_read_fbo = 0;
-static GLuint s_frontend_read_rbo_attached = 0;
-static GLuint s_frontend_upload_tex = 0;
+// Frontend GL objects for blitting (reset on context destroy/resize). Plain
+// unsigned int rather than GLuint — identical type, but it keeps the context
+// bookkeeping compiling in a build with no GL headers.
+static unsigned int s_frontend_read_fbo = 0;
+static unsigned int s_frontend_read_rbo_attached = 0;
+static unsigned int s_frontend_upload_tex = 0;
 
 // Frame synchronization
 static std::mutex s_frame_mutex;
@@ -592,6 +598,7 @@ void LibretroDRC_ComputeViewport(bool padView,
 // OpenGL Canvas Callbacks for libretro
 // ============================================================================
 
+#ifdef ENABLE_OPENGL
 class LibretroGLCanvasCallbacks : public OpenGLCanvasCallbacks
 {
 public:
@@ -720,6 +727,7 @@ public:
 };
 
 static std::unique_ptr<LibretroGLCanvasCallbacks> s_gl_callbacks;
+#endif // ENABLE_OPENGL
 
 // ============================================================================
 // Libretro input state
@@ -1764,12 +1772,16 @@ static void libretro_context_reset()
 					log_cb(RETRO_LOG_ERROR, "Cemu: Failed to get Vulkan HW render interface\n");
 			}
 		}
+#ifdef ENABLE_OPENGL
 		else
 #endif
+#endif
+#ifdef ENABLE_OPENGL
 		{
 			s_gl_callbacks = std::make_unique<LibretroGLCanvasCallbacks>();
 			g_renderer = std::make_unique<OpenGLRenderer>();
 		}
+#endif
 	}
 
 	// From this point on a GPU device/renderer may exist and normal C++ static-destructor
@@ -2166,8 +2178,11 @@ static void libretro_load_blit_gl_funcs()
 #define GL_RENDERBUFFER_ 0x8D41
 #define GL_DRAW_FRAMEBUFFER_ 0x8CA9
 
-// Get the shared renderbuffer from the GPU thread's FBO
+// Get the shared renderbuffer from the GPU thread's FBO. Only the GL path has
+// one; the declaration follows the GL headers that define its return type.
+#ifdef ENABLE_OPENGL
 extern GLuint libretro_getBackbufferRBO();
+#endif
 
 RETRO_API void retro_run()
 {
