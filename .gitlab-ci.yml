@@ -279,9 +279,22 @@ libretro-build-windows-x64:
     - |
       set -o pipefail
       {
-        ${CMAKE} -DCMAKE_BUILD_TYPE=Release $CORE_ARGS "$CMAKE_SOURCE_ROOT" -B$BUILD_DIR $CMAKE_OSX_EXTRA &&
+        # -G Ninja: both runners have ninja, and the template leaves the
+        # generator at the default, which came up with no make program at all.
+        ${CMAKE} -G Ninja -DCMAKE_BUILD_TYPE=Release $CORE_ARGS "$CMAKE_SOURCE_ROOT" -B$BUILD_DIR $CMAKE_OSX_EXTRA &&
         ${CMAKE} --build $BUILD_DIR --target ${CORENAME}_libretro --config Release -- -j $NUMPROC
       } 2>&1 | tail -300 | tee -a ci-macos-debug.log
+    # vcpkg builds the dependencies during configure and reports failures by
+    # pointing at a log the trace does not show; bring it back with the artifact.
+    - |
+      if [ -f "$BUILD_DIR/vcpkg-manifest-install.log" ]; then
+        echo "===== vcpkg-manifest-install.log (tail)" >> ci-macos-debug.log
+        tail -150 "$BUILD_DIR/vcpkg-manifest-install.log" >> ci-macos-debug.log
+      fi
+      for f in $(ls -t dependencies/vcpkg/buildtrees/*/*-out.log 2>/dev/null | head -2); do
+        echo "===== $f (tail)" >> ci-macos-debug.log
+        tail -80 "$f" >> ci-macos-debug.log
+      done
     - mv $BUILD_DIR/$EXTRA_PATH/$LIBNAME $LIBNAME
   artifacts:
     when: always
