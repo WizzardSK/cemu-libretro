@@ -1168,7 +1168,7 @@ RETRO_API void retro_set_environment(retro_environment_t cb)
 		{"cemu_drc_mode", "DRC Display Mode; disabled|toggle|side_by_side|top_bottom|picture_in_picture"},
 		{"cemu_drc_position", "DRC Position; normal|swapped"},
 		{"cemu_wiimote_input", "Wii Remote input; port1_shared|ports2_4|disabled"},
-#ifdef ENABLE_VULKAN
+#if defined(ENABLE_VULKAN) && defined(ENABLE_OPENGL)
 		{"cemu_gpu_api", "Graphics API (restart); OpenGL|Vulkan"},
 #endif
 		{nullptr, nullptr},
@@ -1201,20 +1201,35 @@ RETRO_API void retro_init()
 		GetConfigHandle().Load();
 
 	// Select graphics API based on core option
+#ifdef ENABLE_OPENGL
 	s_graphics_api = SelectedGraphicsAPI::OpenGL;
+#else
+	// Android and macOS build without the OpenGL backend (see ENABLE_OPENGL in
+	// CMakeLists.txt), so Vulkan is the only renderer this core has. Defaulting
+	// to OpenGL there left retro_load_game setting up no renderer at all while
+	// still reporting success: the game never booted, nothing was ever logged,
+	// and the frontend was left presenting a core that never hands it a frame.
+	s_graphics_api = SelectedGraphicsAPI::Vulkan;
+#endif
 #ifdef ENABLE_VULKAN
+	bool useVulkan = (s_graphics_api == SelectedGraphicsAPI::Vulkan);
+#ifdef ENABLE_OPENGL
 	if (const char* v = libretro_get_option_value("cemu_gpu_api"))
+		useVulkan = libretro_iequals(v, "vulkan");
+#endif
+	if (useVulkan)
 	{
-		if (libretro_iequals(v, "vulkan"))
+		if (InitializeGlobalVulkan() && g_vulkan_available)
 		{
-			if (InitializeGlobalVulkan() && g_vulkan_available)
-			{
-				s_graphics_api = SelectedGraphicsAPI::Vulkan;
-				GetConfig().graphic_api = kVulkan;
-				if (log_cb)
-					log_cb(RETRO_LOG_INFO, "Cemu: Vulkan graphics API selected\n");
-			}
-			else if (log_cb)
+			s_graphics_api = SelectedGraphicsAPI::Vulkan;
+			GetConfig().graphic_api = kVulkan;
+			if (log_cb)
+				log_cb(RETRO_LOG_INFO, "Cemu: Vulkan graphics API selected\n");
+		}
+		else
+		{
+			s_graphics_api = SelectedGraphicsAPI::OpenGL;
+			if (log_cb)
 				log_cb(RETRO_LOG_WARN, "Cemu: Vulkan not available, falling back to OpenGL\n");
 		}
 	}
@@ -1841,6 +1856,10 @@ RETRO_API bool retro_load_game(const struct retro_game_info* game)
 	if (!game || !game->path)
 		return false;
 
+	// Re-decided below for this load; a stale value from a previous one would
+	// hide a frontend that cannot give this core a context the second time.
+	s_use_hw_render = false;
+
 	// Set up pixel format
 	enum retro_pixel_format fmt = RETRO_PIXEL_FORMAT_XRGB8888;
 	if (!environ_cb(RETRO_ENVIRONMENT_SET_PIXEL_FORMAT, &fmt))
@@ -1963,6 +1982,17 @@ RETRO_API bool retro_load_game(const struct retro_game_info* game)
 		{ 0, 0, 0, 0, NULL },
 	};
 	environ_cb(RETRO_ENVIRONMENT_SET_INPUT_DESCRIPTORS, (void*)input_desc);
+
+	// Nothing above managed to set a hardware render context: the game would
+	// never boot (context_reset is what launches it) and the frontend would be
+	// left running a core that hands it no frames. Fail the load instead, so the
+	// frontend says so rather than the user staring at a black screen.
+	if (!s_use_hw_render)
+	{
+		if (log_cb)
+			log_cb(RETRO_LOG_ERROR, "Cemu: no hardware renderer available - this core needs a Vulkan (or OpenGL 4.1+) capable frontend\n");
+		return false;
+	}
 
 	// Store game path - actual launch happens in context_reset when GL is ready
 	s_game_path = game->path;
