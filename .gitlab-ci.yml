@@ -336,11 +336,21 @@ libretro-build-osx-x64:
     # -x86_64, not -x86: the latter is the 32-bit profile and sets ARCH=x86.
     - .libretro-osx-cmake-x86_64
     - .core-defs-macos
+  # The Intel runner behind the template's macosx-packaging tag only carries the
+  # macOS 10.15 SDK, and SDL3 needs the 11 one: UniformTypeIdentifiers.h is not
+  # there and GameController has no physicalInputProfile, so vcpkg cannot build
+  # sdl3 on it at any deployment target. Cross-compile the x86_64 slice on the
+  # Apple Silicon runner instead - CMakeLists.txt takes CEMU_ARCHITECTURE from
+  # CMAKE_OSX_ARCHITECTURES, and the GitHub macOS job builds this slice the same
+  # way on an arm64 runner.
+  tags:
+    - mac-apple-silicon
   variables:
     # The template targets 10.9, where std::filesystem does not exist yet, so
     # glslang stopped on "'path' is unavailable: introduced in macOS 10.15".
-    # The runner is 10.15 itself, so that is the floor worth asking for.
+    # Same floor the arm64 template asks for.
     MACOSX_DEPLOYMENT_TARGET: "10.15"
+    CMAKE_OSX_EXTRA: -DCMAKE_OSX_ARCHITECTURES=x86_64
 
 libretro-build-osx-arm64:
   extends:
