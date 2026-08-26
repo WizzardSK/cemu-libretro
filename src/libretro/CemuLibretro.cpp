@@ -764,6 +764,15 @@ static LibretroPortState s_port_state[kLibretroMaxPorts];
 extern void CemuCommonInit();
 extern std::atomic_bool g_isGPUInitFinished;
 
+// Called by CemuCommonInit() at every init stage. Cemu's own log.txt is only
+// created part-way through that function, and a segfault takes the frontend's
+// process down with it, so the frontend log is where the breadcrumbs have to go.
+void LibretroInitProgress(const char* stage)
+{
+	if (log_cb)
+		log_cb(RETRO_LOG_INFO, "Cemu: init stage: %s\n", stage);
+}
+
 // ============================================================================
 // Helper: Initialize paths for libretro
 // ============================================================================
@@ -1379,6 +1388,9 @@ static void libretro_launch_game()
 	// Initialize emulator common systems
 	CemuCommonInit();
 
+	if (log_cb)
+		log_cb(RETRO_LOG_INFO, "Cemu: common init done\n");
+
 	// Load graphic packs (includes workarounds like NSMBU crash fix)
 	{
 		fs::path gpPath = ActiveSettings::GetUserDataPath("graphicPacks");
@@ -1418,6 +1430,8 @@ static void libretro_launch_game()
 			log_cb(RETRO_LOG_INFO, "Cemu: Valid title detected, launching via TitleId\n");
 
 		CafeTitleList::AddTitleFromPath(gamePath);
+		if (log_cb)
+			log_cb(RETRO_LOG_INFO, "Cemu: waiting for the mandatory title scan\n");
 		CafeTitleList::WaitForMandatoryScan();
 
 		TitleId baseTitleId;
@@ -1428,6 +1442,8 @@ static void libretro_launch_game()
 			return;
 		}
 
+		if (log_cb)
+			log_cb(RETRO_LOG_INFO, "Cemu: preparing foreground title\n");
 		status = CafeSystem::PrepareForegroundTitle(baseTitleId);
 	}
 	else
@@ -1456,9 +1472,13 @@ static void libretro_launch_game()
 	}
 
 	// Launch the title
+	if (log_cb)
+		log_cb(RETRO_LOG_INFO, "Cemu: launching the foreground title\n");
 	CafeSystem::LaunchForegroundTitle();
 
 	// Wait for GPU init
+	if (log_cb)
+		log_cb(RETRO_LOG_INFO, "Cemu: waiting for GPU init\n");
 	while (!g_isGPUInitFinished)
 		std::this_thread::sleep_for(std::chrono::milliseconds(5));
 

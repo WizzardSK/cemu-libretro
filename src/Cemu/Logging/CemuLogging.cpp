@@ -168,8 +168,10 @@ void cemuLog_createLogFile(bool triggeredByCrash)
 		return;
 	}
 
+#ifndef RETRO_CORE
 	LogContext.threadRunning.store(true);
 	LogContext.log_writer = std::thread(cemuLog_thread);
+#endif
 	lock.unlock();
 }
 
@@ -194,8 +196,22 @@ void cemuLog_writeLineToLog(std::string_view text, bool date, bool new_line)
 	if (new_line)
 		LogContext.text_cache.emplace_back("\n");
 
+#ifdef RETRO_CORE
+	// The core lives inside the frontend's process and dies with it. Anything
+	// still sitting in text_cache when that happens is lost, which is exactly
+	// what makes a crash report unusable - so write through instead.
+	if (LogContext.file_stream.is_open())
+	{
+		for (const auto& entry : LogContext.text_cache)
+			LogContext.file_stream.write(entry.data(), entry.size());
+		LogContext.text_cache.clear();
+		LogContext.file_stream.flush();
+	}
+	lock.unlock();
+#else
 	lock.unlock();
 	LogContext.log_condition.notify_one();
+#endif
 }
 
 bool cemuLog_log(LogType type, std::string_view text)

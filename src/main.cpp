@@ -112,45 +112,68 @@ void WindowsInitCwd()
 	#endif
 }
 
+#ifdef RETRO_CORE
+// Defined by the libretro glue. Cemu's own log is created part-way through the
+// init below, and a hard crash in the frontend's process can take the whole
+// process down before anything reaches the disk - the frontend log is the only
+// output that reliably survives, so every stage is announced there too.
+void LibretroInitProgress(const char* stage);
+#define CEMU_INIT_STAGE(stage) LibretroInitProgress(stage)
+#else
+#define CEMU_INIT_STAGE(stage) ((void)0)
+#endif
+
 void CemuCommonInit()
 {
+	CEMU_INIT_STAGE("drivers");
 	reconfigureGLDrivers();
 	reconfigureVkDrivers();
 	// crypto init
+	CEMU_INIT_STAGE("crypto");
 	AES128_init();
 	// init PPC timer
 	// call this as early as possible because it measures frequency of RDTSC using an asynchronous thread over 3 seconds
+	CEMU_INIT_STAGE("PPC timer");
 	PPCTimer_init();
 
 	WindowsInitCwd();
+	CEMU_INIT_STAGE("exception handler");
     ExceptionHandler_Init();
 	// read config
+	CEMU_INIT_STAGE("config");
 	GetConfigHandle().Load();
 	if (NetworkConfig::XMLExists())
 		n_config.Load();
 	// parallelize expensive init code
+	CEMU_INIT_STAGE("audio API + graphic packs");
 	std::future<int> futureInitAudioAPI = std::async(std::launch::async, []{ IAudioAPI::InitializeStatic(); IAudioInputAPI::InitializeStatic(); return 0; });
 	std::future<int> futureInitGraphicPacks = std::async(std::launch::async, []{ GraphicPack2::LoadAll(); return 0; });
+	CEMU_INIT_STAGE("input");
 	InputManager::instance().load();
 	futureInitAudioAPI.wait();
 	futureInitGraphicPacks.wait();
 	// init Cafe system
+	CEMU_INIT_STAGE("Cafe system");
 	CafeSystem::Initialize();
 	// init title list
+	CEMU_INIT_STAGE("title list");
 	CafeTitleList::Initialize(ActiveSettings::GetUserDataPath("title_list_cache.xml"));
 	for (auto& it : GetConfig().game_paths)
 		CafeTitleList::AddScanPath(_utf8ToPath(it));
 	fs::path mlcPath = ActiveSettings::GetMlcPath();
 	if (!mlcPath.empty())
 		CafeTitleList::SetMLCPath(mlcPath);
+	CEMU_INIT_STAGE("title list scan");
 	CafeTitleList::Refresh();
 	// init save list
+	CEMU_INIT_STAGE("save list");
 	CafeSaveList::Initialize();
 	if (!mlcPath.empty())
 	{
 		CafeSaveList::SetMLCPath(mlcPath);
 		CafeSaveList::Refresh();
 	}
+	CEMU_INIT_STAGE("done");
 }
 
 void mainEmulatorLLE();
