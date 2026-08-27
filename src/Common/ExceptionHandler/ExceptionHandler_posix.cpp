@@ -1,5 +1,10 @@
 #include <signal.h>
-#ifndef __ANDROID__
+#ifdef __ANDROID__
+// bionic ships no execinfo.h, but it does ship the unwinder the C++ runtime
+// uses, and dladdr to turn the addresses back into something readable.
+#include <unwind.h>
+#include <dlfcn.h>
+#else
 #include <execinfo.h>
 #endif
 
@@ -23,6 +28,61 @@
 #if BOOST_OS_LINUX
 #include "ELFSymbolTable.h"
 #endif
+
+#ifdef __ANDROID__
+namespace
+{
+	struct AndroidUnwindState
+	{
+		void** frames;
+		size_t count;
+		size_t capacity;
+	};
+
+	_Unwind_Reason_Code AndroidUnwindFrame(struct _Unwind_Context* ctx, void* arg)
+	{
+		auto* state = static_cast<AndroidUnwindState*>(arg);
+		const uintptr_t ip = _Unwind_GetIP(ctx);
+		if (ip == 0)
+			return _URC_NO_REASON;
+		if (state->count >= state->capacity)
+			return _URC_END_OF_STACK;
+		state->frames[state->count++] = reinterpret_cast<void*>(ip);
+		return _URC_NO_REASON;
+	}
+}
+
+// Prints frames as module+offset, which is what addr2line against the unstripped
+// .so wants - the loaded base is randomised, so the raw addresses are useless on
+// their own.
+static void PrintAndroidBacktrace(void** frames, size_t size)
+{
+	if (size == 0)
+	{
+		CrashLog_WriteLine("Backtrace unavailable (the unwinder returned no frames)");
+		return;
+	}
+	for (size_t i = 0; i < size; i++)
+	{
+		const uintptr_t addr = reinterpret_cast<uintptr_t>(frames[i]);
+		Dl_info info{};
+		if (dladdr(frames[i], &info) != 0 && info.dli_fname != nullptr)
+		{
+			const uintptr_t base = reinterpret_cast<uintptr_t>(info.dli_fbase);
+			std::string symbol;
+			if (info.dli_sname != nullptr)
+				symbol = fmt::format("  {}+0x{:x}", info.dli_sname,
+					addr - reinterpret_cast<uintptr_t>(info.dli_saddr));
+			CrashLog_WriteLine(fmt::format("#{:02} 0x{:016x}  {}+0x{:x}{}", i, addr, info.dli_fname,
+				addr - base, symbol));
+		}
+		else
+		{
+			CrashLog_WriteLine(fmt::format("#{:02} 0x{:016x}  <unmapped>", i, addr));
+		}
+	}
+}
+#endif // __ANDROID__
 
 #if BOOST_OS_LINUX
 void DemangleAndPrintBacktrace(char** backtrace, size_t size)
@@ -129,8 +189,11 @@ void handlerDumpingSignal(int sig, siginfo_t *info, void *context)
 
 	// get void*'s for all entries on the stack
 #ifdef __ANDROID__
-	// bionic ships no execinfo.h - no backtrace() there.
-	size = 0;
+	{
+		AndroidUnwindState state{backtraceArray, 0, 128};
+		_Unwind_Backtrace(&AndroidUnwindFrame, &state);
+		size = state.count;
+	}
 #else
 	size = backtrace(backtraceArray, 128);
 #endif
@@ -143,7 +206,7 @@ void handlerDumpingSignal(int sig, siginfo_t *info, void *context)
     CrashLog_WriteLine(fmt::format("Error: signal {}:", sig));
 
 #if defined(__ANDROID__)
-	CrashLog_WriteLine("Backtrace unavailable on Android");
+	PrintAndroidBacktrace(backtraceArray, size);
 #elif BOOST_OS_LINUX
 	char** symbol_trace = backtrace_symbols(backtraceArray, size);
 

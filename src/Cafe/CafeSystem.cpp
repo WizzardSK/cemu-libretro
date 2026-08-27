@@ -624,15 +624,20 @@ namespace CafeSystem
 		logPlatformInfo();
 		cemuLog_log(LogType::Force, "Used CPU extensions: {}", g_CPUFeatures.GetCommaSeparatedExtensionList());
 		// misc systems
+		cemuLog_log(LogType::Force, "Init: rplSymbolStorage");
 		rplSymbolStorage_init();
 		// allocate memory for all SysAllocators
 		// must happen before COS module init, but also before iosu::kernel::Initialize()
+		cemuLog_log(LogType::Force, "Init: SysAllocators");
 		SysAllocatorContainer::GetInstance().Initialize();
 		// init IOSU modules
+		cemuLog_log(LogType::Force, "Init: IOSU modules");
 		for(auto& module : s_iosuModules)
 			module->SystemLaunch();
 		// init IOSU (deprecated manual init)
+		cemuLog_log(LogType::Force, "Init: iosuCrypto");
 		iosuCrypto_init();
+		cemuLog_log(LogType::Force, "Init: IOSU services");
 		iosu::fsa::Initialize();
 		iosuIoctl_init();
 		iosuAct_init_depr();
@@ -643,7 +648,9 @@ namespace CafeSystem
 		iosu::nim::Initialize();
 		iosu::odm::Initialize();
 		// init hardware register interfaces
+		cemuLog_log(LogType::Force, "Init: HW_SI");
 		HW_SI::Initialize();
+		cemuLog_log(LogType::Force, "Init: done");
 	}
 
 	void SetImplementation(SystemImplementation* impl)
