@@ -1,4 +1,8 @@
 #include <signal.h>
+#if defined(__linux__)
+#include <sys/prctl.h>
+#include <stdio.h>
+#endif
 #ifdef __ANDROID__
 // bionic ships no execinfo.h, but it does ship the unwinder the C++ runtime
 // uses, and dladdr to turn the addresses back into something readable.
@@ -28,6 +32,46 @@
 #if BOOST_OS_LINUX
 #include "ELFSymbolTable.h"
 #endif
+
+#if defined(__linux__)
+// Which mapping an address belongs to. A pc that lands in a stack or in an
+// anonymous rw- region says "jumped into something that is not code", which is
+// a different bug from a bad read, and the backtrace cannot tell them apart
+// when the unwinder stops at the signal frame.
+static std::string DescribeAddress(uintptr_t addr)
+{
+	if (addr == 0)
+		return "null";
+	FILE* maps = fopen("/proc/self/maps", "r");
+	if (!maps)
+		return "unknown";
+	char line[512];
+	std::string result = "unmapped";
+	while (fgets(line, sizeof(line), maps))
+	{
+		unsigned long long start = 0, end = 0;
+		if (sscanf(line, "%llx-%llx", &start, &end) != 2)
+			continue;
+		if (addr < start || addr >= end)
+			continue;
+		std::string text(line);
+		while (!text.empty() && (text.back() == '\n' || text.back() == ' '))
+			text.pop_back();
+		result = fmt::format("{} (+0x{:x})", text, addr - static_cast<uintptr_t>(start));
+		break;
+	}
+	fclose(maps);
+	return result;
+}
+
+static std::string CurrentThreadName()
+{
+	char name[32] = {};
+	if (prctl(PR_GET_NAME, name, 0, 0, 0) != 0)
+		return "?";
+	return std::string(name);
+}
+#endif // __linux__
 
 #ifdef __ANDROID__
 namespace
@@ -154,9 +198,14 @@ void handlerDumpingSignal(int sig, siginfo_t *info, void *context)
 	// address of the call that faulted.
 	{
 		const mcontext_t& mc = static_cast<ucontext_t*>(context)->uc_mcontext;
+		const uintptr_t fault = (uintptr_t)(info ? info->si_addr : nullptr);
 		CrashLog_WriteLine(fmt::format("fault={:#x} pc={:#x} lr={:#x} sp={:#x}",
-			(uint64)(uintptr_t)(info ? info->si_addr : nullptr), (uint64)mc.pc,
-			(uint64)mc.regs[30], (uint64)mc.sp));
+			(uint64)fault, (uint64)mc.pc, (uint64)mc.regs[30], (uint64)mc.sp));
+		CrashLog_WriteLine(fmt::format("thread: {}", CurrentThreadName()));
+		CrashLog_WriteLine(fmt::format("  pc in {}", DescribeAddress((uintptr_t)mc.pc)));
+		CrashLog_WriteLine(fmt::format("  lr in {}", DescribeAddress((uintptr_t)mc.regs[30])));
+		if (fault != (uintptr_t)mc.pc)
+			CrashLog_WriteLine(fmt::format("  fault in {}", DescribeAddress(fault)));
 	}
 #endif
 
