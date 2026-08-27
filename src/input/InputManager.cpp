@@ -31,7 +31,12 @@ InputManager::InputManager()
 #if HAS_LIBRETRO
 	create_provider<LibretroControllerProvider>();
 #endif
-#ifdef HAS_SDL
+// In a libretro core the frontend owns input and LibretroControllerProvider
+// above already covers it, so SDL would only enumerate the same pads a second
+// time. On Android it does worse than that: SDL_InitSubSystem fails without the
+// Java glue a core does not have, InitSDL throws on its own thread, and the
+// process aborts before a game ever boots (issue #5).
+#if defined(HAS_SDL) && !HAS_LIBRETRO
 	create_provider<SDLControllerProvider>();
 #endif
 #if HAS_XINPUT

@@ -289,7 +289,21 @@ void SDLControllerProvider::event_thread()
 	cemu_assert(false);
 #endif
 	SetThreadName("SDL_events");
-	InitSDL();
+
+	// InitSDL throws when the subsystem will not come up, and this is a thread
+	// with nobody above it to catch that - the exception would reach
+	// std::terminate and abort the process. Losing SDL input is survivable;
+	// taking the emulator down with it is not.
+	try
+	{
+		InitSDL();
+	}
+	catch (const std::exception& ex)
+	{
+		cemuLog_log(LogType::Force, "SDL input unavailable, continuing without it: {}", ex.what());
+		return;
+	}
+
 	while (s_running.load(std::memory_order_relaxed))
 	{
 		SDL_Event event{};
