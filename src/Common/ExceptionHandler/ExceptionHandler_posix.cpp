@@ -25,6 +25,7 @@
 #include "Cafe/HW/Espresso/PPCState.h"
 #include "Cafe/HW/Espresso/PPCCallback.h"
 #include "ExceptionHandler.h"
+#include "Breadcrumb.h"
 
 #include "Cafe/HW/Espresso/Debugger/GDBStub.h"
 #include "Cafe/HW/Espresso/Debugger/GDBBreakpoints.h"
@@ -202,6 +203,8 @@ void handlerDumpingSignal(int sig, siginfo_t *info, void *context)
 		CrashLog_WriteLine(fmt::format("fault={:#x} pc={:#x} lr={:#x} sp={:#x}",
 			(uint64)fault, (uint64)mc.pc, (uint64)mc.regs[30], (uint64)mc.sp));
 		CrashLog_WriteLine(fmt::format("thread: {}", CurrentThreadName()));
+		if (const char* crumb = Breadcrumb::t_current)
+			CrashLog_WriteLine(fmt::format("  doing: {}", crumb));
 		CrashLog_WriteLine(fmt::format("  pc in {}", DescribeAddress((uintptr_t)mc.pc)));
 		CrashLog_WriteLine(fmt::format("  lr in {}", DescribeAddress((uintptr_t)mc.regs[30])));
 		if (fault != (uintptr_t)mc.pc)

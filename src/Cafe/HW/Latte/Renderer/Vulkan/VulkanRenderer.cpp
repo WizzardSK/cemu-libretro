@@ -1,4 +1,5 @@
 #include "Cafe/HW/Latte/Renderer/Vulkan/VulkanRenderer.h"
+#include "Common/ExceptionHandler/Breadcrumb.h"
 #include "Cafe/HW/Latte/Renderer/Vulkan/VulkanAPI.h"
 #ifdef RETRO_CORE
 #include "libretro/LibretroDRC.h"
@@ -3852,16 +3853,29 @@ void VulkanRenderer::texture_loadSlice(LatteTexture* hostTexture, sint32 width, 
 	draw_endRenderPass();
 
 	VkMemoryRequirements memRequirements;
-	vkGetImageMemoryRequirements(m_logicalDevice, vkImageObj->m_image, &memRequirements);
+	{
+		BREADCRUMB("texture_loadSlice: vkGetImageMemoryRequirements");
+		vkGetImageMemoryRequirements(m_logicalDevice, vkImageObj->m_image, &memRequirements);
+	}
 
 	uint32 uploadSize = compressedImageSize;// memRequirements.size;
 	uint32 uploadAlignment = memRequirements.alignment;
 
 	VKRSynchronizedRingAllocator& vkMemAllocator = memoryManager->getStagingAllocator();
 
-	auto uploadResv = vkMemAllocator.AllocateBufferMemory(uploadSize, uploadAlignment);
-	memcpy(uploadResv.memPtr, pixelData, compressedImageSize);
-	vkMemAllocator.FlushReservation(uploadResv);
+	VKRSynchronizedRingAllocator::AllocatorReservation_t uploadResv;
+	{
+		BREADCRUMB("texture_loadSlice: staging AllocateBufferMemory");
+		uploadResv = vkMemAllocator.AllocateBufferMemory(uploadSize, uploadAlignment);
+	}
+	{
+		BREADCRUMB("texture_loadSlice: memcpy into staging");
+		memcpy(uploadResv.memPtr, pixelData, compressedImageSize);
+	}
+	{
+		BREADCRUMB("texture_loadSlice: vkFlushMappedMemoryRanges");
+		vkMemAllocator.FlushReservation(uploadResv);
+	}
 
 	FormatInfoVK texFormatInfo;
 	GetTextureFormatInfoVK(hostTexture->format, hostTexture->isDepth, hostTexture->dim, 0, 0, &texFormatInfo);
@@ -3873,7 +3887,10 @@ void VulkanRenderer::texture_loadSlice(LatteTexture* hostTexture, sint32 width, 
 	barrierSubresourceRange.mipLevel = mipIndex;
 	barrierSubresourceRange.baseArrayLayer = is3DTexture ? 0 : sliceIndex;
 	barrierSubresourceRange.layerCount = 1;
-	barrier_image<ANY_TRANSFER | IMAGE_READ | IMAGE_WRITE | HOST_WRITE, ANY_TRANSFER>(vkTexture, barrierSubresourceRange, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+	{
+		BREADCRUMB("texture_loadSlice: barrier to TRANSFER_DST");
+		barrier_image<ANY_TRANSFER | IMAGE_READ | IMAGE_WRITE | HOST_WRITE, ANY_TRANSFER>(vkTexture, barrierSubresourceRange, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+	}
 
 	VkBufferImageCopy imageRegion[2]{};
 	sint32 imageRegionCount = 0;
@@ -3941,9 +3958,15 @@ void VulkanRenderer::texture_loadSlice(LatteTexture* hostTexture, sint32 width, 
 	else
 		cemu_assert_debug(false);
 
-	vkCmdCopyBufferToImage(m_state.currentCommandBuffer, uploadResv.vkBuffer, vkImageObj->m_image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, imageRegionCount, imageRegion);
+	{
+		BREADCRUMB("texture_loadSlice: vkCmdCopyBufferToImage");
+		vkCmdCopyBufferToImage(m_state.currentCommandBuffer, uploadResv.vkBuffer, vkImageObj->m_image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, imageRegionCount, imageRegion);
+	}
 
-	barrier_image<ANY_TRANSFER, ANY_TRANSFER | IMAGE_READ | IMAGE_WRITE>(vkTexture, barrierSubresourceRange, vkTexture->GetDefaultLayout());
+	{
+		BREADCRUMB("texture_loadSlice: barrier back to default layout");
+		barrier_image<ANY_TRANSFER, ANY_TRANSFER | IMAGE_READ | IMAGE_WRITE>(vkTexture, barrierSubresourceRange, vkTexture->GetDefaultLayout());
+	}
 }
 
 LatteTexture* VulkanRenderer::texture_createTextureEx(Latte::E_DIM dim, MPTR physAddress, MPTR physMipAddress, Latte::E_GX2SURFFMT format, uint32 width, uint32 height, uint32 depth, uint32 pitch, uint32 mipLevels,

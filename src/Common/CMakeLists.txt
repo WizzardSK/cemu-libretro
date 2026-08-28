@@ -5,6 +5,8 @@ add_library(CemuCommon
   enumFlags.h
   ExceptionHandler/ExceptionHandler.cpp
   ExceptionHandler/ExceptionHandler.h
+  ExceptionHandler/Breadcrumb.cpp
+  ExceptionHandler/Breadcrumb.h
   FileStream.h
   VFSFileStream.h
   VFSFileStream.cpp
