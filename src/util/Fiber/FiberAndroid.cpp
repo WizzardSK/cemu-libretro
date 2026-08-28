@@ -77,9 +77,7 @@ namespace
 	void CheckSwitchTarget(FiberImpl* leaving, FiberImpl* target)
 	{
 		const char* problem = nullptr;
-		if (target == leaving)
-			problem = "it is already the running fiber";
-		else if (!target->ctx)
+		if (!target->ctx)
 			problem = "it has no saved context";
 		else if (target->running)
 			problem = "it is running on another host thread";
@@ -179,6 +177,19 @@ void Fiber::Switch(Fiber& targetFiber)
 	Fiber* leavingFiber = sCurrentFiber;
 	FiberImpl* leavingImpl = static_cast<FiberImpl*>(leavingFiber->m_implData);
 	FiberImpl* targetImpl = static_cast<FiberImpl*>(targetFiber.m_implData);
+
+	// The scheduler does switch a thread to itself: when a timeslice ends the
+	// thread goes back on the run queue, and __OSGetNextRunableThread() can
+	// hand it straight back if it is still the best candidate on that core.
+	// swapcontext() absorbs that - it saves into the context it then restores
+	// from, so the call returns and the thread simply carries on - and the
+	// ucontext and Windows backends have always let it through. fcontext
+	// cannot: the context was consumed on the way out and jumping to it lands
+	// on whatever the stack now holds. Return instead, which is what the
+	// callers already expect to happen.
+	if (targetImpl == leavingImpl)
+		return;
+
 	CheckSwitchTarget(leavingImpl, targetImpl);
 	sCurrentFiber = &targetFiber;
 	sCurrentImpl = targetImpl;
