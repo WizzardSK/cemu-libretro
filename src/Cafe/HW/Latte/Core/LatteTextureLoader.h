@@ -2130,6 +2130,172 @@ public:
 	}
 };
 
+/*
+** BC decoded to 8 bits per channel, for devices whose Vulkan driver reports no
+** support for the BC formats at all - every Mali one, among others. The
+** _uncompress decoders above answer the same need but hand back floats, which
+** costs 16 bytes per texel where BC1 costs half a byte; that is fine on a
+** desktop with memory to spare and hopeless on a phone. These keep the same
+** block decoders and write the 8-bit values the texture actually held.
+**
+** Decoding is per block rather than per pixel because decodePixelToRGBA would
+** decode the whole 4x4 again for each of its sixteen pixels.
+*/
+static inline uint8 _bcFloatToU8(float v)
+{
+	// The block decoders return 0..1 for UNORM data, but SNORM blocks reach
+	// these too by way of the UNORM decoders, so clamp rather than trust it.
+	if (v <= 0.0f)
+		return 0;
+	if (v >= 1.0f)
+		return 255;
+	return (uint8)(v * 255.0f + 0.5f);
+}
+
+// Shared by BC1, BC2 and BC3: all three decode to RGBA and differ only in how
+// the block is unpacked.
+template<void (*TDecodeBlock)(uint8*, float*)>
+class TextureDecoder_BCn_rgba8 : public TextureDecoder
+{
+public:
+	sint32 getBytesPerTexel(LatteTextureLoaderCtx* textureLoader) override
+	{
+		return 4;
+	}
+
+	void decode(LatteTextureLoaderCtx* textureLoader, uint8* outputData) override
+	{
+		for (sint32 y = 0; y < textureLoader->height; y += textureLoader->stepY)
+		{
+			for (sint32 x = 0; x < textureLoader->width; x += textureLoader->stepX)
+			{
+				uint8* blockData = LatteTextureLoader_GetInput(textureLoader, x, y);
+				sint32 blockSizeX = (std::min)(4, textureLoader->width - x);
+				sint32 blockSizeY = (std::min)(4, textureLoader->height - y);
+				float rgbaBlock[4 * 4 * 4];
+				TDecodeBlock(blockData, rgbaBlock);
+				for (sint32 py = 0; py < blockSizeY; py++)
+				{
+					sint32 yc = y + py;
+					for (sint32 px = 0; px < blockSizeX; px++)
+					{
+						uint8* out = outputData + (x + px + yc * textureLoader->width) * 4;
+						const float* pixel = rgbaBlock + (px + py * 4) * 4;
+						out[0] = _bcFloatToU8(pixel[0]);
+						out[1] = _bcFloatToU8(pixel[1]);
+						out[2] = _bcFloatToU8(pixel[2]);
+						out[3] = _bcFloatToU8(pixel[3]);
+					}
+				}
+			}
+		}
+	}
+
+	void decodePixelToRGBA(uint8* blockData, uint8* outputPixel, uint8 blockOffsetX, uint8 blockOffsetY) override
+	{
+		float rgbaBlock[4 * 4 * 4];
+		TDecodeBlock(blockData, rgbaBlock);
+		const float* pixel = rgbaBlock + (blockOffsetX + blockOffsetY * 4) * 4;
+		outputPixel[0] = _bcFloatToU8(pixel[0]);
+		outputPixel[1] = _bcFloatToU8(pixel[1]);
+		outputPixel[2] = _bcFloatToU8(pixel[2]);
+		outputPixel[3] = _bcFloatToU8(pixel[3]);
+	}
+};
+
+class TextureDecoder_BC1_rgba8 : public TextureDecoder_BCn_rgba8<decodeBC1Block>, public SingletonClass<TextureDecoder_BC1_rgba8> {};
+class TextureDecoder_BC2_rgba8 : public TextureDecoder_BCn_rgba8<decodeBC2Block_UNORM>, public SingletonClass<TextureDecoder_BC2_rgba8> {};
+class TextureDecoder_BC3_rgba8 : public TextureDecoder_BCn_rgba8<decodeBC3Block_UNORM>, public SingletonClass<TextureDecoder_BC3_rgba8> {};
+
+// BC4 holds one channel and BC5 two, so they go to R8 and RG8 rather than
+// padding out to RGBA and paying four bytes a texel for it.
+class TextureDecoder_BC4_r8 : public TextureDecoder, public SingletonClass<TextureDecoder_BC4_r8>
+{
+public:
+	sint32 getBytesPerTexel(LatteTextureLoaderCtx* textureLoader) override
+	{
+		return 1;
+	}
+
+	void decode(LatteTextureLoaderCtx* textureLoader, uint8* outputData) override
+	{
+		for (sint32 y = 0; y < textureLoader->height; y += textureLoader->stepY)
+		{
+			for (sint32 x = 0; x < textureLoader->width; x += textureLoader->stepX)
+			{
+				uint8* blockData = LatteTextureLoader_GetInput(textureLoader, x, y);
+				sint32 blockSizeX = (std::min)(4, textureLoader->width - x);
+				sint32 blockSizeY = (std::min)(4, textureLoader->height - y);
+				float rBlock[4 * 4 * 1];
+				decodeBC4Block_UNORM(blockData, rBlock);
+				for (sint32 py = 0; py < blockSizeY; py++)
+				{
+					sint32 yc = y + py;
+					for (sint32 px = 0; px < blockSizeX; px++)
+						outputData[x + px + yc * textureLoader->width] = _bcFloatToU8(rBlock[px + py * 4]);
+				}
+			}
+		}
+	}
+
+	void decodePixelToRGBA(uint8* blockData, uint8* outputPixel, uint8 blockOffsetX, uint8 blockOffsetY) override
+	{
+		float rBlock[4 * 4 * 1];
+		decodeBC4Block_UNORM(blockData, rBlock);
+		outputPixel[0] = _bcFloatToU8(rBlock[blockOffsetX + blockOffsetY * 4]);
+		outputPixel[1] = 0;
+		outputPixel[2] = 0;
+		outputPixel[3] = 255;
+	}
+};
+
+class TextureDecoder_BC5_rg8 : public TextureDecoder, public SingletonClass<TextureDecoder_BC5_rg8>
+{
+public:
+	sint32 getBytesPerTexel(LatteTextureLoaderCtx* textureLoader) override
+	{
+		return 2;
+	}
+
+	void decode(LatteTextureLoaderCtx* textureLoader, uint8* outputData) override
+	{
+		for (sint32 y = 0; y < textureLoader->height; y += textureLoader->stepY)
+		{
+			for (sint32 x = 0; x < textureLoader->width; x += textureLoader->stepX)
+			{
+				uint8* blockData = LatteTextureLoader_GetInput(textureLoader, x, y);
+				sint32 blockSizeX = (std::min)(4, textureLoader->width - x);
+				sint32 blockSizeY = (std::min)(4, textureLoader->height - y);
+				float rgBlock[4 * 4 * 2];
+				decodeBC5Block_UNORM(blockData, rgBlock);
+				for (sint32 py = 0; py < blockSizeY; py++)
+				{
+					sint32 yc = y + py;
+					for (sint32 px = 0; px < blockSizeX; px++)
+					{
+						uint8* out = outputData + (x + px + yc * textureLoader->width) * 2;
+						const float* pixel = rgBlock + (px + py * 4) * 2;
+						out[0] = _bcFloatToU8(pixel[0]);
+						out[1] = _bcFloatToU8(pixel[1]);
+					}
+				}
+			}
+		}
+	}
+
+	void decodePixelToRGBA(uint8* blockData, uint8* outputPixel, uint8 blockOffsetX, uint8 blockOffsetY) override
+	{
+		float rgBlock[4 * 4 * 2];
+		decodeBC5Block_UNORM(blockData, rgBlock);
+		const float* pixel = rgBlock + (blockOffsetX + blockOffsetY * 4) * 2;
+		outputPixel[0] = _bcFloatToU8(pixel[0]);
+		outputPixel[1] = _bcFloatToU8(pixel[1]);
+		outputPixel[2] = 0;
+		outputPixel[3] = 255;
+	}
+};
+
+
 class TextureDecoder_BC5 : public TextureDecoder, public SingletonClass<TextureDecoder_BC5>
 {
 public:

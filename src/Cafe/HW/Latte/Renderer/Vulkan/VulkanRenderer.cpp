@@ -2247,6 +2247,33 @@ void VulkanRenderer::QueryAvailableFormats()
 			//cemuLog_log(LogType::Force, "{}", missingStr.c_str());
 		}
 	}
+
+	// Record whether the BC formats can actually be sampled, rather than only
+	// saying so in the log. Every desktop GPU supports them, so nothing ever had
+	// to ask; Mali supports none, and until this was checked the renderer went
+	// on to create BC images anyway. That is a driver the spec says should
+	// refuse the image - this one creates it and then faults inside
+	// vkCmdCopyBufferToImage on the first upload.
+	auto canSample = [&](VkFormat fmt) {
+		VkFormatProperties prop{};
+		vkGetPhysicalDeviceFormatProperties(m_physicalDevice, fmt, &prop);
+		return (prop.optimalTilingFeatures & VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT) != 0 &&
+		       (prop.optimalTilingFeatures & VK_FORMAT_FEATURE_TRANSFER_DST_BIT) != 0;
+	};
+	// Both spellings of each have to work, since a texture may arrive as either.
+	m_supportedFormatInfo.fmt_bc1 = canSample(VK_FORMAT_BC1_RGBA_UNORM_BLOCK) && canSample(VK_FORMAT_BC1_RGBA_SRGB_BLOCK);
+	m_supportedFormatInfo.fmt_bc2 = canSample(VK_FORMAT_BC2_UNORM_BLOCK) && canSample(VK_FORMAT_BC2_SRGB_BLOCK);
+	m_supportedFormatInfo.fmt_bc3 = canSample(VK_FORMAT_BC3_UNORM_BLOCK) && canSample(VK_FORMAT_BC3_SRGB_BLOCK);
+	m_supportedFormatInfo.fmt_bc4 = canSample(VK_FORMAT_BC4_UNORM_BLOCK) && canSample(VK_FORMAT_BC4_SNORM_BLOCK);
+	m_supportedFormatInfo.fmt_bc5 = canSample(VK_FORMAT_BC5_UNORM_BLOCK) && canSample(VK_FORMAT_BC5_SNORM_BLOCK);
+	if (!m_supportedFormatInfo.fmt_bc1 || !m_supportedFormatInfo.fmt_bc2 || !m_supportedFormatInfo.fmt_bc3 ||
+	    !m_supportedFormatInfo.fmt_bc4 || !m_supportedFormatInfo.fmt_bc5)
+	{
+		cemuLog_log(LogType::Force,
+			"BC texture formats unsupported (BC1 {}, BC2 {}, BC3 {}, BC4 {}, BC5 {}) - decompressing them on upload",
+			m_supportedFormatInfo.fmt_bc1, m_supportedFormatInfo.fmt_bc2, m_supportedFormatInfo.fmt_bc3,
+			m_supportedFormatInfo.fmt_bc4, m_supportedFormatInfo.fmt_bc5);
+	}
 }
 
 bool VulkanRenderer::ImguiBegin(bool mainWindow)
@@ -2919,44 +2946,124 @@ void VulkanRenderer::GetTextureFormatInfoVK(Latte::E_GX2SURFFMT format, bool isD
 			break;
 			// compressed formats
 		case Latte::E_GX2SURFFMT::BC1_SRGB:
-			formatInfoOut->vkImageFormat = VK_FORMAT_BC1_RGBA_SRGB_BLOCK; // todo - verify
-			formatInfoOut->decoder = TextureDecoder_BC1::getInstance();
+			if (m_supportedFormatInfo.fmt_bc1)
+			{
+				formatInfoOut->vkImageFormat = VK_FORMAT_BC1_RGBA_SRGB_BLOCK; // todo - verify
+				formatInfoOut->decoder = TextureDecoder_BC1::getInstance();
+			}
+			else
+			{
+				formatInfoOut->vkImageFormat = VK_FORMAT_R8G8B8A8_SRGB;
+				formatInfoOut->decoder = TextureDecoder_BC1_rgba8::getInstance();
+			}
 			break;
 		case Latte::E_GX2SURFFMT::BC1_UNORM:
-			formatInfoOut->vkImageFormat = VK_FORMAT_BC1_RGBA_UNORM_BLOCK; // todo - verify
-			formatInfoOut->decoder = TextureDecoder_BC1::getInstance();
+			if (m_supportedFormatInfo.fmt_bc1)
+			{
+				formatInfoOut->vkImageFormat = VK_FORMAT_BC1_RGBA_UNORM_BLOCK; // todo - verify
+				formatInfoOut->decoder = TextureDecoder_BC1::getInstance();
+			}
+			else
+			{
+				formatInfoOut->vkImageFormat = VK_FORMAT_R8G8B8A8_UNORM;
+				formatInfoOut->decoder = TextureDecoder_BC1_rgba8::getInstance();
+			}
 			break;
 		case Latte::E_GX2SURFFMT::BC2_UNORM:
-			formatInfoOut->vkImageFormat = VK_FORMAT_BC2_UNORM_BLOCK; // todo - verify
-			formatInfoOut->decoder = TextureDecoder_BC2::getInstance();
+			if (m_supportedFormatInfo.fmt_bc2)
+			{
+				formatInfoOut->vkImageFormat = VK_FORMAT_BC2_UNORM_BLOCK; // todo - verify
+				formatInfoOut->decoder = TextureDecoder_BC2::getInstance();
+			}
+			else
+			{
+				formatInfoOut->vkImageFormat = VK_FORMAT_R8G8B8A8_UNORM;
+				formatInfoOut->decoder = TextureDecoder_BC2_rgba8::getInstance();
+			}
 			break;
 		case Latte::E_GX2SURFFMT::BC2_SRGB:
-			formatInfoOut->vkImageFormat = VK_FORMAT_BC2_SRGB_BLOCK; // todo - verify
-			formatInfoOut->decoder = TextureDecoder_BC2::getInstance();
+			if (m_supportedFormatInfo.fmt_bc2)
+			{
+				formatInfoOut->vkImageFormat = VK_FORMAT_BC2_SRGB_BLOCK; // todo - verify
+				formatInfoOut->decoder = TextureDecoder_BC2::getInstance();
+			}
+			else
+			{
+				formatInfoOut->vkImageFormat = VK_FORMAT_R8G8B8A8_SRGB;
+				formatInfoOut->decoder = TextureDecoder_BC2_rgba8::getInstance();
+			}
 			break;
 		case Latte::E_GX2SURFFMT::BC3_UNORM:
-			formatInfoOut->vkImageFormat = VK_FORMAT_BC3_UNORM_BLOCK;
-			formatInfoOut->decoder = TextureDecoder_BC3::getInstance();
+			if (m_supportedFormatInfo.fmt_bc3)
+			{
+				formatInfoOut->vkImageFormat = VK_FORMAT_BC3_UNORM_BLOCK;
+				formatInfoOut->decoder = TextureDecoder_BC3::getInstance();
+			}
+			else
+			{
+				formatInfoOut->vkImageFormat = VK_FORMAT_R8G8B8A8_UNORM;
+				formatInfoOut->decoder = TextureDecoder_BC3_rgba8::getInstance();
+			}
 			break;
 		case Latte::E_GX2SURFFMT::BC3_SRGB:
-			formatInfoOut->vkImageFormat = VK_FORMAT_BC3_SRGB_BLOCK;
-			formatInfoOut->decoder = TextureDecoder_BC3::getInstance();
+			if (m_supportedFormatInfo.fmt_bc3)
+			{
+				formatInfoOut->vkImageFormat = VK_FORMAT_BC3_SRGB_BLOCK;
+				formatInfoOut->decoder = TextureDecoder_BC3::getInstance();
+			}
+			else
+			{
+				formatInfoOut->vkImageFormat = VK_FORMAT_R8G8B8A8_SRGB;
+				formatInfoOut->decoder = TextureDecoder_BC3_rgba8::getInstance();
+			}
 			break;
 		case Latte::E_GX2SURFFMT::BC4_UNORM:
-			formatInfoOut->vkImageFormat = VK_FORMAT_BC4_UNORM_BLOCK;
-			formatInfoOut->decoder = TextureDecoder_BC4::getInstance();
+			if (m_supportedFormatInfo.fmt_bc4)
+			{
+				formatInfoOut->vkImageFormat = VK_FORMAT_BC4_UNORM_BLOCK;
+				formatInfoOut->decoder = TextureDecoder_BC4::getInstance();
+			}
+			else
+			{
+				formatInfoOut->vkImageFormat = VK_FORMAT_R8_UNORM;
+				formatInfoOut->decoder = TextureDecoder_BC4_r8::getInstance();
+			}
 			break;
 		case Latte::E_GX2SURFFMT::BC4_SNORM:
-			formatInfoOut->vkImageFormat = VK_FORMAT_BC4_SNORM_BLOCK;
-			formatInfoOut->decoder = TextureDecoder_BC4::getInstance();
+			if (m_supportedFormatInfo.fmt_bc4)
+			{
+				formatInfoOut->vkImageFormat = VK_FORMAT_BC4_SNORM_BLOCK;
+				formatInfoOut->decoder = TextureDecoder_BC4::getInstance();
+			}
+			else
+			{
+				formatInfoOut->vkImageFormat = VK_FORMAT_R8_UNORM;
+				formatInfoOut->decoder = TextureDecoder_BC4_r8::getInstance();
+			}
 			break;
 		case Latte::E_GX2SURFFMT::BC5_UNORM:
-			formatInfoOut->vkImageFormat = VK_FORMAT_BC5_UNORM_BLOCK;
-			formatInfoOut->decoder = TextureDecoder_BC5::getInstance();
+			if (m_supportedFormatInfo.fmt_bc5)
+			{
+				formatInfoOut->vkImageFormat = VK_FORMAT_BC5_UNORM_BLOCK;
+				formatInfoOut->decoder = TextureDecoder_BC5::getInstance();
+			}
+			else
+			{
+				formatInfoOut->vkImageFormat = VK_FORMAT_R8G8_UNORM;
+				formatInfoOut->decoder = TextureDecoder_BC5_rg8::getInstance();
+			}
 			break;
 		case Latte::E_GX2SURFFMT::BC5_SNORM:
-			formatInfoOut->vkImageFormat = VK_FORMAT_BC5_SNORM_BLOCK;
-			formatInfoOut->decoder = TextureDecoder_BC5::getInstance();
+			if (m_supportedFormatInfo.fmt_bc5)
+			{
+				formatInfoOut->vkImageFormat = VK_FORMAT_BC5_SNORM_BLOCK;
+				formatInfoOut->decoder = TextureDecoder_BC5::getInstance();
+			}
+			else
+			{
+				formatInfoOut->vkImageFormat = VK_FORMAT_R8G8_UNORM;
+				formatInfoOut->decoder = TextureDecoder_BC5_rg8::getInstance();
+			}
 			break;
 		case Latte::E_GX2SURFFMT::R24_X8_UNORM:
 			formatInfoOut->vkImageFormat = VK_FORMAT_R32_SFLOAT;
