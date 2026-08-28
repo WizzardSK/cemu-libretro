@@ -110,6 +110,7 @@ namespace coreinit
 	{
 		OSHostThread(OSThread_t* thread) : m_thread(thread), m_fiber((void(*)(void*))__OSFiberThreadEntry, this, this)
 		{
+			m_fiber.SetDebugName(fmt::format("cemu ppc thread {:08x}", memory_getVirtualOffsetFromPointer(thread)).c_str());
 		}
 
 		~OSHostThread() = default;
@@ -1255,7 +1256,20 @@ namespace coreinit
 			const sint32 ownerCore = itr->second->m_ownerCore;
 			if (ownerCore < 0 || ownerCore == (sint32)coreIndex)
 				return true;
-			return !thread->context.hasCoreAffinitySet(ownerCore);
+			if (thread->context.hasCoreAffinitySet(ownerCore))
+				return false;
+			// The fiber is about to resume on a host thread other than the one
+			// it suspended on, which is what m_ownerCore exists to avoid; it is
+			// allowed here only so a narrowed affinity cannot starve the thread.
+			// Log it unconditionally, not behind the debug flag: it is the one
+			// remaining path by which a fiber can migrate, so it is the first
+			// thing to suspect if a switch goes wrong, and it has to show up in
+			// a report from someone who did not know to turn logging up. The
+			// steal rewrites m_ownerCore, so this fires on an affinity change
+			// rather than on every scheduling decision.
+			cemuLog_log(LogType::Force, "[OSScheduler] core {} taking thread {:08x} from core {} - affinity {:03b} no longer covers the owner",
+				coreIndex, memory_getVirtualOffsetFromPointer(thread), ownerCore, (uint32)thread->context.affinity);
+			return true;
 		};
 
 		OSThread_t* threadItr = runQueue->head.GetPtr();
@@ -1530,6 +1544,7 @@ namespace coreinit
 
 		// create scheduler idle fiber and switch to it
 		g_idleLoopFiber[t_assignedCoreIndex] = new Fiber(__OSThreadCoreIdle, nullptr, nullptr);
+		g_idleLoopFiber[t_assignedCoreIndex]->SetDebugName(fmt::format("cemu idle core {}", t_assignedCoreIndex).c_str());
 		cemu_assert_debug(PPCInterpreter_getCurrentInstance() == nullptr);
 		__OSLockScheduler();
 		if (coreinit_libretro_debug_enabled())

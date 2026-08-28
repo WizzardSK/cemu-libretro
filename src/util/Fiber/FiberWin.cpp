@@ -34,6 +34,12 @@ void Fiber::Switch(Fiber& targetFiber)
 	SwitchToFiber((HANDLE)targetFiber.m_implData);
 }
 
+void Fiber::SetDebugName(const char* name)
+{
+	// nothing to name here: the stack is a plain allocation and this backend
+	// has no crash reporter reading the mapping table
+}
+
 void* Fiber::GetFiberPrivateData()
 {
 	return sCurrentFiber->m_privateData;
