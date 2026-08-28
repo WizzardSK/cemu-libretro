@@ -76,6 +76,8 @@ if(ENABLE_LIBRETRO)
 		main.cpp
 		mainLLE.cpp
 		libretro/CemuLibretro.cpp
+		libretro/LibretroVkQueue.cpp
+		libretro/LibretroVkQueue.h
 		libretro/LibretroAudioAPI.cpp
 		libretro/LibretroWindowSystem.cpp
 	)

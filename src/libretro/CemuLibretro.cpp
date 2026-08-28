@@ -44,6 +44,7 @@
 #include "interface/WindowSystem.h"
 
 #include "LibretroAudioAPI.h"
+#include "LibretroVkQueue.h"
 
 // GL function needed for framebuffer readback (glBindFramebuffer is in Cemu's glext.h)
 #ifdef ENABLE_OPENGL
@@ -1782,6 +1783,7 @@ static void libretro_context_reset()
 				iface->interface_type == RETRO_HW_RENDER_INTERFACE_VULKAN)
 			{
 				s_vk_interface = (const struct retro_hw_render_interface_vulkan*)iface;
+				LibretroVkQueue::SetInterface(s_vk_interface);
 				if (log_cb)
 					log_cb(RETRO_LOG_INFO, "Cemu: Got Vulkan HW render interface (device=%p queue=%p)\n",
 						(void*)s_vk_interface->device, (void*)s_vk_interface->queue);
@@ -2282,10 +2284,12 @@ RETRO_API void retro_run()
 					cur_iface->interface_type == RETRO_HW_RENDER_INTERFACE_VULKAN)
 				{
 					s_vk_interface = (const struct retro_hw_render_interface_vulkan*)cur_iface;
+					LibretroVkQueue::SetInterface(s_vk_interface);
 				}
 				else
 				{
 					s_vk_interface = nullptr;
+					LibretroVkQueue::SetInterface(nullptr);
 				}
 			}
 
