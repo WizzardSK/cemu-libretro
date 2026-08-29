@@ -564,11 +564,18 @@ namespace coreinit
 	void OSWaitEvent(OSEvent* event);
 	bool OSWaitEventWithTimeout(OSEvent* event, uint64 timeout);
 
-	// Zero-timeout waits per event since the last call, which this clears. A
-	// zero timeout is a poll, so a title stuck asking "is it ready yet?" shows
-	// up here as one event with a large count - and that event is the thing it
-	// is waiting for.
-	void GetZeroTimeoutPollCounts(std::vector<std::pair<MPTR, uint64>>& out);
+	// Zero-timeout waits per event since the last call, with how often the same
+	// event was signalled in that window, which this clears. A zero timeout is
+	// a poll, so a title stuck asking "is it ready yet?" shows up as an event
+	// with a large poll count - and no signals at all says nobody is answering.
+	struct EventPollStats
+	{
+		MPTR address;
+		uint64 polls;
+		uint64 signals;
+	};
+
+	void GetZeroTimeoutPollCounts(std::vector<EventPollStats>& out);
 	void OSSignalEventInternal(OSEvent* event); // assumes lock is already held
 	void OSSignalEvent(OSEvent* event);
 	void OSSignalEventAllInternal(OSEvent* event); // assumes lock is already held

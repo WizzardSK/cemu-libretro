@@ -2346,11 +2346,14 @@ static void DumpEmulatedThreads()
 	// What the title is polling, if anything. An event with a five-figure count
 	// between two snapshots is a spin loop waiting on something that never
 	// arrives - and its address is the object to look at.
-	std::vector<std::pair<MPTR, uint64>> polls;
+	std::vector<coreinit::EventPollStats> polls;
 	coreinit::GetZeroTimeoutPollCounts(polls);
-	std::sort(polls.begin(), polls.end(), [](const auto& a, const auto& b) { return a.second > b.second; });
-	for (size_t i = 0; i < polls.size() && i < 5; i++)
-		cemuLog_log(LogType::Force, "  polled event {:08x}: {} times with a zero timeout", polls[i].first, polls[i].second);
+	std::sort(polls.begin(), polls.end(), [](const auto& a, const auto& b) { return a.polls > b.polls; });
+	for (size_t i = 0; i < polls.size() && i < 6; i++)
+	{
+		cemuLog_log(LogType::Force, "  event {:08x}: polled {} times, signalled {}", polls[i].address, polls[i].polls,
+			polls[i].signals);
+	}
 	for (sint32 i = 0; i < activeThreadCount; i++)
 	{
 		const MPTR threadMPTR = activeThread[i];

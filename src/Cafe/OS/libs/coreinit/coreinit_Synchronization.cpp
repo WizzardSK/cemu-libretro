@@ -82,13 +82,24 @@ namespace coreinit
 	// object the title is waiting for. Counted per event so the libretro core's
 	// thread snapshot can print the busiest ones; free when nothing polls.
 	static std::unordered_map<MPTR, uint64> s_zeroTimeoutPolls;
+	// Signals for the same events, so a poll count can be read against them: an
+	// event polled thousands of times and signalled zero is one nobody is
+	// waking, which is a different bug from one that simply gets polled a lot.
+	static std::unordered_map<MPTR, uint64> s_eventSignals;
 	static std::mutex s_zeroTimeoutPollsMutex;
 
-	void GetZeroTimeoutPollCounts(std::vector<std::pair<MPTR, uint64>>& out)
+	void GetZeroTimeoutPollCounts(std::vector<EventPollStats>& out)
 	{
 		std::lock_guard lock(s_zeroTimeoutPollsMutex);
-		out.assign(s_zeroTimeoutPolls.begin(), s_zeroTimeoutPolls.end());
+		out.clear();
+		out.reserve(s_zeroTimeoutPolls.size());
+		for (const auto& [address, polls] : s_zeroTimeoutPolls)
+		{
+			const auto signalled = s_eventSignals.find(address);
+			out.push_back({address, polls, (signalled != s_eventSignals.end()) ? signalled->second : 0});
+		}
 		s_zeroTimeoutPolls.clear();
+		s_eventSignals.clear();
 	}
 
 	bool OSWaitEventWithTimeout(OSEvent* event, uint64 timeout)
@@ -160,6 +171,10 @@ namespace coreinit
 
 	void OSSignalEvent(OSEvent* event)
 	{
+		{
+			std::lock_guard lock(s_zeroTimeoutPollsMutex);
+			s_eventSignals[memory_getVirtualOffsetFromPointer(event)]++;
+		}
 		__OSLockScheduler();
 		OSSignalEventInternal(event);
 		__OSUnlockScheduler();
