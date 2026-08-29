@@ -944,6 +944,22 @@ static void libretro_apply_core_options()
 
 	auto& cfg = GetConfig();
 
+	// Logging. Save logging is low-volume (a handful of lines per save) and is
+	// the only view we have into a title's save path on someone else's device,
+	// so it is always on. File-access logging is not: a title opens thousands
+	// of files while loading, so it stays behind an option, for tracking down a
+	// stuck save or a file the emulator cannot find.
+	{
+		uint64 logFlags = cfg.log_flag.GetValue() | cemuLog_getFlag(LogType::Save);
+		if (const char* v = libretro_get_option_value("cemu_log_filesystem"))
+		{
+			bool b;
+			if (libretro_parse_enabled_disabled(v, b) && b)
+				logFlags |= cemuLog_getFlag(LogType::CoreinitFile);
+		}
+		cemuLog_setActiveLoggingFlags(logFlags);
+	}
+
 	// Async shader compilation
 	if (const char* v = libretro_get_option_value("cemu_async_shader_compile"))
 	{
@@ -1178,6 +1194,7 @@ RETRO_API void retro_set_environment(retro_environment_t cb)
 		{"cemu_drc_mode", "DRC Display Mode; disabled|toggle|side_by_side|top_bottom|picture_in_picture"},
 		{"cemu_drc_position", "DRC Position; normal|swapped"},
 		{"cemu_wiimote_input", "Wii Remote input; port1_shared|ports2_4|disabled"},
+		{"cemu_log_filesystem", "Log file access (debugging); disabled|enabled"},
 #if defined(ENABLE_VULKAN) && defined(ENABLE_OPENGL)
 		{"cemu_gpu_api", "Graphics API (restart); OpenGL|Vulkan"},
 #endif
