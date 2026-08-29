@@ -957,6 +957,19 @@ static void libretro_apply_core_options()
 			if (libretro_parse_enabled_disabled(v, b) && b)
 				logFlags |= cemuLog_getFlag(LogType::CoreinitFile);
 		}
+		// Thread synchronisation: what a title's thread is waiting on. The only
+		// way to tell a title that stopped asking the emulator for anything -
+		// a save that never starts, a loading screen that never ends - from one
+		// that is merely slow, since a blocked thread makes no calls at all.
+		if (const char* v = libretro_get_option_value("cemu_log_thread_sync"))
+		{
+			bool b;
+			if (libretro_parse_enabled_disabled(v, b) && b)
+			{
+				logFlags |= cemuLog_getFlag(LogType::CoreinitThreadSync);
+				logFlags |= cemuLog_getFlag(LogType::CoreinitThread);
+			}
+		}
 		cemuLog_setActiveLoggingFlags(logFlags);
 	}
 
@@ -1195,6 +1208,7 @@ RETRO_API void retro_set_environment(retro_environment_t cb)
 		{"cemu_drc_position", "DRC Position; normal|swapped"},
 		{"cemu_wiimote_input", "Wii Remote input; port1_shared|ports2_4|disabled"},
 		{"cemu_log_filesystem", "Log file access (debugging); disabled|enabled"},
+		{"cemu_log_thread_sync", "Log thread synchronisation (debugging); disabled|enabled"},
 #if defined(ENABLE_VULKAN) && defined(ENABLE_OPENGL)
 		{"cemu_gpu_api", "Graphics API (restart); OpenGL|Vulkan"},
 #endif
