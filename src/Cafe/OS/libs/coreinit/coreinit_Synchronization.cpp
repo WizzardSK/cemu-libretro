@@ -5,6 +5,10 @@
 #include "Cafe/OS/libs/coreinit/coreinit_Time.h"
 #include "util/helpers/fspinlock.h"
 
+#include <mutex>
+#include <unordered_map>
+#include <vector>
+
 namespace coreinit
 {
 	/************* OSEvent ************/
@@ -73,6 +77,20 @@ namespace coreinit
 		}
 	}
 
+	// A title that is stuck polling shows up here: OSWaitEventWithTimeout with a
+	// zero timeout is a poll, and one that never comes back signalled names the
+	// object the title is waiting for. Counted per event so the libretro core's
+	// thread snapshot can print the busiest ones; free when nothing polls.
+	static std::unordered_map<MPTR, uint64> s_zeroTimeoutPolls;
+	static std::mutex s_zeroTimeoutPollsMutex;
+
+	void GetZeroTimeoutPollCounts(std::vector<std::pair<MPTR, uint64>>& out)
+	{
+		std::lock_guard lock(s_zeroTimeoutPollsMutex);
+		out.assign(s_zeroTimeoutPolls.begin(), s_zeroTimeoutPolls.end());
+		s_zeroTimeoutPolls.clear();
+	}
+
 	bool OSWaitEventWithTimeout(OSEvent* event, uint64 timeout)
 	{
 		__OSLockScheduler();
@@ -86,6 +104,10 @@ namespace coreinit
 			if (timeout == 0)
 			{
 				// fail immediately
+				{
+					std::lock_guard lock(s_zeroTimeoutPollsMutex);
+					s_zeroTimeoutPolls[memory_getVirtualOffsetFromPointer(event)]++;
+				}
 				__OSUnlockScheduler();
 				return false;
 			}
