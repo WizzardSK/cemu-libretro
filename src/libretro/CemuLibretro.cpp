@@ -11,6 +11,8 @@
 #include "config/NetworkSettings.h"
 
 #include "Cafe/CafeSystem.h"
+#include "Cafe/OS/libs/coreinit/coreinit_Thread.h"
+#include "Cafe/OS/RPL/rpl_structs.h"
 #include "Cafe/TitleList/TitleList.h"
 #include "Cafe/TitleList/TitleInfo.h"
 #include "Cafe/TitleList/SaveList.h"
@@ -262,6 +264,8 @@ static auto& s_framebuffer = s_libretro_framebuffer; // alias for existing OpenG
 static bool s_use_hw_render = false;
 static bool s_hw_render_initialized = false;
 static bool s_core_options_supported = false;
+// Periodic thread snapshots; see DumpEmulatedThreads().
+static bool s_log_thread_dump = false;
 
 enum class SelectedGraphicsAPI { OpenGL, Vulkan };
 static SelectedGraphicsAPI s_graphics_api = SelectedGraphicsAPI::OpenGL;
@@ -971,6 +975,16 @@ static void libretro_apply_core_options()
 			}
 		}
 		cemuLog_setActiveLoggingFlags(logFlags);
+
+		// Not a log flag: this one prints a table from retro_run rather than
+		// tracing calls, so it is its own switch.
+		s_log_thread_dump = false;
+		if (const char* v = libretro_get_option_value("cemu_log_thread_dump"))
+		{
+			bool b;
+			if (libretro_parse_enabled_disabled(v, b))
+				s_log_thread_dump = b;
+		}
 	}
 
 	// Async shader compilation
@@ -1209,6 +1223,7 @@ RETRO_API void retro_set_environment(retro_environment_t cb)
 		{"cemu_wiimote_input", "Wii Remote input; port1_shared|ports2_4|disabled"},
 		{"cemu_log_filesystem", "Log file access (debugging); disabled|enabled"},
 		{"cemu_log_thread_sync", "Log thread synchronisation (debugging); disabled|enabled"},
+		{"cemu_log_thread_dump", "Log Wii U thread snapshots (debugging); disabled|enabled"},
 #if defined(ENABLE_VULKAN) && defined(ENABLE_OPENGL)
 		{"cemu_gpu_api", "Graphics API (restart); OpenGL|Vulkan"},
 #endif
@@ -2318,8 +2333,67 @@ static void libretro_load_blit_gl_funcs()
 extern GLuint libretro_getBackbufferRBO();
 #endif
 
+// A periodic snapshot of the emulated machine's threads: name, state, and the
+// address each one is sitting at, resolved to a module when the loader knows
+// one. A title that stops asking the emulator for anything - a save that never
+// starts, a load that never ends - shows up here either as a thread parked in
+// WAITING, which names the subsystem to look at, or as one spinning inside the
+// game's own code, which says the emulator is not the one that stopped.
+static void DumpEmulatedThreads()
+{
+	cemuLog_log(LogType::Force, "--- Wii U threads ---");
+	for (sint32 i = 0; i < activeThreadCount; i++)
+	{
+		const MPTR threadMPTR = activeThread[i];
+		if (!threadMPTR)
+			continue;
+
+		OSThread_t* thread = (OSThread_t*)memory_getPointerFromVirtualOffsetAllowNull(threadMPTR);
+		if (!thread)
+			continue;
+
+		const char* name = thread->threadName.GetPtr() ? thread->threadName.GetPtr() : "<unnamed>";
+
+		const char* state = "?";
+		switch (thread->state.value())
+		{
+			case OSThread_t::THREAD_STATE::STATE_NONE: state = "none"; break;
+			case OSThread_t::THREAD_STATE::STATE_READY: state = "ready"; break;
+			case OSThread_t::THREAD_STATE::STATE_RUNNING: state = "running"; break;
+			case OSThread_t::THREAD_STATE::STATE_WAITING: state = "waiting"; break;
+			case OSThread_t::THREAD_STATE::STATE_MORIBUND: state = "moribund"; break;
+		}
+
+		const uint32 pc = thread->context.srr0;
+		RPLModule* module = RPLLoader_FindModuleByCodeAddr(pc);
+		if (module)
+		{
+			cemuLog_log(LogType::Force, "  {:08x} {:24} {:9} suspend={} pc={:08x} ({}+0x{:x})", threadMPTR, name, state,
+				(sint32)thread->suspendCounter, pc, module->moduleName, pc - module->regionMappingBase_text.GetMPTR());
+		}
+		else
+		{
+			cemuLog_log(LogType::Force, "  {:08x} {:24} {:9} suspend={} pc={:08x}", threadMPTR, name, state,
+				(sint32)thread->suspendCounter, pc, state);
+		}
+	}
+}
+
 RETRO_API void retro_run()
 {
+	// Off unless the option is on; every few seconds is enough to tell a parked
+	// thread from a busy one, and cheap next to a frame.
+	if (s_log_thread_dump)
+	{
+		static std::chrono::steady_clock::time_point s_last_dump;
+		const auto now = std::chrono::steady_clock::now();
+		if (now - s_last_dump >= std::chrono::seconds(3))
+		{
+			s_last_dump = now;
+			DumpEmulatedThreads();
+		}
+	}
+
 	if (s_ppc_process_exited.exchange(false, std::memory_order_acq_rel) && environ_cb)
 	{
 		cemuLog_log(LogType::Force, "[Libretro] emulated process exited, asking the frontend to shut down");
