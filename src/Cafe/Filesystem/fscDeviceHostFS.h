@@ -17,6 +17,7 @@ public:
 	uint64 fscGetSeek() override;
 	void fscSetFileLength(uint64 endOffset) override;
 	bool fscDirNext(FSCDirEntry* dirEntry) override;
+	void fscFlush() override;
 
 private:
 	FSCVirtualFile_Host(uint32 type) : m_type(type) {};

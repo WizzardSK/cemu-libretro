@@ -157,6 +157,15 @@ bool FSCVirtualFile_Host::fscDirNext(FSCDirEntry* dirEntry)
 	return true;
 }
 
+void FSCVirtualFile_Host::fscFlush()
+{
+	// Only writable files hold anything worth flushing; the read side has
+	// nothing pending, and directories have no stream at all.
+	if (m_type != FSC_TYPE_FILE || !m_isWritable || !m_fs)
+		return;
+	m_fs->Flush();
+}
+
 FSCVirtualFile* FSCVirtualFile_Host::OpenFile(const fs::path& path, FSC_ACCESS_FLAG accessFlags, sint32& fscStatus)
 {
 	if (!HAS_FLAG(accessFlags, FSC_ACCESS_FLAG::OPEN_FILE) && !HAS_FLAG(accessFlags, FSC_ACCESS_FLAG::OPEN_DIR))

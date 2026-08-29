@@ -158,6 +158,15 @@ struct FSCVirtualFile
 		return false;
 	}
 
+	// Hand anything the host still holds in its own buffers to the OS. Titles
+	// call FSFlushFile/FSFlushQuota to make save data durable at that point,
+	// and a libretro core cannot rely on the process exiting cleanly for the
+	// buffers to be written out. Devices with nothing to flush (archives,
+	// in-memory files) keep the default no-op.
+	virtual void fscFlush()
+	{
+	}
+
 	FSCDirIteratorState* dirIterator{};
 
 	bool m_isAppend{ false };
@@ -183,6 +192,7 @@ bool fsc_rename(const char* srcPath, const char* dstPath, sint32* fscStatus);
 bool fsc_remove(const char* path, sint32* fscStatus);
 bool fsc_nextDir(FSCVirtualFile* fscFile, FSCDirEntry* dirEntry);
 void fsc_close(FSCVirtualFile* fscFile);
+void fsc_flush(FSCVirtualFile* fscFile);
 uint32 fsc_getFileSize(FSCVirtualFile* fscFile);
 uint32 fsc_getFileSeek(FSCVirtualFile* fscFile);
 void fsc_setFileSeek(FSCVirtualFile* fscFile, uint32 newSeek);

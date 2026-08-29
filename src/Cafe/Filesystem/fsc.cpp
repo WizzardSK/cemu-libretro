@@ -530,6 +530,15 @@ void fsc_close(FSCVirtualFile* fscFile)
 	fscLeave();
 }
 
+void fsc_flush(FSCVirtualFile* fscFile)
+{
+	if (!fscFile)
+		return;
+	fscEnter();
+	fscFile->fscFlush();
+	fscLeave();
+}
+
 /*
  * Return size of file
  */

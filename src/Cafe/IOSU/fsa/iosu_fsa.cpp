@@ -213,6 +213,18 @@ namespace iosu
 				return FSA_RESULT::OK;
 			}
 
+			// Walk every live handle. Used by FlushQuota, which names a save
+			// directory rather than a file and so has to reach all of them.
+			template<typename TFunc>
+			void ForEachOpenFile(TFunc func)
+			{
+				for (auto& it : m_handleTable)
+				{
+					if (it.isAllocated && it.fscFile)
+						func(it.fscFile);
+				}
+			}
+
 			FSCVirtualFile* GetByHandle(FSResHandle handle)
 			{
 				uint16 index = (uint16)((uint32)handle >> 16);
@@ -586,8 +598,20 @@ namespace iosu
 			return FSA_RESULT::OK;
 		}
 
+		// A title calls FSFlushQuota after writing a save to have it committed to
+		// storage, and treats the reply as "the save is safe now". Cemu used to
+		// answer OK without doing anything, which held as long as the process
+		// exited through its destructors and let the host streams write out. A
+		// libretro core has no such guarantee - the frontend may close the
+		// content, or Android may kill the app, long before that - so the save a
+		// game reported as written could still be sitting in a host-side buffer.
+		//
+		// Flush for real. The command names a directory, not a file handle, so
+		// every open file goes out; flushing a file with nothing pending costs
+		// nothing, and this runs once per save, not per write.
 		FSA_RESULT FSAProcessCmd_flushQuota(FSAClient* client, FSAShimBuffer* shimBuffer)
 		{
+			sFileHandleTable.ForEachOpenFile([](FSCVirtualFile* fscFile) { fsc_flush(fscFile); });
 			return FSA_RESULT::OK;
 		}
 
@@ -607,6 +631,14 @@ namespace iosu
 
 		FSA_RESULT FSAProcessCmd_flushFile(FSAClient* client, FSAShimBuffer* shimBuffer)
 		{
+			// Same reasoning as FlushQuota, for the one file the title names.
+			FSCVirtualFile* fscFile = sFileHandleTable.GetByHandle((sint32)shimBuffer->request.cmdFlushFile.fileHandle);
+			if (!fscFile)
+			{
+				cemuLog_logDebug(LogType::Force, "FlushFile: Invalid handle (0x{:08x})", (sint32)shimBuffer->request.cmdFlushFile.fileHandle);
+				return FSA_RESULT::INVALID_FILE_HANDLE;
+			}
+			fsc_flush(fscFile);
 			return FSA_RESULT::OK;
 		}
 
