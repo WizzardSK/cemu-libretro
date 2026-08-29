@@ -1290,6 +1290,50 @@ RETRO_API void retro_set_controller_port_device(unsigned port, unsigned device)
 	// Ports 1-4 = WPAD (Wii Remote / Pro Controller)
 }
 
+// Bring a running title down cleanly before this process leaves.
+//
+// Cemu's emulated filesystem writes through buffered std::fstream objects, so
+// anything still sitting in those buffers never reaches disk when the core
+// takes its _exit(0) escape hatch: a game that autosaved just before the
+// frontend closed the content comes back with a truncated, unloadable save.
+// CafeSystem::ShutdownTitle() ends the scheduler, stops the GPU thread and
+// unmounts the save/mlc devices, which closes - and therefore flushes - every
+// file the title still had open. It does not touch the renderer, so the shared
+// Vulkan device the _exit(0) is there to avoid is left alone.
+//
+// Bounded: a title that refuses to stop must not hang the frontend, so the
+// shutdown runs on its own thread and we give up on it after a few seconds.
+static void libretro_shutdown_title_for_exit()
+{
+	if (!s_game_loaded)
+		return;
+	s_game_loaded = false;
+
+	s_shutting_down = true;
+	{
+		std::lock_guard lock(s_frame_mutex);
+		s_frame_ready = true;
+		s_frame_cv.notify_all();
+	}
+
+	auto finished = std::make_shared<std::atomic_bool>(false);
+	std::thread([finished]() {
+		CafeSystem::ShutdownTitle();
+		*finished = true;
+	}).detach();
+
+	for (int i = 0; i < 5000 && !*finished; i++)
+		std::this_thread::sleep_for(std::chrono::milliseconds(1));
+
+	if (log_cb)
+	{
+		if (*finished)
+			log_cb(RETRO_LOG_INFO, "Cemu: title shut down, save data flushed\n");
+		else
+			log_cb(RETRO_LOG_WARN, "Cemu: title did not shut down in time, save data may be incomplete\n");
+	}
+}
+
 RETRO_API void retro_reset()
 {
 	if (!s_game_loaded || s_game_path.empty())
@@ -1309,6 +1353,9 @@ RETRO_API void retro_reset()
 		cmd += s_game_path;
 		cmd += "\"' &";
 	}
+
+	// Flush the title's open files before the process goes away.
+	libretro_shutdown_title_for_exit();
 
 	// Launch relaunch process and immediately exit
 	// _exit() skips all destructors/atexit — no Vulkan cleanup crash
@@ -2036,6 +2083,10 @@ RETRO_API void retro_unload_game()
 	// take the _exit(0) path below instead of returning early into a DllMain deadlock.
 	if (!s_game_loaded && !s_gpu_context_created)
 		return;
+
+	// Stop the title first, whichever renderer is in use: the _exit(0) below
+	// would otherwise drop every unwritten byte of save data on the floor.
+	libretro_shutdown_title_for_exit();
 
 #ifdef ENABLE_VULKAN
 	if (s_graphics_api == SelectedGraphicsAPI::Vulkan)
