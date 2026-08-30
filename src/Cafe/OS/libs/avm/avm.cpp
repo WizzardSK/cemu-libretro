@@ -39,11 +39,11 @@ namespace avm
 
 		void RPLMapped() override
 		{
-			cafeExportRegister("avm", AVMIsHDCPAvailable, LogType::Placeholder);
-			cafeExportRegister("avm", AVMIsHDCPOn, LogType::Placeholder);
-			cafeExportRegister("avm", AVMGetAnalogContentsProtectionEnable, LogType::Placeholder);
-			cafeExportRegister("avm", AVMIsAnalogContentsProtectionOn, LogType::Placeholder);
-			cafeExportRegister("avm", AVMSetAnalogContentsProtectionEnable, LogType::Placeholder);
+			cafeExportRegister("avm", AVMIsHDCPAvailable, LogType::SysApi);
+			cafeExportRegister("avm", AVMIsHDCPOn, LogType::SysApi);
+			cafeExportRegister("avm", AVMGetAnalogContentsProtectionEnable, LogType::SysApi);
+			cafeExportRegister("avm", AVMIsAnalogContentsProtectionOn, LogType::SysApi);
+			cafeExportRegister("avm", AVMSetAnalogContentsProtectionEnable, LogType::SysApi);
 		};
 	}s_COSavmModule;
 

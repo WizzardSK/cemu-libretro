@@ -662,11 +662,11 @@ namespace sysapp
 
 	void load()
 	{
-		cafeExportRegisterFunc(SYSClearSysArgs, "sysapp", "SYSClearSysArgs", LogType::Placeholder);
-		cafeExportRegisterFunc(_SYSLaunchTitleByPathFromLauncher, "sysapp", "_SYSLaunchTitleByPathFromLauncher", LogType::Placeholder);
-		cafeExportRegisterFunc(SYSRelaunchTitle, "sysapp", "SYSRelaunchTitle", LogType::Placeholder);
-		cafeExportRegister("sysapp", _SYSSwitchToEManual, LogType::Placeholder);
-		cafeExportRegister("sysapp", SYSSwitchToEManual, LogType::Placeholder);
+		cafeExportRegisterFunc(SYSClearSysArgs, "sysapp", "SYSClearSysArgs", LogType::SysApi);
+		cafeExportRegisterFunc(_SYSLaunchTitleByPathFromLauncher, "sysapp", "_SYSLaunchTitleByPathFromLauncher", LogType::SysApi);
+		cafeExportRegisterFunc(SYSRelaunchTitle, "sysapp", "SYSRelaunchTitle", LogType::SysApi);
+		cafeExportRegister("sysapp", _SYSSwitchToEManual, LogType::SysApi);
+		cafeExportRegister("sysapp", SYSSwitchToEManual, LogType::SysApi);
 	}
 }
 
@@ -696,8 +696,8 @@ namespace sysapp
 
 			osLib_addFunction("sysapp", "SYSGetStandardResult", sysappExport_SYSGetStandardResult);
 
-			cafeExportRegisterFunc(_SYSGetLauncherArgs, "sysapp", "_SYSGetLauncherArgs", LogType::Placeholder);
-			cafeExportRegisterFunc(_SYSGetAccountArgs, "sysapp", "_SYSGetAccountArgs", LogType::Placeholder);
+			cafeExportRegisterFunc(_SYSGetLauncherArgs, "sysapp", "_SYSGetLauncherArgs", LogType::SysApi);
+			cafeExportRegisterFunc(_SYSGetAccountArgs, "sysapp", "_SYSGetAccountArgs", LogType::SysApi);
 
 			sysapp::load();
 		};

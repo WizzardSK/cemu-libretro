@@ -345,10 +345,10 @@ namespace acp
 
 		void RPLMapped() override
 		{
-			cafeExportRegister("nn_acp", ACPCheckApplicationDeviceEmulation, LogType::Placeholder);
+			cafeExportRegister("nn_acp", ACPCheckApplicationDeviceEmulation, LogType::SysApi);
 
 			osLib_addFunction("nn_acp", "ACPCreateSaveDirEx", nnACPExport_ACPCreateSaveDirEx);
-			cafeExportRegister("nn_acp", ACPUpdateSaveTimeStamp, LogType::Placeholder);
+			cafeExportRegister("nn_acp", ACPUpdateSaveTimeStamp, LogType::SysApi);
 
 			osLib_addFunction("nn_acp", "ACPGetSaveDataTitleIdList", export_ACPGetSaveDataTitleIdList);
 			osLib_addFunction("nn_acp", "ACPGetTitleSaveMetaXml", export_ACPGetTitleSaveMetaXml);
@@ -361,11 +361,11 @@ namespace acp
 
 			osLib_addFunction("nn_acp", "ACPGetTitleMetaDirByDevice", export_ACPGetTitleMetaDirByDevice);
 			osLib_addFunction("nn_acp", "ACPGetTitleMetaXmlByDevice", export_ACPGetTitleMetaXmlByDevice);
-			cafeExportRegister("nn_acp", ACPGetTitleMetaXml, LogType::Placeholder);
+			cafeExportRegister("nn_acp", ACPGetTitleMetaXml, LogType::SysApi);
 
-			cafeExportRegister("nn_acp", ACPGetApplicationBox, LogType::Placeholder);
+			cafeExportRegister("nn_acp", ACPGetApplicationBox, LogType::SysApi);
 
-			cafeExportRegister("nn_acp", ACPGetOlvAccesskey, LogType::Placeholder);
+			cafeExportRegister("nn_acp", ACPGetOlvAccesskey, LogType::SysApi);
 
 			osLib_addFunction("nn_acp", "ACPIsOverAgeEx", export_ACPIsOverAgeEx);
 

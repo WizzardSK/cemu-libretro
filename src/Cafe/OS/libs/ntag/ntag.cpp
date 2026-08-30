@@ -643,8 +643,8 @@ namespace ntag
 			cafeExportRegister("ntag", NTAGInit, LogType::NTAG);
 			cafeExportRegister("ntag", NTAGInitEx, LogType::NTAG);
 			cafeExportRegister("ntag", NTAGShutdown, LogType::NTAG);
-			cafeExportRegister("ntag", NTAGIsInit, LogType::Placeholder); // disabled logging, since this gets spammed
-			cafeExportRegister("ntag", NTAGProc, LogType::Placeholder); // disabled logging, since this gets spammed
+			cafeExportRegister("ntag", NTAGIsInit, LogType::SysApi); // disabled logging, since this gets spammed
+			cafeExportRegister("ntag", NTAGProc, LogType::SysApi); // disabled logging, since this gets spammed
 			cafeExportRegister("ntag", NTAGSetFormatSettings, LogType::NTAG);
 			cafeExportRegister("ntag", NTAGSetTagDetectCallback, LogType::NTAG);
 			cafeExportRegister("ntag", NTAGAbort, LogType::NTAG);

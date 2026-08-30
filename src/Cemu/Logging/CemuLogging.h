@@ -48,6 +48,12 @@ enum class LogType : sint32
 	NFC	= 43,
 	NTAG = 44,
 	Recompiler = 60,
+
+	// System and applet APIs (erreula, sysapp, acp, act, ac, ndm, spm, ...).
+	// These were registered as Placeholder, which is never enabled, so a title's
+	// calls into them left no trace at all - the blind spot that makes "the title
+	// stopped asking the emulator for anything" impossible to prove.
+	SysApi = 46,
 };
 
 template <>

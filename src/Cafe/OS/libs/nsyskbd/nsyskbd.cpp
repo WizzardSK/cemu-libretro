@@ -60,8 +60,8 @@ namespace nsyskbd
 
 		void RPLMapped() override
 		{
-			cafeExportRegister("nsyskbd", KBDGetChannelStatus, LogType::Placeholder);
-			cafeExportRegister("nsyskbd", KBDGetKey, LogType::Placeholder);
+			cafeExportRegister("nsyskbd", KBDGetChannelStatus, LogType::SysApi);
+			cafeExportRegister("nsyskbd", KBDGetKey, LogType::SysApi);
 		};
 
 		void RPLUnmapped() override

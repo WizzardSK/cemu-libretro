@@ -292,25 +292,25 @@ namespace nn_ac
 
 	void load()
 	{
-		cafeExportRegisterFunc(Initialize, "nn_ac", "Initialize__Q2_2nn2acFv", LogType::Placeholder);
+		cafeExportRegisterFunc(Initialize, "nn_ac", "Initialize__Q2_2nn2acFv", LogType::SysApi);
 
-		cafeExportRegisterFunc(Connect, "nn_ac", "Connect__Q2_2nn2acFv", LogType::Placeholder);
-		cafeExportRegisterFunc(ConnectAsync, "nn_ac", "ConnectAsync__Q2_2nn2acFv", LogType::Placeholder);
+		cafeExportRegisterFunc(Connect, "nn_ac", "Connect__Q2_2nn2acFv", LogType::SysApi);
+		cafeExportRegisterFunc(ConnectAsync, "nn_ac", "ConnectAsync__Q2_2nn2acFv", LogType::SysApi);
 
-		cafeExportRegisterFunc(GetConnectResult, "nn_ac", "GetConnectResult__Q2_2nn2acFPQ2_2nn6Result", LogType::Placeholder);
-		cafeExportRegisterFunc(GetLastErrorCode, "nn_ac", "GetLastErrorCode__Q2_2nn2acFPUi", LogType::Placeholder);
-		cafeExportRegisterFunc(GetConnectStatus, "nn_ac", "GetConnectStatus__Q2_2nn2acFPQ3_2nn2ac6Status", LogType::Placeholder);
-		cafeExportRegisterFunc(GetStatus, "nn_ac", "GetStatus__Q2_2nn2acFPQ3_2nn2ac6Status", LogType::Placeholder);
-		cafeExportRegisterFunc(IsApplicationConnected, "nn_ac", "IsApplicationConnected__Q2_2nn2acFPb", LogType::Placeholder);
+		cafeExportRegisterFunc(GetConnectResult, "nn_ac", "GetConnectResult__Q2_2nn2acFPQ2_2nn6Result", LogType::SysApi);
+		cafeExportRegisterFunc(GetLastErrorCode, "nn_ac", "GetLastErrorCode__Q2_2nn2acFPUi", LogType::SysApi);
+		cafeExportRegisterFunc(GetConnectStatus, "nn_ac", "GetConnectStatus__Q2_2nn2acFPQ3_2nn2ac6Status", LogType::SysApi);
+		cafeExportRegisterFunc(GetStatus, "nn_ac", "GetStatus__Q2_2nn2acFPQ3_2nn2ac6Status", LogType::SysApi);
+		cafeExportRegisterFunc(IsApplicationConnected, "nn_ac", "IsApplicationConnected__Q2_2nn2acFPb", LogType::SysApi);
 
 		// AC also offers C-style wrappers
-		cafeExportRegister("nn_ac", ACInitialize, LogType::Placeholder);
-		cafeExportRegister("nn_ac", ACIsSuccess, LogType::Placeholder);
-		cafeExportRegister("nn_ac", ACIsFailure, LogType::Placeholder);
-		cafeExportRegister("nn_ac", ACGetConnectStatus, LogType::Placeholder);
-		cafeExportRegister("nn_ac", ACGetStatus, LogType::Placeholder);
-		cafeExportRegister("nn_ac", ACConnectAsync, LogType::Placeholder);
-		cafeExportRegister("nn_ac", ACIsApplicationConnected, LogType::Placeholder);
+		cafeExportRegister("nn_ac", ACInitialize, LogType::SysApi);
+		cafeExportRegister("nn_ac", ACIsSuccess, LogType::SysApi);
+		cafeExportRegister("nn_ac", ACIsFailure, LogType::SysApi);
+		cafeExportRegister("nn_ac", ACGetConnectStatus, LogType::SysApi);
+		cafeExportRegister("nn_ac", ACGetStatus, LogType::SysApi);
+		cafeExportRegister("nn_ac", ACConnectAsync, LogType::SysApi);
+		cafeExportRegister("nn_ac", ACIsApplicationConnected, LogType::SysApi);
 	}
 
 }

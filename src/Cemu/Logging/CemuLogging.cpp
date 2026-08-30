@@ -110,6 +110,7 @@ const std::map<LogType, std::string> g_logging_window_mapping
 	{LogType::InputAPI,           "Input"},
 	{LogType::Socket,             "Socket"},
 	{LogType::Save,               "Save"},
+	{LogType::SysApi,             "System APIs"},
 	{LogType::H264,               "H264"},
 	{LogType::NFC,                "NFC"},
 	{LogType::NTAG,               "NTAG"},

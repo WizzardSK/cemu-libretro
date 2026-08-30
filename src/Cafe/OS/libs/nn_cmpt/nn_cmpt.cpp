@@ -28,8 +28,8 @@ namespace nn::cmpt
 
 		void RPLMapped() override
 		{
-			cafeExportRegister("nn_cmpt", CMPTAcctGetPcConf, LogType::Placeholder);
-			cafeExportRegister("nn_cmpt", CMPTGetDataSize, LogType::Placeholder);
+			cafeExportRegister("nn_cmpt", CMPTAcctGetPcConf, LogType::SysApi);
+			cafeExportRegister("nn_cmpt", CMPTGetDataSize, LogType::SysApi);
 		};
 
 	}s_COSnnCmptModule;

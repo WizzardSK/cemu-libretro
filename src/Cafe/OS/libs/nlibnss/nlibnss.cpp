@@ -39,8 +39,8 @@ namespace nlibnss
 
 		void RPLMapped() override
 		{
-			cafeExportRegister("nlibnss", NSSSignatureGetSignatureLength, LogType::Placeholder);
-			cafeExportRegister("nlibnss", NSSExportDeviceCertChain, LogType::Placeholder);
+			cafeExportRegister("nlibnss", NSSSignatureGetSignatureLength, LogType::SysApi);
+			cafeExportRegister("nlibnss", NSSExportDeviceCertChain, LogType::SysApi);
 		};
 
 	}s_COSnlibnssModule;

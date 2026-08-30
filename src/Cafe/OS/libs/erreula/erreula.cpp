@@ -496,21 +496,21 @@ namespace erreula
 
 		void RPLMapped() override
 		{
-			cafeExportRegisterFunc(ErrEulaCreate, "erreula", "ErrEulaCreate__3RplFPUcQ3_2nn7erreula10RegionTypeQ3_2nn7erreula8LangTypeP8FSClient", LogType::Placeholder);
-			cafeExportRegisterFunc(ErrEulaDestroy, "erreula", "ErrEulaDestroy__3RplFv", LogType::Placeholder);
+			cafeExportRegisterFunc(ErrEulaCreate, "erreula", "ErrEulaCreate__3RplFPUcQ3_2nn7erreula10RegionTypeQ3_2nn7erreula8LangTypeP8FSClient", LogType::SysApi);
+			cafeExportRegisterFunc(ErrEulaDestroy, "erreula", "ErrEulaDestroy__3RplFv", LogType::SysApi);
 
-			cafeExportRegisterFunc(IsDecideSelectButtonError, "erreula", "ErrEulaIsDecideSelectButtonError__3RplFv", LogType::Placeholder);
-			cafeExportRegisterFunc(IsDecideSelectLeftButtonError, "erreula", "ErrEulaIsDecideSelectLeftButtonError__3RplFv", LogType::Placeholder);
-			cafeExportRegisterFunc(IsDecideSelectRightButtonError, "erreula", "ErrEulaIsDecideSelectRightButtonError__3RplFv", LogType::Placeholder);
+			cafeExportRegisterFunc(IsDecideSelectButtonError, "erreula", "ErrEulaIsDecideSelectButtonError__3RplFv", LogType::SysApi);
+			cafeExportRegisterFunc(IsDecideSelectLeftButtonError, "erreula", "ErrEulaIsDecideSelectLeftButtonError__3RplFv", LogType::SysApi);
+			cafeExportRegisterFunc(IsDecideSelectRightButtonError, "erreula", "ErrEulaIsDecideSelectRightButtonError__3RplFv", LogType::SysApi);
 
-			cafeExportRegisterFunc(GetResultCode, "erreula", "ErrEulaGetResultCode__3RplFv", LogType::Placeholder);
-			cafeExportRegisterFunc(GetResultType, "erreula", "ErrEulaGetResultType__3RplFv", LogType::Placeholder);
+			cafeExportRegisterFunc(GetResultCode, "erreula", "ErrEulaGetResultCode__3RplFv", LogType::SysApi);
+			cafeExportRegisterFunc(GetResultType, "erreula", "ErrEulaGetResultType__3RplFv", LogType::SysApi);
 
-			cafeExportRegisterFunc(ErrEulaAppearError, "erreula", "ErrEulaAppearError__3RplFRCQ3_2nn7erreula9AppearArg", LogType::Placeholder);
-			cafeExportRegisterFunc(ErrEulaDisappearError, "erreula", "ErrEulaDisappearError__3RplFv", LogType::Placeholder);
-			cafeExportRegisterFunc(ErrEulaGetStateErrorViewer, "erreula", "ErrEulaGetStateErrorViewer__3RplFv", LogType::Placeholder);
+			cafeExportRegisterFunc(ErrEulaAppearError, "erreula", "ErrEulaAppearError__3RplFRCQ3_2nn7erreula9AppearArg", LogType::SysApi);
+			cafeExportRegisterFunc(ErrEulaDisappearError, "erreula", "ErrEulaDisappearError__3RplFv", LogType::SysApi);
+			cafeExportRegisterFunc(ErrEulaGetStateErrorViewer, "erreula", "ErrEulaGetStateErrorViewer__3RplFv", LogType::SysApi);
 
-			cafeExportRegisterFunc(ErrEulaCalc, "erreula", "ErrEulaCalc__3RplFRCQ3_2nn7erreula14ControllerInfo", LogType::Placeholder);
+			cafeExportRegisterFunc(ErrEulaCalc, "erreula", "ErrEulaCalc__3RplFRCQ3_2nn7erreula14ControllerInfo", LogType::SysApi);
 
 			osLib_addFunction("erreula", "ErrEulaAppearHomeNixSign__3RplFRCQ3_2nn7erreula14HomeNixSignArg", export_AppearHomeNixSign);
 			osLib_addFunction("erreula", "ErrEulaChangeLang__3RplFQ3_2nn7erreula8LangType", export_ChangeLang);

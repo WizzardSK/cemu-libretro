@@ -300,7 +300,7 @@ namespace nn
 
 				osLib_addFunction("nn_nim", "GetIconDatabaseEntries__Q2_2nn3nimFPQ3_2nn3nim17IconDatabaseEntryPCULUi", export_GetIconDatabaseEntries);
 
-				cafeExportRegisterFunc(ConstructResultError, "nn_nim", "Construct__Q3_2nn3nim11ResultErrorFQ2_2nn6Resulti", LogType::Placeholder);
+				cafeExportRegisterFunc(ConstructResultError, "nn_nim", "Construct__Q3_2nn3nim11ResultErrorFQ2_2nn6Resulti", LogType::SysApi);
 
 				osLib_addFunction("nn_nim", "MakeTitlePackageTaskConfigAutoUsingBgInstallPolicy__Q3_2nn3nim4utilFULiQ3_2nn4Cafe9TitleType", export_MakeTitlePackageTaskConfigAutoUsingBgInstallPolicy);
 				osLib_addFunction("nn_nim", "CalculateTitleInstallSize__Q2_2nn3nimFPLRCQ3_2nn3nim22TitlePackageTaskConfigPCUsUi", export_CalculateTitleInstallSize);

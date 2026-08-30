@@ -88,12 +88,12 @@ namespace nn
 					s_daemonStatus[i] = DAEMON_STATUS::RUNNING;
 				s_initializeRefCount = 0;
 
-				cafeExportRegisterFunc(Initialize, "nn_ndm", "Initialize__Q2_2nn3ndmFv", LogType::Placeholder);
-				cafeExportRegisterFunc(Finalize, "nn_ndm", "Finalize__Q2_2nn3ndmFv", LogType::Placeholder);
-				cafeExportRegisterFunc(IsInitialized, "nn_ndm", "IsInitialized__Q2_2nn3ndmFv", LogType::Placeholder);
-				cafeExportRegisterFunc(GetDaemonStatus, "nn_ndm", "GetDaemonStatus__Q2_2nn3ndmFPQ4_2nn3ndm7IDaemon6StatusQ4_2nn3ndm4Cafe10DaemonName", LogType::Placeholder);
-				cafeExportRegisterFunc(SuspendDaemons, "nn_ndm", "SuspendDaemons__Q2_2nn3ndmFUi", LogType::Placeholder);
-				cafeExportRegisterFunc(ResumeDaemons, "nn_ndm", "ResumeDaemons__Q2_2nn3ndmFUi", LogType::Placeholder);
+				cafeExportRegisterFunc(Initialize, "nn_ndm", "Initialize__Q2_2nn3ndmFv", LogType::SysApi);
+				cafeExportRegisterFunc(Finalize, "nn_ndm", "Finalize__Q2_2nn3ndmFv", LogType::SysApi);
+				cafeExportRegisterFunc(IsInitialized, "nn_ndm", "IsInitialized__Q2_2nn3ndmFv", LogType::SysApi);
+				cafeExportRegisterFunc(GetDaemonStatus, "nn_ndm", "GetDaemonStatus__Q2_2nn3ndmFPQ4_2nn3ndm7IDaemon6StatusQ4_2nn3ndm4Cafe10DaemonName", LogType::SysApi);
+				cafeExportRegisterFunc(SuspendDaemons, "nn_ndm", "SuspendDaemons__Q2_2nn3ndmFUi", LogType::SysApi);
+				cafeExportRegisterFunc(ResumeDaemons, "nn_ndm", "ResumeDaemons__Q2_2nn3ndmFUi", LogType::SysApi);
 			};
 
 		}s_COSnnNdmModule;

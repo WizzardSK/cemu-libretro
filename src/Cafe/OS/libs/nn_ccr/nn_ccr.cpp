@@ -19,7 +19,7 @@ namespace nn::ccr
 
 		void RPLMapped() override
 		{
-			cafeExportRegister("nn_ccr", CCRSysCaffeineBootCheck, LogType::Placeholder);
+			cafeExportRegister("nn_ccr", CCRSysCaffeineBootCheck, LogType::SysApi);
 		};
 
 	}s_COSnnccrModule;

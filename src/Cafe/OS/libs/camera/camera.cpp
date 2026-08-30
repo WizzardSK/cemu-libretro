@@ -252,13 +252,13 @@ namespace camera
 
 		void RPLMapped() override
 		{
-			cafeExportRegister("camera", CAMGetMemReq, LogType::Placeholder);
-			cafeExportRegister("camera", CAMCheckMemSegmentation, LogType::Placeholder);
-			cafeExportRegister("camera", CAMInit, LogType::Placeholder);
-			cafeExportRegister("camera", CAMExit, LogType::Placeholder);
-			cafeExportRegister("camera", CAMOpen, LogType::Placeholder);
-			cafeExportRegister("camera", CAMClose, LogType::Placeholder);
-			cafeExportRegister("camera", CAMSubmitTargetSurface, LogType::Placeholder);
+			cafeExportRegister("camera", CAMGetMemReq, LogType::SysApi);
+			cafeExportRegister("camera", CAMCheckMemSegmentation, LogType::SysApi);
+			cafeExportRegister("camera", CAMInit, LogType::SysApi);
+			cafeExportRegister("camera", CAMExit, LogType::SysApi);
+			cafeExportRegister("camera", CAMOpen, LogType::SysApi);
+			cafeExportRegister("camera", CAMClose, LogType::SysApi);
+			cafeExportRegister("camera", CAMSubmitTargetSurface, LogType::SysApi);
 		};
 
 		void rpl_entry(uint32 moduleHandle, coreinit::RplEntryReason reason) override

@@ -142,15 +142,15 @@ namespace nn
 
 			void RPLMapped() override
 			{
-				cafeExportRegisterFunc(GetDefaultExtendedStorageVolumeId, "nn_spm", "GetDefaultExtendedStorageVolumeId__Q2_2nn3spmFv", LogType::Placeholder);
-				cafeExportRegisterFunc(GetExtendedStorageIndex, "nn_spm", "GetExtendedStorageIndex__Q2_2nn3spmFPQ3_2nn3spm12StorageIndex", LogType::Placeholder);
-				cafeExportRegisterFunc(GetStorageList, "nn_spm", "GetStorageList__Q2_2nn3spmFPQ3_2nn3spm15StorageListItemUi", LogType::Placeholder);
+				cafeExportRegisterFunc(GetDefaultExtendedStorageVolumeId, "nn_spm", "GetDefaultExtendedStorageVolumeId__Q2_2nn3spmFv", LogType::SysApi);
+				cafeExportRegisterFunc(GetExtendedStorageIndex, "nn_spm", "GetExtendedStorageIndex__Q2_2nn3spmFPQ3_2nn3spm12StorageIndex", LogType::SysApi);
+				cafeExportRegisterFunc(GetStorageList, "nn_spm", "GetStorageList__Q2_2nn3spmFPQ3_2nn3spm15StorageListItemUi", LogType::SysApi);
 
-				cafeExportRegisterFunc(GetStorageInfo, "nn_spm", "GetStorageInfo__Q2_2nn3spmFPQ3_2nn3spm11StorageInfoQ3_2nn3spm12StorageIndex", LogType::Placeholder);
+				cafeExportRegisterFunc(GetStorageInfo, "nn_spm", "GetStorageInfo__Q2_2nn3spmFPQ3_2nn3spm11StorageInfoQ3_2nn3spm12StorageIndex", LogType::SysApi);
 
-				cafeExportRegisterFunc(VolumeId_Compare, "nn_spm", "Compare__Q3_2nn3spm8VolumeIdCFRCQ3_2nn3spm8VolumeId", LogType::Placeholder);
+				cafeExportRegisterFunc(VolumeId_Compare, "nn_spm", "Compare__Q3_2nn3spm8VolumeIdCFRCQ3_2nn3spm8VolumeId", LogType::SysApi);
 
-				cafeExportRegisterFunc(WaitStateUpdated, "nn_spm", "WaitStateUpdated__Q2_2nn3spmFPUL", LogType::Placeholder);
+				cafeExportRegisterFunc(WaitStateUpdated, "nn_spm", "WaitStateUpdated__Q2_2nn3spmFPUL", LogType::SysApi);
 			};
 
 		}s_COSnnSpmModule;

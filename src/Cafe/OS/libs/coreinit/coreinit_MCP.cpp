@@ -451,15 +451,15 @@ namespace coreinit
 		osLib_addFunction("coreinit", "MCP_UpdateCheckContext", export_MCP_UpdateCheckContext);
 		osLib_addFunction("coreinit", "MCP_TitleListUpdateGetNext", export_MCP_TitleListUpdateGetNext);
 		osLib_addFunction("coreinit", "MCP_GetOverlayAppInfo", export_MCP_GetOverlayAppInfo);
-		cafeExportRegister("coreinit", MCP_UpdateClearContextAsync, LogType::Placeholder);
+		cafeExportRegister("coreinit", MCP_UpdateClearContextAsync, LogType::SysApi);
 
-		cafeExportRegister("coreinit", MCP_InstallUtilGetTitleEnability, LogType::Placeholder);
-		cafeExportRegister("coreinit", MCP_RightCheckLaunchable, LogType::Placeholder);
+		cafeExportRegister("coreinit", MCP_InstallUtilGetTitleEnability, LogType::SysApi);
+		cafeExportRegister("coreinit", MCP_RightCheckLaunchable, LogType::SysApi);
 
-		cafeExportRegister("coreinit", MCP_GetEcoSettings, LogType::Placeholder);
+		cafeExportRegister("coreinit", MCP_GetEcoSettings, LogType::SysApi);
 
-		cafeExportRegister("coreinit", MCP_GetTitleId, LogType::Placeholder);
-		cafeExportRegister("coreinit", MCP_DemoLaunchGetRemainder, LogType::Placeholder);
+		cafeExportRegister("coreinit", MCP_GetTitleId, LogType::SysApi);
+		cafeExportRegister("coreinit", MCP_DemoLaunchGetRemainder, LogType::SysApi);
 	}
 
 }

@@ -723,7 +723,7 @@ namespace nn::act
 			// country
 			osLib_addFunction("nn_act", "GetCountry__Q2_2nn3actFPc", nnActExport_GetCountry);
 			// timezone
-			cafeExportRegisterFunc(nn::act::GetTimeZoneId, "nn_act", "GetTimeZoneId__Q2_2nn3actFPc", LogType::Placeholder);
+			cafeExportRegisterFunc(nn::act::GetTimeZoneId, "nn_act", "GetTimeZoneId__Q2_2nn3actFPc", LogType::SysApi);
 
 			// parental
 			osLib_addFunction("nn_act", "EnableParentalControlCheck__Q2_2nn3actFb", nnActExport_EnableParentalControlCheck);
@@ -753,13 +753,13 @@ namespace nn::act
 
 			osLib_addFunction("nn_act", "AcquirePrincipalIdByAccountId__Q2_2nn3actFPUiPA17_CcUi", nnActExport_AcquirePrincipalIdByAccountId);
 
-			cafeExportRegisterFunc(nn::act::GetErrorCode, "nn_act", "GetErrorCode__Q2_2nn3actFRCQ2_2nn6Result", LogType::Placeholder);
+			cafeExportRegisterFunc(nn::act::GetErrorCode, "nn_act", "GetErrorCode__Q2_2nn3actFRCQ2_2nn6Result", LogType::SysApi);
 
 			// placeholders / incomplete implementations
 			osLib_addFunction("nn_act", "HasNfsAccount__Q2_2nn3actFv", nnActExport_HasNfsAccount);
 			osLib_addFunction("nn_act", "GetHostServerSettings__Q2_2nn3actFPcT1Uc", nnActExport_GetHostServerSettings);
-			cafeExportRegisterFunc(nn::act::GetUtcOffset, "nn_act", "GetUtcOffset__Q2_2nn3actFv", LogType::Placeholder);
-			cafeExportRegisterFunc(nn::act::GetUtcOffsetEx, "nn_act", "GetUtcOffsetEx__Q2_2nn3actFPLUc", LogType::Placeholder);
+			cafeExportRegisterFunc(nn::act::GetUtcOffset, "nn_act", "GetUtcOffset__Q2_2nn3actFv", LogType::SysApi);
+			cafeExportRegisterFunc(nn::act::GetUtcOffsetEx, "nn_act", "GetUtcOffsetEx__Q2_2nn3actFPLUc", LogType::SysApi);
 
 		};
 

@@ -2739,8 +2739,8 @@ namespace coreinit
 		cafeExportRegister("coreinit", FSGetCurrentCmdBlock, LogType::CoreinitFile);
 
 		cafeExportRegister("coreinit", FSGetVolumeState, LogType::CoreinitFile);
-		cafeExportRegister("coreinit", FSGetErrorCodeForViewer, LogType::Placeholder);
-		cafeExportRegister("coreinit", FSGetLastErrorCodeForViewer, LogType::Placeholder);
+		cafeExportRegister("coreinit", FSGetErrorCodeForViewer, LogType::SysApi);
+		cafeExportRegister("coreinit", FSGetLastErrorCodeForViewer, LogType::SysApi);
 
 		cafeExportRegister("coreinit", FSAMakeDir, LogType::Placeholder);
 		cafeExportRegister("coreinit", FSAInit, LogType::Placeholder);
