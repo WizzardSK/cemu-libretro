@@ -575,6 +575,11 @@ namespace coreinit
 		uint64 signals;
 	};
 
+	// Off by default, and worth keeping that way: the counting sits on the
+	// signal path, where a lock is not free. The libretro core turns it on with
+	// its thread snapshot option and leaves it off otherwise.
+	void SetEventStatsEnabled(bool enabled);
+
 	void GetZeroTimeoutPollCounts(std::vector<EventPollStats>& out);
 	void OSSignalEventInternal(OSEvent* event); // assumes lock is already held
 	void OSSignalEvent(OSEvent* event);

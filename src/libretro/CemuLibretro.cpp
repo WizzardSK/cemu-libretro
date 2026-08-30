@@ -810,8 +810,18 @@ static void libretro_init_paths()
 		save_dir = system_dir;
 	}
 
-	fs::path sysPath = fs::path(system_dir) / "Cemu";
-	fs::path savePath = fs::path(save_dir) / "Cemu";
+	// RetroArch can already sort saves per core, in which case the directory it
+	// hands over is named after this one - and appending our own would make
+	// saves/Cemu/Cemu. Add the subdirectory only where it is not there yet.
+	const auto in_named_dir = [](const fs::path& dir) {
+		fs::path named = dir;
+		if (named.filename() != "Cemu")
+			named /= "Cemu";
+		return named;
+	};
+
+	fs::path sysPath = in_named_dir(fs::path(system_dir));
+	fs::path savePath = in_named_dir(fs::path(save_dir));
 
 	std::error_code ec;
 	fs::create_directories(sysPath, ec);
@@ -1027,6 +1037,10 @@ static void libretro_apply_core_options()
 			if (libretro_parse_enabled_disabled(v, b))
 				s_log_thread_dump = b;
 		}
+		// The per-event poll and signal counts the snapshot prints are gathered
+		// on the signal path, under a lock. Nobody pays for that while the
+		// snapshot is off.
+		coreinit::SetEventStatsEnabled(s_log_thread_dump);
 	}
 
 	// Miiverse (nn::olv). A title initializes it through the account's network

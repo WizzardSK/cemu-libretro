@@ -87,6 +87,20 @@ namespace coreinit
 	// waking, which is a different bug from one that simply gets polled a lot.
 	static std::unordered_map<MPTR, uint64> s_eventSignals;
 	static std::mutex s_zeroTimeoutPollsMutex;
+	// Counting costs a lock on every signal, so it is opt-in: nothing pays for
+	// it while nobody is reading the numbers.
+	static std::atomic<bool> s_eventStatsEnabled{false};
+
+	void SetEventStatsEnabled(bool enabled)
+	{
+		if (!enabled)
+		{
+			std::lock_guard lock(s_zeroTimeoutPollsMutex);
+			s_zeroTimeoutPolls.clear();
+			s_eventSignals.clear();
+		}
+		s_eventStatsEnabled.store(enabled, std::memory_order_relaxed);
+	}
 
 	void GetZeroTimeoutPollCounts(std::vector<EventPollStats>& out)
 	{
@@ -116,8 +130,11 @@ namespace coreinit
 			{
 				// fail immediately
 				{
-					std::lock_guard lock(s_zeroTimeoutPollsMutex);
-					s_zeroTimeoutPolls[memory_getVirtualOffsetFromPointer(event)]++;
+					if (s_eventStatsEnabled.load(std::memory_order_relaxed))
+					{
+						std::lock_guard lock(s_zeroTimeoutPollsMutex);
+						s_zeroTimeoutPolls[memory_getVirtualOffsetFromPointer(event)]++;
+					}
 				}
 				__OSUnlockScheduler();
 				return false;
@@ -153,8 +170,11 @@ namespace coreinit
 		// function, and counting only the public entry point made events that
 		// are signalled constantly look like they were never signalled at all.
 		{
-			std::lock_guard lock(s_zeroTimeoutPollsMutex);
-			s_eventSignals[memory_getVirtualOffsetFromPointer(event)]++;
+			if (s_eventStatsEnabled.load(std::memory_order_relaxed))
+			{
+				std::lock_guard lock(s_zeroTimeoutPollsMutex);
+				s_eventSignals[memory_getVirtualOffsetFromPointer(event)]++;
+			}
 		}
 
 		cemu_assert_debug(__OSHasSchedulerLock());
@@ -188,8 +208,11 @@ namespace coreinit
 	void OSSignalEventAllInternal(OSEvent* event)
 	{
 		{
-			std::lock_guard lock(s_zeroTimeoutPollsMutex);
-			s_eventSignals[memory_getVirtualOffsetFromPointer(event)]++;
+			if (s_eventStatsEnabled.load(std::memory_order_relaxed))
+			{
+				std::lock_guard lock(s_zeroTimeoutPollsMutex);
+				s_eventSignals[memory_getVirtualOffsetFromPointer(event)]++;
+			}
 		}
 
 		if (event->state == OSEvent::EVENT_STATE::STATE_SIGNALED)
