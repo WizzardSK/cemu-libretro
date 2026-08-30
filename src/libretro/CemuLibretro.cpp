@@ -12,6 +12,7 @@
 
 #include "Cafe/CafeSystem.h"
 #include "Cafe/OS/libs/coreinit/coreinit_Thread.h"
+#include "Cafe/OS/common/OSCommon.h"
 #include "Cafe/OS/RPL/rpl_structs.h"
 #include "Cafe/TitleList/TitleList.h"
 #include "Cafe/TitleList/TitleInfo.h"
@@ -2385,6 +2386,23 @@ extern GLuint libretro_getBackbufferRBO();
 // starts, a load that never ends - shows up here either as a thread parked in
 // WAITING, which names the subsystem to look at, or as one spinning inside the
 // game's own code, which says the emulator is not the one that stopped.
+// The name of the HLE export a thread is sitting in, or empty if the address is
+// not one. Cemu compiles every export into a stub built from a single
+// instruction whose primary opcode is 1 and whose low 16 bits are the function's
+// index in the HLE table (PPCInterpreter_virtualHLE decodes the same thing), so
+// the name is one read away. It is the difference between "waiting somewhere in
+// coreinit" and "waiting in OSWaitEvent", which is the whole question when a
+// title stops asking the emulator for anything.
+static std::string_view ResolveHLEFunctionName(uint32 pc)
+{
+	if (!memory_getPointerFromVirtualOffsetAllowNull(pc))
+		return {};
+	const uint32 opcode = memory_readU32(pc);
+	if ((opcode >> 26) != 1)
+		return {};
+	return osLib_getFunctionNameByIndex((sint32)(opcode & 0xFFFF));
+}
+
 static void DumpEmulatedThreads()
 {
 	cemuLog_log(LogType::Force, "--- Wii U threads ---");
@@ -2423,17 +2441,39 @@ static void DumpEmulatedThreads()
 		}
 
 		const uint32 pc = thread->context.srr0;
+
+		// Where it is: the game's own code (module + offset), an HLE export by
+		// name, or a bare address when it is neither.
+		std::string where;
 		RPLModule* module = RPLLoader_FindModuleByCodeAddr(pc);
 		if (module)
-		{
-			cemuLog_log(LogType::Force, "  {:08x} {:24} {:9} suspend={} pc={:08x} ({}+0x{:x})", threadMPTR, name, state,
-				(sint32)thread->suspendCounter, pc, module->moduleName, pc - module->regionMappingBase_text.GetMPTR());
-		}
+			where = fmt::format("pc={:08x} ({}+0x{:x})", pc, module->moduleName, pc - module->regionMappingBase_text.GetMPTR());
+		else if (std::string_view hleName = ResolveHLEFunctionName(pc); !hleName.empty())
+			where = fmt::format("pc={:08x} ({})", pc, hleName);
 		else
+			where = fmt::format("pc={:08x}", pc);
+
+		// And what it is waiting for. A mutex names the thread that holds it,
+		// which turns "everything is waiting" into a chain with one end; a wait
+		// queue is at least an address to match against the events above.
+		std::string blockedOn;
+		if (thread->state.value() == OSThread_t::THREAD_STATE::STATE_WAITING)
 		{
-			cemuLog_log(LogType::Force, "  {:08x} {:24} {:9} suspend={} pc={:08x}", threadMPTR, name, state,
-				(sint32)thread->suspendCounter, pc, state);
+			if (coreinit::OSMutex* mutex = thread->waitingForMutex.GetPtr())
+			{
+				OSThread_t* owner = mutex->owner.GetPtr();
+				const char* ownerName = (owner && owner->threadName.GetPtr()) ? owner->threadName.GetPtr() : "<unnamed>";
+				blockedOn = fmt::format(" mutex={:08x} held-by={:08x} {}", thread->waitingForMutex.GetMPTR(),
+					mutex->owner.GetMPTR(), owner ? ownerName : "<nobody>");
+			}
+			else if (thread->currentWaitQueue.GetMPTR())
+			{
+				blockedOn = fmt::format(" queue={:08x}", thread->currentWaitQueue.GetMPTR());
+			}
 		}
+
+		cemuLog_log(LogType::Force, "  {:08x} {:24} {:9} suspend={} {}{}", threadMPTR, name, state,
+			(sint32)thread->suspendCounter, where, blockedOn);
 	}
 }
 
