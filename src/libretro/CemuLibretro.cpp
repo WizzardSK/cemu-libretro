@@ -830,15 +830,20 @@ static void libretro_init_paths()
 	// mlc01 is where every save goes, and by libretro convention writable
 	// per-user data belongs in the save directory rather than the system one.
 	// It used to land in system/Cemu/mlc01, because that is what Cemu derives
-	// from the user data path when no mlc path is configured - and the core
-	// created saves/Cemu/mlc01 next to it and then never used it. An install
-	// that already has saves under the old path keeps using it: moving someone's
-	// save data behind their back is worse than an inconsistent default.
+	// from the user data path when no mlc path is configured.
 	s_mlc_path = savePath / "mlc01";
-	const fs::path legacy_mlc = sysPath / "mlc01";
-	if (fs::exists(legacy_mlc / "usr" / "save", ec) && !fs::exists(s_mlc_path / "usr" / "save", ec))
-		s_mlc_path = legacy_mlc;
 	fs::create_directories(s_mlc_path, ec);
+
+	// An install from before that move keeps its old directory, untouched and
+	// no longer read. Say so once rather than let someone wonder where their
+	// saves went: the account in there regenerates by itself, but anything a
+	// title wrote does not.
+	const fs::path legacy_mlc = sysPath / "mlc01";
+	if (fs::exists(legacy_mlc / "usr" / "save", ec))
+	{
+		cemuLog_log(LogType::Force, "mlc01: an older one is still at {} and is no longer used. Move its contents to {} to keep what is in it.",
+			_pathToUtf8(legacy_mlc), _pathToUtf8(s_mlc_path));
+	}
 
 	std::set<fs::path> failedWriteAccess;
 	ActiveSettings::SetPaths(
