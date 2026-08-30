@@ -834,17 +834,6 @@ static void libretro_init_paths()
 	s_mlc_path = savePath / "mlc01";
 	fs::create_directories(s_mlc_path, ec);
 
-	// An install from before that move keeps its old directory, untouched and
-	// no longer read. Say so once rather than let someone wonder where their
-	// saves went: the account in there regenerates by itself, but anything a
-	// title wrote does not.
-	const fs::path legacy_mlc = sysPath / "mlc01";
-	if (fs::exists(legacy_mlc / "usr" / "save", ec))
-	{
-		cemuLog_log(LogType::Force, "mlc01: an older one is still at {} and is no longer used. Move its contents to {} to keep what is in it.",
-			_pathToUtf8(legacy_mlc), _pathToUtf8(s_mlc_path));
-	}
-
 	std::set<fs::path> failedWriteAccess;
 	ActiveSettings::SetPaths(
 		false,               // not portable
