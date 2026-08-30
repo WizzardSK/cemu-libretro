@@ -816,7 +816,6 @@ static void libretro_init_paths()
 	std::error_code ec;
 	fs::create_directories(sysPath, ec);
 	fs::create_directories(savePath, ec);
-	fs::create_directories(sysPath / "keys", ec);
 	fs::create_directories(sysPath / "shaderCache", ec);
 	// mlc01 is where every save goes, and by libretro convention writable
 	// per-user data belongs in the save directory rather than the system one.
