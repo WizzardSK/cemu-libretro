@@ -1014,6 +1014,23 @@ static void libretro_apply_core_options()
 		}
 	}
 
+	// Miiverse (nn::olv). A title initializes it through the account's network
+	// service, and Offline - the default, and the only thing a core with no
+	// account UI can pick on its own - sends it down the online path, where
+	// nn::act::AcquireIndependentServiceToken fails for want of an account.
+	// The title is handed back an nn::act error (102-1021), reports it as
+	// Miiverse 115-9999, and typically retries for as long as it runs.
+	// "Nintendo" is Cemu's local post archive: Initialize succeeds without a
+	// network or an account, and the archive file is opened lazily, so its
+	// absence costs nothing.
+	if (const char* v = libretro_get_option_value("cemu_miiverse"))
+	{
+		NetworkService service = NetworkService::Offline;
+		if (libretro_iequals(v, "local_archive"))
+			service = NetworkService::Nintendo;
+		cfg.SetAccountSelectedService(ActiveSettings::GetPersistentId(), service);
+	}
+
 	// Async shader compilation
 	if (const char* v = libretro_get_option_value("cemu_async_shader_compile"))
 	{
@@ -1252,6 +1269,7 @@ RETRO_API void retro_set_environment(retro_environment_t cb)
 		{"cemu_log_thread_sync", "Log thread synchronisation (debugging); disabled|enabled"},
 		{"cemu_log_thread_dump", "Log Wii U thread snapshots (debugging); disabled|enabled"},
 		{"cemu_log_system_api", "Log system API calls (debugging); disabled|enabled"},
+		{"cemu_miiverse", "Miiverse; disabled|local_archive"},
 #if defined(ENABLE_VULKAN) && defined(ENABLE_OPENGL)
 		{"cemu_gpu_api", "Graphics API (restart); OpenGL|Vulkan"},
 #endif

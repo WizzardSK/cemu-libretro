@@ -254,6 +254,12 @@ namespace nn
 				sint32 res = (sint32)nn::act::AcquireIndependentServiceToken(&token, OLV_CLIENT_ID, 0);
 				if (res < 0)
 				{
+					// A title gets this back as a Miiverse failure and usually retries
+					// forever, so say what actually failed: with no account and no
+					// network service there is no service token to acquire. Selecting
+					// the Nintendo service takes the local post archive path above
+					// instead, which needs neither.
+					cemuLog_log(LogType::SysApi, "nn::olv::Initialize: AcquireIndependentServiceToken failed with {} - the title will see a Miiverse error", nn::nnResultToString((nnResult)res));
 					g_IsInitialized = false;
 					return res;
 				}

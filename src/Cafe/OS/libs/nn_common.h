@@ -107,6 +107,46 @@ namespace nn
 		return (NN_ERROR_CODE)(errorCodeBase + errCode);
 	}
 
+	// An nnResult the way a bug report needs to read it: the module and the
+	// description a title would show as "102-1021", rather than the raw word.
+	// Only for logging - nothing branches on this.
+	inline std::string nnResultToString(nnResult result)
+	{
+		const char* moduleName;
+		switch (nnResult_GetModule(result))
+		{
+		case NN_RESULT_MODULE_COMMON:    moduleName = "common"; break;
+		case NN_RESULT_MODULE_NN_BOSS:   moduleName = "nn::boss"; break;
+		case NN_RESULT_MODULE_NN_ACP:    moduleName = "nn::acp"; break;
+		case NN_RESULT_MODULE_NN_IOS:    moduleName = "nn::ios"; break;
+		case NN_RESULT_MODULE_NN_NIM:    moduleName = "nn::nim"; break;
+		case NN_RESULT_MODULE_NN_ACT:    moduleName = "nn::act"; break;
+		case NN_RESULT_MODULE_NN_NDM:    moduleName = "nn::ndm"; break;
+		case NN_RESULT_MODULE_NN_FP:     moduleName = "nn::fp"; break;
+		case NN_RESULT_MODULE_NN_AC:     moduleName = "nn::ac"; break;
+		case NN_RESULT_MODULE_NN_OLV:    moduleName = "nn::olv"; break;
+		case NN_RESULT_MODULE_NN_SPM:    moduleName = "nn::spm"; break;
+		case NN_RESULT_MODULE_NN_EC:     moduleName = "nn::ec"; break;
+		case NN_RESULT_MODULE_NN_SL:     moduleName = "nn::sl"; break;
+		case NN_RESULT_MODULE_NN_NFP:    moduleName = "nn::nfp"; break;
+		default:                         moduleName = "?"; break;
+		}
+		const uint32 level = (result >> 29) & 0x7;
+		const char* levelName = level == NN_RESULT_LEVEL_FATAL ? "fatal" :
+			level == NN_RESULT_LEVEL_LVL6 ? "lvl6" :
+			level == NN_RESULT_LEVEL_STATUS ? "status" : "success";
+		// The user-facing prefix is only known for the modules that have one
+		// spelled out; elsewhere the description alone is printed.
+		if (nnResult_GetModule(result) == NN_RESULT_MODULE_NN_ACT)
+		{
+			return fmt::format("{}-{} ({} {}, raw 0x{:08x})",
+				NN_ERRCODE_MODULE_PREFIX_ACT / 10000, nnResult_GetDescription(result) >> 7,
+				moduleName, levelName, result);
+		}
+		return fmt::format("{} {} code {} (raw 0x{:08x})",
+			moduleName, levelName, nnResult_GetDescription(result) >> 7, result);
+	}
+
 }
 
 // tests
