@@ -77,6 +77,20 @@ VFSFileStream* VFSFileStream::openFile2(const fs::path& path, bool allowWrite)
 #ifdef RETRO_CORE
 	if (UsesVFS())
 	{
+		// A directory is not a file. The frontend's VFS opens one read-only
+		// without complaint on POSIX, and the handle would be handed back as a
+		// file - which is exactly what the native path guards against, a few
+		// lines into FileStream's constructor in FileStream_unix.cpp. Without
+		// the same guard here, FSCVirtualFile_Host::OpenFile takes the file
+		// branch for a directory and everything above it sees a FILE where a
+		// directory is: a save directory that exists comes back "not a
+		// directory". Content the frontend hands over as a URI is not a path
+		// and is_directory says nothing about it, which is the answer we want
+		// there anyway.
+		std::error_code ec;
+		if (fs::is_directory(path, ec))
+			return nullptr;
+
 		// UPDATE_EXISTING is what separates opening a file from creating one:
 		// without it the frontend discards whatever the file already held.
 		unsigned int mode = allowWrite ? (RETRO_VFS_FILE_ACCESS_READ | RETRO_VFS_FILE_ACCESS_WRITE | RETRO_VFS_FILE_ACCESS_UPDATE_EXISTING) : RETRO_VFS_FILE_ACCESS_READ;
