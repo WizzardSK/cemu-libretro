@@ -324,6 +324,13 @@ namespace iosu
 				return FSA_RESULT::NOT_FOUND;
 			if (fscFile->fscGetType() != FSC_TYPE_DIRECTORY)
 			{
+				// Worth saying out loud: the node opened, so the path exists -
+				// it is just not a directory, which for a save directory a title
+				// has just had nn_save initialize is a contradiction the title
+				// has to resolve on its own. Name the path and what it turned
+				// out to be.
+				cemuLog_log(LogType::SysApi, "Open directory {}: not a directory (fsc type {})", path,
+					(uint32)fscFile->fscGetType());
 				delete fscFile;
 				return FSA_RESULT::NOT_DIR;
 			}
