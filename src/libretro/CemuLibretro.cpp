@@ -783,6 +783,10 @@ void LibretroInitProgress(const char* stage)
 // Helper: Initialize paths for libretro
 // ============================================================================
 
+// Where mlc01 lives, decided in libretro_init_paths and applied after the
+// settings file is read (which would otherwise overwrite it).
+static fs::path s_mlc_path;
+
 static void libretro_init_paths()
 {
 	const char* system_dir = nullptr;
@@ -814,7 +818,18 @@ static void libretro_init_paths()
 	fs::create_directories(savePath, ec);
 	fs::create_directories(sysPath / "keys", ec);
 	fs::create_directories(sysPath / "shaderCache", ec);
-	fs::create_directories(savePath / "mlc01", ec);
+	// mlc01 is where every save goes, and by libretro convention writable
+	// per-user data belongs in the save directory rather than the system one.
+	// It used to land in system/Cemu/mlc01, because that is what Cemu derives
+	// from the user data path when no mlc path is configured - and the core
+	// created saves/Cemu/mlc01 next to it and then never used it. An install
+	// that already has saves under the old path keeps using it: moving someone's
+	// save data behind their back is worse than an inconsistent default.
+	s_mlc_path = savePath / "mlc01";
+	const fs::path legacy_mlc = sysPath / "mlc01";
+	if (fs::exists(legacy_mlc / "usr" / "save", ec) && !fs::exists(s_mlc_path / "usr" / "save", ec))
+		s_mlc_path = legacy_mlc;
+	fs::create_directories(s_mlc_path, ec);
 
 	std::set<fs::path> failedWriteAccess;
 	ActiveSettings::SetPaths(
@@ -1302,6 +1317,13 @@ RETRO_API void retro_init()
 	GetConfigHandle().SetFilename(ActiveSettings::GetConfigPath("settings.xml").generic_wstring());
 	if (fs::exists(ActiveSettings::GetConfigPath("settings.xml")))
 		GetConfigHandle().Load();
+
+	// After the load, not before: CemuConfig::Load assigns mlc_path from the
+	// file and would undo this. An mlc path the user put in settings.xml wins;
+	// otherwise point it at the directory chosen above.
+	if (GetConfig().mlc_path.GetValue().empty())
+		GetConfig().SetMLCPath(s_mlc_path, false);
+	cemuLog_log(LogType::Force, "mlc01: {}", _pathToUtf8(ActiveSettings::GetMlcPath()));
 
 	// Select graphics API based on core option
 #ifdef ENABLE_OPENGL
