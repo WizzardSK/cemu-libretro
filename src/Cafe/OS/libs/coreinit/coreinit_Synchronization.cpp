@@ -148,6 +148,15 @@ namespace coreinit
 
 	void OSSignalEventInternal(OSEvent* event)
 	{
+		// Counted here rather than in OSSignalEvent: OSSignalEventAll and the
+		// HLE modules that complete an operation reach an event through this
+		// function, and counting only the public entry point made events that
+		// are signalled constantly look like they were never signalled at all.
+		{
+			std::lock_guard lock(s_zeroTimeoutPollsMutex);
+			s_eventSignals[memory_getVirtualOffsetFromPointer(event)]++;
+		}
+
 		cemu_assert_debug(__OSHasSchedulerLock());
 		if (event->state == OSEvent::EVENT_STATE::STATE_SIGNALED)
 		{
@@ -171,10 +180,6 @@ namespace coreinit
 
 	void OSSignalEvent(OSEvent* event)
 	{
-		{
-			std::lock_guard lock(s_zeroTimeoutPollsMutex);
-			s_eventSignals[memory_getVirtualOffsetFromPointer(event)]++;
-		}
 		__OSLockScheduler();
 		OSSignalEventInternal(event);
 		__OSUnlockScheduler();
@@ -182,6 +187,11 @@ namespace coreinit
 
 	void OSSignalEventAllInternal(OSEvent* event)
 	{
+		{
+			std::lock_guard lock(s_zeroTimeoutPollsMutex);
+			s_eventSignals[memory_getVirtualOffsetFromPointer(event)]++;
+		}
+
 		if (event->state == OSEvent::EVENT_STATE::STATE_SIGNALED)
 		{
 			return;
