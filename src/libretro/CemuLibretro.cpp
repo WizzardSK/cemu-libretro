@@ -974,6 +974,33 @@ static void libretro_apply_core_options()
 				logFlags |= cemuLog_getFlag(LogType::CoreinitThread);
 			}
 		}
+		// System APIs: what a title asks the *system* for. A stuck save that makes
+		// no FS call at all is usually waiting on something else - an error
+		// dialog, the software keyboard, a Miiverse or ACP operation - and none
+		// of that was traceable, because 240 of the emulator's ~1100 HLE exports
+		// are registered as LogType::Placeholder, which is never enabled. This
+		// covers those (now LogType::SysApi) plus the system modules that do have
+		// a log type, without the per-frame coreinit traffic, so the log stays
+		// small enough to attach to a bug report.
+		if (const char* v = libretro_get_option_value("cemu_log_system_api"))
+		{
+			bool b;
+			if (libretro_parse_enabled_disabled(v, b) && b)
+			{
+				logFlags |= cemuLog_getFlag(LogType::SysApi);
+				logFlags |= cemuLog_getFlag(LogType::UnsupportedAPI);
+				logFlags |= cemuLog_getFlag(LogType::APIErrors);
+				logFlags |= cemuLog_getFlag(LogType::CoreinitLogging); // OSReport: the title's own output
+				logFlags |= cemuLog_getFlag(LogType::ProcUi);
+				logFlags |= cemuLog_getFlag(LogType::SWKBD);
+				logFlags |= cemuLog_getFlag(LogType::NN_OLV);
+				logFlags |= cemuLog_getFlag(LogType::NN_BOSS);
+				logFlags |= cemuLog_getFlag(LogType::NN_SL);
+				logFlags |= cemuLog_getFlag(LogType::NN_AOC);
+				logFlags |= cemuLog_getFlag(LogType::NN_FP);
+				logFlags |= cemuLog_getFlag(LogType::NN_PDM);
+			}
+		}
 		cemuLog_setActiveLoggingFlags(logFlags);
 
 		// Not a log flag: this one prints a table from retro_run rather than
@@ -1224,6 +1251,7 @@ RETRO_API void retro_set_environment(retro_environment_t cb)
 		{"cemu_log_filesystem", "Log file access (debugging); disabled|enabled"},
 		{"cemu_log_thread_sync", "Log thread synchronisation (debugging); disabled|enabled"},
 		{"cemu_log_thread_dump", "Log Wii U thread snapshots (debugging); disabled|enabled"},
+		{"cemu_log_system_api", "Log system API calls (debugging); disabled|enabled"},
 #if defined(ENABLE_VULKAN) && defined(ENABLE_OPENGL)
 		{"cemu_gpu_api", "Graphics API (restart); OpenGL|Vulkan"},
 #endif
