@@ -1425,10 +1425,16 @@ RETRO_API void retro_set_controller_port_device(unsigned port, unsigned device)
 //
 // Bounded: a title that refuses to stop must not hang the frontend, so the
 // shutdown runs on its own thread and we give up on it after a few seconds.
-static void libretro_shutdown_title_for_exit()
+//
+// Returns whether it got there. That answer decides how the core leaves: a
+// title that stopped is one whose GPU thread is stopped too, which is what
+// makes tearing the renderer down safe (see retro_unload_game). One that did
+// not stop still has threads drawing through the frontend's Vulkan device, and
+// for that case the _exit(0) escape hatch is still the least bad option.
+static bool libretro_shutdown_title_for_exit()
 {
 	if (!s_game_loaded)
-		return;
+		return true;
 	s_game_loaded = false;
 
 	s_shutting_down = true;
@@ -1444,7 +1450,11 @@ static void libretro_shutdown_title_for_exit()
 		*finished = true;
 	}).detach();
 
-	for (int i = 0; i < 5000 && !*finished; i++)
+	// Generous, because the alternative to waiting is _exit(0): every second
+	// spent here is a second of a user's session that does not have to end.
+	// ShutdownTitle traces its own phases, so a timeout says where it stopped.
+	constexpr int kShutdownTimeoutMs = 30000;
+	for (int i = 0; i < kShutdownTimeoutMs && !*finished; i++)
 		std::this_thread::sleep_for(std::chrono::milliseconds(1));
 
 	if (log_cb)
@@ -1454,6 +1464,8 @@ static void libretro_shutdown_title_for_exit()
 		else
 			log_cb(RETRO_LOG_WARN, "Cemu: title did not shut down in time, save data may be incomplete\n");
 	}
+
+	return *finished;
 }
 
 RETRO_API void retro_reset()
@@ -2038,8 +2050,9 @@ static void libretro_context_destroy()
 	s_frontend_read_rbo_attached = 0;
 	s_gpu_context_made_current = false;
 
-	// Vulkan: do NOT clean up here — GPU thread may still be using Vulkan objects.
-	// Cleanup happens via _exit() in retro_unload_game/retro_reset.
+	// Vulkan: do NOT clean up here — the title is still running and its GPU thread
+	// is only parked, not stopped. The renderer is torn down in retro_unload_game,
+	// after the title has actually stopped.
 }
 
 RETRO_API bool retro_load_game(const struct retro_game_info* game)
@@ -2198,41 +2211,101 @@ RETRO_API bool retro_load_game_special(unsigned game_type, const struct retro_ga
 	return false;
 }
 
+// Closing content used to end the RetroArch process. The reason was real - the
+// renderer draws through a Vulkan device the frontend owns, and tearing that
+// down under a live GPU thread faults inside the driver - but the cost was the
+// user's whole session, and a frontend is entitled to unload a core and carry
+// on. So the order is: stop the title, which stops the GPU thread, and only
+// then take the renderer apart. ~VulkanRenderer waits for the device to go idle
+// and already knows to leave the device and instance themselves alone when they
+// are not ours (m_useExternalDevice), so what it destroys is exactly what this
+// core allocated.
+//
+// The escape hatch stays for the case that earned it: a title that did not stop
+// inside libretro_shutdown_title_for_exit's window still has threads submitting
+// work, and there is nothing safe to do with them.
 RETRO_API void retro_unload_game()
 {
-	// A GPU device/renderer may have been created even if the title failed to finish loading
-	// (s_game_loaded false). In that case normal teardown is still unsafe, so we must still
-	// take the _exit(0) path below instead of returning early into a DllMain deadlock.
+	// A GPU device/renderer may have been created even if the title failed to finish
+	// loading (s_game_loaded false), and that renderer still has to go.
 	if (!s_game_loaded && !s_gpu_context_created)
 		return;
 
-	// Stop the title first, whichever renderer is in use: the _exit(0) below
-	// would otherwise drop every unwritten byte of save data on the floor.
-	libretro_shutdown_title_for_exit();
+	const bool stopped = libretro_shutdown_title_for_exit();
 
-#ifdef ENABLE_VULKAN
-	if (s_graphics_api == SelectedGraphicsAPI::Vulkan)
-	{
-		// Vulkan shared device cannot be cleanly unloaded
-		_exit(0);
-	}
-#endif
-
-	// OpenGL: signal shutdown and let threads wind down
+	// Wake anything still waiting on a frame that is never coming.
 	s_shutting_down = true;
 	{
 		std::lock_guard lock(s_frame_mutex);
 		s_frame_ready = true;
-		s_frame_cv.notify_one();
+		s_frame_cv.notify_all();
 	}
-	std::this_thread::sleep_for(std::chrono::milliseconds(50));
-	_exit(0);
+
+	if (!stopped)
+	{
+		if (log_cb)
+			log_cb(RETRO_LOG_ERROR,
+				"Cemu: the title did not stop, so the renderer cannot be torn down safely - exiting\n");
+		_exit(0);
+	}
+
+	// After the title, never before it: the input update thread and the emulated
+	// controllers are reachable from guest code, and joining the thread and
+	// resetting the pads underneath a title that is still running deadlocks the
+	// core it was running on - measured, six hangs out of six. With the title
+	// stopped nothing calls into them any more. Nothing else stops this thread,
+	// and left alone it outlives the core: it kept running after RetroArch
+	// dlclosed the library and took the process down with a fault in unmapped
+	// memory, plus "terminate called without an active exception" from the
+	// still-joinable std::thread.
+	InputManager::instance().Shutdown();
+
+	// Not g_renderer.reset(): ~VulkanRenderer reaches back through
+	// VulkanRenderer::GetInstance(), which reads g_renderer itself - the sampler
+	// cache's destructor asks it for the logical device. reset() nulls the
+	// stored pointer *before* it deletes, so those destructors would be handed a
+	// null halfway through the teardown, which is a SIGSEGV in
+	// ~VKRObjectSampler every time. Deleting first and releasing after keeps the
+	// pointer valid for the whole destructor - the order the standalone build
+	// unwinds in, where the renderer outlives its own teardown by construction.
+	if (Renderer* renderer = g_renderer.get())
+	{
+		delete renderer;
+		(void)g_renderer.release();
+	}
+
+#ifdef ENABLE_OPENGL
+	s_gl_callbacks.reset();
+#endif
+#ifdef ENABLE_VULKAN
+	s_vk_interface = nullptr;
+	LibretroVkQueue::SetInterface(nullptr);
+#endif
+
+	// Back to the state a fresh retro_load_game expects. s_initialized belongs to
+	// retro_init/retro_deinit and is deliberately left alone.
+	s_gpu_context_created = false;
+	s_hw_render_initialized = false;
+	s_gpu_context_made_current = false;
+	s_emu_initialized = false;
+	s_shutting_down = false;
+	s_frame_ready = false;
+	s_ppc_process_exited = false;
+	s_game_path.clear();
+	s_frontend_read_fbo = 0;
+	s_frontend_read_rbo_attached = 0;
+	s_frontend_upload_tex = 0;
+
+	if (log_cb)
+		log_cb(RETRO_LOG_INFO, "Cemu: content closed, core unloaded\n");
 }
 
 RETRO_API void retro_deinit()
 {
-	// If unload didn't fully clean up, force exit. Also covers the case where the title
-	// failed to load after a GPU context was already created (see s_gpu_context_created).
+	// retro_unload_game has normally already taken the renderer apart and cleared
+	// these. If it has not - a frontend that deinits without unloading, or an
+	// unload that bailed out - then a GPU device still exists and running this
+	// library's static destructors is not safe.
 	if (s_emu_initialized || s_gpu_context_created)
 		_exit(0);
 	s_initialized = false;
