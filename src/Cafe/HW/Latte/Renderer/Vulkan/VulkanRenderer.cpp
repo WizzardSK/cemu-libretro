@@ -4585,12 +4585,18 @@ void VKRObjectSampler::DestroyCache()
 	// assuming all other objects which depend on vkSampler are destroyed, this cache should also have been emptied already
 	// but just to be sure lets still clear the cache
 	cemu_assert_debug(s_samplerCache.empty());
-	for(auto& sampler : s_samplerCache)
+	// Emptied before the deletes, not after: ~VKRObjectSampler erases its own
+	// entry from this map, which invalidates the iterator the loop is standing
+	// on and leaves it walking freed nodes. Only reachable when the cache is
+	// still populated at teardown, which is why it never fires in a run that
+	// ends by process exit.
+	auto cache = std::move(s_samplerCache);
+	s_samplerCache.clear();
+	for(auto& sampler : cache)
 	{
 		cemu_assert_debug(sampler.second->m_refCount == 0);
 		delete sampler.second;
 	}
-	s_samplerCache.clear();
 }
 
 VKRObjectRenderPass::VKRObjectRenderPass(AttachmentInfo_t& attachmentInfo, sint32 colorAttachmentCount)
