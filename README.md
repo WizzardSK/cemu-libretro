@@ -42,7 +42,7 @@ cp cemu_libretro.info ~/.config/retroarch/cores/libcemu_libretro.info
 ## Setup
 
 - Place `keys.txt` in RetroArch system directory under `Cemu/` (e.g. `~/.config/retroarch/system/Cemu/keys.txt`)
-- MLC storage is at `<save_dir>/Cemu/mlc01/` — the frontend's save directory, not the system one. It falls back to `<system_dir>/Cemu/mlc01/` only where the frontend offers no save directory. (With RetroArch's "Sort saves by core" the directory is already named `Cemu`, and the core does not add a second one.)
+- MLC storage is at `<save_dir>/Cemu/mlc01/`
 - Shared fonts: place `CafeStd.ttf`, `CafeCn.ttf`, `CafeKr.ttf`, `CafeTw.ttf` in `<system_dir>/Cemu/resources/sharedFonts/`
 - Graphic packs: place in `<system_dir>/Cemu/graphicPacks/` (symlinks supported)
   - Packs with `default = 1` are auto-enabled (e.g. NSMBU crash fix)
