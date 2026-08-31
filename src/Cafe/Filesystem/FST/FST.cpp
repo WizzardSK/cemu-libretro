@@ -189,8 +189,10 @@ struct DiscPartitionHeader
 
 static_assert(sizeof(DiscPartitionHeader) == 0x40+0x20);
 
-bool FSTVolume::FindDiscKey(const fs::path& path, NCrypto::AesKey& discTitleKey)
+bool FSTVolume::FindDiscKey(const fs::path& path, NCrypto::AesKey& discTitleKey, bool* imageOpened)
 {
+	if (imageOpened)
+		*imageOpened = false;
 	cemuLog_log(LogType::Force, "[FST] FindDiscKey begin path='{}'", path.generic_string());
 	std::unique_ptr<FSTDataSourceWUD> dataSource(FSTDataSourceWUD::Open(path));
 	if (!dataSource)
@@ -208,6 +210,8 @@ bool FSTVolume::FindDiscKey(const fs::path& path, NCrypto::AesKey& discTitleKey)
 		return false;
 	}
 	cemuLog_log(LogType::Force, "[FST] FindDiscKey: read header bytes ok (size={})", (sint32)sizeof(header));
+	if (imageOpened)
+		*imageOpened = true;
 
 	// try all the keys in the key cache
 	uint8 headerDecrypted[sizeof(header)-16];

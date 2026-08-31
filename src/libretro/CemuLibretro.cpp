@@ -41,6 +41,9 @@
 #include "util/crypto/aes128.h"
 #include "util/helpers/helpers.h"
 
+#include "Cafe/Filesystem/FST/FST.h"
+#include "Cafe/Filesystem/FST/KeyCache.h"
+
 #include "Cafe/GraphicPack/GraphicPack2.h"
 #include "Cafe/GameProfile/GameProfile.h"
 
@@ -782,6 +785,39 @@ void LibretroInitProgress(const char* stage)
 // ============================================================================
 // Helper: Initialize paths for libretro
 // ============================================================================
+
+// Put a sentence on the screen, not only in the log. Message interface v1 gives
+// a priority and a duration and is what a modern frontend wants; the old
+// SET_MESSAGE is a frame count, so it is converted at the 60 fps the interface
+// assumes, and is all an older one understands.
+static void libretro_show_message(unsigned level, unsigned durationMs, const std::string& text)
+{
+	if (log_cb)
+		log_cb(level >= RETRO_LOG_ERROR ? RETRO_LOG_ERROR : RETRO_LOG_INFO, "Cemu: %s\n", text.c_str());
+
+	if (!environ_cb)
+		return;
+
+	unsigned version = 0;
+	if (environ_cb(RETRO_ENVIRONMENT_GET_MESSAGE_INTERFACE_VERSION, &version) && version >= 1)
+	{
+		struct retro_message_ext msg = {};
+		msg.msg = text.c_str();
+		msg.duration = durationMs;
+		msg.priority = 3;
+		msg.level = (enum retro_log_level)level;
+		msg.target = RETRO_MESSAGE_TARGET_ALL;
+		msg.type = RETRO_MESSAGE_TYPE_NOTIFICATION;
+		msg.progress = -1;
+		environ_cb(RETRO_ENVIRONMENT_SET_MESSAGE_EXT, &msg);
+		return;
+	}
+
+	struct retro_message msg = {};
+	msg.msg = text.c_str();
+	msg.frames = durationMs * 60 / 1000;
+	environ_cb(RETRO_ENVIRONMENT_SET_MESSAGE, &msg);
+}
 
 // Where mlc01 lives, decided in libretro_init_paths and applied after the
 // settings file is read (which would otherwise overwrite it).
@@ -2055,9 +2091,51 @@ static void libretro_context_destroy()
 	// after the title has actually stopped.
 }
 
+// A .wud/.wux is encrypted, and without its disc key nothing downstream says so
+// in a way anyone can act on: the mount fails, the title scan then finds no
+// title, and what reaches the user is "could not find base title ID" - which
+// reads like the file is broken rather than like a key is missing.
+//
+// The question is cheap to ask here, and asking it before anything else in the
+// load means the answer can be a refused load with a sentence naming the file
+// and the key file that was searched, rather than a black screen several
+// seconds later. FindDiscKey is the same call the mount would make.
+static bool libretro_disc_key_available(const fs::path& gamePath)
+{
+	std::string ext = _pathToUtf8(gamePath.extension());
+	std::transform(ext.begin(), ext.end(), ext.begin(), [](unsigned char c) { return (char)std::tolower(c); });
+	if (ext != ".wud" && ext != ".wux")
+		return true;
+
+	KeyCache_Prepare();
+
+	NCrypto::AesKey discTitleKey;
+	bool imageOpened = false;
+	if (FSTVolume::FindDiscKey(gamePath, discTitleKey, &imageOpened))
+		return true;
+
+	// The image would not open or its header would not read: whatever is wrong
+	// with it, a missing key is not it, and saying so would send the user off
+	// editing keys.txt for nothing. Let the normal load path report it.
+	if (!imageOpened)
+		return true;
+
+	const fs::path keysPath = ActiveSettings::GetUserDataPath("keys.txt");
+	libretro_show_message(RETRO_LOG_ERROR, 8000,
+		fmt::format("No disc key for {}. Add its key to {}",
+			_pathToUtf8(gamePath.filename()), _pathToUtf8(keysPath)));
+	return false;
+}
+
 RETRO_API bool retro_load_game(const struct retro_game_info* game)
 {
 	if (!game || !game->path)
+		return false;
+
+	// Before the renderer, the context and the launch thread: a load that cannot
+	// possibly succeed should fail while the frontend is still in a position to
+	// say so and stay in its menu.
+	if (!libretro_disc_key_available(fs::path(game->path)))
 		return false;
 
 	// Re-decided below for this load; a stale value from a previous one would

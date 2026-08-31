@@ -37,7 +37,12 @@ public:
 	    BAD_TITLE_TIK = 5,
   	};
 
-	static bool FindDiscKey(const fs::path& path, NCrypto::AesKey& discTitleKey);
+	// imageOpened, when asked for, says whether the image itself could be opened
+	// and its header read. It separates "this is not a disc image we can read"
+	// from "it is, and no key in the cache decrypts it" - a caller that wants to
+	// tell the user which of the two happened cannot get that from the return
+	// value alone.
+	static bool FindDiscKey(const fs::path& path, NCrypto::AesKey& discTitleKey, bool* imageOpened = nullptr);
 
 	static FSTVolume* OpenFromDiscImage(const fs::path& path, NCrypto::AesKey& discTitleKey, ErrorCode* errorCodeOut = nullptr);
 	static FSTVolume* OpenFromDiscImage(const fs::path& path, ErrorCode* errorCodeOut = nullptr);
