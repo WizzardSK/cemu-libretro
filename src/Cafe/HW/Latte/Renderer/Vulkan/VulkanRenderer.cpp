@@ -3417,6 +3417,17 @@ void VulkanRenderer::SwapBuffers(bool swapTV, bool swapDRC)
 
 	SubmitCommandBuffer();
 
+#ifdef RETRO_CORE
+	// The work is submitted and the frame is the frontend's; park here until it
+	// asks for the next one. After the submit, so nothing is held open while we
+	// wait, and only for the TV frame - the DRC swap is part of the same frame.
+	if (swapTV)
+	{
+		extern void libretro_frame_gate_wait();
+		libretro_frame_gate_wait();
+	}
+#endif
+
 #ifndef RETRO_CORE
 	if (swapTV && IsSwapchainInfoValid(true))
 		SwapBuffer(true);

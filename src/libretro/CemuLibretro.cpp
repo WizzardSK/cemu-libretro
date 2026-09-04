@@ -254,6 +254,52 @@ static unsigned int s_frontend_read_fbo = 0;
 static unsigned int s_frontend_read_rbo_attached = 0;
 static unsigned int s_frontend_upload_tex = 0;
 
+// Frame gate.
+//
+// RetroArch pauses a core by not calling retro_run, but this emulator runs on
+// its own threads, so that alone stops nothing: the title keeps running and the
+// audio keeps playing while the frontend sits in its menu (#12). The gate turns
+// "the frontend stopped calling us" into "the emulator stopped": retro_run hands
+// out one token per call and the GPU thread takes one at each swap, so the
+// emulator advances exactly as often as it is asked to - which is also what lets
+// fast-forward and frame stepping mean anything.
+//
+// No timeout on the wait: a gate that lets a frame through on its own would put
+// the core back in charge of its own speed, which is the thing being fixed. What
+// keeps that from hanging a shutdown is libretro_frame_gate_release, called
+// before anything waits for the GPU thread to stop.
+static std::mutex s_gate_mutex;
+static std::condition_variable s_gate_cv;
+static unsigned s_gate_tokens = 1;    // one, so the first frame does not wait
+static bool s_gate_released = false;  // shutting down: nothing waits any more
+
+// GPU thread, at a swap.
+void libretro_frame_gate_wait()
+{
+	std::unique_lock lock(s_gate_mutex);
+	s_gate_cv.wait(lock, [] { return s_gate_tokens > 0 || s_gate_released; });
+	if (s_gate_tokens > 0)
+		s_gate_tokens--;
+}
+
+// retro_run. Capped at one: a frontend that ran ahead must not build up credit
+// it can spend later, or the emulator would sprint after every menu visit.
+static void libretro_frame_gate_grant()
+{
+	std::lock_guard lock(s_gate_mutex);
+	s_gate_tokens = 1;
+	s_gate_cv.notify_all();
+}
+
+// Shutdown, and any other point where waiting for a token would be waiting for
+// a frontend that is not coming back.
+void libretro_frame_gate_release()
+{
+	std::lock_guard lock(s_gate_mutex);
+	s_gate_released = true;
+	s_gate_cv.notify_all();
+}
+
 // Frame synchronization
 static std::mutex s_frame_mutex;
 static std::condition_variable s_frame_cv;
@@ -728,9 +774,18 @@ public:
 			glBindFramebuffer(GL_READ_FRAMEBUFFER_EXT, fbo);
 			glReadPixels(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, GL_BGRA, GL_UNSIGNED_BYTE, s_framebuffer.data());
 
-			std::lock_guard lock(s_frame_mutex);
-			s_frame_ready = true;
-			s_frame_cv.notify_one();
+			{
+				std::lock_guard lock(s_frame_mutex);
+				s_frame_ready = true;
+				s_frame_cv.notify_one();
+			}
+
+			// The frame is the frontend's now; wait to be asked for the next one.
+			// Only for the TV swap: a DRC swap is part of the same frame, and
+			// parking on both would halve the frame rate of a title that does
+			// them separately.
+			if (swapTV)
+				libretro_frame_gate_wait();
 		}
 	}
 };
@@ -1479,6 +1534,9 @@ static bool libretro_shutdown_title_for_exit()
 		s_frame_ready = true;
 		s_frame_cv.notify_all();
 	}
+	// Before ShutdownTitle, which stops the GPU thread: a thread parked at the
+	// frame gate is a thread that never gets there.
+	libretro_frame_gate_release();
 
 	auto finished = std::make_shared<std::atomic_bool>(false);
 	std::thread([finished]() {
@@ -2318,6 +2376,7 @@ RETRO_API void retro_unload_game()
 		s_frame_ready = true;
 		s_frame_cv.notify_all();
 	}
+	libretro_frame_gate_release();
 
 	if (!stopped)
 	{
@@ -2368,6 +2427,11 @@ RETRO_API void retro_unload_game()
 	s_emu_initialized = false;
 	s_shutting_down = false;
 	s_frame_ready = false;
+	{
+		std::lock_guard lock(s_gate_mutex);
+		s_gate_released = false;
+		s_gate_tokens = 1;
+	}
 	s_ppc_process_exited = false;
 	s_game_path.clear();
 	s_frontend_read_fbo = 0;
@@ -2691,6 +2755,9 @@ RETRO_API void retro_run()
 
 	// Poll input
 	libretro_poll_input();
+
+	// Ask for a frame: the GPU thread is parked at the gate after the last swap.
+	libretro_frame_gate_grant();
 
 	// Wait for frame from GPU thread
 	{
