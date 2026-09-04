@@ -235,7 +235,7 @@ static retro_input_poll_t input_poll_cb = nullptr;
 static retro_input_state_t input_state_cb = nullptr;
 static retro_log_printf_t log_cb = nullptr;
 
-static bool s_game_loaded = false;
+static std::atomic_bool s_game_loaded{false};   // read by the GPU thread at the frame gate
 static bool s_initialized = false;
 static bool s_emu_initialized = false;
 // Set as soon as a Vulkan/OpenGL device or renderer has been created, i.e. as soon as
@@ -273,13 +273,45 @@ static std::condition_variable s_gate_cv;
 static unsigned s_gate_tokens = 1;    // one, so the first frame does not wait
 static bool s_gate_released = false;  // shutting down: nothing waits any more
 
+// True between "the frontend asked for a frame" and "the frame was handed
+// over": the window in which the emulator is allowed to advance. The GPU
+// thread's own token is what paces the frame; this is what the emulated CPU
+// cores look at, since they must not consume tokens - they run many times per
+// frame - but they must not run outside the window either.
+static bool s_frame_permit = false;
+
 // GPU thread, at a swap.
+//
+// Not before a title is running: loading one blocks inside retro_load_game
+// waiting for the GPU thread, and the GPU thread swaps while it gets there -
+// so a gate that holds it then is holding it against a retro_run that cannot
+// be called yet, and the load never finishes. Boot swaps go straight through.
 void libretro_frame_gate_wait()
 {
+	if (!s_game_loaded)
+		return;
 	std::unique_lock lock(s_gate_mutex);
+	// The frame is delivered, so the window closes here rather than when the
+	// next one opens: from now until the frontend asks again, nothing should
+	// be running - the emulated cores included.
+	s_frame_permit = false;
 	s_gate_cv.wait(lock, [] { return s_gate_tokens > 0 || s_gate_released; });
 	if (s_gate_tokens > 0)
 		s_gate_tokens--;
+}
+
+// Everything that is not the frame-pacing GPU swap itself: the emulated CPU
+// cores from the scheduler's idle loop, and the GPU command processor at a
+// command boundary. Neither may consume tokens - they come round many times
+// per frame - but neither may run outside the window either. The command
+// processor has to be in here too: parked cores submit nothing, so a command
+// loop left running would spin on an empty ring instead of standing still.
+void libretro_frame_window_wait()
+{
+	if (!s_game_loaded)
+		return;
+	std::unique_lock lock(s_gate_mutex);
+	s_gate_cv.wait(lock, [] { return s_frame_permit || s_gate_released; });
 }
 
 // retro_run. Capped at one: a frontend that ran ahead must not build up credit
@@ -288,6 +320,7 @@ static void libretro_frame_gate_grant()
 {
 	std::lock_guard lock(s_gate_mutex);
 	s_gate_tokens = 1;
+	s_frame_permit = true;
 	s_gate_cv.notify_all();
 }
 
@@ -297,6 +330,7 @@ void libretro_frame_gate_release()
 {
 	std::lock_guard lock(s_gate_mutex);
 	s_gate_released = true;
+	s_frame_permit = true;
 	s_gate_cv.notify_all();
 }
 
@@ -2431,6 +2465,7 @@ RETRO_API void retro_unload_game()
 		std::lock_guard lock(s_gate_mutex);
 		s_gate_released = false;
 		s_gate_tokens = 1;
+		s_frame_permit = true;
 	}
 	s_ppc_process_exited = false;
 	s_game_path.clear();

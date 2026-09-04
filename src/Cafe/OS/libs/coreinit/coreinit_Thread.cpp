@@ -16,6 +16,11 @@
 #include "util/helpers/helpers.h"
 #include <cstdlib>
 
+#ifdef RETRO_CORE
+// Defined at global scope by the libretro glue (src/libretro/CemuLibretro.cpp).
+void libretro_frame_window_wait();
+#endif
+
 static bool coreinit_libretro_debug_enabled()
 {
 	static int s_cached = -1;
@@ -1329,6 +1334,13 @@ namespace coreinit
 		__OSUnlockScheduler();
 		while (true)
 		{
+#ifdef RETRO_CORE
+			// The frontend decides when the emulator advances, and this is the
+			// only point in this loop where no scheduler lock is held and no
+			// guest fiber is on the stack - so it is where a core waits out a
+			// frame the frontend has not asked for.
+			::libretro_frame_window_wait();
+#endif
 			sSchedulerIdleLoopCount[t_assignedCoreIndex].fetch_add(1, std::memory_order_relaxed);
 			sSchedulerHeartbeat[t_assignedCoreIndex].fetch_add(1, std::memory_order_relaxed);
 			if (!g_coreRunQueueThreadCount[coreIndex].isZero()) // avoid hammering the lock on the main core if there is no runable thread

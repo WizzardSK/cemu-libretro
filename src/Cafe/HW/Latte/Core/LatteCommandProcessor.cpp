@@ -1448,6 +1448,11 @@ void LatteCP_processCommandBuffer(DrawPassContext& drawPassCtx)
 	}
 }
 
+#ifdef ENABLE_LIBRETRO
+// Defined at global scope by the libretro glue (src/libretro/CemuLibretro.cpp).
+void libretro_frame_window_wait();
+#endif
+
 void LatteCP_ProcessRingbuffer()
 {
 	sint32 timerRecheck = 0; // estimates how much CP processing time has elapsed based on the executed commands, if the value exceeds CP_TIMER_RECHECK then _handleTimers() is called
@@ -1456,8 +1461,11 @@ void LatteCP_ProcessRingbuffer()
 	{
 #ifdef ENABLE_LIBRETRO
 		// command boundary: safe place to stand still while the frontend
-		// rebuilds its graphics context
+		// rebuilds its graphics context, and equally while it is not asking
+		// for frames - otherwise this loop spins on a ring that the parked
+		// emulated cores are not filling.
 		Latte_GpuPauseGate();
+		::libretro_frame_window_wait();
 #endif
 		uint32 itHeader = LatteCP_readU32Deprc();
 		uint32 itHeaderType = (itHeader >> 30) & 3;
