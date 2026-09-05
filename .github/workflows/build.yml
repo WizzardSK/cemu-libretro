@@ -12,7 +12,10 @@ on:
 
 env:
   VCPKG_ROOT: "${{github.workspace}}/dependencies/vcpkg"
-  VCPKG_BINARY_SOURCES: 'clear;nuget,GitHub,readwrite'
+  # No nuget binary cache: this fork does not publish packages, and the one it
+  # had was 537 vcpkg artifacts nothing here reads - the libretro core build in
+  # libretro.yml does not use it.
+  VCPKG_BINARY_SOURCES: 'clear'
   VCPKG_FORCE_DOWNLOADED_BINARIES: true
   
 jobs:
