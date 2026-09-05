@@ -280,6 +280,13 @@ static bool s_gate_released = false;  // shutting down: nothing waits any more
 // frame - but they must not run outside the window either.
 static bool s_frame_permit = false;
 
+// Nonzero while something outside the frame loop needs the emulator to keep
+// moving: the frame gate parks threads, and a handshake that waits for one of
+// those threads to arrive somewhere would otherwise wait forever (see
+// libretro_context_destroy). A counter, not a flag, so overlapping holders
+// cannot open the gate for each other.
+static unsigned s_gate_hold_open = 0;
+
 // GPU thread, at a swap.
 //
 // Not before a title is running: loading one blocks inside retro_load_game
@@ -295,7 +302,7 @@ void libretro_frame_gate_wait()
 	// next one opens: from now until the frontend asks again, nothing should
 	// be running - the emulated cores included.
 	s_frame_permit = false;
-	s_gate_cv.wait(lock, [] { return s_gate_tokens > 0 || s_gate_released; });
+	s_gate_cv.wait(lock, [] { return s_gate_tokens > 0 || s_gate_released || s_gate_hold_open; });
 	if (s_gate_tokens > 0)
 		s_gate_tokens--;
 }
@@ -311,7 +318,20 @@ void libretro_frame_window_wait()
 	if (!s_game_loaded)
 		return;
 	std::unique_lock lock(s_gate_mutex);
-	s_gate_cv.wait(lock, [] { return s_frame_permit || s_gate_released; });
+	s_gate_cv.wait(lock, [] { return s_frame_permit || s_gate_released || s_gate_hold_open; });
+}
+
+// Lets the emulator run outside a frame for as long as the hold is held. For
+// handshakes that need a parked thread to reach a particular point in its own
+// loop - which it cannot do while the gate is holding it there.
+void libretro_frame_gate_hold_open(bool hold)
+{
+	std::lock_guard lock(s_gate_mutex);
+	if (hold)
+		s_gate_hold_open++;
+	else if (s_gate_hold_open > 0)
+		s_gate_hold_open--;
+	s_gate_cv.notify_all();
 }
 
 // retro_run. Capped at one: a frontend that ran ahead must not build up credit
@@ -1585,15 +1605,24 @@ static bool libretro_shutdown_title_for_exit()
 	for (int i = 0; i < kShutdownTimeoutMs && !*finished; i++)
 		std::this_thread::sleep_for(std::chrono::milliseconds(1));
 
+	// A GPU thread that would not stop was detached rather than joined, so the
+	// title is only half stopped: save data is on disk, but a live thread is
+	// still rendering through the frontend's Vulkan device. Tearing that device
+	// down under it is the crash this used to end in, so report it as not
+	// stopped and let the caller take the exit path instead.
+	const bool abandoned = Latte_WasThreadAbandoned();
+
 	if (log_cb)
 	{
-		if (*finished)
+		if (*finished && !abandoned)
 			log_cb(RETRO_LOG_INFO, "Cemu: title shut down, save data flushed\n");
+		else if (*finished)
+			log_cb(RETRO_LOG_WARN, "Cemu: title shut down and save data flushed, but the GPU thread would not stop\n");
 		else
 			log_cb(RETRO_LOG_WARN, "Cemu: title did not shut down in time, save data may be incomplete\n");
 	}
 
-	return *finished;
+	return *finished && !abandoned;
 }
 
 RETRO_API void retro_reset()
@@ -2014,9 +2043,23 @@ static void libretro_create_shared_gl_context()
 #endif // _WIN32
 #endif // ENABLE_OPENGL
 
+// True once the frontend has taken its graphics context apart. On exit that
+// happens *before* retro_unload_game, and everything Cemu does to tear down its
+// renderer - the final command buffer submit in ~VulkanRenderer, every vkDestroy
+// in the caches - goes through a device that no longer exists. Code that would
+// touch the GPU during teardown asks here first.
+static std::atomic_bool s_frontend_context_gone{false};
+
+bool libretro_gpu_context_gone()
+{
+	return s_frontend_context_gone.load(std::memory_order_acquire);
+}
+
 static void libretro_context_reset()
 {
 	s_hw_render_initialized = true;
+	// A context exists again, so GPU teardown is allowed again.
+	s_frontend_context_gone = false;
 
 	// the frontend's context is back - let the GPU thread run again
 	Latte_ReleaseGpuPause();
@@ -2167,16 +2210,25 @@ static void libretro_context_destroy()
 	//
 	// Bounded: if the GPU thread is stuck somewhere it cannot reach the gate,
 	// a frozen frontend would be worse than the race we are closing.
+	//
+	// The gate has to be held open for the length of this handshake: parking is
+	// something the GPU thread does for itself at a command boundary, and a
+	// thread the frame gate is holding never reaches one. Waiting for a parked
+	// thread to park is a wait that always times out.
+	libretro_frame_gate_hold_open(true);
 	Latte_RequestGpuPause();
 	for (int i = 0; i < 500 && !Latte_IsGpuParked(); i++)
 		std::this_thread::sleep_for(std::chrono::milliseconds(1));
-	if (log_cb && !Latte_IsGpuParked())
+	const bool parked = Latte_IsGpuParked();
+	libretro_frame_gate_hold_open(false);
+	if (log_cb && !parked)
 		log_cb(RETRO_LOG_WARN, "Cemu: GPU thread did not park before the context went away\n");
 
 	s_hw_render_initialized = false;
 	s_frontend_read_fbo = 0;
 	s_frontend_read_rbo_attached = 0;
 	s_gpu_context_made_current = false;
+	s_frontend_context_gone = true;
 
 	// Vulkan: do NOT clean up here — the title is still running and its GPU thread
 	// is only parked, not stopped. The renderer is torn down in retro_unload_game,
@@ -2441,8 +2493,24 @@ RETRO_API void retro_unload_game()
 	// unwinds in, where the renderer outlives its own teardown by construction.
 	if (Renderer* renderer = g_renderer.get())
 	{
-		delete renderer;
-		(void)g_renderer.release();
+		if (libretro_gpu_context_gone())
+		{
+			// Nothing to destroy it with. ~VulkanRenderer submits a final
+			// command buffer and frees its objects through the frontend's
+			// device, and that device is already gone by the time an exiting
+			// frontend gets here - the destructor faults inside the driver.
+			// Dropping ownership leaks the host-side object on a path the
+			// process does not come back from; the alternative is a crash on
+			// every exit.
+			(void)g_renderer.release();
+			if (log_cb)
+				log_cb(RETRO_LOG_INFO, "Cemu: graphics context already gone, leaving the renderer alone\n");
+		}
+		else
+		{
+			delete renderer;
+			(void)g_renderer.release();
+		}
 	}
 
 #ifdef ENABLE_OPENGL
@@ -2466,6 +2534,7 @@ RETRO_API void retro_unload_game()
 		s_gate_released = false;
 		s_gate_tokens = 1;
 		s_frame_permit = true;
+		s_gate_hold_open = 0;
 	}
 	s_ppc_process_exited = false;
 	s_game_path.clear();
@@ -2485,6 +2554,18 @@ RETRO_API void retro_deinit()
 	// library's static destructors is not safe.
 	if (s_emu_initialized || s_gpu_context_created)
 		_exit(0);
+
+	// Anything still joinable when this library is unloaded is a std::terminate
+	// in a static destructor, with no stack to explain it.
+	//
+	// CafeSystem::Shutdown would be the obvious thing to call here as well - it
+	// is what joins the IOSU service threads (/dev/fsa, /dev/odm, MCP), which
+	// ShutdownTitle leaves alone because they belong to the system rather than
+	// to the title. It does not return: measured six times out of six, the
+	// frontend never exits. Until those services can be stopped without
+	// blocking, the threads are left as they are.
+	CafeTitleList::Shutdown();
+
 	s_initialized = false;
 }
 

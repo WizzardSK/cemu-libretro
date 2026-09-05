@@ -37,6 +37,20 @@ static bool LatteThread_libretro_debug_enabled()
 LatteGPUState_t LatteGPUState = {};
 
 std::atomic_bool sLatteThreadRunning = false;
+#ifdef ENABLE_LIBRETRO
+// Set by the GPU thread once it is past everything that touches the renderer,
+// so Latte_Stop can tell "still tearing down" from "safe to join".
+static std::atomic_bool sLatteThreadExited{false};
+// Set when Latte_Stop had to give up and detach. The thread is then still alive
+// and still rendering through the frontend's device, which is exactly the state
+// in which nothing downstream may take that device apart.
+static std::atomic_bool sLatteThreadAbandoned{false};
+
+bool Latte_WasThreadAbandoned()
+{
+	return sLatteThreadAbandoned.load(std::memory_order_acquire);
+}
+#endif
 
 #ifdef ENABLE_LIBRETRO
 static std::atomic_bool sGpuPauseRequested{false};
@@ -286,6 +300,10 @@ void Latte_Start()
 		cemuLog_log(LogType::Force, "[LatteThread] Latte_Start begin running={} finishedInit={}", sLatteThreadRunning.load() ? 1 : 0, sLatteThreadFinishedInit.load() ? 1 : 0);
 	std::unique_lock _lock(sLatteThreadStateMutex);
 	cemu_assert_debug(!sLatteThreadRunning);
+#ifdef ENABLE_LIBRETRO
+	sLatteThreadExited.store(false, std::memory_order_release);
+	sLatteThreadAbandoned.store(false, std::memory_order_release);
+#endif
 	sLatteThreadRunning = true;
 	sLatteThreadFinishedInit = false;
 	sLatteThread = std::thread(Latte_ThreadEntry);
@@ -308,10 +326,32 @@ void Latte_Stop()
 	sLatteThreadRunning = false;
 	_lock.unlock();
 #ifdef ENABLE_LIBRETRO
-	// In libretro mode, detach GPU thread to avoid deadlock on exit
-	// GPU thread may be blocked on GL calls in shared context and won't notice stop signal
+	// Detaching here used to be unconditional, on the grounds that the GPU
+	// thread can be blocked somewhere it will not see the stop signal. The cost
+	// was that a "stopped" title still had a live GPU thread: it ran on through
+	// its own teardown while the frontend went on to unload the core, and the
+	// two raced over the renderer. What that looks like is a crash at exit in
+	// LatteShaderCache_Load or RendererShaderVk::CreateVkShaderModule with a
+	// null device - an in-flight shader compile finding the renderer gone.
+	//
+	// So: wait for the thread to finish its own teardown, then join it, and
+	// fall back to the old detach if it does not get there. The wait is bounded
+	// because a frontend frozen on exit would be worse than the race, and the
+	// caller (ShutdownTitle) has its own timeout above this one.
 	if (sLatteThread.joinable())
-		sLatteThread.detach();
+	{
+		constexpr int kExitTimeoutMs = 5000;
+		for (int i = 0; i < kExitTimeoutMs && !sLatteThreadExited.load(std::memory_order_acquire); i++)
+			std::this_thread::sleep_for(std::chrono::milliseconds(1));
+		if (sLatteThreadExited.load(std::memory_order_acquire))
+			sLatteThread.join();
+		else
+		{
+			cemuLog_log(LogType::Force, "[LatteThread] GPU thread did not exit in time, detaching it");
+			sLatteThreadAbandoned.store(true, std::memory_order_release);
+			sLatteThread.detach();
+		}
+	}
 #else
 	sLatteThread.join();
 #endif
@@ -322,10 +362,35 @@ bool Latte_GetStopSignal()
 	return !sLatteThreadRunning;
 }
 
+#ifdef ENABLE_LIBRETRO
+// Defined at global scope by the libretro glue (src/libretro/CemuLibretro.cpp).
+bool libretro_gpu_context_gone();
+#endif
+
 void LatteThread_Exit()
 {
 	if (LatteThread_libretro_debug_enabled())
 		cemuLog_log(LogType::Force, "[LatteThread] LatteThread_Exit begin renderer={}", g_renderer ? 1 : 0);
+#ifdef ENABLE_LIBRETRO
+	// Everything below this point talks to the GPU: the renderer's own shutdown,
+	// the cache unloads that free their objects through it, and the destructor.
+	// If the frontend has already destroyed the graphics context - which is the
+	// order an exiting frontend uses - there is nothing left to talk to, and
+	// each of those calls is a fault inside the driver. Let the objects go
+	// unfreed instead; this thread is on its way out and so is the process.
+	if (::libretro_gpu_context_gone())
+	{
+		cemuLog_log(LogType::Force, "[LatteThread] graphics context already gone, skipping GPU teardown");
+		g_renderer.release();
+		std::memset(&LatteGPUState, 0, sizeof(LatteGPUState));
+		sLatteThreadExited.store(true, std::memory_order_release);
+		#if BOOST_OS_WINDOWS
+		ExitThread(0);
+		#else
+		pthread_exit(nullptr);
+		#endif
+	}
+#endif
 	if (g_renderer)
 		g_renderer->Shutdown();
 	if (LatteThread_libretro_debug_enabled())
@@ -362,6 +427,9 @@ void LatteThread_Exit()
 	std::memset(&LatteGPUState, 0, sizeof(LatteGPUState));
 	if (LatteThread_libretro_debug_enabled())
 		cemuLog_log(LogType::Force, "[LatteThread] LatteThread_Exit end (ExitThread)\n");
+#ifdef ENABLE_LIBRETRO
+	sLatteThreadExited.store(true, std::memory_order_release);
+#endif
 	#if BOOST_OS_WINDOWS
 	ExitThread(0);
 	#else
