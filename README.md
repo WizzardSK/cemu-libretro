@@ -2,6 +2,16 @@
 
 Cemu (Wii U emulator) as a libretro core for RetroArch.
 
+## Getting the core
+
+Through RetroArch: **Online Updater → Core Downloader → Cemu**. The libretro
+buildbot builds this branch nightly, for Windows x64, Linux x64 and arm64,
+macOS x64 and arm64, and Android arm64-v8a and x86_64 - which is every target
+there is, and always the current tree. There are no releases here on purpose:
+one more place to download from is one more place to be out of date.
+
+Build it yourself for anything else, or to test a change.
+
 ## Build
 
 ```bash
