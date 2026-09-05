@@ -183,6 +183,33 @@ void CafeTitleList::Refresh()
 	sTLIsScanMandatory = false;
 }
 
+// The refresh worker is started by Refresh() and never joined: it clears
+// sTLRefreshWorkerActive when it finishes, but the std::thread object stays
+// joinable. In a library that gets unloaded, destroying that object during the
+// static destructors is std::terminate - "terminate called without an active
+// exception" as the process exits.
+void CafeTitleList::Shutdown()
+{
+	std::thread worker;
+	bool stillScanning;
+	{
+		std::unique_lock _lock(sTLMutex);
+		stillScanning = sTLRefreshWorkerActive;
+		worker = std::move(sTLRefreshWorker);
+	}
+	if (!worker.joinable())
+		return;
+	// A scan that is still running can take minutes - the paths it walks may be
+	// a network mount - and waiting for it would hang the frontend on exit. The
+	// worker clears sTLRefreshWorkerActive before it returns, so the usual case
+	// here is a finished scan and a join that costs nothing. Detaching in the
+	// other case at least leaves no joinable thread behind.
+	if (stillScanning)
+		worker.detach();
+	else
+		worker.join();
+}
+
 bool CafeTitleList::IsScanning()
 {
 	std::unique_lock _lock(sTLMutex);

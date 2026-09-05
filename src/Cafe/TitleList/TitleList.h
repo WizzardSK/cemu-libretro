@@ -29,6 +29,7 @@ public:
 	static void Refresh(); // scan all paths
 	static bool IsScanning(); // returns true if async refresh is currently active
 	static void WaitForMandatoryScan(); // wait for current scan result if no cached info is available
+	static void Shutdown(); // join the refresh worker, so nothing outlives the library
 	static void AddTitleFromPath(fs::path path);
 
 	static uint64 RegisterCallback(void(*cb)(CafeTitleListCallbackEvent* evt, void* ctx), void* ctx); // on register, the callback will be invoked for every already known title
