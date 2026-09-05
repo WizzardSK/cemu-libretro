@@ -1356,6 +1356,21 @@ namespace coreinit
 			}
 			if (isMainCore)
 			{
+				// The only way out of this loop for the main core. The other
+				// cores notice the shutdown when their run queue semaphore is
+				// released, but this branch never waits on one, so without this
+				// check the main core keeps looping over system events forever
+				// and OSSchedulerEnd blocks joining it. That the main core
+				// usually did leave was luck: it also exits from
+				// __OSThreadSwitchToNext, which only runs if a guest thread
+				// happens to be scheduled on this core when the scheduler is
+				// stopped.
+				if (!sSchedulerActive.load(std::memory_order::relaxed))
+				{
+					if (coreinit_libretro_debug_enabled())
+						cemuLog_log(LogType::Force, "[OSScheduler] Core {} idle loop detected shutdown, switching to scheduler fiber", t_assignedCoreIndex);
+					Fiber::Switch(*t_schedulerFiber); // switch back to original thread to exit
+				}
 				__OSCheckSystemEvents();
 				if(g_isMulticoreMode == false)
 					coreIndex = (coreIndex + 1) % 3;
