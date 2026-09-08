@@ -167,7 +167,9 @@ if(ENABLE_LIBRETRO)
 		# destructors out of dlclose(), where an emulator that was never
 		# written to be unloaded has no business running them.
 		target_link_options(cemu_libretro PRIVATE "LINKER:-z,nodelete")
-		target_link_options(cemu_libretro PRIVATE "$<$<CONFIG:Release>:-Xlinker;--strip-debug>")
+		# Fork-only test branch: keep the debug info the Release link would drop,
+		# so a crash on a device comes back with line numbers. Not for upstream.
+		# target_link_options(cemu_libretro PRIVATE "$<$<CONFIG:Release>:-Xlinker;--strip-debug>")
 		# Only export retro_* symbols
 		target_link_options(cemu_libretro PRIVATE "-Wl,--version-script=${CMAKE_CURRENT_SOURCE_DIR}/libretro/link.T")
 	endif()
