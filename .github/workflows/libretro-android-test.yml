@@ -39,13 +39,14 @@ jobs:
         run: bash ./dependencies/vcpkg/bootstrap-vcpkg.sh
 
       - name: "Configure"
-        # Release flags plus -g: same -O3 codegen as the buildbot's core, so a
+        # Release plus -g: same -O3 codegen as the buildbot's core, so a
         # timing-dependent crash still reproduces, but with line numbers in the
-        # trace rather than function names alone.
+        # trace rather than function names alone. It goes in CMAKE_CXX_FLAGS and
+        # not in the _RELEASE variant, which the NDK toolchain file overwrites.
         run: |
           cmake -DCMAKE_BUILD_TYPE=Release \
-            -DCMAKE_C_FLAGS_RELEASE="-O3 -DNDEBUG -g" \
-            -DCMAKE_CXX_FLAGS_RELEASE="-O3 -DNDEBUG -g" \
+            -DCMAKE_C_FLAGS=-g \
+            -DCMAKE_CXX_FLAGS=-g \
             -DENABLE_LIBRETRO=ON \
             -DENABLE_BLUEZ=OFF \
             -DENABLE_FERAL_GAMEMODE=OFF \
