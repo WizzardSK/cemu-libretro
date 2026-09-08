@@ -1,0 +1,108 @@
+# Fork-only: builds the arm64-v8a Android core the way the libretro.yml job does
+# and publishes it unstripped as a release, so a crash on a device can be turned
+# into function names. Not for upstream.
+name: libretro android core (test build)
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - release-android-test
+
+permissions:
+  contents: write
+
+env:
+  VCPKG_ROOT: "${{github.workspace}}/dependencies/vcpkg"
+
+jobs:
+  core:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 350
+    env:
+      ANDROID_ABI: arm64-v8a
+      TRIPLET: arm64-android
+    steps:
+      - name: "Checkout repo"
+        uses: actions/checkout@v4
+        with:
+          submodules: "recursive"
+          fetch-depth: 0
+
+      - name: "Install host dependencies"
+        run: |
+          sudo apt update -qq
+          sudo apt install -y --no-install-recommends \
+            nasm autoconf automake libtool pkg-config python3 ninja-build
+
+      - name: "Bootstrap vcpkg"
+        run: bash ./dependencies/vcpkg/bootstrap-vcpkg.sh
+
+      - name: "Configure"
+        run: |
+          cmake -DCMAKE_BUILD_TYPE=Release \
+            -DENABLE_LIBRETRO=ON \
+            -DENABLE_BLUEZ=OFF \
+            -DENABLE_FERAL_GAMEMODE=OFF \
+            -DENABLE_WAYLAND=OFF \
+            -DENABLE_DISCORD_RPC=OFF \
+            -DVCPKG_TARGET_TRIPLET=$TRIPLET \
+            -DVCPKG_HOST_TRIPLET=x64-linux \
+            -DANDROID_PLATFORM=android-28 \
+            -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK_LATEST_HOME/build/cmake/android.toolchain.cmake \
+            -DANDROID_STL=c++_static \
+            -DANDROID_ABI=$ANDROID_ABI \
+            . -Bbuild/android-$ANDROID_ABI
+
+      - name: "Build"
+        run: cmake --build build/android-$ANDROID_ABI --target cemu_libretro --config Release -- -j $(nproc)
+
+      - name: "Name it, and keep the symbols"
+        run: |
+          STRIP=$ANDROID_NDK_LATEST_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-strip
+          mv bin/cemu_libretro.so cemu_libretro_android.so
+          # The buildbot strips its cores, which leaves a crash report with
+          # nothing in it but addresses. Ship the unstripped core as the one to
+          # run, and a stripped copy beside it for anyone who wants the size.
+          $STRIP -o cemu_libretro_android.stripped.so cemu_libretro_android.so
+          ls -la cemu_libretro_android.so cemu_libretro_android.stripped.so
+          echo "GIT_SHA=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cemu_libretro_android
+          path: |
+            cemu_libretro_android.so
+            cemu_libretro_android.stripped.so
+
+      - name: "Publish it as a release"
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          {
+            echo "arm64-v8a libretro core built from \`${GIT_SHA}\` on the libretro branch."
+            echo
+            echo "**This one is not stripped.** The buildbot strips its cores, so a crash on"
+            echo "a downloaded core reports bare addresses and nothing else. Run"
+            echo "\`cemu_libretro_android.so\` from here instead and a tombstone or"
+            echo "\`adb logcat\` will name the functions."
+            echo
+            echo "Drop it into RetroArch's \`cores/\` as \`cemu_libretro_android.so\`."
+            echo "It is larger than the buildbot's core only because the symbols are still in"
+            echo "it - the code is the same build. To turn an existing crash log into names:"
+            echo
+            echo '```'
+            echo "ndk-stack -sym cemu_libretro_android.so -dump crash.txt"
+            echo '```'
+            echo
+            echo "\`cemu_libretro_android.stripped.so\` is the same core stripped, if you want"
+            echo "the buildbot's size once the crash is captured."
+            echo
+            echo "Temporary test build."
+          } > notes.md
+          gh release delete android-test --yes --cleanup-tag || true
+          gh release create android-test \
+            cemu_libretro_android.so cemu_libretro_android.stripped.so \
+            --latest \
+            --title "Android test build (${GIT_SHA})" \
+            --notes-file notes.md
