@@ -39,8 +39,13 @@ jobs:
         run: bash ./dependencies/vcpkg/bootstrap-vcpkg.sh
 
       - name: "Configure"
+        # Release flags plus -g: same -O3 codegen as the buildbot's core, so a
+        # timing-dependent crash still reproduces, but with line numbers in the
+        # trace rather than function names alone.
         run: |
           cmake -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_C_FLAGS_RELEASE="-O3 -DNDEBUG -g" \
+            -DCMAKE_CXX_FLAGS_RELEASE="-O3 -DNDEBUG -g" \
             -DENABLE_LIBRETRO=ON \
             -DENABLE_BLUEZ=OFF \
             -DENABLE_FERAL_GAMEMODE=OFF \
