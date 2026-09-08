@@ -158,7 +158,9 @@ if(ENABLE_LIBRETRO)
 		# Force all CemuResource symbols (imgui needs fontawesome from resource archive)
 		target_link_options(cemu_libretro PRIVATE "LINKER:--whole-archive" $<TARGET_FILE:CemuResource> "LINKER:--no-whole-archive")
 		target_link_options(cemu_libretro PRIVATE -z noexecstack)
-		target_link_options(cemu_libretro PRIVATE "$<$<CONFIG:Release>:-Xlinker;--strip-debug>")
+		# Fork-only test branch: keep the debug info the Release link would drop,
+		# so a crash on a device comes back with line numbers. Not for upstream.
+		# target_link_options(cemu_libretro PRIVATE "$<$<CONFIG:Release>:-Xlinker;--strip-debug>")
 		# Only export retro_* symbols
 		target_link_options(cemu_libretro PRIVATE "-Wl,--version-script=${CMAKE_CURRENT_SOURCE_DIR}/libretro/link.T")
 	endif()
