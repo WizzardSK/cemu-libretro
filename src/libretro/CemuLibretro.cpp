@@ -1256,7 +1256,24 @@ static void libretro_read_screen_layout_options()
 	if (s_screen_layout_index >= s_screen_layout_count)
 		s_screen_layout_index = 0;
 
+	const LibretroLayoutButton previousButton = s_next_layout_button;
 	s_next_layout_button = libretro_parse_layout_button(libretro_get_option_value("cemu_next_screen_layout_button"));
+	if (s_next_layout_button != previousButton && log_cb)
+	{
+		// Says what the core is watching for, so a report of "the shortcut does
+		// nothing" can be told apart from the option never reaching the core.
+		const char* name = "nothing";
+		switch (s_next_layout_button)
+		{
+		case LibretroLayoutButton::None: break;
+		case LibretroLayoutButton::L3: name = "L3"; break;
+		case LibretroLayoutButton::R3: name = "R3"; break;
+		case LibretroLayoutButton::L3R3: name = "L3 + R3"; break;
+		case LibretroLayoutButton::SelectL3: name = "Select + L3"; break;
+		case LibretroLayoutButton::SelectR3: name = "Select + R3"; break;
+		}
+		log_cb(RETRO_LOG_INFO, "Cemu: next screen layout is on %s\n", name);
+	}
 
 	libretro_update_screen_layout_visibility();
 	libretro_apply_screen_layout();
@@ -1514,6 +1531,33 @@ static void libretro_apply_core_options()
 	}
 }
 
+// The default for an option whose value list does not start with it. A list
+// reads best in its own order - 1 to 5, or the screen layouts always in the
+// same sequence - and core options v2 carries the default separately, so it
+// does not have to be rotated to the front. A frontend that only speaks the
+// old flat list gets exactly that rotation, built below.
+static const char* libretro_option_default(const char* key)
+{
+	struct Entry
+	{
+		const char* key;
+		const char* value;
+	};
+	static const Entry entries[] = {
+		{"cemu_number_of_screen_layouts", "2"},
+		{"cemu_screen_layout2", "GamePad Screen"},
+		{"cemu_screen_layout3", "Side by Side"},
+		{"cemu_screen_layout4", "Top Bottom"},
+		{"cemu_screen_layout5", "Picture in Picture"},
+	};
+	for (const Entry& entry : entries)
+	{
+		if (std::strcmp(entry.key, key) == 0)
+			return entry.value;
+	}
+	return nullptr;
+}
+
 // Which submenu an option belongs under. Anything not named here sits at the
 // top level, which is where a new option lands until someone decides better.
 static const char* libretro_option_category(const char* key)
@@ -1574,6 +1618,63 @@ static const char* libretro_option_category(const char* key)
 	return nullptr;
 }
 
+// The old flat list has one way of saying what the default is: put it first.
+// Options whose values are listed in their own order instead get rotated here,
+// so a frontend without categories still starts where it should.
+static bool libretro_set_core_variables(retro_environment_t cb, const struct retro_variable* variables)
+{
+	static std::deque<std::string> storage;
+	static std::vector<struct retro_variable> rotated;
+
+	if (rotated.empty())
+	{
+		for (const struct retro_variable* var = variables; var->key; ++var)
+		{
+			const char* explicitDefault = libretro_option_default(var->key);
+			if (!explicitDefault || !var->value)
+			{
+				rotated.push_back(*var);
+				continue;
+			}
+
+			std::string desc(var->value);
+			const size_t split = desc.find(';');
+			if (split == std::string::npos)
+			{
+				rotated.push_back(*var);
+				continue;
+			}
+
+			std::string values = desc.substr(split + 1);
+			desc.erase(split);
+			while (!values.empty() && values.front() == ' ')
+				values.erase(values.begin());
+
+			std::string rebuilt = explicitDefault;
+			size_t pos = 0;
+			while (pos <= values.size())
+			{
+				const size_t bar = values.find('|', pos);
+				std::string value = values.substr(pos, bar == std::string::npos ? std::string::npos : bar - pos);
+				if (!value.empty() && value != explicitDefault)
+				{
+					rebuilt += '|';
+					rebuilt += value;
+				}
+				if (bar == std::string::npos)
+					break;
+				pos = bar + 1;
+			}
+
+			storage.push_back(desc + "; " + rebuilt);
+			rotated.push_back({var->key, storage.back().c_str()});
+		}
+		rotated.push_back({nullptr, nullptr});
+	}
+
+	return cb(RETRO_ENVIRONMENT_SET_VARIABLES, (void*)rotated.data());
+}
+
 // A frontend that speaks core options v2 gets the list as categories it can
 // page through - which is the only way to put the screen settings on a submenu
 // of their own. One that does not gets the flat list, which is where both come
@@ -1618,6 +1719,8 @@ static bool libretro_set_core_options_v2(retro_environment_t cb, const struct re
 			while (!values.empty() && values.front() == ' ')
 				values.erase(values.begin());
 
+			const char* explicitDefault = libretro_option_default(var->key);
+
 			struct retro_core_option_v2_definition def{};
 			def.key = var->key;
 			def.desc = keep(desc);
@@ -1631,9 +1734,10 @@ static bool libretro_set_core_options_v2(retro_environment_t cb, const struct re
 				std::string value = values.substr(pos, bar == std::string::npos ? std::string::npos : bar - pos);
 				if (!value.empty())
 				{
+					const bool isDefault = explicitDefault ? (value == explicitDefault) : (count == 0);
 					def.values[count].value = keep(std::move(value));
-					if (count == 0)
-						def.default_value = def.values[0].value;
+					if (isDefault)
+						def.default_value = def.values[count].value;
 					++count;
 				}
 				if (bar == std::string::npos)
@@ -1713,14 +1817,14 @@ RETRO_API void retro_set_environment(retro_environment_t cb)
 		{"cemu_emulate_infinity_base", "Emulate Infinity Base; disabled|enabled"},
 		{"cemu_emulate_dimensions_toypad", "Emulate Dimensions Toypad; disabled|enabled"},
 		{"cemu_skip_draw_on_dupe", "Skip Draw on Duplicate Frames; disabled|enabled"},
-		{"cemu_number_of_screen_layouts", "# of Screen Layouts; 2|1|3|4|5"},
+		{"cemu_number_of_screen_layouts", "# of Screen Layouts; 1|2|3|4|5"},
 		{"cemu_screen_layout1", "Layout 1; Default Screen|GamePad Screen|Side by Side|Top Bottom|Picture in Picture"},
-		{"cemu_screen_layout2", "Layout 2; GamePad Screen|Default Screen|Side by Side|Top Bottom|Picture in Picture"},
-		{"cemu_screen_layout3", "Layout 3; Side by Side|Default Screen|GamePad Screen|Top Bottom|Picture in Picture"},
-		{"cemu_screen_layout4", "Layout 4; Top Bottom|Default Screen|GamePad Screen|Side by Side|Picture in Picture"},
-		{"cemu_screen_layout5", "Layout 5; Picture in Picture|Default Screen|GamePad Screen|Side by Side|Top Bottom"},
+		{"cemu_screen_layout2", "Layout 2; Default Screen|GamePad Screen|Side by Side|Top Bottom|Picture in Picture"},
+		{"cemu_screen_layout3", "Layout 3; Default Screen|GamePad Screen|Side by Side|Top Bottom|Picture in Picture"},
+		{"cemu_screen_layout4", "Layout 4; Default Screen|GamePad Screen|Side by Side|Top Bottom|Picture in Picture"},
+		{"cemu_screen_layout5", "Layout 5; Default Screen|GamePad Screen|Side by Side|Top Bottom|Picture in Picture"},
 		{"cemu_next_screen_layout_button", "Next Screen Layout; Disabled|L3|R3|L3 + R3|Select + L3|Select + R3"},
-		{"cemu_drc_position", "DRC Position; normal|swapped"},
+		{"cemu_drc_position", "GamePad Position; normal|swapped"},
 		{"cemu_wiimote_input", "Wii Remote Input; port1_shared|ports2_4|disabled"},
 		{"cemu_log_filesystem", "Log File Access (debugging); disabled|enabled"},
 		{"cemu_log_thread_sync", "Log Thread Synchronisation (debugging); disabled|enabled"},
@@ -1734,7 +1838,7 @@ RETRO_API void retro_set_environment(retro_environment_t cb)
 	if (libretro_set_core_options_v2(cb, variables))
 		s_core_options_supported = true;
 	else
-		s_core_options_supported = cb(RETRO_ENVIRONMENT_SET_VARIABLES, (void*)variables);
+		s_core_options_supported = libretro_set_core_variables(cb, variables);
 }
 
 RETRO_API void retro_set_video_refresh(retro_video_refresh_t cb) { video_cb = cb; }
