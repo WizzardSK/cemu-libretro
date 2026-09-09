@@ -1892,6 +1892,16 @@ RETRO_API void retro_init()
 	if (const char* v = libretro_get_option_value("cemu_gpu_api"))
 		useVulkan = libretro_iequals(v, "vulkan");
 #endif
+	// A conversion draws nothing and must not touch the GPU at all: loading
+	// Vulkan here means a second instance on a device the frontend is about to
+	// set up for itself, and on a phone-class driver with a single queue family
+	// that is a frontend which never finishes creating its own - it stops
+	// before it even loads its stock shader, with no error anywhere.
+	if (const char* v = libretro_get_option_value("cemu_convert_to_wua"))
+	{
+		if (libretro_iequals(v, "enabled"))
+			useVulkan = false;
+	}
 	if (useVulkan)
 	{
 		if (InitializeGlobalVulkan() && g_vulkan_available)
@@ -2841,7 +2851,7 @@ RETRO_API bool retro_load_game(const struct retro_game_info* game)
 		}
 	}
 #ifdef ENABLE_OPENGL
-	if (s_graphics_api == SelectedGraphicsAPI::OpenGL)
+	if (s_graphics_api == SelectedGraphicsAPI::OpenGL && !s_convert_mode.load())
 #endif
 #endif
 #ifdef ENABLE_OPENGL
