@@ -50,6 +50,23 @@ bool Latte_WasThreadAbandoned()
 {
 	return sLatteThreadAbandoned.load(std::memory_order_acquire);
 }
+
+// Where the GPU thread is. Only ever set by that thread, and only to string
+// literals, so reading it from another thread during a shutdown is safe. It
+// exists because "the GPU thread would not stop" on its own says nothing about
+// what to fix: parked in the ring buffer, still loading a shader cache and
+// waiting for a title that is never going to start are three different bugs.
+static std::atomic<const char*> sLatteThreadPhase{"not started"};
+
+static void LatteThread_SetPhase(const char* phase)
+{
+	sLatteThreadPhase.store(phase, std::memory_order_release);
+}
+
+const char* Latte_GetThreadPhase()
+{
+	return sLatteThreadPhase.load(std::memory_order_acquire);
+}
 #endif
 
 #ifdef ENABLE_LIBRETRO
@@ -186,6 +203,9 @@ int Latte_ThreadEntry()
 	WindowSystem::GetWindowPhysSize(w,h);
 
 	// renderer
+#ifdef ENABLE_LIBRETRO
+	LatteThread_SetPhase("renderer init");
+#endif
 	g_renderer->Initialize();
 	RendererOutputShader::InitializeStatic();
 
@@ -227,11 +247,23 @@ int Latte_ThreadEntry()
 		g_renderer->EnableDebugMode();
 
 	// wait till a game is started
+#ifdef ENABLE_LIBRETRO
+	LatteThread_SetPhase("waiting for a title to start");
+#endif
 	while( true )
 	{
 		if( CafeSystem::IsTitleRunning() )
 			break;
 
+#ifdef ENABLE_LIBRETRO
+		// A stop that arrives before the title ever starts has to be seen here
+		// too. Closing content while it is still being prepared used to leave
+		// this loop spinning: Latte_Stop timed out, detached the thread, and the
+		// frontend then unloaded the library out from under a thread that was
+		// still running in it.
+		if (Latte_GetStopSignal())
+			LatteThread_Exit();
+#endif
 		g_renderer->DrawEmptyFrame(true);
 		g_renderer->DrawEmptyFrame(false);
 		g_renderer->CancelScreenshotRequest(); // keep the screenshot request queue empty
@@ -241,6 +273,11 @@ int Latte_ThreadEntry()
 	g_renderer->DrawEmptyFrame(true);
 
 	// before doing anything with game specific shaders, we need to wait for graphic packs to finish loading
+#ifdef ENABLE_LIBRETRO
+	LatteThread_SetPhase("waiting for graphic packs");
+	if (Latte_GetStopSignal())
+		LatteThread_Exit();
+#endif
 	GraphicPack2::WaitUntilReady();
 	// if legacy packs are enabled we cannot use the colorbuffer resolution optimization
 	LatteGPUState.allowFramebufferSizeOptimization = true;
@@ -260,7 +297,16 @@ int Latte_ThreadEntry()
 		}
 	}
 	// load disk shader cache
+#ifdef ENABLE_LIBRETRO
+	LatteThread_SetPhase("loading the shader cache");
+	if (Latte_GetStopSignal())
+		LatteThread_Exit();
+#endif
     LatteShaderCache_Load();
+#ifdef ENABLE_LIBRETRO
+	if (Latte_GetStopSignal())
+		LatteThread_Exit();
+#endif
 	// init registers
 	Latte_LoadInitialRegisters();
 	// let CPU thread know the GPU is done initializing
@@ -268,6 +314,9 @@ int Latte_ThreadEntry()
 	cemuLog_log(LogType::Force, "LatteThread: GPU init finished, waiting for GX2Init...");
 	// wait until CPU has called GX2Init()
 	{
+#ifdef ENABLE_LIBRETRO
+		LatteThread_SetPhase("waiting for GX2Init");
+#endif
 		int waitCount = 0;
 		while (LatteGPUState.gx2InitCalled == 0)
 		{
@@ -284,6 +333,9 @@ int Latte_ThreadEntry()
 		}
 	}
 	cemuLog_log(LogType::Force, "LatteThread: GX2Init called, entering command processor");
+#ifdef ENABLE_LIBRETRO
+	LatteThread_SetPhase("command processor");
+#endif
 	LatteCP_ProcessRingbuffer();
 	cemu_assert_debug(false); // should never reach
 	return 0;
@@ -347,7 +399,7 @@ void Latte_Stop()
 			sLatteThread.join();
 		else
 		{
-			cemuLog_log(LogType::Force, "[LatteThread] GPU thread did not exit in time, detaching it");
+			cemuLog_log(LogType::Force, "[LatteThread] GPU thread did not exit in time (phase: {}), detaching it", Latte_GetThreadPhase());
 			sLatteThreadAbandoned.store(true, std::memory_order_release);
 			sLatteThread.detach();
 		}
@@ -369,6 +421,9 @@ bool libretro_gpu_context_gone();
 
 void LatteThread_Exit()
 {
+#ifdef ENABLE_LIBRETRO
+	LatteThread_SetPhase("exiting");
+#endif
 	if (LatteThread_libretro_debug_enabled())
 		cemuLog_log(LogType::Force, "[LatteThread] LatteThread_Exit begin renderer={}", g_renderer ? 1 : 0);
 #ifdef ENABLE_LIBRETRO

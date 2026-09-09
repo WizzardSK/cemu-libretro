@@ -1617,7 +1617,8 @@ static bool libretro_shutdown_title_for_exit()
 		if (*finished && !abandoned)
 			log_cb(RETRO_LOG_INFO, "Cemu: title shut down, save data flushed\n");
 		else if (*finished)
-			log_cb(RETRO_LOG_WARN, "Cemu: title shut down and save data flushed, but the GPU thread would not stop\n");
+			log_cb(RETRO_LOG_WARN, "Cemu: title shut down and save data flushed, but the GPU thread would not stop (it was %s)\n",
+				Latte_GetThreadPhase());
 		else
 			log_cb(RETRO_LOG_WARN, "Cemu: title did not shut down in time, save data may be incomplete\n");
 	}
