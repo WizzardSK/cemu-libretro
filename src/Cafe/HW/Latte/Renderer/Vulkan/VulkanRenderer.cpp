@@ -1171,7 +1171,7 @@ bool VulkanRenderer::IsPadWindowActive()
 	// shared present image. Report "active" whenever the DRC layout asks for it
 	// so LatteRenderTarget routes DRC scan-out (and the auto-mirror fallback)
 	// through DrawBackbufferQuad.
-	if (g_libretroDRCMode != LibretroDRCDisplayMode::Disabled)
+	if (g_libretroScreenLayout != LibretroScreenLayout::Tv)
 		return true;
 #endif
 	return IsSwapchainInfoValid(false);

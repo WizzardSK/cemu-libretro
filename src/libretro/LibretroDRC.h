@@ -8,16 +8,16 @@
 
 #include "Common/precompiled.h"
 
-enum class LibretroDRCDisplayMode
+enum class LibretroScreenLayout
 {
-	Disabled,         // TV only
-	Toggle,           // either TV or DRC (controlled by position swap)
+	Tv,               // TV only
+	GamePad,          // GamePad only
 	SideBySide,       // primary 80% + secondary 20%, side-by-side
 	TopBottom,        // primary 70% on top, secondary 30% on bottom
 	PictureInPicture, // primary fullscreen, secondary as small corner overlay
 };
 
-extern LibretroDRCDisplayMode g_libretroDRCMode;
+extern LibretroScreenLayout g_libretroScreenLayout;
 extern bool g_libretroDRCPositionSwapped;
 
 // Returns true when Cemu should actually present the requested screen for the
