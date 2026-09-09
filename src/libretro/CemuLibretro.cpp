@@ -2732,6 +2732,11 @@ static void libretro_stop_system_services()
 	libretro_stop_service("/dev/act", &iosu::act::Stop);
 	libretro_stop_service("/dev/mcp", &iosu::mcp::Shutdown);
 	libretro_stop_service("/dev/fsa", &iosu::fsa::Shutdown);
+	// The modules' own hooks, which is where /dev/ccr_nfc joins its thread.
+	// Without them that thread is still joinable when this library is unloaded,
+	// and its std::thread destructor is a std::terminate with no stack to it -
+	// the "terminate called without an active exception" on a clean exit.
+	libretro_stop_service("IOSU modules", &CafeSystem::ShutdownIOSUModules);
 }
 
 RETRO_API void retro_unload_game()

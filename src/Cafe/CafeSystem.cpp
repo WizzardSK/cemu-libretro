@@ -669,11 +669,15 @@ namespace CafeSystem
 		iosu::act::Stop();
         iosu::mcp::Shutdown();
         iosu::fsa::Shutdown();
-		// shutdown IOSU modules
-		for(auto it = s_iosuModules.rbegin(); it != s_iosuModules.rend(); ++it)
-			(*it)->SystemExit();
+		ShutdownIOSUModules();
         s_initialized = false;
     }
+
+	void ShutdownIOSUModules()
+	{
+		for(auto it = s_iosuModules.rbegin(); it != s_iosuModules.rend(); ++it)
+			(*it)->SystemExit();
+	}
 
 	std::string GetInternalVirtualCodeFolder()
 	{

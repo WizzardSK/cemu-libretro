@@ -25,6 +25,10 @@ namespace CafeSystem
 	void Initialize();
 	void SetImplementation(SystemImplementation* impl);
     void Shutdown();
+	// The IOSU modules' SystemExit hooks, which is where those of them that
+	// have a thread join it. Shutdown() runs them; a libretro core that has to
+	// leave nothing joinable behind at dlclose needs them without the rest.
+	void ShutdownIOSUModules();
 
 	PREPARE_STATUS_CODE PrepareForegroundTitle(TitleId titleId);
 	PREPARE_STATUS_CODE PrepareForegroundTitleFromStandaloneRPX(const fs::path& path);
