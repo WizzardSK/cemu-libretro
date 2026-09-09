@@ -5,6 +5,8 @@
 
 #include "util/helpers/Semaphore.h"
 
+#include <atomic>
+
 // deprecated IOCTL handling code
 
 RingBuffer<ioQueueEntry_t*, 256> _ioctlRingbuffer[IOS_DEVICE_COUNT];
@@ -34,9 +36,36 @@ sint32 iosuIoctl_pushAndWait(uint32 ioctlHandle, ioQueueEntry_t* ioQueueEntry)
 	return ioQueueEntry->returnValue;
 }
 
+// The deprecated IOSU threads below park in decrementWithWait() and have no way
+// out: they are detached and their loops never end. In a process that simply
+// exits that is invisible, but a libretro core gets unloaded, and the semaphore
+// array's own destructor then blocks in pthread_cond_destroy() for as long as a
+// thread is still waiting on it - a frontend that unloads the core and hangs.
+static std::atomic_bool sIoctlShuttingDown{false};
+// How many of them are inside the wait right now, which is what the destructor
+// of the semaphore array cannot tolerate.
+static std::atomic<int> sIoctlWaiters{0};
+
+void iosuIoctl_requestShutdown()
+{
+	sIoctlShuttingDown.store(true, std::memory_order_release);
+	// One post per device is enough: each has a single waiter.
+	for (uint32 i = 0; i < IOS_DEVICE_COUNT; i++)
+		_ioctlRingbufferSemaphore[i].increment();
+}
+
+bool iosuIoctl_hasWaiters()
+{
+	return sIoctlWaiters.load(std::memory_order_acquire) > 0;
+}
+
 ioQueueEntry_t* iosuIoctl_getNextWithWait(uint32 deviceIndex)
 {
+	sIoctlWaiters.fetch_add(1, std::memory_order_acq_rel);
 	_ioctlRingbufferSemaphore[deviceIndex].decrementWithWait();
+	sIoctlWaiters.fetch_sub(1, std::memory_order_acq_rel);
+	if (sIoctlShuttingDown.load(std::memory_order_acquire))
+		return nullptr;
 	if (_ioctlRingbuffer[deviceIndex].HasData() == false)
 		assert_dbg();
 	return _ioctlRingbuffer[deviceIndex].Pop();

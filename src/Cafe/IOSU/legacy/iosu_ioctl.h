@@ -56,7 +56,11 @@ void iosuIoctl_init();
 
 
 // for use by IOSU
-ioQueueEntry_t* iosuIoctl_getNextWithWait(uint32 deviceIndex);
+ioQueueEntry_t* iosuIoctl_getNextWithWait(uint32 deviceIndex); // nullptr once a shutdown was requested
+// Wakes the deprecated IOSU threads so they can leave their wait, which they
+// have to do before anything destroys the semaphores they are waiting on.
+void iosuIoctl_requestShutdown();
+bool iosuIoctl_hasWaiters();
 ioQueueEntry_t* iosuIoctl_getNextWithTimeout(uint32 deviceIndex, sint32 ms);
 void iosuIoctl_completeRequest(ioQueueEntry_t* ioQueueEntry, uint32 returnValue);
 

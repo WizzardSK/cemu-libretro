@@ -281,6 +281,8 @@ namespace iosu
 			{
 				uint32 returnValue = 0; // Ioctl return value
 				ioQueueEntry_t* ioQueueEntry = iosuIoctl_getNextWithWait(IOS_DEVICE_NIM);
+				if (!ioQueueEntry)
+					return; // shutting down
 				if (ioQueueEntry->request == IOSU_NIM_REQUEST_CEMU)
 				{
 					iosuNimCemuRequest_t* nimCemuRequest = (iosuNimCemuRequest_t*)ioQueueEntry->bufferVectors[0].buffer.GetPtr();

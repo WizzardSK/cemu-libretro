@@ -109,6 +109,8 @@ namespace iosu
 		{
 			uint32 returnValue = 0; // Ioctl return value
 			ioQueueEntry_t* ioQueueEntry = iosuIoctl_getNextWithWait(IOS_DEVICE_MCP);
+			if (!ioQueueEntry)
+				return 0; // shutting down
 			if (ioQueueEntry->request == IOSU_MCP_REQUEST_CEMU)
 			{
 				iosuMcpCemuRequest_t* mcpCemuRequest = (iosuMcpCemuRequest_t*)ioQueueEntry->bufferVectors[0].buffer.GetPtr();

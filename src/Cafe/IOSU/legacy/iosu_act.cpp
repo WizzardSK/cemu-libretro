@@ -672,6 +672,8 @@ int iosuAct_thread()
 	{
 		uint32 ioctlReturnValue = 0;
 		ioQueueEntry_t* ioQueueEntry = iosuIoctl_getNextWithWait(IOS_DEVICE_ACT);
+		if (!ioQueueEntry)
+			return 0; // shutting down
 		if (ioQueueEntry->request == 0)
 		{
 			if (ioQueueEntry->countIn != 1 || ioQueueEntry->countOut != 1)

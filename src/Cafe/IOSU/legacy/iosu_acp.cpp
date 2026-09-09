@@ -522,6 +522,8 @@ namespace iosu
 		{
 			uint32 returnValue = 0; // Ioctl return value
 			ioQueueEntry_t* ioQueueEntry = iosuIoctl_getNextWithWait(IOS_DEVICE_ACP_MAIN);
+			if (!ioQueueEntry)
+				return 0; // shutting down
 			if (ioQueueEntry->request == IOSU_ACP_REQUEST_CEMU)
 			{
 				iosuAcpCemuRequest_t* acpCemuRequest = (iosuAcpCemuRequest_t*)ioQueueEntry->bufferVectors[0].buffer.GetPtr();

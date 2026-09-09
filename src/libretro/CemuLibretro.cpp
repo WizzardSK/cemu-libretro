@@ -937,6 +937,9 @@ static LibretroPortState s_port_state[kLibretroMaxPorts];
 // The IOSU services this core has to stop before the library goes away. Their
 // own headers pull in IOSU/ headers that only resolve with src/Cafe on the
 // include path, which this one does not have.
+void iosuIoctl_requestShutdown();
+bool iosuIoctl_hasWaiters();
+
 namespace iosu
 {
 	namespace odm { void Shutdown(); }
@@ -2732,6 +2735,14 @@ static void libretro_stop_system_services()
 	libretro_stop_service("/dev/act", &iosu::act::Stop);
 	libretro_stop_service("/dev/mcp", &iosu::mcp::Shutdown);
 	libretro_stop_service("/dev/fsa", &iosu::fsa::Shutdown);
+	// The deprecated IOSU threads (act, mcp, acp, nim) are detached and their
+	// loops never end, so they cannot be joined - but they must stop waiting on
+	// the ioctl semaphores before those are destroyed at dlclose, or the
+	// destructor blocks in pthread_cond_destroy() and the frontend hangs.
+	iosuIoctl_requestShutdown();
+	for (int i = 0; i < 200 && iosuIoctl_hasWaiters(); i++)
+		std::this_thread::sleep_for(std::chrono::milliseconds(1));
+
 	// The modules' own hooks, which is where /dev/ccr_nfc joins its thread.
 	// Without them that thread is still joinable when this library is unloaded,
 	// and its std::thread destructor is a std::terminate with no stack to it -
