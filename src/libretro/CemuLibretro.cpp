@@ -1501,22 +1501,61 @@ static void libretro_apply_core_options()
 	}
 }
 
+// Which submenu an option belongs under. Anything not named here sits at the
+// top level, which is where a new option lands until someone decides better.
 static const char* libretro_option_category(const char* key)
 {
-	static const char* const screen_keys[] = {
-		"cemu_number_of_screen_layouts",
-		"cemu_screen_layout1",
-		"cemu_screen_layout2",
-		"cemu_screen_layout3",
-		"cemu_screen_layout4",
-		"cemu_screen_layout5",
-		"cemu_next_screen_layout_button",
-		"cemu_drc_position",
-	};
-	for (const char* screen_key : screen_keys)
+	struct Entry
 	{
-		if (std::strcmp(screen_key, key) == 0)
-			return "screen";
+		const char* key;
+		const char* category;
+	};
+	static const Entry entries[] = {
+		{"cemu_number_of_screen_layouts", "screen"},
+		{"cemu_screen_layout1", "screen"},
+		{"cemu_screen_layout2", "screen"},
+		{"cemu_screen_layout3", "screen"},
+		{"cemu_screen_layout4", "screen"},
+		{"cemu_screen_layout5", "screen"},
+		{"cemu_next_screen_layout_button", "screen"},
+		{"cemu_drc_position", "screen"},
+
+		{"cemu_gpu_api", "video"},
+		{"cemu_internal_resolution", "video"},
+		{"cemu_upscale_filter", "video"},
+		{"cemu_downscale_filter", "video"},
+		{"cemu_fullscreen_scaling", "video"},
+		{"cemu_vsync", "video"},
+		{"cemu_skip_draw_on_dupe", "video"},
+
+		{"cemu_async_shader_compile", "shaders"},
+		{"cemu_precompiled_shaders", "shaders"},
+		{"cemu_accurate_shader_mul", "shaders"},
+		{"cemu_shader_fast_math", "shaders"},
+		{"cemu_gx2drawdone_sync", "shaders"},
+		{"cemu_shader_compile_notification", "shaders"},
+
+		{"cemu_cpu_mode", "system"},
+		{"cemu_console_language", "system"},
+		{"cemu_thread_quantum", "system"},
+
+		{"cemu_wiimote_input", "input"},
+
+		{"cemu_emulate_skylander_portal", "addons"},
+		{"cemu_emulate_infinity_base", "addons"},
+		{"cemu_emulate_dimensions_toypad", "addons"},
+
+		{"cemu_audio_latency", "audio"},
+
+		{"cemu_log_filesystem", "logging"},
+		{"cemu_log_thread_sync", "logging"},
+		{"cemu_log_thread_dump", "logging"},
+		{"cemu_log_system_api", "logging"},
+	};
+	for (const Entry& entry : entries)
+	{
+		if (std::strcmp(entry.key, key) == 0)
+			return entry.category;
 	}
 	return nullptr;
 }
@@ -1535,6 +1574,13 @@ static bool libretro_set_core_options_v2(retro_environment_t cb, const struct re
 	static std::vector<struct retro_core_option_v2_definition> definitions;
 	static struct retro_core_option_v2_category categories[] = {
 		{"screen", "Screen", "Which of the Wii U's two screens the core presents, and how."},
+		{"video", "Video", "Resolution, scaling and how often a frame is drawn."},
+		{"shaders", "Shaders", "How the Wii U's shaders are translated, cached and compiled."},
+		{"system", "System", "The emulated machine: its CPU, its language, its scheduler."},
+		{"input", "Input", "Controllers beyond the GamePad."},
+		{"addons", "Add-ons", "The toys-to-life peripherals a few titles ask for."},
+		{"audio", "Audio", "Sound output."},
+		{"logging", "Logging", "Extra logging, for working out why something misbehaves."},
 		{nullptr, nullptr, nullptr},
 	};
 
@@ -1633,17 +1679,17 @@ RETRO_API void retro_set_environment(retro_environment_t cb)
 
 	// Set up core options (matching danprice/Cemu-Libretro Windows core where applicable)
 	static const struct retro_variable variables[] = {
-		{"cemu_cpu_mode", "CPU Mode; auto|singlecore_interpreter|singlecore_recompiler|multicore_recompiler|multicore_interpreter"},
+		{"cemu_cpu_mode", "CPU Mode (restart); auto|singlecore_interpreter|singlecore_recompiler|multicore_recompiler|multicore_interpreter"},
 		{"cemu_console_language", "Console Language; English|Japanese|French|German|Italian|Spanish|Chinese|Korean|Dutch|Portuguese|Russian|Taiwanese"},
 		{"cemu_async_shader_compile", "Async Shader Compile; enabled|disabled"},
 		{"cemu_gx2drawdone_sync", "GX2DrawDone Sync; enabled|disabled"},
-		{"cemu_precompiled_shaders", "Precompiled shaders; auto|enabled|disabled"},
+		{"cemu_precompiled_shaders", "Precompiled Shaders; auto|enabled|disabled"},
 		{"cemu_accurate_shader_mul", "Accurate Shader Multiplication; enabled|disabled"},
 		{"cemu_shader_fast_math", "Shader Fast Math; enabled|disabled"},
-		{"cemu_upscale_filter", "Upscale filter; linear|bicubic|bicubic_hermite|nearest"},
-		{"cemu_downscale_filter", "Downscale filter; linear|bicubic|bicubic_hermite|nearest"},
+		{"cemu_upscale_filter", "Upscale Filter; linear|bicubic|bicubic_hermite|nearest"},
+		{"cemu_downscale_filter", "Downscale Filter; linear|bicubic|bicubic_hermite|nearest"},
 		{"cemu_internal_resolution", "Internal Resolution; 1280x720|1920x1080|2560x1440|3840x2160"},
-		{"cemu_fullscreen_scaling", "Fullscreen scaling; keep_aspect|stretch"},
+		{"cemu_fullscreen_scaling", "Fullscreen Scaling; keep_aspect|stretch"},
 		{"cemu_thread_quantum", "Thread Quantum; 45000|20000|60000|80000|100000"},
 		{"cemu_audio_latency", "Audio Latency; 2|1|3|4"},
 		{"cemu_vsync", "VSync; disabled|enabled"},
@@ -1660,11 +1706,11 @@ RETRO_API void retro_set_environment(retro_environment_t cb)
 		{"cemu_screen_layout5", "Layout 5; Picture in Picture|Default Screen|GamePad Screen|Side by Side|Top Bottom"},
 		{"cemu_next_screen_layout_button", "Next Screen Layout; Disabled|L3|R3|L3 + R3|Select + L3|Select + R3"},
 		{"cemu_drc_position", "DRC Position; normal|swapped"},
-		{"cemu_wiimote_input", "Wii Remote input; port1_shared|ports2_4|disabled"},
-		{"cemu_log_filesystem", "Log file access (debugging); disabled|enabled"},
-		{"cemu_log_thread_sync", "Log thread synchronisation (debugging); disabled|enabled"},
-		{"cemu_log_thread_dump", "Log Wii U thread snapshots (debugging); disabled|enabled"},
-		{"cemu_log_system_api", "Log system API calls (debugging); disabled|enabled"},
+		{"cemu_wiimote_input", "Wii Remote Input; port1_shared|ports2_4|disabled"},
+		{"cemu_log_filesystem", "Log File Access (debugging); disabled|enabled"},
+		{"cemu_log_thread_sync", "Log Thread Synchronisation (debugging); disabled|enabled"},
+		{"cemu_log_thread_dump", "Log Wii U Thread Snapshots (debugging); disabled|enabled"},
+		{"cemu_log_system_api", "Log System API Calls (debugging); disabled|enabled"},
 #if defined(ENABLE_VULKAN) && defined(ENABLE_OPENGL)
 		{"cemu_gpu_api", "Graphics API (restart); OpenGL|Vulkan"},
 #endif
