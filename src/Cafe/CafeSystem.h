@@ -25,6 +25,9 @@ namespace CafeSystem
 	void Initialize();
 	void SetImplementation(SystemImplementation* impl);
     void Shutdown();
+	// Which step ShutdownTitle() is on, for whoever has to report that it did
+	// not finish.
+	const char* GetShutdownPhase();
 	// The IOSU modules' SystemExit hooks, which is where those of them that
 	// have a thread join it. Shutdown() runs them; a libretro core that has to
 	// leave nothing joinable behind at dlclose needs them without the rest.

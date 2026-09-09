@@ -1074,31 +1074,56 @@ namespace CafeSystem
         fsc_unmount("/internal/code/", FSC_PRIORITY_BASE);
 	}
 
+	// Where ShutdownTitle has got to. Set by it, read by anything that has to
+	// give up on it: "the title did not stop" says nothing about which step of
+	// a dozen was the one that would not come back.
+	static std::atomic<const char*> s_shutdownPhase{"not shutting down"};
+
+	const char* GetShutdownPhase()
+	{
+		return s_shutdownPhase.load(std::memory_order_acquire);
+	}
+
 	void ShutdownTitle()
 	{
 		if(!sSystemRunning)
 			return;
+		auto phase = [](const char* name) { s_shutdownPhase.store(name, std::memory_order_release); };
+		phase("stopping the scheduler");
 		coreinit::OSSchedulerEnd();
+		phase("stopping the GPU thread");
 		Latte_Stop();
 		// reset Cafe OS userspace modules
+		phase("resetting audio");
 		snd_core::reset();
+		phase("stopping alarms");
 		coreinit::OSAlarm_Shutdown();
+		phase("resetting GX2");
 		GX2::_GX2DriverReset();
+		phase("resetting save state");
 		nn::save::ResetToDefaultState();
+		phase("deleting PPC threads");
 		coreinit::__OSDeleteAllActivePPCThreads();
+		phase("unloading modules");
 		RPLLoader_UnloadAll();
+		phase("stopping IOSU modules");
 		for(auto it = s_iosuModules.rbegin(); it != s_iosuModules.rend(); ++it)
 			(*it)->TitleStop();
 		// reset Cemu subsystems
+		phase("stopping the recompiler");
 		PPCRecompiler_Shutdown();
+		phase("resetting graphic packs");
 		GraphicPack2::Reset();
+		phase("unmounting");
 		UnmountCurrentTitle();
 		UnmountExtras();
 		MlcStorageUnmountAllTitles();
 		UnmountBaseDirectories();
+		phase("releasing memory");
 		DestroyMemorySpace();
 		LaunchSettings::ClearCosArgstr();
 		sSystemRunning = false;
+		phase("done");
 	}
 
 	/* Virtual mlc storage */

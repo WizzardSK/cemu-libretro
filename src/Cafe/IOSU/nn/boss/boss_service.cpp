@@ -842,7 +842,18 @@ namespace iosu::boss
 		{
 			if (!m_threadRunning.exchange(false))
 				return;
-			m_bossDaemonThread.join();
+			// The daemon may be inside a task's network request, and closing a
+			// title must not wait for one to come back: an unbounded join here
+			// is a shutdown that never finishes and a frontend that gives up on
+			// the core. Wait a moment for it to notice the flag, and let it
+			// finish on its own if it is busy.
+			constexpr int kStopTimeoutMs = 2000;
+			for (int i = 0; i < kStopTimeoutMs && !m_threadExited.load(std::memory_order_acquire); i++)
+				std::this_thread::sleep_for(std::chrono::milliseconds(1));
+			if (m_threadExited.load(std::memory_order_acquire))
+				m_bossDaemonThread.join();
+			else
+				m_bossDaemonThread.detach();
 		}
 
 		void RegisterTask(const TaskSettingCore& taskSetting)
@@ -937,6 +948,7 @@ namespace iosu::boss
 	private:
 		void BossDaemonThread()
 		{
+			m_threadExited.store(false, std::memory_order_release);
 			CURL* curl = curl_easy_init();
 			while ( m_threadRunning )
 			{
@@ -949,9 +961,11 @@ namespace iosu::boss
 						cemu_assert_debug(task->GetState() != TaskState::Ready);
 					}
 				}
-				std::this_thread::sleep_for(std::chrono::milliseconds(100));
+				for (int i = 0; i < 10 && m_threadRunning; i++)
+					std::this_thread::sleep_for(std::chrono::milliseconds(10));
 			}
 			curl_easy_cleanup(curl);
+			m_threadExited.store(true, std::memory_order_release);
 		}
 
 		std::shared_ptr<RegisteredTask> GetNextRunableTask()
@@ -967,6 +981,7 @@ namespace iosu::boss
 
 		std::thread m_bossDaemonThread;
 		std::atomic_bool m_threadRunning{ false };
+		std::atomic_bool m_threadExited{ true };
 		// task list
 		std::mutex m_taskMtx;
 		std::map<TaskId, std::shared_ptr<RegisteredTask>> m_registeredTasks;
