@@ -378,6 +378,17 @@ void Latte_Stop()
 	sLatteThreadRunning = false;
 	_lock.unlock();
 #ifdef ENABLE_LIBRETRO
+	// A thread parked at the pause gate is asleep on a condition variable whose
+	// predicate does check the stop signal - but only when something wakes it,
+	// and nothing did. A frontend destroys the graphics context before it
+	// unloads, which is exactly when the gate is holding the GPU thread, so the
+	// stop that followed was never seen and Latte_Stop timed out on a thread
+	// that was one notify away from leaving.
+	{
+		std::lock_guard<std::mutex> lock(sGpuPauseMutex);
+	}
+	sGpuPauseCv.notify_all();
+
 	// Detaching here used to be unconditional, on the grounds that the GPU
 	// thread can be blocked somewhere it will not see the stop signal. The cost
 	// was that a "stopped" title still had a live GPU thread: it ran on through
