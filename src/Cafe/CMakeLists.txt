@@ -486,6 +486,8 @@ add_library(CemuCafe
   TitleList/SaveList.cpp
   TitleList/SaveList.h
   TitleList/TitleId.h
+  TitleList/TitleConverter.cpp
+  TitleList/TitleConverter.h
   TitleList/TitleInfo.cpp
   TitleList/TitleInfo.h
   TitleList/TitleList.cpp

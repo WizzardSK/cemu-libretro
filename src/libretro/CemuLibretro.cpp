@@ -21,6 +21,8 @@
 #include "Cafe/TitleList/TitleList.h"
 #include "Cafe/TitleList/TitleInfo.h"
 #include "Cafe/TitleList/SaveList.h"
+#include "Cafe/TitleList/TitleConverter.h"
+#include "Cafe/TitleList/GameInfo.h"
 #include "Cafe/HW/Latte/Core/Latte.h"
 #include "Cafe/HW/Latte/Renderer/Renderer.h"
 #ifdef ENABLE_OPENGL
@@ -245,6 +247,17 @@ static bool s_emu_initialized = false;
 // CemuCommonInit() has run at least once, so the IOSU services exist and can
 // be stopped. Never cleared: they are started once per process, not per title.
 static bool s_cafe_system_initialized = false;
+
+// Converting a title to .wua instead of running it. A conversion is minutes of
+// work over the whole title, so it runs on its own thread and retro_run reports
+// where it is - the frontend keeps its menu, and the core never boots.
+static std::atomic_bool s_convert_mode{false};
+static std::atomic_bool s_convert_cancel{false};
+static std::atomic_bool s_convert_finished{false};
+static std::thread s_convert_thread;
+static std::mutex s_convert_mutex;
+static std::string s_convert_status;
+static std::unique_ptr<GameInfo2> s_convert_game_info;
 // Set as soon as a Vulkan/OpenGL device or renderer has been created, i.e. as soon as
 // normal C++ static-destructor teardown of this DLL becomes unsafe (see retro_unload_game /
 // retro_deinit). This is intentionally separate from s_emu_initialized/s_game_loaded, which
@@ -1538,6 +1551,7 @@ static const char* libretro_option_category(const char* key)
 		{"cemu_cpu_mode", "system"},
 		{"cemu_console_language", "system"},
 		{"cemu_thread_quantum", "system"},
+		{"cemu_convert_to_wua", "system"},
 
 		{"cemu_wiimote_input", "input"},
 
@@ -1691,6 +1705,7 @@ RETRO_API void retro_set_environment(retro_environment_t cb)
 		{"cemu_internal_resolution", "Internal Resolution; 1280x720|1920x1080|2560x1440|3840x2160"},
 		{"cemu_fullscreen_scaling", "Fullscreen Scaling; keep_aspect|stretch"},
 		{"cemu_thread_quantum", "Thread Quantum; 45000|20000|60000|80000|100000"},
+		{"cemu_convert_to_wua", "Convert to .wua Instead of Booting; disabled|enabled"},
 		{"cemu_audio_latency", "Audio Latency; 2|1|3|4"},
 		{"cemu_vsync", "VSync; disabled|enabled"},
 		{"cemu_shader_compile_notification", "Shader Compile Notification; enabled|disabled"},
@@ -1993,6 +2008,89 @@ static void libretro_setup_wiimotes()
 				(unsigned)channel + 1, (unsigned)port + 1);
 	}
 }
+static void libretro_set_convert_status(std::string text)
+{
+	std::lock_guard lock(s_convert_mutex);
+	s_convert_status = std::move(text);
+}
+
+// Everything the title is made of - base, update, DLC - written next to the
+// file the frontend was pointed at. What a user wants out of this is one
+// portable file, and a .wua without the update is not that.
+static void libretro_start_wua_conversion(TitleId baseTitleId, const fs::path& gamePath)
+{
+	s_convert_game_info = std::make_unique<GameInfo2>(CafeTitleList::GetGameInfo(baseTitleId));
+	if (!s_convert_game_info->IsValid())
+	{
+		libretro_set_convert_status("Conversion failed: the title could not be opened");
+		s_convert_finished = true;
+		return;
+	}
+
+	static std::vector<TitleInfo*> titles;
+	titles.clear();
+	titles.push_back(&s_convert_game_info->GetBase());
+	if (s_convert_game_info->HasUpdate())
+		titles.push_back(&s_convert_game_info->GetUpdate());
+	for (TitleInfo& aoc : s_convert_game_info->GetAOC())
+		titles.push_back(&aoc);
+
+	fs::path outputPath = gamePath;
+	if (fs::is_directory(outputPath))
+		outputPath += ".wua";
+	else
+		outputPath.replace_extension(".wua");
+
+	if (fs::exists(outputPath))
+	{
+		libretro_set_convert_status(fmt::format("Not converting: {} already exists", _pathToUtf8(outputPath.filename())));
+		s_convert_finished = true;
+		return;
+	}
+
+	// A .wua is smaller than the file it came from - it is compressed and no
+	// longer encrypted - so the source size is a safe floor to ask for.
+	std::error_code ec;
+	if (fs::is_regular_file(gamePath, ec))
+	{
+		const uintmax_t needed = fs::file_size(gamePath, ec);
+		const fs::space_info space = fs::space(outputPath.parent_path(), ec);
+		if (!ec && space.available < needed)
+		{
+			libretro_set_convert_status(fmt::format("Not converting: {} MiB free, {} MiB needed",
+				space.available / 1024 / 1024, needed / 1024 / 1024));
+			s_convert_finished = true;
+			return;
+		}
+	}
+
+	libretro_set_convert_status("Counting files...");
+	cemuLog_log(LogType::Force, "Converting {} to {}", _pathToUtf8(gamePath), _pathToUtf8(outputPath));
+
+	s_convert_thread = std::thread([outputPath]() {
+		SetThreadName("wuaConvert");
+		std::string error;
+		const bool ok = TitleConverter::ConvertToWUA(titles, outputPath, s_convert_cancel,
+			[](const TitleConverter::Progress& p) {
+				if (p.filesDone == 0)
+				{
+					libretro_set_convert_status(fmt::format("Counting files... ({})", p.filesTotal));
+					return;
+				}
+				const uint64 total = p.bytesTotal ? p.bytesTotal : 1;
+				libretro_set_convert_status(fmt::format("Converting: {}% ({}/{} MiB, file {}/{})",
+					(unsigned)(p.bytesDone * 100 / total), p.bytesDone / 1024 / 1024,
+					p.bytesTotal / 1024 / 1024, p.filesDone, p.filesTotal));
+			},
+			error);
+
+		libretro_set_convert_status(ok ? fmt::format("Done: {}", _pathToUtf8(outputPath.filename()))
+									   : fmt::format("Conversion failed: {}", error));
+		cemuLog_log(LogType::Force, "Conversion {}", ok ? "finished" : fmt::format("failed: {}", error));
+		s_convert_finished = true;
+	});
+}
+
 static void libretro_launch_game()
 {
 	if (s_game_path.empty() || s_emu_initialized)
@@ -2056,6 +2154,12 @@ static void libretro_launch_game()
 		{
 			if (log_cb)
 				log_cb(RETRO_LOG_ERROR, "Cemu: Could not find base title ID\n");
+			return;
+		}
+
+		if (s_convert_mode.load())
+		{
+			libretro_start_wua_conversion(baseTitleId, gamePath);
 			return;
 		}
 
@@ -2564,6 +2668,20 @@ RETRO_API bool retro_load_game(const struct retro_game_info* game)
 	// hide a frontend that cannot give this core a context the second time.
 	s_use_hw_render = false;
 
+	// Converting a title draws nothing, so it asks for no graphics context at
+	// all: no device to negotiate, and nothing for retro_deinit to be careful
+	// about afterwards. Read here rather than with the rest of the options,
+	// which are applied once the emulator is up - and this decides whether it
+	// comes up at all.
+	if (const char* v = libretro_get_option_value("cemu_convert_to_wua"))
+		s_convert_mode.store(libretro_iequals(v, "enabled"));
+	if (s_convert_mode.load())
+	{
+		s_convert_finished = false;
+		s_convert_cancel = false;
+		libretro_set_convert_status("Preparing...");
+	}
+
 	// Set up pixel format
 	enum retro_pixel_format fmt = RETRO_PIXEL_FORMAT_XRGB8888;
 	if (!environ_cb(RETRO_ENVIRONMENT_SET_PIXEL_FORMAT, &fmt))
@@ -2575,7 +2693,7 @@ RETRO_API bool retro_load_game(const struct retro_game_info* game)
 
 	// Set up HW render context based on selected graphics API
 #ifdef ENABLE_VULKAN
-	if (s_graphics_api == SelectedGraphicsAPI::Vulkan)
+	if (!s_convert_mode.load() && s_graphics_api == SelectedGraphicsAPI::Vulkan)
 	{
 		// Set negotiation interface so RetroArch lets us create the VkDevice
 		environ_cb(RETRO_ENVIRONMENT_SET_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE, &s_vk_negotiation);
@@ -2886,6 +3004,15 @@ RETRO_API void retro_deinit()
 	// library's static destructors is not safe.
 	if (s_emu_initialized || s_gpu_context_created)
 		_exit(0);
+
+	// A conversion that is still running holds the title mounted, so it has to
+	// stop before anything below takes the system apart.
+	if (s_convert_thread.joinable())
+	{
+		s_convert_cancel.store(true);
+		s_convert_thread.join();
+	}
+	s_convert_game_info.reset();
 
 	// The IOSU services outlive a title on purpose - they belong to the system,
 	// and ShutdownTitle leaves them alone - but they must not outlive the
@@ -3216,6 +3343,44 @@ RETRO_API void retro_run()
 	{
 		cemuLog_log(LogType::Force, "[Libretro] emulated process exited, asking the frontend to shut down");
 		environ_cb(RETRO_ENVIRONMENT_SHUTDOWN, nullptr);
+	}
+
+	if (s_convert_mode.load())
+	{
+		// Nothing asked for a graphics context in this mode, so context_reset -
+		// which is what normally starts the launch thread - never fires. Start
+		// it here instead.
+		if (!s_launch_thread_running && !s_convert_finished.load())
+		{
+			s_launch_thread_running = true;
+			std::thread([]() {
+				libretro_launch_game();
+				s_launch_thread_running = false;
+			}).detach();
+		}
+
+		// The conversion runs on its own thread; this is the only place the
+		// core can say anything to the user, so it repeats where it has got to
+		// rather than leaving them looking at a black screen for minutes.
+		static std::string s_shown;
+		static unsigned s_frames_since_message = 0;
+		if (s_frames_since_message++ >= 60)
+		{
+			s_frames_since_message = 0;
+			std::string text;
+			{
+				std::lock_guard lock(s_convert_mutex);
+				text = s_convert_status;
+			}
+			if (!text.empty() && text != s_shown && environ_cb)
+			{
+				s_shown = std::move(text);
+				struct retro_message message{s_shown.c_str(), 240};
+				environ_cb(RETRO_ENVIRONMENT_SET_MESSAGE, &message);
+			}
+		}
+		video_cb(NULL, SCREEN_WIDTH, SCREEN_HEIGHT, 0);
+		return;
 	}
 
 	if (!s_game_loaded)
