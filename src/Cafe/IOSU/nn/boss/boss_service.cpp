@@ -1420,6 +1420,11 @@ namespace iosu::boss
 		void TitleStop() override
 		{
 			s_bossService.Stop();
+			// Started in TitleStart() and, until now, never stopped: its thread
+			// stayed joinable for the life of the process, which is a
+			// std::terminate in the daemon's own destructor as soon as anything
+			// unloads this library.
+			s_bossDaemon.Stop();
 			m_fadDb.Clear();
 			m_nsDataAccessor.Close();
 		}
