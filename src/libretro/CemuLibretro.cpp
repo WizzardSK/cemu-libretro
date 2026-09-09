@@ -238,6 +238,9 @@ static retro_log_printf_t log_cb = nullptr;
 static std::atomic_bool s_game_loaded{false};   // read by the GPU thread at the frame gate
 static bool s_initialized = false;
 static bool s_emu_initialized = false;
+// CemuCommonInit() has run at least once, so the IOSU services exist and can
+// be stopped. Never cleared: they are started once per process, not per title.
+static bool s_cafe_system_initialized = false;
 // Set as soon as a Vulkan/OpenGL device or renderer has been created, i.e. as soon as
 // normal C++ static-destructor teardown of this DLL becomes unsafe (see retro_unload_game /
 // retro_deinit). This is intentionally separate from s_emu_initialized/s_game_loaded, which
@@ -881,6 +884,17 @@ static LibretroPortState s_port_state[kLibretroMaxPorts];
 // ============================================================================
 // Forward declarations from main.cpp
 // ============================================================================
+
+// The IOSU services this core has to stop before the library goes away. Their
+// own headers pull in IOSU/ headers that only resolve with src/Cafe on the
+// include path, which this one does not have.
+namespace iosu
+{
+	namespace odm { void Shutdown(); }
+	namespace act { void Stop(); }
+	namespace mcp { void Shutdown(); }
+	namespace fsa { void Shutdown(); }
+}
 
 extern void CemuCommonInit();
 extern std::atomic_bool g_isGPUInitFinished;
@@ -1730,6 +1744,7 @@ static void libretro_launch_game()
 
 	// Initialize emulator common systems
 	CemuCommonInit();
+	s_cafe_system_initialized = true;
 
 	if (log_cb)
 		log_cb(RETRO_LOG_INFO, "Cemu: common init done\n");
@@ -2450,6 +2465,47 @@ RETRO_API bool retro_load_game_special(unsigned game_type, const struct retro_ga
 // The escape hatch stays for the case that earned it: a title that did not stop
 // inside libretro_shutdown_title_for_exit's window still has threads submitting
 // work, and there is nothing safe to do with them.
+// Stops one service with a deadline. Detached rather than joined for the same
+// reason the title shutdown is: a service that will not come back must not take
+// the frontend with it.
+static bool libretro_stop_service(const char* name, void (*stop)())
+{
+	auto finished = std::make_shared<std::atomic_bool>(false);
+	std::thread([finished, stop]() {
+		stop();
+		*finished = true;
+	}).detach();
+
+	constexpr int kServiceStopTimeoutMs = 3000;
+	for (int i = 0; i < kServiceStopTimeoutMs && !*finished; i++)
+		std::this_thread::sleep_for(std::chrono::milliseconds(1));
+
+	if (log_cb)
+		log_cb(*finished ? RETRO_LOG_INFO : RETRO_LOG_WARN,
+			*finished ? "Cemu: %s stopped\n" : "Cemu: %s did not stop\n", name);
+	return *finished;
+}
+
+// CafeSystem::Shutdown() is what normally stops these, and calling it here
+// hangs the frontend every time without saying which of the four does not come
+// back (#17). One at a time with a deadline each: the log names the one that
+// hung, and the others are stopped either way.
+//
+// Only ever once - mcp and fsa join their thread unconditionally, so a second
+// pass would be a std::terminate on an already-joined thread.
+static void libretro_stop_system_services()
+{
+	static bool s_services_stopped = false;
+	if (s_services_stopped || !s_cafe_system_initialized)
+		return;
+	s_services_stopped = true;
+
+	libretro_stop_service("/dev/odm", &iosu::odm::Shutdown);
+	libretro_stop_service("/dev/act", &iosu::act::Stop);
+	libretro_stop_service("/dev/mcp", &iosu::mcp::Shutdown);
+	libretro_stop_service("/dev/fsa", &iosu::fsa::Shutdown);
+}
+
 RETRO_API void retro_unload_game()
 {
 	// A GPU device/renderer may have been created even if the title failed to finish
@@ -2558,6 +2614,13 @@ RETRO_API void retro_deinit()
 	// library's static destructors is not safe.
 	if (s_emu_initialized || s_gpu_context_created)
 		_exit(0);
+
+	// The IOSU services outlive a title on purpose - they belong to the system,
+	// and ShutdownTitle leaves them alone - but they must not outlive the
+	// library. They are stopped here rather than in retro_unload_game because
+	// a frontend may load more content into the same core, and that content
+	// still needs /dev/fsa.
+	libretro_stop_system_services();
 
 	// Anything still joinable when this library is unloaded is a std::terminate
 	// in a static destructor, with no stack to explain it.
