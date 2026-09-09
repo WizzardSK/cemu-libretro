@@ -526,6 +526,13 @@ LatteCMDPtr LatteCP_itWaitRegMem(LatteCMDPtr cmd, uint32 nWords)
 			// check if any GPU events happened
 			LatteTiming_HandleTimedVsync();
 			LatteAsyncCommands_checkAndExecute();
+
+			// The value this is waiting for is written by the emulated CPU, and
+			// once the title is being stopped its cores are gone: nothing will
+			// ever write it. Without this the GPU thread stays here forever and
+			// the title never finishes stopping.
+			if (Latte_GetStopSignal())
+				LatteThread_Exit();
 		}
 		performanceMonitor.gpuTime_fenceTime.endMeasuring();
 	}
@@ -634,6 +641,10 @@ LatteCMDPtr LatteCP_itMemSemaphore(LatteCMDPtr cmd, uint32 nWords)
 				loopCount++;
 				if (loopCount > 2000)
 					std::this_thread::yield();
+				// Signalled by the emulated CPU, so a stopping title means it
+				// never will be.
+				if (Latte_GetStopSignal())
+					LatteThread_Exit();
 				continue;
 			}
 			if (semaphoreData->compare_exchange_strong(oldVal, oldVal - 1))
@@ -965,6 +976,9 @@ LatteCMDPtr LatteCP_itHLEWaitForFlip(LatteCMDPtr cmd, uint32 nWords)
 		// check if any GPU events happened
 		LatteTiming_HandleTimedVsync();
 		std::this_thread::yield();
+		// No more flips are coming once the title is stopping.
+		if (Latte_GetStopSignal())
+			LatteThread_Exit();
 	}
 	return cmd;
 }
