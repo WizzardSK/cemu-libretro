@@ -158,6 +158,15 @@ if(ENABLE_LIBRETRO)
 		# Force all CemuResource symbols (imgui needs fontawesome from resource archive)
 		target_link_options(cemu_libretro PRIVATE "LINKER:--whole-archive" $<TARGET_FILE:CemuResource> "LINKER:--no-whole-archive")
 		target_link_options(cemu_libretro PRIVATE -z noexecstack)
+		# The frontend keeps pointers into this library after it unloads it: the
+		# hardware render callbacks and the Vulkan context negotiation
+		# interface are ours, and RetroArch tears its own device down after
+		# dlclose() - a jump into unmapped memory, which is a SIGSEGV on exit
+		# with nothing in the log. libretro has no way to hand those back, so
+		# the library stays mapped instead. It also keeps the static
+		# destructors out of dlclose(), where an emulator that was never
+		# written to be unloaded has no business running them.
+		target_link_options(cemu_libretro PRIVATE "LINKER:-z,nodelete")
 		target_link_options(cemu_libretro PRIVATE "$<$<CONFIG:Release>:-Xlinker;--strip-debug>")
 		# Only export retro_* symbols
 		target_link_options(cemu_libretro PRIVATE "-Wl,--version-script=${CMAKE_CURRENT_SOURCE_DIR}/libretro/link.T")
