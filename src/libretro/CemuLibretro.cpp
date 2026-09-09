@@ -1227,6 +1227,23 @@ static void libretro_update_screen_layout_visibility()
 	}
 }
 
+// The frontend calls this when it is about to show the options - opening the
+// menu, or right after a value changed - which is the moment the layout slots
+// above the configured count have to disappear. Pushing SET_CORE_OPTIONS_DISPLAY
+// when the count changes is not enough on its own: the menu is built from what
+// the frontend knows at the time it builds it.
+static bool RETRO_CALLCONV libretro_update_options_display()
+{
+	if (const char* v = libretro_get_option_value("cemu_number_of_screen_layouts"))
+	{
+		const int n = atoi(v);
+		if (n >= 1 && n <= (int)kMaxScreenLayouts)
+			s_screen_layout_count = (unsigned)n;
+	}
+	libretro_update_screen_layout_visibility();
+	return true;
+}
+
 static void libretro_read_screen_layout_options()
 {
 	static const LibretroScreenLayout defaults[kMaxScreenLayouts] = {
@@ -1842,6 +1859,11 @@ RETRO_API void retro_set_environment(retro_environment_t cb)
 		s_core_options_supported = true;
 	else
 		s_core_options_supported = libretro_set_core_variables(cb, variables);
+
+	{
+		struct retro_core_options_update_display_callback update_display{libretro_update_options_display};
+		cb(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_UPDATE_DISPLAY_CALLBACK, &update_display);
+	}
 }
 
 RETRO_API void retro_set_video_refresh(retro_video_refresh_t cb) { video_cb = cb; }
