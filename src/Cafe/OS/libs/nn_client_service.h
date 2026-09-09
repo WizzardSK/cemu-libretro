@@ -194,7 +194,14 @@ public:
 
     ~IPCServiceClient()
     {
-    	Shutdown();
+    	// Deliberately not Shutdown(): the client is a static object, so this
+    	// runs at teardown, and closing the handle means an IOS_Close() into an
+    	// emulated system that is already gone. On a libretro core, where the
+    	// library really is unloaded, that is a SIGSEGV in unmapped memory
+    	// inside __cxa_finalize. The guest closes its handle through Finalize();
+    	// a handle that outlives the system it belongs to has nothing to
+    	// release.
+    	m_clientHandle = 0;
     }
 
 	void Initialize(std::string_view devicePath, uint8_t* buffer, uint32_t bufferSize)
