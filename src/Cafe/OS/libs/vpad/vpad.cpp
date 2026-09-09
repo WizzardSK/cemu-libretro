@@ -253,6 +253,7 @@ namespace vpad
 			constexpr uint32 LR_VPAD_L = 0x0020, LR_VPAD_R = 0x0010, LR_VPAD_ZL = 0x0080, LR_VPAD_ZR = 0x0040;
 			constexpr uint32 LR_VPAD_PLUS = 0x0008, LR_VPAD_MINUS = 0x0004;
 			constexpr uint32 LR_VPAD_UP = 0x0200, LR_VPAD_DOWN = 0x0100, LR_VPAD_LEFT = 0x0800, LR_VPAD_RIGHT = 0x0400;
+			constexpr uint32 LR_VPAD_STICK_R = 0x00020000, LR_VPAD_STICK_L = 0x00040000;
 
 			// declared before namespace vpad
 
@@ -271,6 +272,8 @@ namespace vpad
 			if (libretro_get_button_state(12)) status->hold |= LR_VPAD_DOWN;
 			if (libretro_get_button_state(13)) status->hold |= LR_VPAD_LEFT;
 			if (libretro_get_button_state(14)) status->hold |= LR_VPAD_RIGHT;
+			if (libretro_get_button_state(15)) status->hold |= LR_VPAD_STICK_L;
+			if (libretro_get_button_state(16)) status->hold |= LR_VPAD_STICK_R;
 
 			// Debug: log when any button is pressed
 			if (status->hold != 0)

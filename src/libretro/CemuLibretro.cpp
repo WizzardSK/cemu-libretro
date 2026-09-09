@@ -853,7 +853,10 @@ static std::unique_ptr<LibretroGLCanvasCallbacks> s_gl_callbacks;
 
 struct LibretroInputState
 {
-	int16_t buttons[16]{};
+	// Indexed by VPADController::ButtonId, so it has to be as long as that
+	// enum: kButtonId_StickR is 16, and a [16] array made storing an R3 press
+	// a write into left_x below it.
+	int16_t buttons[VPADController::kButtonId_Max]{};
 	int16_t left_x = 0, left_y = 0;
 	int16_t right_x = 0, right_y = 0;
 	bool touch_pressed = false;
@@ -2643,7 +2646,7 @@ static void libretro_poll_input()
 
 bool libretro_get_button_state(uint32_t button_id)
 {
-	if (button_id >= 16)
+	if (button_id >= VPADController::kButtonId_Max)
 		return false;
 	return s_input_state.buttons[button_id] != 0;
 }
