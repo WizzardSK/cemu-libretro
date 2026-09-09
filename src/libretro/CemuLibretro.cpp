@@ -2809,7 +2809,10 @@ RETRO_API bool retro_load_game(const struct retro_game_info* game)
 	// never boot (context_reset is what launches it) and the frontend would be
 	// left running a core that hands it no frames. Fail the load instead, so the
 	// frontend says so rather than the user staring at a black screen.
-	if (!s_use_hw_render)
+	//
+	// A conversion asked for no context on purpose and boots nothing, so this
+	// does not apply to it.
+	if (!s_use_hw_render && !s_convert_mode.load())
 	{
 		if (log_cb)
 			log_cb(RETRO_LOG_ERROR, "Cemu: no hardware renderer available - this core needs a Vulkan (or OpenGL 4.1+) capable frontend\n");
