@@ -3,6 +3,10 @@
 
 #include <thread>
 #include <chrono>
+#include <deque>
+#include <string>
+#include <vector>
+#include <cstring>
 #include "libretro.h"
 
 #include "config/CemuConfig.h"
@@ -376,9 +380,38 @@ static SelectedGraphicsAPI s_graphics_api = SelectedGraphicsAPI::OpenGL;
 
 // DRC layout state is shared with VulkanRenderer via LibretroDRC.h.
 #include "LibretroDRC.h"
-LibretroDRCDisplayMode g_libretroDRCMode = LibretroDRCDisplayMode::Disabled;
+LibretroScreenLayout g_libretroScreenLayout = LibretroScreenLayout::Tv;
 bool g_libretroDRCPositionSwapped = false;
-static bool s_drc_showing_gamepad = false;
+
+// Screen layouts, in the shape melonDS DS uses: a handful of configured
+// layouts and one button that steps through them. The count and the layout in
+// each slot come from the core options; the slot the core is on does not - it
+// always starts at the first one.
+static constexpr unsigned kMaxScreenLayouts = 5;
+static LibretroScreenLayout s_screen_layouts[kMaxScreenLayouts] = {
+	LibretroScreenLayout::Tv,
+	LibretroScreenLayout::GamePad,
+	LibretroScreenLayout::SideBySide,
+	LibretroScreenLayout::TopBottom,
+	LibretroScreenLayout::PictureInPicture,
+};
+static unsigned s_screen_layout_count = 2;
+static unsigned s_screen_layout_index = 0;
+
+// What steps to the next layout. Nothing by default: a Wii U GamePad needs
+// every button a RetroPad has, so which one - if any - to give up is the
+// user's decision, per game.
+enum class LibretroLayoutButton
+{
+	None,
+	L3,
+	R3,
+	L3R3,
+	SelectL3,
+	SelectR3,
+};
+static LibretroLayoutButton s_next_layout_button = LibretroLayoutButton::None;
+static bool s_next_layout_button_held = false;
 
 static retro_hw_render_callback s_hw_render{};
 
@@ -591,35 +624,51 @@ static bool libretro_drc_iequals(const char* a, const char* b)
 	return *a == 0 && *b == 0;
 }
 
-static LibretroDRCDisplayMode libretro_parse_drc_mode(const char* v)
+// The option values are the labels the user picks from, so they are matched as
+// such. An unknown one - an .opt file from a newer build, or an edited one -
+// falls back to the slot's default rather than refusing to start.
+static LibretroScreenLayout libretro_parse_screen_layout(const char* v, LibretroScreenLayout fallback)
 {
 	if (!v)
-		return LibretroDRCDisplayMode::Disabled;
-	if (libretro_drc_iequals(v, "disabled")) return LibretroDRCDisplayMode::Disabled;
-	if (libretro_drc_iequals(v, "toggle")) return LibretroDRCDisplayMode::Toggle;
-	if (libretro_drc_iequals(v, "side_by_side")) return LibretroDRCDisplayMode::SideBySide;
-	if (libretro_drc_iequals(v, "top_bottom")) return LibretroDRCDisplayMode::TopBottom;
-	if (libretro_drc_iequals(v, "picture_in_picture")) return LibretroDRCDisplayMode::PictureInPicture;
-	return LibretroDRCDisplayMode::Disabled;
+		return fallback;
+	if (libretro_drc_iequals(v, "Default Screen")) return LibretroScreenLayout::Tv;
+	if (libretro_drc_iequals(v, "GamePad Screen")) return LibretroScreenLayout::GamePad;
+	if (libretro_drc_iequals(v, "Side by Side")) return LibretroScreenLayout::SideBySide;
+	if (libretro_drc_iequals(v, "Top Bottom")) return LibretroScreenLayout::TopBottom;
+	if (libretro_drc_iequals(v, "Picture in Picture")) return LibretroScreenLayout::PictureInPicture;
+	return fallback;
+}
+
+static const char* libretro_screen_layout_name(LibretroScreenLayout layout)
+{
+	switch (layout)
+	{
+	case LibretroScreenLayout::Tv: return "Default Screen";
+	case LibretroScreenLayout::GamePad: return "GamePad Screen";
+	case LibretroScreenLayout::SideBySide: return "Side by Side";
+	case LibretroScreenLayout::TopBottom: return "Top Bottom";
+	case LibretroScreenLayout::PictureInPicture: return "Picture in Picture";
+	}
+	return "Default Screen";
 }
 
 static bool libretro_drc_needs_pad_view()
 {
-	return g_libretroDRCMode != LibretroDRCDisplayMode::Disabled;
+	return g_libretroScreenLayout != LibretroScreenLayout::Tv;
 }
 
 // Shared DRC helpers (declared in LibretroDRC.h, also called from VulkanRenderer).
 bool LibretroDRC_ShouldRenderScreen(bool padView)
 {
-	switch (g_libretroDRCMode)
+	switch (g_libretroScreenLayout)
 	{
-	case LibretroDRCDisplayMode::Disabled:
+	case LibretroScreenLayout::Tv:
 		return !padView;
-	case LibretroDRCDisplayMode::Toggle:
-		return g_libretroDRCPositionSwapped ? padView : !padView;
-	case LibretroDRCDisplayMode::SideBySide:
-	case LibretroDRCDisplayMode::TopBottom:
-	case LibretroDRCDisplayMode::PictureInPicture:
+	case LibretroScreenLayout::GamePad:
+		return padView;
+	case LibretroScreenLayout::SideBySide:
+	case LibretroScreenLayout::TopBottom:
+	case LibretroScreenLayout::PictureInPicture:
 		return true;
 	}
 	return !padView;
@@ -632,17 +681,17 @@ void LibretroDRC_ComputeViewport(bool padView,
 	// Top-left origin convention. GL callers flip Y at their site.
 	const bool isPrimary = g_libretroDRCPositionSwapped ? padView : !padView;
 
-	switch (g_libretroDRCMode)
+	switch (g_libretroScreenLayout)
 	{
-	case LibretroDRCDisplayMode::Disabled:
-	case LibretroDRCDisplayMode::Toggle:
+	case LibretroScreenLayout::Tv:
+	case LibretroScreenLayout::GamePad:
 		outX = 0;
 		outY = 0;
 		outWidth = dstWidth;
 		outHeight = dstHeight;
 		return;
 
-	case LibretroDRCDisplayMode::SideBySide:
+	case LibretroScreenLayout::SideBySide:
 	{
 		const int primaryWidth = (dstWidth * 80) / 100;
 		const int secondaryWidth = dstWidth - primaryWidth;
@@ -667,7 +716,7 @@ void LibretroDRC_ComputeViewport(bool padView,
 		return;
 	}
 
-	case LibretroDRCDisplayMode::TopBottom:
+	case LibretroScreenLayout::TopBottom:
 		if (isPrimary)
 		{
 			outX = 0;
@@ -684,7 +733,7 @@ void LibretroDRC_ComputeViewport(bool padView,
 		}
 		return;
 
-	case LibretroDRCDisplayMode::PictureInPicture:
+	case LibretroScreenLayout::PictureInPicture:
 		if (isPrimary)
 		{
 			outX = 0;
@@ -1108,6 +1157,97 @@ static bool libretro_parse_internal_resolution(const char* v, unsigned& outWidth
 	return false;
 }
 
+static LibretroLayoutButton libretro_parse_layout_button(const char* v)
+{
+	if (!v)
+		return LibretroLayoutButton::None;
+	if (libretro_drc_iequals(v, "L3")) return LibretroLayoutButton::L3;
+	if (libretro_drc_iequals(v, "R3")) return LibretroLayoutButton::R3;
+	if (libretro_drc_iequals(v, "L3 + R3")) return LibretroLayoutButton::L3R3;
+	if (libretro_drc_iequals(v, "Select + L3")) return LibretroLayoutButton::SelectL3;
+	if (libretro_drc_iequals(v, "Select + R3")) return LibretroLayoutButton::SelectR3;
+	return LibretroLayoutButton::None;
+}
+
+static void libretro_apply_screen_layout()
+{
+	const LibretroScreenLayout layout = s_screen_layouts[s_screen_layout_index];
+	if (layout == g_libretroScreenLayout)
+		return;
+
+	g_libretroScreenLayout = layout;
+	const bool padVisible = layout != LibretroScreenLayout::Tv;
+	ActiveSettings::SetLibretroDisplayDRCOverride(padVisible);
+	WindowSystem::GetWindowInfo().pad_open = padVisible;
+}
+
+static void libretro_update_screen_layout_visibility()
+{
+	if (!environ_cb)
+		return;
+	for (unsigned i = 0; i < kMaxScreenLayouts; ++i)
+	{
+		char key[32];
+		snprintf(key, sizeof(key), "cemu_screen_layout%u", i + 1);
+		struct retro_core_option_display display{key, i < s_screen_layout_count};
+		environ_cb(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &display);
+	}
+}
+
+static void libretro_read_screen_layout_options()
+{
+	static const LibretroScreenLayout defaults[kMaxScreenLayouts] = {
+		LibretroScreenLayout::Tv,
+		LibretroScreenLayout::GamePad,
+		LibretroScreenLayout::SideBySide,
+		LibretroScreenLayout::TopBottom,
+		LibretroScreenLayout::PictureInPicture,
+	};
+
+	unsigned count = 2;
+	if (const char* v = libretro_get_option_value("cemu_number_of_screen_layouts"))
+	{
+		const int n = atoi(v);
+		if (n >= 1 && n <= (int)kMaxScreenLayouts)
+			count = (unsigned)n;
+	}
+	s_screen_layout_count = count;
+
+	for (unsigned i = 0; i < kMaxScreenLayouts; ++i)
+	{
+		char key[32];
+		snprintf(key, sizeof(key), "cemu_screen_layout%u", i + 1);
+		s_screen_layouts[i] = libretro_parse_screen_layout(libretro_get_option_value(key), defaults[i]);
+	}
+
+	// A count lowered under the slot the core is on leaves it out of range;
+	// start again from the first rather than from something the user cannot
+	// see any more.
+	if (s_screen_layout_index >= s_screen_layout_count)
+		s_screen_layout_index = 0;
+
+	s_next_layout_button = libretro_parse_layout_button(libretro_get_option_value("cemu_next_screen_layout_button"));
+
+	libretro_update_screen_layout_visibility();
+	libretro_apply_screen_layout();
+}
+
+static void libretro_next_screen_layout()
+{
+	if (s_screen_layout_count == 0)
+		return;
+
+	s_screen_layout_index = (s_screen_layout_index + 1) % s_screen_layout_count;
+	// Nothing to redraw differently when the next slot holds the same layout;
+	// libretro_apply_screen_layout returns early on its own.
+	libretro_apply_screen_layout();
+
+	if (log_cb)
+		log_cb(RETRO_LOG_INFO, "Cemu: screen layout %u of %u (%s)\n",
+			s_screen_layout_index + 1, s_screen_layout_count,
+			libretro_screen_layout_name(g_libretroScreenLayout));
+}
+
 static void libretro_apply_core_options()
 {
 	if (!environ_cb)
@@ -1259,20 +1399,10 @@ static void libretro_apply_core_options()
 	LaunchSettings::SetForceMultiCoreInterpreter(libretro_is_multicore_interpreter(cpuModeValue));
 	ActiveSettings::SetLibretroPrecompiledShadersOverride(libretro_parse_precompiled_shaders(libretro_get_option_value("cemu_precompiled_shaders")));
 
-	// DRC (GamePad) display mode
-	if (const char* v = libretro_get_option_value("cemu_drc_mode"))
-	{
-		g_libretroDRCMode = libretro_parse_drc_mode(v);
-		const bool drcEnabled = g_libretroDRCMode != LibretroDRCDisplayMode::Disabled;
-		ActiveSettings::SetLibretroDisplayDRCOverride(drcEnabled);
-		WindowSystem::GetWindowInfo().pad_open = drcEnabled;
-	}
+	// Screen layouts
+	libretro_read_screen_layout_options();
 	if (const char* v = libretro_get_option_value("cemu_drc_position"))
-	{
 		g_libretroDRCPositionSwapped = libretro_drc_iequals(v, "swapped");
-		if (g_libretroDRCMode == LibretroDRCDisplayMode::Toggle)
-			s_drc_showing_gamepad = g_libretroDRCPositionSwapped;
-	}
 
 	// Internal resolution
 	if (const char* v = libretro_get_option_value("cemu_internal_resolution"))
@@ -1371,6 +1501,95 @@ static void libretro_apply_core_options()
 	}
 }
 
+static const char* libretro_option_category(const char* key)
+{
+	static const char* const screen_keys[] = {
+		"cemu_number_of_screen_layouts",
+		"cemu_screen_layout1",
+		"cemu_screen_layout2",
+		"cemu_screen_layout3",
+		"cemu_screen_layout4",
+		"cemu_screen_layout5",
+		"cemu_next_screen_layout_button",
+		"cemu_drc_position",
+	};
+	for (const char* screen_key : screen_keys)
+	{
+		if (std::strcmp(screen_key, key) == 0)
+			return "screen";
+	}
+	return nullptr;
+}
+
+// A frontend that speaks core options v2 gets the list as categories it can
+// page through - which is the only way to put the screen settings on a submenu
+// of their own. One that does not gets the flat list, which is where both come
+// from, so the two cannot drift apart.
+static bool libretro_set_core_options_v2(retro_environment_t cb, const struct retro_variable* variables)
+{
+	unsigned version = 0;
+	if (!cb(RETRO_ENVIRONMENT_GET_CORE_OPTIONS_VERSION, &version) || version < 2)
+		return false;
+
+	static std::deque<std::string> storage;
+	static std::vector<struct retro_core_option_v2_definition> definitions;
+	static struct retro_core_option_v2_category categories[] = {
+		{"screen", "Screen", "Which of the Wii U's two screens the core presents, and how."},
+		{nullptr, nullptr, nullptr},
+	};
+
+	if (definitions.empty())
+	{
+		auto keep = [](std::string value) -> const char* {
+			storage.push_back(std::move(value));
+			return storage.back().c_str();
+		};
+
+		for (const struct retro_variable* var = variables; var->key; ++var)
+		{
+			std::string desc(var->value ? var->value : "");
+			std::string values;
+			const size_t split = desc.find(';');
+			if (split != std::string::npos)
+			{
+				values = desc.substr(split + 1);
+				desc.erase(split);
+			}
+			while (!values.empty() && values.front() == ' ')
+				values.erase(values.begin());
+
+			struct retro_core_option_v2_definition def{};
+			def.key = var->key;
+			def.desc = keep(desc);
+			def.category_key = libretro_option_category(var->key);
+
+			size_t count = 0;
+			size_t pos = 0;
+			while (pos <= values.size() && count + 1 < RETRO_NUM_CORE_OPTION_VALUES_MAX)
+			{
+				const size_t bar = values.find('|', pos);
+				std::string value = values.substr(pos, bar == std::string::npos ? std::string::npos : bar - pos);
+				if (!value.empty())
+				{
+					def.values[count].value = keep(std::move(value));
+					if (count == 0)
+						def.default_value = def.values[0].value;
+					++count;
+				}
+				if (bar == std::string::npos)
+					break;
+				pos = bar + 1;
+			}
+
+			definitions.push_back(def);
+		}
+		definitions.push_back({});
+	}
+
+	struct retro_core_options_v2 options{categories, definitions.data()};
+	return cb(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_V2, &options);
+}
+
 RETRO_API void retro_set_environment(retro_environment_t cb)
 {
 	environ_cb = cb;
@@ -1433,7 +1652,13 @@ RETRO_API void retro_set_environment(retro_environment_t cb)
 		{"cemu_emulate_infinity_base", "Emulate Infinity Base; disabled|enabled"},
 		{"cemu_emulate_dimensions_toypad", "Emulate Dimensions Toypad; disabled|enabled"},
 		{"cemu_skip_draw_on_dupe", "Skip Draw on Duplicate Frames; disabled|enabled"},
-		{"cemu_drc_mode", "DRC Display Mode; disabled|toggle|side_by_side|top_bottom|picture_in_picture"},
+		{"cemu_number_of_screen_layouts", "# of Screen Layouts; 2|1|3|4|5"},
+		{"cemu_screen_layout1", "Layout 1; Default Screen|GamePad Screen|Side by Side|Top Bottom|Picture in Picture"},
+		{"cemu_screen_layout2", "Layout 2; GamePad Screen|Default Screen|Side by Side|Top Bottom|Picture in Picture"},
+		{"cemu_screen_layout3", "Layout 3; Side by Side|Default Screen|GamePad Screen|Top Bottom|Picture in Picture"},
+		{"cemu_screen_layout4", "Layout 4; Top Bottom|Default Screen|GamePad Screen|Side by Side|Picture in Picture"},
+		{"cemu_screen_layout5", "Layout 5; Picture in Picture|Default Screen|GamePad Screen|Side by Side|Top Bottom"},
+		{"cemu_next_screen_layout_button", "Next Screen Layout; Disabled|L3|R3|L3 + R3|Select + L3|Select + R3"},
 		{"cemu_drc_position", "DRC Position; normal|swapped"},
 		{"cemu_wiimote_input", "Wii Remote input; port1_shared|ports2_4|disabled"},
 		{"cemu_log_filesystem", "Log file access (debugging); disabled|enabled"},
@@ -1446,7 +1671,10 @@ RETRO_API void retro_set_environment(retro_environment_t cb)
 #endif
 		{nullptr, nullptr},
 	};
-	s_core_options_supported = cb(RETRO_ENVIRONMENT_SET_VARIABLES, (void*)variables);
+	if (libretro_set_core_options_v2(cb, variables))
+		s_core_options_supported = true;
+	else
+		s_core_options_supported = cb(RETRO_ENVIRONMENT_SET_VARIABLES, (void*)variables);
 }
 
 RETRO_API void retro_set_video_refresh(retro_video_refresh_t cb) { video_cb = cb; }
@@ -2630,6 +2858,27 @@ static void libretro_poll_input()
 		pad.left_y = input_state_cb(port, RETRO_DEVICE_ANALOG, RETRO_DEVICE_INDEX_ANALOG_LEFT, RETRO_DEVICE_ID_ANALOG_Y);
 		pad.right_x = input_state_cb(port, RETRO_DEVICE_ANALOG, RETRO_DEVICE_INDEX_ANALOG_RIGHT, RETRO_DEVICE_ID_ANALOG_X);
 		pad.right_y = input_state_cb(port, RETRO_DEVICE_ANALOG, RETRO_DEVICE_INDEX_ANALOG_RIGHT, RETRO_DEVICE_ID_ANALOG_Y);
+	}
+
+	// The layout button, on the press rather than while it is held.
+	{
+		const auto& pad = s_port_state[0];
+		const bool l3 = pad.buttons[RETRO_DEVICE_ID_JOYPAD_L3] != 0;
+		const bool r3 = pad.buttons[RETRO_DEVICE_ID_JOYPAD_R3] != 0;
+		const bool select = pad.buttons[RETRO_DEVICE_ID_JOYPAD_SELECT] != 0;
+		bool down = false;
+		switch (s_next_layout_button)
+		{
+		case LibretroLayoutButton::None: break;
+		case LibretroLayoutButton::L3: down = l3; break;
+		case LibretroLayoutButton::R3: down = r3; break;
+		case LibretroLayoutButton::L3R3: down = l3 && r3; break;
+		case LibretroLayoutButton::SelectL3: down = select && l3; break;
+		case LibretroLayoutButton::SelectR3: down = select && r3; break;
+		}
+		if (down && !s_next_layout_button_held)
+			libretro_next_screen_layout();
+		s_next_layout_button_held = down;
 	}
 
 	// Touchscreen (mouse/pointer mapped to GamePad touchscreen)

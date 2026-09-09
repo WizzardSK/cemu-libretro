@@ -1025,9 +1025,9 @@ void LatteRenderTarget_itHLECopyColorBufferToScanBuffer(MPTR colorBufferPtr, uin
 	// dispatch order, regardless of Cemu's scan-out call order, because PiP's
 	// DRC sub-rect overlays the full-image TV blit and must be drawn last.
 	const bool libretroComposite =
-		g_libretroDRCMode == LibretroDRCDisplayMode::SideBySide ||
-		g_libretroDRCMode == LibretroDRCDisplayMode::TopBottom ||
-		g_libretroDRCMode == LibretroDRCDisplayMode::PictureInPicture;
+		g_libretroScreenLayout == LibretroScreenLayout::SideBySide ||
+		g_libretroScreenLayout == LibretroScreenLayout::TopBottom ||
+		g_libretroScreenLayout == LibretroScreenLayout::PictureInPicture;
 	if (libretroComposite)
 	{
 		static LatteTextureView* s_cachedTvView = nullptr;
