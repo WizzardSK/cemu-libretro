@@ -251,6 +251,9 @@ static bool s_cafe_system_initialized = false;
 // Converting a title to .wua instead of running it. A conversion is minutes of
 // work over the whole title, so it runs on its own thread and retro_run reports
 // where it is - the frontend keeps its menu, and the core never boots.
+// The frame handed to the frontend while converting: black, at the geometry the
+// core declared, and only there because a frontend expects a core that returns
+// from retro_run to have drawn something.
 static std::atomic_bool s_convert_mode{false};
 static std::atomic_bool s_convert_cancel{false};
 static std::atomic_bool s_convert_finished{false};
@@ -3485,9 +3488,19 @@ RETRO_API void retro_run()
 				s_shown = std::move(text);
 				struct retro_message message{s_shown.c_str(), 240};
 				environ_cb(RETRO_ENVIRONMENT_SET_MESSAGE, &message);
+				// Also in the frontend's log: an OSD message is gone in four
+				// seconds, and this is the only record of a conversion that
+				// went wrong.
+				if (log_cb)
+					log_cb(RETRO_LOG_INFO, "Cemu: %s\n", s_shown.c_str());
 			}
 		}
-		video_cb(NULL, SCREEN_WIDTH, SCREEN_HEIGHT, 0);
+
+		// A real frame, not the "same as last time" that video_cb(NULL) means:
+		// there has never been a first one to repeat here, since nothing in
+		// this mode draws.
+		static std::vector<uint32_t> blank((size_t)SCREEN_WIDTH * SCREEN_HEIGHT, 0);
+		video_cb(blank.data(), SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_WIDTH * sizeof(uint32_t));
 		return;
 	}
 
