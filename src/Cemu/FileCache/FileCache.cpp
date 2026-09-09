@@ -24,12 +24,17 @@ struct _FileCacheAsyncWriter
 
 	~_FileCacheAsyncWriter()
 	{
-		if (m_isRunning.load())
 		{
+			// Under the lock: the thread checks m_isRunning only after waking,
+			// so a stop set while it is between "no work" and wait() misses the
+			// notify and the join below never returns. As a static destructor
+			// that is a process that will not exit.
+			std::lock_guard lock(m_fileCacheMutex);
 			m_isRunning.store(false);
-			m_fileCacheCondVar.notify_one();
-			m_fileCacheThread.join();
 		}
+		m_fileCacheCondVar.notify_all();
+		if (m_fileCacheThread.joinable())
+			m_fileCacheThread.join();
 	}
 
 	void AddJob(FileCache* fileCache, const FileCache::FileName& name, const uint8* fileData, sint32 fileSize)
