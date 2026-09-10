@@ -1058,15 +1058,30 @@ void LatteRenderTarget_itHLECopyColorBufferToScanBuffer(MPTR colorBufferPtr, uin
 		if (renderTarget & RENDER_TARGET_DRC)
 			s_cachedDrcView = texView;
 
-		// Always dispatch in TV-then-DRC order with whatever is cached so
-		// far. Blits are idempotent within a frame; PiP's DRC overlay
-		// survives because DRC always lands after TV.
+		// Dispatch in a fixed order rather than the one Cemu happens to scan
+		// out in - blits are idempotent within a frame, and PiP draws the
+		// secondary screen over the primary, so the small one has to land
+		// last. Which of the two is small flips with the GamePad Position
+		// option, so the order flips with it: swapped means the TV image is
+		// the inset and goes second.
 		// LibretroDRC_ShouldRenderScreen would drop the TV blit in the
 		// GamePad-only layout anyway; not asking for it saves the work.
-		if (s_cachedTvView && LibretroDRC_ShouldRenderScreen(false))
-			LatteRenderTarget_copyToBackbuffer(s_cachedTvView, false);
-		if (s_cachedDrcView && g_renderer->IsPadWindowActive())
-			LatteRenderTarget_copyToBackbuffer(s_cachedDrcView, true);
+		const bool tvVisible = s_cachedTvView && LibretroDRC_ShouldRenderScreen(false);
+		const bool drcVisible = s_cachedDrcView && g_renderer->IsPadWindowActive();
+		if (g_libretroDRCPositionSwapped)
+		{
+			if (drcVisible)
+				LatteRenderTarget_copyToBackbuffer(s_cachedDrcView, true);
+			if (tvVisible)
+				LatteRenderTarget_copyToBackbuffer(s_cachedTvView, false);
+		}
+		else
+		{
+			if (tvVisible)
+				LatteRenderTarget_copyToBackbuffer(s_cachedTvView, false);
+			if (drcVisible)
+				LatteRenderTarget_copyToBackbuffer(s_cachedDrcView, true);
+		}
 		if (libretroDrcOnly && !s_seenDrcScanout && s_cachedTvView && g_renderer->IsPadWindowActive())
 			LatteRenderTarget_copyToBackbuffer(s_cachedTvView, true);
 	}
