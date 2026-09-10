@@ -1513,33 +1513,69 @@ static void libretro_next_screen_layout()
 			libretro_screen_layout_name(g_libretroScreenLayout));
 }
 
+static void libretro_start_wua_conversion(TitleId baseTitleId, const fs::path& gamePath);
+static bool libretro_shutdown_title_for_exit();
+static void libretro_set_convert_status(std::string text);
+
+// Acting on the conversion switch. The title stops first - its memory is the
+// memory the conversion wants - and the conversion then runs in this same
+// process, so nothing has to be written down and picked up on a later run.
+//
+// Called from the option handler, which is the frontend's thread, and returns
+// as soon as the work is handed to the conversion thread.
+static void libretro_request_conversion()
+{
+	if (s_convert_mode.load() || !s_game_loaded || s_game_path.empty())
+		return;
+
+	if (log_cb)
+		log_cb(RETRO_LOG_INFO, "Cemu: conversion requested - stopping the title first\n");
+	if (environ_cb)
+	{
+		struct retro_message message{"Stopping the title, then converting to .wua", 240};
+		environ_cb(RETRO_ENVIRONMENT_SET_MESSAGE, &message);
+	}
+
+	// Ends the scheduler, stops the GPU thread and unmounts the save devices -
+	// everything the title held goes back before a single byte is written.
+	libretro_shutdown_title_for_exit();
+
+	s_convert_finished = false;
+	s_convert_cancel = false;
+	s_convert_mode.store(true);
+	libretro_set_convert_status("Preparing...");
+	// The submenu is not something to reach into while this is running.
+	libretro_update_convert_visibility();
+
+	const fs::path gamePath = _utf8ToPath(s_game_path);
+	TitleInfo launchTitle{gamePath};
+	TitleId baseTitleId;
+	if (!launchTitle.IsValid() || !CafeTitleList::FindBaseTitleId(launchTitle.GetAppTitleId(), baseTitleId))
+	{
+		libretro_set_convert_status("Conversion failed: the title could not be identified");
+		s_convert_finished = true;
+		return;
+	}
+
+	libretro_start_wua_conversion(baseTitleId, gamePath);
+}
+
 static void libretro_apply_core_options()
 {
-	// The conversion switch is not a setting, it is a request, and it takes
-	// effect on the next start of this title rather than now: the emulator is
-	// up and holding the whole game in memory, which is the memory the
-	// conversion wants. Say so, and leave the value alone - it has to survive
-	// the restart, and retro_load_game turns it off again on the way back in.
+	// The conversion switch is not a setting, it is a request, and it is acted
+	// on here rather than remembered: the title stops, which is what frees the
+	// memory the conversion wants, and the conversion starts in this same
+	// process. The switch goes straight back off, so nothing about it is ever
+	// written to the .opt file - there is no next run for it to survive into.
 	if (!s_convert_mode.load())
 	{
 		if (const char* v = libretro_get_option_value("cemu_convert_to_wua"))
 		{
-			static bool s_told = false;
-			const bool armed = libretro_iequals(v, "enabled");
-			if (armed && !s_told)
+			if (libretro_iequals(v, "enabled"))
 			{
-				s_told = true;
-				if (environ_cb)
-				{
-					struct retro_message message{"Restart the content to convert it to .wua", 300};
-					environ_cb(RETRO_ENVIRONMENT_SET_MESSAGE, &message);
-				}
-				if (log_cb)
-					log_cb(RETRO_LOG_INFO, "Cemu: conversion armed - it runs on the next start of this title\n");
-			}
-			else if (!armed)
-			{
-				s_told = false;
+				libretro_set_option_value("cemu_convert_to_wua", "disabled");
+				libretro_request_conversion();
+				return;
 			}
 		}
 	}
@@ -2032,6 +2068,13 @@ static bool libretro_set_core_options_v2(retro_environment_t cb, const struct re
 			def.key = var->key;
 			def.desc = keep(desc);
 			def.category_key = libretro_option_category(var->key);
+
+			// What pressing it actually does, which is more than the name can
+			// carry: the title stops, the conversion runs, and the core closes
+			// when it is finished.
+			if (strcmp(var->key, "cemu_convert_to_wua") == 0)
+				def.info = keep(std::string("Stops the running title and writes it to the output directory "
+					"as a single .wua archive. The core closes when the conversion is done."));
 
 			// The output directory is whatever the frontend turned out to
 			// allow, so its values are built here rather than written above.
@@ -2647,12 +2690,6 @@ static void libretro_launch_game()
 			return;
 		}
 
-		if (s_convert_mode.load())
-		{
-			libretro_start_wua_conversion(baseTitleId, gamePath);
-			return;
-		}
-
 		if (log_cb)
 			log_cb(RETRO_LOG_INFO, "Cemu: preparing foreground title\n");
 		status = CafeSystem::PrepareForegroundTitle(baseTitleId);
@@ -3163,18 +3200,11 @@ RETRO_API bool retro_load_game(const struct retro_game_info* game)
 	// about afterwards. Read here rather than with the rest of the options,
 	// which are applied once the emulator is up - and this decides whether it
 	// comes up at all.
-	if (const char* v = libretro_get_option_value("cemu_convert_to_wua"))
-		s_convert_mode.store(libretro_iequals(v, "enabled"));
-	// Whatever the answer, the switch goes back off here. It is armed for one
-	// restart and no more: a value left on would convert the next title the
-	// frontend loads, which is exactly what nobody asks for.
+	// A conversion is asked for while a title is running and happens there and
+	// then, so loading content never starts one. The switch is put back to off
+	// in case an older build left it on: nothing about it belongs in the .opt.
+	s_convert_mode.store(false);
 	libretro_set_option_value("cemu_convert_to_wua", "disabled");
-	if (s_convert_mode.load())
-	{
-		s_convert_finished = false;
-		s_convert_cancel = false;
-		libretro_set_convert_status("Preparing...");
-	}
 
 	// Set up pixel format
 	enum retro_pixel_format fmt = RETRO_PIXEL_FORMAT_XRGB8888;
@@ -3871,18 +3901,6 @@ RETRO_API void retro_run()
 
 	if (s_convert_mode.load())
 	{
-		// Nothing asked for a graphics context in this mode, so context_reset -
-		// which is what normally starts the launch thread - never fires. Start
-		// it here instead.
-		if (!s_launch_thread_running && !s_convert_finished.load())
-		{
-			s_launch_thread_running = true;
-			std::thread([]() {
-				libretro_launch_game();
-				s_launch_thread_running = false;
-			}).detach();
-		}
-
 		// The conversion runs on its own thread; this is the only place the
 		// core can say anything to the user, so it repeats where it has got to
 		// rather than leaving them looking at a black screen for minutes.
