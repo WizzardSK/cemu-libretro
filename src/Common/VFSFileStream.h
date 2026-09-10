@@ -20,6 +20,9 @@ public:
 	// Deleting through the frontend as well, so that a file created on a SAF
 	// tree can be taken back off it.
 	static bool Remove(const fs::path& path);
+	// Moving a finished file into place has to go the same way: std::filesystem
+	// cannot see either end of it when the frontend owns the location.
+	static bool Rename(const fs::path& from, const fs::path& to);
 
 	static VFSFileStream* openFile(std::string_view path);
 	static VFSFileStream* openFile(const wchar_t* path, bool allowWrite = false);

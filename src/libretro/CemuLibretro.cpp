@@ -1285,15 +1285,6 @@ static void libretro_collect_wua_destinations()
 			[&candidate](const LibretroWuaDestination& kept) { return kept.path == candidate.path; });
 		if (duplicate)
 			continue;
-		// A saf:// destination needs a writer that goes through the frontend's
-		// VFS; TitleConverter still creates its output with the OS file API,
-		// so offering one would be offering a conversion that cannot finish.
-		if (candidate.path.find("://") != std::string::npos)
-		{
-			if (log_cb)
-				log_cb(RETRO_LOG_INFO, "Cemu: skipping %s as a destination - the converter cannot write through the frontend yet\n", candidate.path.c_str());
-			continue;
-		}
 		if (!VFSFileStream::IsDirectory(fs::path(candidate.path)))
 			continue;
 		if (VFSFileStream::Exists(fs::path(libretro_path_join(candidate.path, outputName))))

@@ -1,11 +1,13 @@
 #include "TitleConverter.h"
 
 #include "Cafe/Filesystem/fsc.h"
-#include "Common/FileStream.h"
+#include "Cafe/Filesystem/ZArchiveVFS.h"
+#include "Common/VFSFileStream.h"
 
 #include <zarchive/zarchivereader.h>
 #include <zarchive/zarchivewriter.h>
 
+#include <algorithm>
 #include <memory>
 #include <vector>
 
@@ -19,7 +21,11 @@ namespace TitleConverter
 		struct WriterContext
 		{
 			fs::path outputPath;
-			FileStream* fs{nullptr};
+			// Through the frontend's file system, not the OS's: a destination
+			// the host application authorised - a SAF tree on Android - is not
+			// a path open() would take. VFSFileStream falls back to the native
+			// file when there is no frontend to ask.
+			VFSFileStream* fs{nullptr};
 			ZArchiveWriter* zaWriter{nullptr};
 			bool isValid{false};
 
@@ -45,7 +51,7 @@ namespace TitleConverter
 			static void NewOutputFile(const int32_t partIndex, void* _ctx)
 			{
 				WriterContext* ctx = (WriterContext*)_ctx;
-				ctx->fs = FileStream::createFile2(ctx->outputPath);
+				ctx->fs = VFSFileStream::createFile2(ctx->outputPath);
 				if (!ctx->fs)
 					ctx->isValid = false;
 			}
@@ -162,6 +168,44 @@ namespace TitleConverter
 		};
 	} // namespace
 
+	namespace
+	{
+		// Rename is the cheap way and the only one that is atomic, but a
+		// frontend's file system does not have to implement it - Android's SAF
+		// backend is one that may not - so a failure falls back to copying the
+		// bytes across and dropping the temporary file afterwards.
+		bool MoveIntoPlace(const fs::path& from, const fs::path& to)
+		{
+			if (VFSFileStream::Rename(from, to))
+				return true;
+
+			std::unique_ptr<VFSFileStream> src(VFSFileStream::openFile2(from));
+			if (!src)
+				return false;
+			std::unique_ptr<VFSFileStream> dst(VFSFileStream::createFile2(to));
+			if (!dst)
+				return false;
+
+			std::vector<uint8> buffer(1024 * 1024);
+			uint64 remaining = src->GetSize();
+			while (remaining > 0)
+			{
+				const uint32 chunk = (uint32)std::min<uint64>(remaining, buffer.size());
+				if (src->readData(buffer.data(), chunk) != chunk)
+					return false;
+				if (dst->writeData(buffer.data(), (sint32)chunk) != (sint32)chunk)
+					return false;
+				remaining -= chunk;
+			}
+			dst->Flush();
+			dst.reset();
+			src.reset();
+
+			VFSFileStream::Remove(from);
+			return true;
+		}
+	}
+
 	bool ConvertToWUA(std::span<TitleInfo*> titles, const fs::path& outputPath,
 		const std::atomic_bool& cancel,
 		const std::function<void(const Progress&)>& onProgress,
@@ -189,8 +233,7 @@ namespace TitleConverter
 			if (!ctx.isValid)
 			{
 				error = "could not create the output file";
-				std::error_code ec;
-				fs::remove(outputPathTmp, ec);
+				VFSFileStream::Remove(outputPathTmp);
 				return false;
 			}
 
@@ -199,8 +242,7 @@ namespace TitleConverter
 				error = cancel.load() ? "cancelled" : "could not read the title";
 				delete ctx.fs;
 				ctx.fs = nullptr;
-				std::error_code ec;
-				fs::remove(outputPathTmp, ec);
+				VFSFileStream::Remove(outputPathTmp);
 				return false;
 			}
 
@@ -214,22 +256,19 @@ namespace TitleConverter
 			return false;
 
 		// The archive has to be readable back, or it is not worth keeping.
-		std::unique_ptr<ZArchiveReader> reader(ZArchiveReader::OpenFromFile(outputPathTmp));
+		std::unique_ptr<ZArchiveReader> reader(ZArchive_OpenFromPath(outputPathTmp));
 		if (!reader)
 		{
 			error = "the archive could not be read back";
-			std::error_code ec;
-			fs::remove(outputPathTmp, ec);
+			VFSFileStream::Remove(outputPathTmp);
 			return false;
 		}
 		reader.reset();
 
-		std::error_code ec;
-		fs::rename(outputPathTmp, outputPath, ec);
-		if (ec)
+		if (!MoveIntoPlace(outputPathTmp, outputPath))
 		{
-			error = fmt::format("could not move the archive into place: {}", ec.message());
-			fs::remove(outputPathTmp, ec);
+			error = "could not move the archive into place";
+			VFSFileStream::Remove(outputPathTmp);
 			return false;
 		}
 		return true;

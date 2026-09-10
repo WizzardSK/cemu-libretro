@@ -97,6 +97,17 @@ bool VFSFileStream::Remove(const fs::path& path)
 	return fs::remove(path, ec);
 }
 
+bool VFSFileStream::Rename(const fs::path& from, const fs::path& to)
+{
+#ifdef RETRO_CORE
+	if (UsesVFS() && s_vfs_interface->rename)
+		return s_vfs_interface->rename(from.string().c_str(), to.string().c_str()) == 0;
+#endif
+	std::error_code ec;
+	fs::rename(from, to, ec);
+	return !ec;
+}
+
 VFSFileStream::VFSFileStream(struct retro_vfs_file_handle* vfs_handle)
 {
 	m_vfsHandle = vfs_handle;
