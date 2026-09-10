@@ -15,6 +15,11 @@ public:
 	// Same question std::filesystem answers, asked of the frontend instead: a
 	// path the frontend hands us does not have to be one the OS can open.
 	static bool IsRegularFile(const fs::path& path);
+	static bool IsDirectory(const fs::path& path);
+	static bool Exists(const fs::path& path);
+	// Deleting through the frontend as well, so that a file created on a SAF
+	// tree can be taken back off it.
+	static bool Remove(const fs::path& path);
 
 	static VFSFileStream* openFile(std::string_view path);
 	static VFSFileStream* openFile(const wchar_t* path, bool allowWrite = false);

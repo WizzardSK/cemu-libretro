@@ -48,6 +48,55 @@ bool VFSFileStream::IsRegularFile(const fs::path& path)
 	return fs::is_regular_file(path, ec);
 }
 
+bool VFSFileStream::IsDirectory(const fs::path& path)
+{
+#ifdef RETRO_CORE
+	if (UsesVFS() && s_vfs_version >= 3 && s_vfs_interface->stat)
+	{
+		const int32_t flags = s_vfs_interface->stat(path.string().c_str(), nullptr);
+		return (flags & RETRO_VFS_STAT_IS_VALID) != 0 && (flags & RETRO_VFS_STAT_IS_DIRECTORY) != 0;
+	}
+	// Without stat there is no way to ask: a directory cannot be opened as a
+	// file, but neither can a path that is not there at all.
+#endif
+	std::error_code ec;
+	return fs::is_directory(path, ec);
+}
+
+bool VFSFileStream::Exists(const fs::path& path)
+{
+#ifdef RETRO_CORE
+	if (UsesVFS())
+	{
+		if (s_vfs_version >= 3 && s_vfs_interface->stat)
+		{
+			const int32_t flags = s_vfs_interface->stat(path.string().c_str(), nullptr);
+			return (flags & RETRO_VFS_STAT_IS_VALID) != 0;
+		}
+		struct retro_vfs_file_handle* handle = s_vfs_interface->open(path.string().c_str(), RETRO_VFS_FILE_ACCESS_READ, RETRO_VFS_FILE_ACCESS_HINT_NONE);
+		if (handle)
+		{
+			s_vfs_interface->close(handle);
+			return true;
+		}
+		// A directory does not open as a file, so fall through and let the OS
+		// answer for the paths it can see.
+	}
+#endif
+	std::error_code ec;
+	return fs::exists(path, ec);
+}
+
+bool VFSFileStream::Remove(const fs::path& path)
+{
+#ifdef RETRO_CORE
+	if (UsesVFS() && s_vfs_interface->remove)
+		return s_vfs_interface->remove(path.string().c_str()) == 0;
+#endif
+	std::error_code ec;
+	return fs::remove(path, ec);
+}
+
 VFSFileStream::VFSFileStream(struct retro_vfs_file_handle* vfs_handle)
 {
 	m_vfsHandle = vfs_handle;

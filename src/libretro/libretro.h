@@ -1729,6 +1729,28 @@ enum retro_mod
  */
 #define RETRO_ENVIRONMENT_GET_VFS_INTERFACE (45 | RETRO_ENVIRONMENT_EXPERIMENTAL)
 
+/* Backported from a newer libretro.h: the frontend's list of locations a core
+ * is allowed to write to. On Android those are SAF trees, handed over as
+ * saf:// paths that only the VFS interface can open - which is what makes them
+ * usable as a destination for a conversion. Guarded so that syncing the header
+ * later does not collide with it. */
+#ifndef RETRO_ENVIRONMENT_GET_VFS_AUTHORIZED_LOCATIONS
+#define RETRO_ENVIRONMENT_GET_VFS_AUTHORIZED_LOCATIONS (93 | RETRO_ENVIRONMENT_EXPERIMENTAL)
+
+struct retro_vfs_authorized_location
+{
+   const char *path;
+   const char *label;
+   unsigned flags;
+};
+
+struct retro_vfs_authorized_locations
+{
+   const struct retro_vfs_authorized_location *locations;
+   size_t count;
+};
+#endif
+
 /**
  * Returns an interface that the core can use
  * to set the state of any accessible device LEDs.

@@ -1,6 +1,7 @@
 // Cemu libretro core - main implementation
 // Routes video/audio/input through libretro frontend callbacks
 
+#include <algorithm>
 #include <thread>
 #include <chrono>
 #include <deque>
@@ -261,6 +262,20 @@ static std::thread s_convert_thread;
 static std::mutex s_convert_mutex;
 static std::string s_convert_status;
 static std::unique_ptr<GameInfo2> s_convert_game_info;
+
+// Where a conversion is allowed to write. The frontend decides that - on
+// Android it is a set of SAF trees rather than anything open() would take - so
+// the destinations are collected from it once the content is known, and only
+// those that pass every precondition are offered. Empty means the conversion
+// options have nothing to act on and are hidden; the reason is what their help
+// text says instead.
+struct LibretroWuaDestination
+{
+	std::string path;
+	std::string label;
+};
+static std::vector<LibretroWuaDestination> s_wua_destinations;
+static std::string s_wua_unavailable_reason;
 // Set as soon as a Vulkan/OpenGL device or renderer has been created, i.e. as soon as
 // normal C++ static-destructor teardown of this DLL becomes unsafe (see retro_unload_game /
 // retro_deinit). This is intentionally separate from s_emu_initialized/s_game_loaded, which
@@ -1182,6 +1197,135 @@ static std::optional<PrecompiledShaderOption> libretro_parse_precompiled_shaders
 	return std::nullopt;
 }
 
+// A SAF URI is not a filesystem path: std::filesystem would put a backslash in
+// it on Windows and normalise parts of it away everywhere. Joining by hand
+// keeps whatever the frontend handed over intact.
+static std::string libretro_path_join(const std::string& dir, const std::string& name)
+{
+	if (dir.empty())
+		return name;
+	std::string joined = dir;
+	if (joined.back() != '/' && joined.back() != '\\')
+		joined += '/';
+	joined += name;
+	return joined;
+}
+
+// The only reliable way to ask whether a directory can be written to is to
+// write something: a SAF tree carries no permission bits a core could read,
+// and a read-only mount answers every question about itself happily right up
+// to the point where the write fails.
+static bool libretro_wua_dir_writable(const std::string& dir)
+{
+	const std::string probe = libretro_path_join(dir, ".cemu_wua_probe");
+	VFSFileStream* fs = VFSFileStream::createFile2(fs::path(probe));
+	if (!fs)
+		return false;
+	delete fs;
+	VFSFileStream::Remove(fs::path(probe));
+	return true;
+}
+
+// Everything a conversion could write to, in the order it is worth offering:
+// beside the content, the system directory and its downloads folder, then
+// whatever the frontend has been authorised to write to (SAF trees on
+// Android). A candidate has to be a directory, has to be writable, and must
+// not already hold the .wua this title would produce.
+static void libretro_collect_wua_destinations()
+{
+	s_wua_destinations.clear();
+	s_wua_unavailable_reason.clear();
+
+	if (s_game_path.empty())
+	{
+		s_wua_unavailable_reason = "no content is loaded";
+		return;
+	}
+
+	const fs::path contentPath = _utf8ToPath(s_game_path);
+	const std::string extension = _pathToUtf8(contentPath.extension());
+	if (libretro_iequals(extension.c_str(), ".wua"))
+	{
+		s_wua_unavailable_reason = "this title is already a .wua";
+		return;
+	}
+
+	const std::string outputName = _pathToUtf8(contentPath.stem()) + ".wua";
+
+	std::vector<LibretroWuaDestination> candidates;
+	auto add = [&candidates](std::string path, std::string label) {
+		if (!path.empty())
+			candidates.push_back({std::move(path), std::move(label)});
+	};
+
+	add(_pathToUtf8(contentPath.parent_path()), "Beside the content");
+
+	const char* system_dir = nullptr;
+	if (environ_cb && environ_cb(RETRO_ENVIRONMENT_GET_SYSTEM_DIRECTORY, &system_dir) && system_dir && *system_dir)
+	{
+		add(system_dir, "System folder");
+		add(libretro_path_join(system_dir, "downloads"), "Downloads folder");
+	}
+
+	if (environ_cb)
+	{
+		struct retro_vfs_authorized_locations locations{};
+		if (environ_cb(RETRO_ENVIRONMENT_GET_VFS_AUTHORIZED_LOCATIONS, &locations) && locations.locations)
+		{
+			for (size_t i = 0; i < locations.count; ++i)
+			{
+				const struct retro_vfs_authorized_location& loc = locations.locations[i];
+				if (!loc.path || !*loc.path)
+					continue;
+				add(loc.path, (loc.label && *loc.label) ? loc.label : loc.path);
+			}
+		}
+	}
+
+	bool sawExisting = false;
+	for (const LibretroWuaDestination& candidate : candidates)
+	{
+		const bool duplicate = std::any_of(s_wua_destinations.begin(), s_wua_destinations.end(),
+			[&candidate](const LibretroWuaDestination& kept) { return kept.path == candidate.path; });
+		if (duplicate)
+			continue;
+		// A saf:// destination needs a writer that goes through the frontend's
+		// VFS; TitleConverter still creates its output with the OS file API,
+		// so offering one would be offering a conversion that cannot finish.
+		if (candidate.path.find("://") != std::string::npos)
+		{
+			if (log_cb)
+				log_cb(RETRO_LOG_INFO, "Cemu: skipping %s as a destination - the converter cannot write through the frontend yet\n", candidate.path.c_str());
+			continue;
+		}
+		if (!VFSFileStream::IsDirectory(fs::path(candidate.path)))
+			continue;
+		if (VFSFileStream::Exists(fs::path(libretro_path_join(candidate.path, outputName))))
+		{
+			sawExisting = true;
+			continue;
+		}
+		if (!libretro_wua_dir_writable(candidate.path))
+			continue;
+		s_wua_destinations.push_back(candidate);
+	}
+
+	if (s_wua_destinations.empty())
+	{
+		s_wua_unavailable_reason = sawExisting
+			? fmt::format("{} already exists everywhere this core may write", outputName)
+			: "there is nowhere this core may write";
+	}
+
+	if (log_cb)
+	{
+		log_cb(RETRO_LOG_INFO, "Cemu: %u place(s) to convert to%s%s\n",
+			(unsigned)s_wua_destinations.size(),
+			s_wua_unavailable_reason.empty() ? "" : ": ",
+			s_wua_unavailable_reason.c_str());
+	}
+}
+
 static std::optional<CafeConsoleLanguage> libretro_parse_console_language(const char* v)
 {
 	if (!v) return std::nullopt;
@@ -1235,6 +1379,22 @@ static void libretro_apply_screen_layout()
 	WindowSystem::GetWindowInfo().pad_open = padVisible;
 }
 
+// Both conversion options are pointless without a destination - the title is
+// already a .wua, or nothing the core may write to is free - so they come off
+// the menu entirely, and the help text of the one that remains visible in the
+// .opt file says why.
+static void libretro_update_convert_visibility()
+{
+	if (!environ_cb)
+		return;
+	const bool available = !s_wua_destinations.empty();
+	for (const char* key : {"cemu_wua_output_dir", "cemu_convert_to_wua"})
+	{
+		struct retro_core_option_display display{key, available};
+		environ_cb(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &display);
+	}
+}
+
 static void libretro_update_screen_layout_visibility()
 {
 	if (!environ_cb)
@@ -1262,6 +1422,7 @@ static bool RETRO_CALLCONV libretro_update_options_display()
 			s_screen_layout_count = (unsigned)n;
 	}
 	libretro_update_screen_layout_visibility();
+	libretro_update_convert_visibility();
 	return true;
 }
 
@@ -1665,7 +1826,9 @@ static const char* libretro_option_category(const char* key)
 		{"cemu_cpu_mode", "system"},
 		{"cemu_console_language", "system"},
 		{"cemu_thread_quantum", "system"},
-		{"cemu_convert_to_wua", "system"},
+
+		{"cemu_wua_output_dir", "convert"},
+		{"cemu_convert_to_wua", "convert"},
 
 		{"cemu_wiimote_input", "input"},
 
@@ -1817,11 +1980,16 @@ static bool libretro_set_core_options_v2(retro_environment_t cb, const struct re
 		{"input", "Input", "Controllers beyond the GamePad."},
 		{"addons", "Add-ons", "The toys-to-life peripherals a few titles ask for."},
 		{"audio", "Audio", "Sound output."},
+		{"convert", "WUX/WUD Convert", "Writing the loaded title out as a single .wua archive instead of playing it."},
 		{"logging", "Logging", "Extra logging, for working out why something misbehaves."},
 		{nullptr, nullptr, nullptr},
 	};
 
-	if (definitions.empty())
+	// Rebuilt on every call rather than once: the destinations for a conversion
+	// are not known until content is loaded, so the core publishes its options
+	// again from retro_load_game. The strings stay in the deque - the frontend
+	// copies what it needs, but nothing here promises when.
+	definitions.clear();
 	{
 		auto keep = [](std::string value) -> const char* {
 			storage.push_back(std::move(value));
@@ -1847,6 +2015,37 @@ static bool libretro_set_core_options_v2(retro_environment_t cb, const struct re
 			def.key = var->key;
 			def.desc = keep(desc);
 			def.category_key = libretro_option_category(var->key);
+
+			// The output directory is whatever the frontend turned out to
+			// allow, so its values are built here rather than written above.
+			if (strcmp(var->key, "cemu_wua_output_dir") == 0)
+			{
+				def.info = keep(s_wua_destinations.empty()
+					? fmt::format("Nothing to convert to: {}.", s_wua_unavailable_reason.empty()
+						? std::string("no destination is available")
+						: s_wua_unavailable_reason)
+					: std::string("Where the .wua is written. The filesystem needs room for it - "
+						"a conversion that runs out of space fails at the end."));
+
+				size_t index = 0;
+				for (const LibretroWuaDestination& destination : s_wua_destinations)
+				{
+					if (index + 1 >= RETRO_NUM_CORE_OPTION_VALUES_MAX)
+						break;
+					def.values[index].value = keep(destination.path);
+					def.values[index].label = keep(fmt::format("{} ({})", destination.label, destination.path));
+					++index;
+				}
+				if (index == 0)
+				{
+					def.values[index].value = keep(std::string("unavailable"));
+					def.values[index].label = keep(std::string("Unavailable"));
+					++index;
+				}
+				def.default_value = def.values[0].value;
+				definitions.push_back(def);
+				continue;
+			}
 
 			size_t count = 0;
 			size_t pos = 0;
@@ -1878,6 +2077,8 @@ static bool libretro_set_core_options_v2(retro_environment_t cb, const struct re
 	struct retro_core_options_v2 options{categories, definitions.data()};
 	return cb(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_V2, &options);
 }
+
+static void libretro_publish_core_options(retro_environment_t cb);
 
 RETRO_API void retro_set_environment(retro_environment_t cb)
 {
@@ -1921,6 +2122,19 @@ RETRO_API void retro_set_environment(retro_environment_t cb)
 	cb(RETRO_ENVIRONMENT_SET_SUPPORT_NO_GAME, &no_game);
 
 	// Set up core options (matching danprice/Cemu-Libretro Windows core where applicable)
+	libretro_publish_core_options(cb);
+
+	{
+		struct retro_core_options_update_display_callback update_display{libretro_update_options_display};
+		cb(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_UPDATE_DISPLAY_CALLBACK, &update_display);
+	}
+}
+
+// Published from retro_set_environment, and again from retro_load_game once
+// the destinations for a conversion are known - the option list carries them,
+// and they depend on the content.
+static void libretro_publish_core_options(retro_environment_t cb)
+{
 	static const struct retro_variable variables[] = {
 		{"cemu_cpu_mode", "CPU Mode (restart); auto|singlecore_interpreter|singlecore_recompiler|multicore_recompiler|multicore_interpreter"},
 		{"cemu_console_language", "Console Language; English|Japanese|French|German|Italian|Spanish|Chinese|Korean|Dutch|Portuguese|Russian|Taiwanese"},
@@ -1934,7 +2148,8 @@ RETRO_API void retro_set_environment(retro_environment_t cb)
 		{"cemu_internal_resolution", "Internal Resolution; 1280x720|1920x1080|2560x1440|3840x2160"},
 		{"cemu_fullscreen_scaling", "Fullscreen Scaling; keep_aspect|stretch"},
 		{"cemu_thread_quantum", "Thread Quantum; 45000|20000|60000|80000|100000"},
-		{"cemu_convert_to_wua", "Convert to .wua Instead of Booting; disabled|enabled"},
+		{"cemu_wua_output_dir", "Output Directory; <dynamic>"},
+		{"cemu_convert_to_wua", "Start Conversion to WUA; disabled|enabled"},
 		{"cemu_audio_latency", "Audio Latency; 2|1|3|4"},
 		{"cemu_vsync", "VSync; disabled|enabled"},
 		{"cemu_shader_compile_notification", "Shader Compile Notification; enabled|disabled"},
@@ -1965,11 +2180,6 @@ RETRO_API void retro_set_environment(retro_environment_t cb)
 		s_core_options_supported = true;
 	else
 		s_core_options_supported = libretro_set_core_variables(cb, variables);
-
-	{
-		struct retro_core_options_update_display_callback update_display{libretro_update_options_display};
-		cb(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_UPDATE_DISPLAY_CALLBACK, &update_display);
-	}
 }
 
 RETRO_API void retro_set_video_refresh(retro_video_refresh_t cb) { video_cb = cb; }
@@ -2260,9 +2470,9 @@ static void libretro_set_convert_status(std::string text)
 	s_convert_status = std::move(text);
 }
 
-// Everything the title is made of - base, update, DLC - written next to the
-// file the frontend was pointed at. What a user wants out of this is one
-// portable file, and a .wua without the update is not that.
+// Everything the title is made of - base, update, DLC - written into the folder
+// the user picked. What a user wants out of this is one portable file, and a
+// .wua without the update is not that.
 static void libretro_start_wua_conversion(TitleId baseTitleId, const fs::path& gamePath)
 {
 	s_convert_game_info = std::make_unique<GameInfo2>(CafeTitleList::GetGameInfo(baseTitleId));
@@ -2281,33 +2491,56 @@ static void libretro_start_wua_conversion(TitleId baseTitleId, const fs::path& g
 	for (TitleInfo& aoc : s_convert_game_info->GetAOC())
 		titles.push_back(&aoc);
 
-	fs::path outputPath = gamePath;
-	if (fs::is_directory(outputPath))
-		outputPath += ".wua";
-	else
-		outputPath.replace_extension(".wua");
-
-	if (fs::exists(outputPath))
+	// Where it goes: the destination the user picked, as long as it is still
+	// one of the ones offered. A value left in the .opt from another title, or
+	// a folder that has since gone, falls back to the first offer.
+	std::string outputDir;
+	if (const char* chosen = libretro_get_option_value("cemu_wua_output_dir"))
 	{
-		libretro_set_convert_status(fmt::format("Not converting: {} already exists", _pathToUtf8(outputPath.filename())));
+		for (const LibretroWuaDestination& destination : s_wua_destinations)
+		{
+			if (destination.path == chosen)
+			{
+				outputDir = destination.path;
+				break;
+			}
+		}
+	}
+	if (outputDir.empty() && !s_wua_destinations.empty())
+		outputDir = s_wua_destinations.front().path;
+	if (outputDir.empty())
+	{
+		libretro_set_convert_status(fmt::format("Not converting: {}",
+			s_wua_unavailable_reason.empty() ? std::string("no destination is available") : s_wua_unavailable_reason));
 		s_convert_finished = true;
 		return;
 	}
 
-	// A .wua is smaller than the file it came from - it is compressed and no
-	// longer encrypted - so the source size is a safe floor to ask for.
-	std::error_code ec;
-	if (fs::is_regular_file(gamePath, ec))
+	const std::string outputName = _pathToUtf8(gamePath.stem()) + ".wua";
+	const fs::path outputPath = fs::path(libretro_path_join(outputDir, outputName));
+
+	// The preconditions are checked again here rather than trusted from the
+	// menu: that was built when the content loaded, and both the folder and
+	// the file are somebody else's to change in the meantime. Free space is
+	// deliberately not among them - it can run out during the conversion just
+	// as easily, and the write reports that itself.
+	if (!VFSFileStream::IsDirectory(fs::path(outputDir)))
 	{
-		const uintmax_t needed = fs::file_size(gamePath, ec);
-		const fs::space_info space = fs::space(outputPath.parent_path(), ec);
-		if (!ec && space.available < needed)
-		{
-			libretro_set_convert_status(fmt::format("Not converting: {} MiB free, {} MiB needed",
-				space.available / 1024 / 1024, needed / 1024 / 1024));
-			s_convert_finished = true;
-			return;
-		}
+		libretro_set_convert_status(fmt::format("Not converting: {} is not there any more", outputDir));
+		s_convert_finished = true;
+		return;
+	}
+	if (VFSFileStream::Exists(outputPath))
+	{
+		libretro_set_convert_status(fmt::format("Not converting: {} already exists", outputName));
+		s_convert_finished = true;
+		return;
+	}
+	if (!libretro_wua_dir_writable(outputDir))
+	{
+		libretro_set_convert_status(fmt::format("Not converting: cannot write to {}", outputDir));
+		s_convert_finished = true;
+		return;
 	}
 
 	libretro_set_convert_status("Counting files...");
@@ -3067,6 +3300,15 @@ RETRO_API bool retro_load_game(const struct retro_game_info* game)
 
 	// Store game path - actual launch happens in context_reset when GL is ready
 	s_game_path = game->path;
+
+	// The conversion options describe what can be done with *this* content, so
+	// they are worked out here and the option list is published again with
+	// them. A frontend that already built its menu sees the change through the
+	// update-display callback.
+	libretro_collect_wua_destinations();
+	if (environ_cb)
+		libretro_publish_core_options(environ_cb);
+	libretro_update_convert_visibility();
 
 	// Vulkan: context_reset is called by RetroArch after RETRO_HW_CONTEXT_VULKAN is set up
 
