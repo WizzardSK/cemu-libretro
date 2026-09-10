@@ -423,6 +423,7 @@ static unsigned s_screen_layout_index = 0;
 enum class LibretroLayoutButton
 {
 	None,
+	Select,
 	L3,
 	R3,
 	L3R3,
@@ -1213,6 +1214,7 @@ static LibretroLayoutButton libretro_parse_layout_button(const char* v)
 {
 	if (!v)
 		return LibretroLayoutButton::None;
+	if (libretro_drc_iequals(v, "Select")) return LibretroLayoutButton::Select;
 	if (libretro_drc_iequals(v, "L3")) return LibretroLayoutButton::L3;
 	if (libretro_drc_iequals(v, "R3")) return LibretroLayoutButton::R3;
 	if (libretro_drc_iequals(v, "L3 + R3")) return LibretroLayoutButton::L3R3;
@@ -1332,6 +1334,7 @@ static void libretro_read_screen_layout_options()
 		switch (s_next_layout_button)
 		{
 		case LibretroLayoutButton::None: break;
+		case LibretroLayoutButton::Select: name = "Select"; break;
 		case LibretroLayoutButton::L3: name = "L3"; break;
 		case LibretroLayoutButton::R3: name = "R3"; break;
 		case LibretroLayoutButton::L3R3: name = "L3 + R3"; break;
@@ -1945,7 +1948,7 @@ RETRO_API void retro_set_environment(retro_environment_t cb)
 		{"cemu_screen_layout3", "Layout 3; Default Screen|GamePad Screen|Side by Side|Top Bottom|Picture in Picture"},
 		{"cemu_screen_layout4", "Layout 4; Default Screen|GamePad Screen|Side by Side|Top Bottom|Picture in Picture"},
 		{"cemu_screen_layout5", "Layout 5; Default Screen|GamePad Screen|Side by Side|Top Bottom|Picture in Picture"},
-		{"cemu_next_screen_layout_button", "Next Screen Layout; Disabled|L3|R3|L3 + R3|Select + L3|Select + R3"},
+		{"cemu_next_screen_layout_button", "Next Screen Layout; Disabled|Select|L3|R3|L3 + R3|Select + L3|Select + R3"},
 		{"cemu_next_screen_layout_key", "Next Screen Layout Key; Disabled|F1|F2|F3|F4|F5|F6|F7|F8|F9|F10|F11|F12|Tab|Backspace|Insert|Delete|Home|End|Page Up|Page Down"},
 		{"cemu_drc_position", "GamePad Position; normal|swapped"},
 		{"cemu_wiimote_input", "Wii Remote Input; port1_shared|ports2_4|disabled"},
@@ -3350,6 +3353,7 @@ static void libretro_poll_input()
 		switch (s_next_layout_button)
 		{
 		case LibretroLayoutButton::None: break;
+		case LibretroLayoutButton::Select: down = select; break;
 		case LibretroLayoutButton::L3: down = l3; break;
 		case LibretroLayoutButton::R3: down = r3; break;
 		case LibretroLayoutButton::L3R3: down = l3 && r3; break;
