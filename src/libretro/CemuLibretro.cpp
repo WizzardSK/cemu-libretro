@@ -1197,6 +1197,18 @@ static std::optional<PrecompiledShaderOption> libretro_parse_precompiled_shaders
 	return std::nullopt;
 }
 
+// Writing a core option back. The frontend owns the value, but a core is
+// allowed to set one, and this core has one value it must never leave behind:
+// the conversion switch.
+static void libretro_set_option_value(const char* key, const char* value)
+{
+	if (!environ_cb)
+		return;
+	struct retro_variable var{key, value};
+	if (!environ_cb(RETRO_ENVIRONMENT_SET_VARIABLE, &var) && log_cb)
+		log_cb(RETRO_LOG_WARN, "Cemu: the frontend would not set %s back to %s\n", key, value);
+}
+
 // A SAF URI is not a filesystem path: std::filesystem would put a backslash in
 // it on Windows and normalise parts of it away everywhere. Joining by hand
 // keeps whatever the frontend handed over intact.
@@ -1209,21 +1221,6 @@ static std::string libretro_path_join(const std::string& dir, const std::string&
 		joined += '/';
 	joined += name;
 	return joined;
-}
-
-// The only reliable way to ask whether a directory can be written to is to
-// write something: a SAF tree carries no permission bits a core could read,
-// and a read-only mount answers every question about itself happily right up
-// to the point where the write fails.
-static bool libretro_wua_dir_writable(const std::string& dir)
-{
-	const std::string probe = libretro_path_join(dir, ".cemu_wua_probe");
-	VFSFileStream* fs = VFSFileStream::createFile2(fs::path(probe));
-	if (!fs)
-		return false;
-	delete fs;
-	VFSFileStream::Remove(fs::path(probe));
-	return true;
 }
 
 // Everything a conversion could write to, in the order it is worth offering:
@@ -1260,12 +1257,11 @@ static void libretro_collect_wua_destinations()
 
 	add(_pathToUtf8(contentPath.parent_path()), "Beside the content");
 
+	// The system directory itself is for the frontend's own files, so only the
+	// downloads folder beside it is offered.
 	const char* system_dir = nullptr;
 	if (environ_cb && environ_cb(RETRO_ENVIRONMENT_GET_SYSTEM_DIRECTORY, &system_dir) && system_dir && *system_dir)
-	{
-		add(system_dir, "System folder");
 		add(libretro_path_join(system_dir, "downloads"), "Downloads folder");
-	}
 
 	if (environ_cb)
 	{
@@ -1305,8 +1301,6 @@ static void libretro_collect_wua_destinations()
 			sawExisting = true;
 			continue;
 		}
-		if (!libretro_wua_dir_writable(candidate.path))
-			continue;
 		s_wua_destinations.push_back(candidate);
 	}
 
@@ -1387,7 +1381,10 @@ static void libretro_update_convert_visibility()
 {
 	if (!environ_cb)
 		return;
-	const bool available = !s_wua_destinations.empty();
+	// Nothing in here is actionable while a conversion is running: it is the
+	// only thing the core is doing, and it cannot be pointed somewhere else
+	// halfway through.
+	const bool available = !s_wua_destinations.empty() && !s_convert_mode.load();
 	for (const char* key : {"cemu_wua_output_dir", "cemu_convert_to_wua"})
 	{
 		struct retro_core_option_display display{key, available};
@@ -1527,6 +1524,35 @@ static void libretro_next_screen_layout()
 
 static void libretro_apply_core_options()
 {
+	// The conversion switch is not a setting, it is a request, and it takes
+	// effect on the next start of this title rather than now: the emulator is
+	// up and holding the whole game in memory, which is the memory the
+	// conversion wants. Say so, and leave the value alone - it has to survive
+	// the restart, and retro_load_game turns it off again on the way back in.
+	if (!s_convert_mode.load())
+	{
+		if (const char* v = libretro_get_option_value("cemu_convert_to_wua"))
+		{
+			static bool s_told = false;
+			const bool armed = libretro_iequals(v, "enabled");
+			if (armed && !s_told)
+			{
+				s_told = true;
+				if (environ_cb)
+				{
+					struct retro_message message{"Restart the content to convert it to .wua", 300};
+					environ_cb(RETRO_ENVIRONMENT_SET_MESSAGE, &message);
+				}
+				if (log_cb)
+					log_cb(RETRO_LOG_INFO, "Cemu: conversion armed - it runs on the next start of this title\n");
+			}
+			else if (!armed)
+			{
+				s_told = false;
+			}
+		}
+	}
+
 	if (!environ_cb)
 		return;
 
@@ -2536,12 +2562,6 @@ static void libretro_start_wua_conversion(TitleId baseTitleId, const fs::path& g
 		s_convert_finished = true;
 		return;
 	}
-	if (!libretro_wua_dir_writable(outputDir))
-	{
-		libretro_set_convert_status(fmt::format("Not converting: cannot write to {}", outputDir));
-		s_convert_finished = true;
-		return;
-	}
 
 	libretro_set_convert_status("Counting files...");
 	cemuLog_log(LogType::Force, "Converting {} to {}", _pathToUtf8(gamePath), _pathToUtf8(outputPath));
@@ -3154,6 +3174,10 @@ RETRO_API bool retro_load_game(const struct retro_game_info* game)
 	// comes up at all.
 	if (const char* v = libretro_get_option_value("cemu_convert_to_wua"))
 		s_convert_mode.store(libretro_iequals(v, "enabled"));
+	// Whatever the answer, the switch goes back off here. It is armed for one
+	// restart and no more: a value left on would convert the next title the
+	// frontend loads, which is exactly what nobody asks for.
+	libretro_set_option_value("cemu_convert_to_wua", "disabled");
 	if (s_convert_mode.load())
 	{
 		s_convert_finished = false;
@@ -3389,6 +3413,13 @@ static void libretro_stop_system_services()
 
 RETRO_API void retro_unload_game()
 {
+	// Content going away for any reason other than a restart - closed, or
+	// swapped for another game - means the conversion was not asked for after
+	// all. Restart does not come through here: it relaunches the frontend from
+	// retro_reset and never unloads, which is what leaves the switch armed for
+	// exactly that path.
+	libretro_set_option_value("cemu_convert_to_wua", "disabled");
+
 	// A GPU device/renderer may have been created even if the title failed to finish
 	// loading (s_game_loaded false), and that renderer still has to go.
 	if (!s_game_loaded && !s_gpu_context_created)
@@ -3884,6 +3915,22 @@ RETRO_API void retro_run()
 				// went wrong.
 				if (log_cb)
 					log_cb(RETRO_LOG_INFO, "Cemu: %s\n", s_shown.c_str());
+			}
+		}
+
+		// Written, flushed, and nothing else for this core to do: ask the
+		// frontend to close the content rather than sit on a black screen. The
+		// wait is so the last message - the name it was written under, or why
+		// it failed - is on screen long enough to read.
+		if (s_convert_finished.load())
+		{
+			static unsigned s_frames_after_finish = 0;
+			if (s_frames_after_finish++ >= 240 && environ_cb)
+			{
+				s_frames_after_finish = 0;
+				if (log_cb)
+					log_cb(RETRO_LOG_INFO, "Cemu: conversion done, asking the frontend to close the content\n");
+				environ_cb(RETRO_ENVIRONMENT_SHUTDOWN, nullptr);
 			}
 		}
 
