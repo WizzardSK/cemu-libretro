@@ -273,6 +273,10 @@ struct LibretroWuaDestination
 {
 	std::string path;
 	std::string label;
+	// A .wua for this title is already sitting there. Not a reason to drop the
+	// destination - the label says so and the conversion overwrites it if that
+	// is what the user picks.
+	bool hasExisting{false};
 };
 static std::vector<LibretroWuaDestination> s_wua_destinations;
 static std::string s_wua_unavailable_reason;
@@ -1278,8 +1282,7 @@ static void libretro_collect_wua_destinations()
 		}
 	}
 
-	bool sawExisting = false;
-	for (const LibretroWuaDestination& candidate : candidates)
+	for (LibretroWuaDestination candidate : candidates)
 	{
 		const bool duplicate = std::any_of(s_wua_destinations.begin(), s_wua_destinations.end(),
 			[&candidate](const LibretroWuaDestination& kept) { return kept.path == candidate.path; });
@@ -1287,20 +1290,12 @@ static void libretro_collect_wua_destinations()
 			continue;
 		if (!VFSFileStream::IsDirectory(fs::path(candidate.path)))
 			continue;
-		if (VFSFileStream::Exists(fs::path(libretro_path_join(candidate.path, outputName))))
-		{
-			sawExisting = true;
-			continue;
-		}
-		s_wua_destinations.push_back(candidate);
+		candidate.hasExisting = VFSFileStream::Exists(fs::path(libretro_path_join(candidate.path, outputName)));
+		s_wua_destinations.push_back(std::move(candidate));
 	}
 
 	if (s_wua_destinations.empty())
-	{
-		s_wua_unavailable_reason = sawExisting
-			? fmt::format("{} already exists everywhere this core may write", outputName)
-			: "there is nowhere this core may write";
-	}
+		s_wua_unavailable_reason = "there is nowhere this core may write";
 
 	if (log_cb)
 	{
@@ -2093,7 +2088,9 @@ static bool libretro_set_core_options_v2(retro_environment_t cb, const struct re
 					if (index + 1 >= RETRO_NUM_CORE_OPTION_VALUES_MAX)
 						break;
 					def.values[index].value = keep(destination.path);
-					def.values[index].label = keep(fmt::format("{} ({})", destination.label, destination.path));
+					def.values[index].label = keep(destination.hasExisting
+						? fmt::format("{} ({}) - overwrites the .wua already there", destination.label, destination.path)
+						: fmt::format("{} ({})", destination.label, destination.path));
 					++index;
 				}
 				if (index == 0)
@@ -2590,12 +2587,10 @@ static void libretro_start_wua_conversion(TitleId baseTitleId, const fs::path& g
 		s_convert_finished = true;
 		return;
 	}
-	if (VFSFileStream::Exists(outputPath))
-	{
-		libretro_set_convert_status(fmt::format("Not converting: {} already exists", outputName));
-		s_convert_finished = true;
-		return;
-	}
+	// An existing .wua is not a refusal: the destination said so in its label,
+	// and picking it anyway is picking to replace it. It goes just before the
+	// finished archive is moved into place, not here, so a conversion that
+	// fails leaves the old one where it was.
 
 	libretro_set_convert_status("Counting files...");
 	cemuLog_log(LogType::Force, "Converting {} to {}", _pathToUtf8(gamePath), _pathToUtf8(outputPath));

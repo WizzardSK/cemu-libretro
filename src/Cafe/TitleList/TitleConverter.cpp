@@ -176,6 +176,13 @@ namespace TitleConverter
 		// bytes across and dropping the temporary file afterwards.
 		bool MoveIntoPlace(const fs::path& from, const fs::path& to)
 		{
+			// Only now, with a finished archive in hand: replacing what was
+			// there is what the user chose when they picked a destination whose
+			// label said it would be overwritten, but a conversion that failed
+			// on the way should have left it alone.
+			if (VFSFileStream::Exists(to))
+				VFSFileStream::Remove(to);
+
 			if (VFSFileStream::Rename(from, to))
 				return true;
 
