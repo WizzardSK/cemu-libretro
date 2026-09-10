@@ -1512,6 +1512,37 @@ static void libretro_start_wua_conversion(TitleId baseTitleId, const fs::path& g
 static bool libretro_shutdown_title_for_exit();
 static void libretro_set_convert_status(std::string text);
 
+// What the conversion has to read, in bytes: the base title plus whatever
+// update and DLC go into the same archive. A .wua ends up smaller than that -
+// it is compressed and no longer encrypted - so it is a safe floor to ask the
+// destination for. Directories are walked; a path the local file system cannot
+// see contributes nothing, which is the SAF case and is handled by the caller.
+static uintmax_t libretro_title_input_size(const std::vector<TitleInfo*>& titles)
+{
+	uintmax_t total = 0;
+	for (const TitleInfo* title : titles)
+	{
+		if (!title)
+			continue;
+		const fs::path path = title->GetPath();
+		std::error_code ec;
+		if (fs::is_regular_file(path, ec))
+		{
+			total += fs::file_size(path, ec);
+			continue;
+		}
+		if (!fs::is_directory(path, ec))
+			continue;
+		for (fs::recursive_directory_iterator it(path, fs::directory_options::skip_permission_denied, ec), end;
+			it != end && !ec; it.increment(ec))
+		{
+			if (it->is_regular_file(ec))
+				total += it->file_size(ec);
+		}
+	}
+	return total;
+}
+
 // Acting on the conversion switch. The title stops first - its memory is the
 // memory the conversion wants - and the conversion then runs in this same
 // process, so nothing has to be written down and picked up on a later run.
@@ -2577,10 +2608,8 @@ static void libretro_start_wua_conversion(TitleId baseTitleId, const fs::path& g
 	const fs::path outputPath = fs::path(libretro_path_join(outputDir, outputName));
 
 	// The preconditions are checked again here rather than trusted from the
-	// menu: that was built when the content loaded, and both the folder and
-	// the file are somebody else's to change in the meantime. Free space is
-	// deliberately not among them - it can run out during the conversion just
-	// as easily, and the write reports that itself.
+	// menu: that was built when the content loaded, and the folder is somebody
+	// else's to change in the meantime.
 	if (!VFSFileStream::IsDirectory(fs::path(outputDir)))
 	{
 		libretro_set_convert_status(fmt::format("Not converting: {} is not there any more", outputDir));
@@ -2591,6 +2620,24 @@ static void libretro_start_wua_conversion(TitleId baseTitleId, const fs::path& g
 	// and picking it anyway is picking to replace it. It goes just before the
 	// finished archive is moved into place, not here, so a conversion that
 	// fails leaves the old one where it was.
+
+	// Room for it, where that can be asked. A saf:// destination cannot be
+	// asked - nothing in the VFS reports free space - so there the write is
+	// what finds out, but a local folder can say no before the user spends
+	// minutes on it.
+	if (outputDir.find("://") == std::string::npos)
+	{
+		const uintmax_t needed = libretro_title_input_size(titles);
+		std::error_code ec;
+		const fs::space_info space = fs::space(fs::path(outputDir), ec);
+		if (!ec && needed > 0 && space.available < needed)
+		{
+			libretro_set_convert_status(fmt::format("Not converting: {} MiB free in {}, {} MiB needed",
+				space.available / 1024 / 1024, outputDir, needed / 1024 / 1024));
+			s_convert_finished = true;
+			return;
+		}
+	}
 
 	libretro_set_convert_status("Counting files...");
 	cemuLog_log(LogType::Force, "Converting {} to {}", _pathToUtf8(gamePath), _pathToUtf8(outputPath));
