@@ -432,6 +432,25 @@ enum class LibretroLayoutButton
 static LibretroLayoutButton s_next_layout_button = LibretroLayoutButton::None;
 static bool s_next_layout_button_held = false;
 
+// The same step, on a keyboard key. A frontend overlay can send one of these
+// without spending a RetroPad button on it, which is how the Nintendo DS cores
+// let an overlay switch layouts.
+struct LibretroLayoutKey
+{
+	const char* name;
+	unsigned key;
+};
+static const LibretroLayoutKey kLayoutKeys[] = {
+	{"F1", RETROK_F1}, {"F2", RETROK_F2}, {"F3", RETROK_F3}, {"F4", RETROK_F4},
+	{"F5", RETROK_F5}, {"F6", RETROK_F6}, {"F7", RETROK_F7}, {"F8", RETROK_F8},
+	{"F9", RETROK_F9}, {"F10", RETROK_F10}, {"F11", RETROK_F11}, {"F12", RETROK_F12},
+	{"Tab", RETROK_TAB}, {"Backspace", RETROK_BACKSPACE}, {"Insert", RETROK_INSERT},
+	{"Delete", RETROK_DELETE}, {"Home", RETROK_HOME}, {"End", RETROK_END},
+	{"Page Up", RETROK_PAGEUP}, {"Page Down", RETROK_PAGEDOWN},
+};
+static unsigned s_next_layout_key = RETROK_UNKNOWN;
+static bool s_next_layout_key_held = false;
+
 static retro_hw_render_callback s_hw_render{};
 
 #ifdef ENABLE_VULKAN
@@ -1276,6 +1295,33 @@ static void libretro_read_screen_layout_options()
 	if (s_screen_layout_index >= s_screen_layout_count)
 		s_screen_layout_index = 0;
 
+	const unsigned previousKey = s_next_layout_key;
+	s_next_layout_key = RETROK_UNKNOWN;
+	if (const char* v = libretro_get_option_value("cemu_next_screen_layout_key"))
+	{
+		for (const LibretroLayoutKey& k : kLayoutKeys)
+		{
+			if (libretro_drc_iequals(v, k.name))
+			{
+				s_next_layout_key = k.key;
+				break;
+			}
+		}
+	}
+	if (s_next_layout_key != previousKey && log_cb)
+	{
+		const char* name = "nothing";
+		for (const LibretroLayoutKey& k : kLayoutKeys)
+		{
+			if (k.key == s_next_layout_key)
+			{
+				name = k.name;
+				break;
+			}
+		}
+		log_cb(RETRO_LOG_INFO, "Cemu: next screen layout is also on key %s\n", name);
+	}
+
 	const LibretroLayoutButton previousButton = s_next_layout_button;
 	s_next_layout_button = libretro_parse_layout_button(libretro_get_option_value("cemu_next_screen_layout_button"));
 	if (s_next_layout_button != previousButton && log_cb)
@@ -1595,6 +1641,7 @@ static const char* libretro_option_category(const char* key)
 		{"cemu_screen_layout4", "screen"},
 		{"cemu_screen_layout5", "screen"},
 		{"cemu_next_screen_layout_button", "screen"},
+		{"cemu_next_screen_layout_key", "screen"},
 		{"cemu_drc_position", "screen"},
 
 		{"cemu_gpu_api", "video"},
@@ -1844,6 +1891,7 @@ RETRO_API void retro_set_environment(retro_environment_t cb)
 		{"cemu_screen_layout4", "Layout 4; Default Screen|GamePad Screen|Side by Side|Top Bottom|Picture in Picture"},
 		{"cemu_screen_layout5", "Layout 5; Default Screen|GamePad Screen|Side by Side|Top Bottom|Picture in Picture"},
 		{"cemu_next_screen_layout_button", "Next Screen Layout; Disabled|L3|R3|L3 + R3|Select + L3|Select + R3"},
+		{"cemu_next_screen_layout_key", "Next Screen Layout Key; Disabled|F1|F2|F3|F4|F5|F6|F7|F8|F9|F10|F11|F12|Tab|Backspace|Insert|Delete|Home|End|Page Up|Page Down"},
 		{"cemu_drc_position", "GamePad Position; normal|swapped"},
 		{"cemu_wiimote_input", "Wii Remote Input; port1_shared|ports2_4|disabled"},
 		{"cemu_log_filesystem", "Log File Access (debugging); disabled|enabled"},
@@ -3256,6 +3304,16 @@ static void libretro_poll_input()
 		if (down && !s_next_layout_button_held)
 			libretro_next_screen_layout();
 		s_next_layout_button_held = down;
+	}
+
+	// The same step from the keyboard, which is also what an overlay key ends
+	// up as once the frontend has bound one to it.
+	{
+		const bool down = s_next_layout_key != RETROK_UNKNOWN &&
+			input_state_cb(0, RETRO_DEVICE_KEYBOARD, 0, s_next_layout_key) != 0;
+		if (down && !s_next_layout_key_held)
+			libretro_next_screen_layout();
+		s_next_layout_key_held = down;
 	}
 
 	// Touchscreen (mouse/pointer mapped to GamePad touchscreen)
