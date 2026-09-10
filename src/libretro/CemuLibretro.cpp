@@ -2059,7 +2059,7 @@ static bool libretro_set_core_options_v2(retro_environment_t cb, const struct re
 		{"input", "Input", "Controllers beyond the GamePad."},
 		{"addons", "Add-ons", "The toys-to-life peripherals a few titles ask for."},
 		{"audio", "Audio", "Sound output."},
-		{"convert", "WUX/WUD Convert", "Writing the loaded title out as a single .wua archive instead of playing it."},
+		{"convert", "Convert to WUA", "Writing the loaded title out as a single .wua archive: disc image, extracted folder or NUS dump, with its update and DLC."},
 		{"logging", "Logging", "Extra logging, for working out why something misbehaves."},
 		{nullptr, nullptr, nullptr},
 	};
