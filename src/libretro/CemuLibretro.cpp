@@ -1746,6 +1746,58 @@ static bool libretro_set_core_variables(retro_environment_t cb, const struct ret
 // page through - which is the only way to put the screen settings on a submenu
 // of their own. One that does not gets the flat list, which is where both come
 // from, so the two cannot drift apart.
+// What a config file stores and what a menu shows are not the same thing. The
+// values here are written the way the code reads them - lower case, words
+// joined by underscores - which is unreadable in a menu next to options that
+// spell theirs out. A v2 option can carry a label for each value, so give the
+// mechanical ones one, and leave what is already written for display (anything
+// with a capital or a space in it) and anything starting with a digit (a
+// resolution, a number of microseconds) alone.
+static std::string libretro_option_value_label(const char* key, const std::string& value)
+{
+	static const struct
+	{
+		const char* key;
+		const char* value;
+		const char* label;
+	} overrides[] = {
+		// "Port1 Shared" and "Ports2 4" is what the rule below would make of these.
+		{"cemu_wiimote_input", "port1_shared", "Port 1, shared with the GamePad"},
+		{"cemu_wiimote_input", "ports2_4", "Ports 2-4"},
+	};
+
+	for (const auto& o : overrides)
+	{
+		if (strcmp(key, o.key) == 0 && value == o.value)
+			return o.label;
+	}
+
+	if (value.empty() || value.front() < 'a' || value.front() > 'z')
+		return std::string();
+	for (const char c : value)
+	{
+		const bool plain = (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '_';
+		if (!plain)
+			return std::string();
+	}
+
+	std::string label = value;
+	bool startOfWord = true;
+	for (char& c : label)
+	{
+		if (c == '_')
+		{
+			c = ' ';
+			startOfWord = true;
+			continue;
+		}
+		if (startOfWord && c >= 'a' && c <= 'z')
+			c = (char)(c - 'a' + 'A');
+		startOfWord = false;
+	}
+	return label;
+}
+
 static bool libretro_set_core_options_v2(retro_environment_t cb, const struct retro_variable* variables)
 {
 	unsigned version = 0;
@@ -1802,7 +1854,10 @@ static bool libretro_set_core_options_v2(retro_environment_t cb, const struct re
 				if (!value.empty())
 				{
 					const bool isDefault = explicitDefault ? (value == explicitDefault) : (count == 0);
+					const std::string label = libretro_option_value_label(var->key, value);
 					def.values[count].value = keep(std::move(value));
+					if (!label.empty())
+						def.values[count].label = keep(label);
 					if (isDefault)
 						def.default_value = def.values[count].value;
 					++count;
