@@ -1028,7 +1028,19 @@ void LatteRenderTarget_itHLECopyColorBufferToScanBuffer(MPTR colorBufferPtr, uin
 		g_libretroScreenLayout == LibretroScreenLayout::SideBySide ||
 		g_libretroScreenLayout == LibretroScreenLayout::TopBottom ||
 		g_libretroScreenLayout == LibretroScreenLayout::PictureInPicture;
-	if (libretroComposite)
+	// The GamePad-only layout has the same ordering problem, for a different
+	// reason: the mirror at the end of this function copies the TV image into
+	// the pad view for titles that never draw a DRC image of their own, and a
+	// title that does draw one is at the mercy of which of the two Cemu scans
+	// out last - so whenever the TV image came second, the layout that promises
+	// the GamePad screen showed the TV screen instead. Route it through the same
+	// deterministic dispatch, and mirror only while no DRC image has ever
+	// arrived.
+	static bool s_seenDrcScanout = false;
+	if (renderTarget & RENDER_TARGET_DRC)
+		s_seenDrcScanout = true;
+	const bool libretroDrcOnly = g_libretroScreenLayout == LibretroScreenLayout::GamePad;
+	if (libretroComposite || libretroDrcOnly)
 	{
 		static LatteTextureView* s_cachedTvView = nullptr;
 		static LatteTextureView* s_cachedDrcView = nullptr;
@@ -1049,10 +1061,14 @@ void LatteRenderTarget_itHLECopyColorBufferToScanBuffer(MPTR colorBufferPtr, uin
 		// Always dispatch in TV-then-DRC order with whatever is cached so
 		// far. Blits are idempotent within a frame; PiP's DRC overlay
 		// survives because DRC always lands after TV.
-		if (s_cachedTvView)
+		// LibretroDRC_ShouldRenderScreen would drop the TV blit in the
+		// GamePad-only layout anyway; not asking for it saves the work.
+		if (s_cachedTvView && LibretroDRC_ShouldRenderScreen(false))
 			LatteRenderTarget_copyToBackbuffer(s_cachedTvView, false);
 		if (s_cachedDrcView && g_renderer->IsPadWindowActive())
 			LatteRenderTarget_copyToBackbuffer(s_cachedDrcView, true);
+		if (libretroDrcOnly && !s_seenDrcScanout && s_cachedTvView && g_renderer->IsPadWindowActive())
+			LatteRenderTarget_copyToBackbuffer(s_cachedTvView, true);
 	}
 	else
 #endif
@@ -1067,7 +1083,7 @@ void LatteRenderTarget_itHLECopyColorBufferToScanBuffer(MPTR colorBufferPtr, uin
 	// Libretro: Auto-mirror TV to DRC when game doesn't explicitly render to DRC.
 	// Skip in composite modes — those already route TV and DRC independently, and
 	// an unconditional mirror would clobber the DRC sub-rect with TV content.
-	if (!libretroComposite && g_renderer->IsPadWindowActive() && !(renderTarget & RENDER_TARGET_DRC) && (renderTarget & RENDER_TARGET_TV))
+	if (!libretroComposite && !libretroDrcOnly && g_renderer->IsPadWindowActive() && !(renderTarget & RENDER_TARGET_DRC) && (renderTarget & RENDER_TARGET_TV))
 		LatteRenderTarget_copyToBackbuffer(texView, true);
 	#endif
 }
