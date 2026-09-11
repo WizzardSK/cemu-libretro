@@ -287,8 +287,8 @@ static std::string s_wua_unavailable_reason;
 // normal C++ static-destructor teardown of this DLL becomes unsafe (see retro_unload_game /
 // retro_deinit). This is intentionally separate from s_emu_initialized/s_game_loaded, which
 // are only set once the whole title has finished loading - a load failure that happens after
-// the GPU context is created but before that point used to skip the _exit(0) safety net below
-// and fall through to a DllMain/static-destructor deadlock on unload.
+// the GPU context is created but before that point would otherwise leave retro_unload_game
+// with nothing to tear down, and the renderer behind.
 static std::atomic_bool s_gpu_context_created{false};
 static std::string s_game_path;
 
@@ -2410,22 +2410,22 @@ RETRO_API void retro_set_controller_port_device(unsigned port, unsigned device)
 // Bring a running title down cleanly before this process leaves.
 //
 // Cemu's emulated filesystem writes through buffered std::fstream objects, so
-// anything still sitting in those buffers never reaches disk when the core
-// takes its _exit(0) escape hatch: a game that autosaved just before the
-// frontend closed the content comes back with a truncated, unloadable save.
+// anything still sitting in those buffers never reaches disk if the process goes
+// away underneath them: a game that autosaved just before the frontend closed
+// the content comes back with a truncated, unloadable save.
 // CafeSystem::ShutdownTitle() ends the scheduler, stops the GPU thread and
 // unmounts the save/mlc devices, which closes - and therefore flushes - every
 // file the title still had open. It does not touch the renderer, so the shared
-// Vulkan device the _exit(0) is there to avoid is left alone.
+// Vulkan device is left alone.
 //
 // Bounded: a title that refuses to stop must not hang the frontend, so the
 // shutdown runs on its own thread and we give up on it after a few seconds.
 //
-// Returns whether it got there. That answer decides how the core leaves: a
-// title that stopped is one whose GPU thread is stopped too, which is what
-// makes tearing the renderer down safe (see retro_unload_game). One that did
-// not stop still has threads drawing through the frontend's Vulkan device, and
-// for that case the _exit(0) escape hatch is still the least bad option.
+// Returns whether it got there. A title that stopped is one whose GPU thread is
+// stopped too, which is what makes tearing the renderer down safe (see
+// retro_unload_game). One that did not stop still has threads drawing through
+// the frontend's Vulkan device; the teardown happens regardless, and the return
+// value is what tells the log which of the two it was.
 static bool libretro_shutdown_title_for_exit()
 {
 	if (!s_game_loaded)
@@ -2448,8 +2448,9 @@ static bool libretro_shutdown_title_for_exit()
 		*finished = true;
 	}).detach();
 
-	// Generous, because the alternative to waiting is _exit(0): every second
-	// spent here is a second of a user's session that does not have to end.
+	// Generous, because the alternative to waiting is destroying a device that
+	// threads are still submitting to: every second spent here is a second that
+	// does not have to end in a fault.
 	// ShutdownTitle traces its own phases, so a timeout says where it stopped.
 	constexpr int kShutdownTimeoutMs = 30000;
 	for (int i = 0; i < kShutdownTimeoutMs && !*finished; i++)
@@ -3153,7 +3154,7 @@ static void libretro_context_reset()
 
 	// From this point on a GPU device/renderer may exist and normal C++ static-destructor
 	// teardown of this DLL is unsafe (see retro_unload_game / retro_deinit). Mark it so a
-	// later load failure still takes the _exit(0) escape hatch instead of deadlocking on unload.
+	// later load failure still gets the renderer torn down rather than left behind.
 	if (g_renderer)
 		s_gpu_context_created = true;
 
@@ -3442,9 +3443,10 @@ RETRO_API bool retro_load_game_special(unsigned game_type, const struct retro_ga
 // are not ours (m_useExternalDevice), so what it destroys is exactly what this
 // core allocated.
 //
-// The escape hatch stays for the case that earned it: a title that did not stop
-// inside libretro_shutdown_title_for_exit's window still has threads submitting
-// work, and there is nothing safe to do with them.
+// A title that did not stop inside libretro_shutdown_title_for_exit's window
+// still has threads submitting work while that happens. The teardown runs
+// anyway: there is no safe thing to do with those threads, and a fault here is
+// a diagnosable bug rather than something to paper over.
 // Stops one service with a deadline. Detached rather than joined for the same
 // reason the title shutdown is: a service that will not come back must not take
 // the frontend with it.
@@ -3520,10 +3522,15 @@ RETRO_API void retro_unload_game()
 
 	if (!stopped)
 	{
+		// The teardown below runs anyway. A title that would not stop still has
+		// threads submitting work through the device the renderer is about to
+		// destroy, so this is where the process may fault - and that fault is the
+		// bug, with a backtrace pointing at whatever would not park. Exiting here
+		// instead would hide it behind a silent process death that no crash
+		// reporter picks up.
 		if (log_cb)
 			log_cb(RETRO_LOG_ERROR,
-				"Cemu: the title did not stop, so the renderer cannot be torn down safely - exiting\n");
-		_exit(0);
+				"Cemu: the title did not stop; tearing the renderer down with threads still live\n");
 	}
 
 	// After the title, never before it: the input update thread and the emulated
@@ -3606,8 +3613,9 @@ RETRO_API void retro_deinit()
 	// these. If it has not - a frontend that deinits without unloading, or an
 	// unload that bailed out - then a GPU device still exists and running this
 	// library's static destructors is not safe.
-	if (s_emu_initialized || s_gpu_context_created)
-		_exit(0);
+	if ((s_emu_initialized || s_gpu_context_created) && log_cb)
+		log_cb(RETRO_LOG_ERROR,
+			"Cemu: deinit with a GPU device still alive - static teardown from here is not safe\n");
 
 	// A conversion that is still running holds the title mounted, so it has to
 	// stop before anything below takes the system apart.
