@@ -261,6 +261,9 @@ static std::atomic_bool s_convert_finished{false};
 static std::thread s_convert_thread;
 static std::mutex s_convert_mutex;
 static std::string s_convert_status;
+// -1 means "no figure to show": the frontend draws an indeterminate bar for it,
+// which is what counting files and the final message want.
+static int s_convert_progress = -1;
 static std::unique_ptr<GameInfo2> s_convert_game_info;
 
 // Where a conversion is allowed to write. The frontend decides that - on
@@ -1519,7 +1522,7 @@ static void libretro_next_screen_layout()
 
 static void libretro_start_wua_conversion(TitleId baseTitleId, const fs::path& gamePath);
 static bool libretro_shutdown_title_for_exit();
-static void libretro_set_convert_status(std::string text);
+static void libretro_set_convert_status(std::string text, int progress = -1);
 
 // What the conversion has to read, in bytes: the base title plus whatever
 // update and DLC go into the same archive. A .wua ends up smaller than that -
@@ -2572,10 +2575,11 @@ static void libretro_setup_wiimotes()
 				(unsigned)channel + 1, (unsigned)port + 1);
 	}
 }
-static void libretro_set_convert_status(std::string text)
+static void libretro_set_convert_status(std::string text, int progress)
 {
 	std::lock_guard lock(s_convert_mutex);
 	s_convert_status = std::move(text);
+	s_convert_progress = progress;
 }
 
 // Everything the title is made of - base, update, DLC - written into the folder
@@ -2673,9 +2677,10 @@ static void libretro_start_wua_conversion(TitleId baseTitleId, const fs::path& g
 					return;
 				}
 				const uint64 total = p.bytesTotal ? p.bytesTotal : 1;
-				libretro_set_convert_status(fmt::format("Converting: {}% ({}/{} MiB, file {}/{})",
-					(unsigned)(p.bytesDone * 100 / total), p.bytesDone / 1024 / 1024,
-					p.bytesTotal / 1024 / 1024, p.filesDone, p.filesTotal));
+				const int percent = (int)(p.bytesDone * 100 / total);
+				libretro_set_convert_status(fmt::format("Converting: {}/{} MiB, file {}/{}",
+					p.bytesDone / 1024 / 1024, p.bytesTotal / 1024 / 1024,
+					p.filesDone, p.filesTotal), percent);
 			},
 			error);
 
@@ -3968,25 +3973,59 @@ RETRO_API void retro_run()
 		// core can say anything to the user, so it repeats where it has got to
 		// rather than leaving them looking at a black screen for minutes.
 		static std::string s_shown;
-		static unsigned s_frames_since_message = 0;
-		if (s_frames_since_message++ >= 60)
+		static int s_shown_progress = -2;
+		static bool s_logged_this = false;
+		std::string text;
+		int progress = -1;
 		{
-			s_frames_since_message = 0;
-			std::string text;
+			std::lock_guard lock(s_convert_mutex);
+			text = s_convert_status;
+			progress = s_convert_progress;
+		}
+		if (!text.empty() && environ_cb)
+		{
+			// A progress message rather than a notification, and sent every
+			// frame rather than every sixtieth: a notification is a toast with
+			// a lifetime, so it came and went and hid behind an open menu,
+			// while a progress message is a bar the frontend keeps on screen
+			// and updates in place until the figure reaches 100.
+			unsigned version = 0;
+			const bool have_ext = environ_cb(RETRO_ENVIRONMENT_GET_MESSAGE_INTERFACE_VERSION, &version) && version >= 1;
+			if (have_ext)
 			{
-				std::lock_guard lock(s_convert_mutex);
-				text = s_convert_status;
+				s_shown = text;
+				struct retro_message_ext message = {};
+				message.msg = s_shown.c_str();
+				message.duration = 4000;
+				message.priority = 3;
+				message.level = RETRO_LOG_INFO;
+				message.target = RETRO_MESSAGE_TARGET_OSD;
+				message.type = RETRO_MESSAGE_TYPE_PROGRESS;
+				message.progress = (int8_t)((progress < 0) ? -1 : (progress > 100 ? 100 : progress));
+				environ_cb(RETRO_ENVIRONMENT_SET_MESSAGE_EXT, &message);
 			}
-			if (!text.empty() && text != s_shown && environ_cb)
+			else if (text != s_shown)
 			{
-				s_shown = std::move(text);
+				// No message interface: the old call is all there is, and it
+				// takes a frame count rather than a bar, so it stays throttled
+				// to when the text actually changes.
+				s_shown = text;
 				struct retro_message message{s_shown.c_str(), 240};
 				environ_cb(RETRO_ENVIRONMENT_SET_MESSAGE, &message);
-				// Also in the frontend's log: an OSD message is gone in four
-				// seconds, and this is the only record of a conversion that
-				// went wrong.
-				if (log_cb)
-					log_cb(RETRO_LOG_INFO, "Cemu: %s\n", s_shown.c_str());
+			}
+
+			// Also in the frontend's log, once per distinct message: the OSD is
+			// gone in seconds, and this is the only record of a conversion that
+			// went wrong.
+			if (progress != s_shown_progress || !s_logged_this)
+			{
+				if (progress < 0 || progress / 10 != s_shown_progress / 10)
+				{
+					if (log_cb)
+						log_cb(RETRO_LOG_INFO, "Cemu: %s\n", text.c_str());
+					s_logged_this = true;
+				}
+				s_shown_progress = progress;
 			}
 		}
 
