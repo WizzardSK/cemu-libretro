@@ -1567,17 +1567,12 @@ static void libretro_request_conversion()
 		return;
 
 	if (log_cb)
-		log_cb(RETRO_LOG_INFO, "Cemu: conversion requested - stopping the title first\n");
-	if (environ_cb)
-	{
-		struct retro_message message{"Stopping the title, then converting to .wua", 240};
-		environ_cb(RETRO_ENVIRONMENT_SET_MESSAGE, &message);
-	}
+		log_cb(RETRO_LOG_INFO, "Cemu: conversion requested - the title keeps running\n");
 
-	// Ends the scheduler, stops the GPU thread and unmounts the save devices -
-	// everything the title held goes back before a single byte is written.
-	libretro_shutdown_title_for_exit();
-
+	// The title is left running. It and the conversion both read the same
+	// files and neither writes them, so the reads do not conflict; what they do
+	// share is memory and a core's worth of CPU, and on a machine short of
+	// either this will be felt in both.
 	s_convert_finished = false;
 	s_convert_cancel = false;
 	s_convert_mode.store(true);
@@ -4029,28 +4024,18 @@ RETRO_API void retro_run()
 			}
 		}
 
-		// Written, flushed, and nothing else for this core to do: ask the
-		// frontend to close the content rather than sit on a black screen. The
-		// wait is so the last message - the name it was written under, or why
-		// it failed - is on screen long enough to read.
+		// Finished, one way or the other. The title never stopped, so there is
+		// nothing to close and nothing to return to: the conversion simply
+		// stops being in progress, the submenu comes back, and the last message
+		// stays up its own few seconds.
 		if (s_convert_finished.load())
 		{
-			static unsigned s_frames_after_finish = 0;
-			if (s_frames_after_finish++ >= 240 && environ_cb)
-			{
-				s_frames_after_finish = 0;
-				if (log_cb)
-					log_cb(RETRO_LOG_INFO, "Cemu: conversion done, asking the frontend to close the content\n");
-				environ_cb(RETRO_ENVIRONMENT_SHUTDOWN, nullptr);
-			}
+			if (s_convert_thread.joinable())
+				s_convert_thread.join();
+			s_convert_mode.store(false);
+			s_convert_finished = false;
+			libretro_update_convert_visibility();
 		}
-
-		// A real frame, not the "same as last time" that video_cb(NULL) means:
-		// there has never been a first one to repeat here, since nothing in
-		// this mode draws.
-		static std::vector<uint32_t> blank((size_t)SCREEN_WIDTH * SCREEN_HEIGHT, 0);
-		video_cb(blank.data(), SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_WIDTH * sizeof(uint32_t));
-		return;
 	}
 
 	if (!s_game_loaded)
