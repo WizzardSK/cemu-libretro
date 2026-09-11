@@ -3212,6 +3212,16 @@ static bool libretro_disc_key_available(const fs::path& gamePath)
 
 	KeyCache_Prepare();
 
+	// FindDiscKey decrypts the partition header to recognise a key, and the two
+	// AES entry points are function pointers that stay null until AES128_init
+	// picks an implementation. The emulator does that in CemuCommonInit, which
+	// runs from context_reset - after this, and only if this lets the load
+	// through. Asking here therefore means asking before the crypto exists:
+	// with a key to try, the first one dereferences a null pointer and takes
+	// the process down before Cemu has even opened its log.
+	// It is idempotent, so CemuCommonInit calling it again later is no matter.
+	AES128_init();
+
 	NCrypto::AesKey discTitleKey;
 	bool imageOpened = false;
 	if (FSTVolume::FindDiscKey(gamePath, discTitleKey, &imageOpened))
