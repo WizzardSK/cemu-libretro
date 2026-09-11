@@ -1522,6 +1522,7 @@ static void libretro_next_screen_layout()
 
 static void libretro_start_wua_conversion(TitleId baseTitleId, const fs::path& gamePath);
 static bool libretro_shutdown_title_for_exit();
+static void libretro_prepare_and_launch_title();
 static void libretro_set_convert_status(std::string text, int progress = -1);
 
 // What the conversion has to read, in bytes: the base title plus whatever
