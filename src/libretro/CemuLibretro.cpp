@@ -3267,15 +3267,6 @@ RETRO_API bool retro_load_game(const struct retro_game_info* game)
 	// hide a frontend that cannot give this core a context the second time.
 	s_use_hw_render = false;
 
-	// Converting a title draws nothing, so it asks for no graphics context at
-	// all: no device to negotiate, and nothing for retro_deinit to be careful
-	// about afterwards. Read here rather than with the rest of the options,
-	// which are applied once the emulator is up - and this decides whether it
-	// comes up at all.
-	// A conversion is asked for while a title is running and happens there and
-	// then, so loading content never starts one.
-	s_convert_mode.store(false);
-
 	// Set up pixel format
 	enum retro_pixel_format fmt = RETRO_PIXEL_FORMAT_XRGB8888;
 	if (!environ_cb(RETRO_ENVIRONMENT_SET_PIXEL_FORMAT, &fmt))
@@ -3287,7 +3278,7 @@ RETRO_API bool retro_load_game(const struct retro_game_info* game)
 
 	// Set up HW render context based on selected graphics API
 #ifdef ENABLE_VULKAN
-	if (!s_convert_mode.load() && s_graphics_api == SelectedGraphicsAPI::Vulkan)
+	if (s_graphics_api == SelectedGraphicsAPI::Vulkan)
 	{
 		// Set negotiation interface so RetroArch lets us create the VkDevice
 		environ_cb(RETRO_ENVIRONMENT_SET_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE, &s_vk_negotiation);
@@ -3327,7 +3318,7 @@ RETRO_API bool retro_load_game(const struct retro_game_info* game)
 		}
 	}
 #ifdef ENABLE_OPENGL
-	if (s_graphics_api == SelectedGraphicsAPI::OpenGL && !s_convert_mode.load())
+	if (s_graphics_api == SelectedGraphicsAPI::OpenGL)
 #endif
 #endif
 #ifdef ENABLE_OPENGL
@@ -3403,10 +3394,7 @@ RETRO_API bool retro_load_game(const struct retro_game_info* game)
 	// never boot (context_reset is what launches it) and the frontend would be
 	// left running a core that hands it no frames. Fail the load instead, so the
 	// frontend says so rather than the user staring at a black screen.
-	//
-	// A conversion asked for no context on purpose and boots nothing, so this
-	// does not apply to it.
-	if (!s_use_hw_render && !s_convert_mode.load())
+	if (!s_use_hw_render)
 	{
 		if (log_cb)
 			log_cb(RETRO_LOG_ERROR, "Cemu: no hardware renderer available - this core needs a Vulkan (or OpenGL 4.1+) capable frontend\n");
