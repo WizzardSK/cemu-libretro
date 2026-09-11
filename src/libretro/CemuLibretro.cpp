@@ -3402,10 +3402,10 @@ RETRO_API bool retro_load_game(const struct retro_game_info* game)
 	// Store game path - actual launch happens in context_reset when GL is ready
 	s_game_path = game->path;
 
-	// The conversion options describe what can be done with *this* content, so
-	// they are worked out here and the option list is published again with
-	// them. A frontend that already built its menu sees the change through the
-	// update-display callback.
+	// The option list is published again now that there is content: whether the
+	// conversion options are declared at all depends on there being somewhere
+	// to write, and that is not known before this point. Where they can write
+	// to is worked out later, when the frontend asks for the menu.
 	if (environ_cb)
 		libretro_publish_core_options(environ_cb);
 	libretro_update_convert_visibility();
