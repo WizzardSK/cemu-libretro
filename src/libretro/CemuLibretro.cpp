@@ -3402,10 +3402,13 @@ RETRO_API bool retro_load_game(const struct retro_game_info* game)
 	// Store game path - actual launch happens in context_reset when GL is ready
 	s_game_path = game->path;
 
-	// The option list is published again now that there is content: whether the
-	// conversion options are declared at all depends on there being somewhere
-	// to write, and that is not known before this point. Where they can write
-	// to is worked out later, when the frontend asks for the menu.
+	// Whether the conversion options are declared at all depends on there being
+	// somewhere to write, so the destinations have to be known before the list
+	// is published: an option the core does not declare here is one the
+	// frontend has no way of being told about later. They are worked out again
+	// when the menu is drawn, which is what keeps them current; this pass only
+	// decides whether the two options exist.
+	libretro_collect_wua_destinations();
 	if (environ_cb)
 		libretro_publish_core_options(environ_cb);
 	libretro_update_convert_visibility();
