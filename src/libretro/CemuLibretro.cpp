@@ -2482,29 +2482,30 @@ RETRO_API void retro_reset()
 	if (!s_game_loaded || s_game_path.empty())
 		return;
 
-	const char* corePath = nullptr;
-	if (environ_cb)
-		environ_cb(RETRO_ENVIRONMENT_GET_LIBRETRO_PATH, &corePath);
+	// Stop the title and start it again, here, in this process. This used to
+	// end the process and have the shell start a fresh RetroArch: tearing a
+	// title down under a live GPU thread faulted inside the driver, and there
+	// was no way to stop one reliably. There is now - the same one a second
+	// retro_load_game uses - so a reset can be a reset.
+	if (log_cb)
+		log_cb(RETRO_LOG_INFO, "Cemu: reset - stopping the title\n");
 
-	// Prepare relaunch command BEFORE exit
-	std::string cmd;
-	if (corePath)
+	if (!libretro_shutdown_title_for_exit())
 	{
-		cmd = "sh -c 'sleep 1 && retroarch -L \"";
-		cmd += corePath;
-		cmd += "\" \"";
-		cmd += s_game_path;
-		cmd += "\"' &";
+		// The GPU thread would not park, which is the case the old exit existed
+		// for. Restarting on top of it is the fault this must not commit, so the
+		// title stays stopped and the frontend is told, rather than the process
+		// disappearing from under it.
+		libretro_show_message(RETRO_LOG_ERROR, 6000,
+			"Reset failed: the title did not stop cleanly, so it was not restarted");
+		return;
 	}
 
-	// Flush the title's open files before the process goes away.
-	libretro_shutdown_title_for_exit();
-
-	// Launch relaunch process and immediately exit
-	// _exit() skips all destructors/atexit — no Vulkan cleanup crash
-	if (!cmd.empty())
-		system(cmd.c_str());
-	_exit(0);
+	// CemuCommonInit is deliberately not repeated: it sets up the emulated
+	// machine, not the title, and it has already run. s_emu_initialized stays
+	// set throughout - a deinit landing in the middle of this still has a GPU
+	// device to be careful about, and that flag is how it knows.
+	libretro_prepare_and_launch_title();
 }
 
 
@@ -2684,49 +2685,11 @@ static void libretro_start_wua_conversion(TitleId baseTitleId, const fs::path& g
 	});
 }
 
-static void libretro_launch_game()
+// Preparing the title and starting it. Split out of libretro_launch_game so
+// that a reset can do it again without CemuCommonInit, which initialises the
+// emulated machine itself and is not something to run twice.
+static void libretro_prepare_and_launch_title()
 {
-	if (s_game_path.empty() || s_emu_initialized)
-		return;
-
-	if (log_cb)
-		log_cb(RETRO_LOG_INFO, "Cemu: Initializing emulator...\n");
-
-	// Initialize emulator common systems
-	CemuCommonInit();
-	s_cafe_system_initialized = true;
-
-	if (log_cb)
-		log_cb(RETRO_LOG_INFO, "Cemu: common init done\n");
-
-	// Load graphic packs (includes workarounds like NSMBU crash fix)
-	{
-		fs::path gpPath = ActiveSettings::GetUserDataPath("graphicPacks");
-		cemuLog_log(LogType::Force, "Searching for graphic packs in: {}", _pathToUtf8(gpPath));
-		std::error_code ec;
-		bool exists = fs::exists(gpPath, ec);
-		cemuLog_log(LogType::Force, "Graphic packs directory exists: {}", exists);
-	}
-	GraphicPack2::LoadAll();
-	// Enable all graphic packs that have default=1 (workarounds etc.)
-	for (auto& gp : GraphicPack2::GetGraphicPacks())
-	{
-		if (gp->IsDefaultEnabled() && !gp->IsEnabled())
-			gp->SetEnabled(true);
-	}
-	if (log_cb)
-		log_cb(RETRO_LOG_INFO, "Cemu: Loaded %d graphic packs\n", (int)GraphicPack2::GetGraphicPacks().size());
-
-	// Apply core options before launch
-	libretro_apply_core_options();
-
-	// Init audio through libretro
-	libretro_init_audio();
-
-	// Hand the Wii Remote channels a libretro pad each
-	libretro_setup_wiimotes();
-
-	// Prepare the game
 	fs::path gamePath = s_game_path;
 	CafeSystem::PREPARE_STATUS_CODE status;
 
@@ -2797,6 +2760,52 @@ static void libretro_launch_game()
 
 	if (log_cb)
 		log_cb(RETRO_LOG_INFO, "Cemu: Game loaded successfully - %s\n", CafeSystem::GetForegroundTitleName().c_str());
+}
+
+static void libretro_launch_game()
+{
+	if (s_game_path.empty() || s_emu_initialized)
+		return;
+
+	if (log_cb)
+		log_cb(RETRO_LOG_INFO, "Cemu: Initializing emulator...\n");
+
+	// Initialize emulator common systems
+	CemuCommonInit();
+	s_cafe_system_initialized = true;
+
+	if (log_cb)
+		log_cb(RETRO_LOG_INFO, "Cemu: common init done\n");
+
+	// Load graphic packs (includes workarounds like NSMBU crash fix)
+	{
+		fs::path gpPath = ActiveSettings::GetUserDataPath("graphicPacks");
+		cemuLog_log(LogType::Force, "Searching for graphic packs in: {}", _pathToUtf8(gpPath));
+		std::error_code ec;
+		bool exists = fs::exists(gpPath, ec);
+		cemuLog_log(LogType::Force, "Graphic packs directory exists: {}", exists);
+	}
+	GraphicPack2::LoadAll();
+	// Enable all graphic packs that have default=1 (workarounds etc.)
+	for (auto& gp : GraphicPack2::GetGraphicPacks())
+	{
+		if (gp->IsDefaultEnabled() && !gp->IsEnabled())
+			gp->SetEnabled(true);
+	}
+	if (log_cb)
+		log_cb(RETRO_LOG_INFO, "Cemu: Loaded %d graphic packs\n", (int)GraphicPack2::GetGraphicPacks().size());
+
+	// Apply core options before launch
+	libretro_apply_core_options();
+
+	// Init audio through libretro
+	libretro_init_audio();
+
+	// Hand the Wii Remote channels a libretro pad each
+	libretro_setup_wiimotes();
+
+	// Prepare the game
+	libretro_prepare_and_launch_title();
 }
 
 static std::atomic_bool s_launch_thread_running{false};
