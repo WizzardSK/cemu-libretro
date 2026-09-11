@@ -157,7 +157,16 @@ void CemuCommonInit()
 	CafeSystem::Initialize();
 	// init title list
 	CEMU_INIT_STAGE("title list");
+#ifdef ENABLE_LIBRETRO
+	// The cache only ever holds what a scan of the configured game paths found,
+	// and the core has none: it is handed one title by path and adds that. So
+	// the file was written empty on every run and read back empty on the next.
+	// An empty path is how CafeTitleList is told not to keep one - StoreCacheFile
+	// returns early on it.
+	CafeTitleList::Initialize(fs::path());
+#else
 	CafeTitleList::Initialize(ActiveSettings::GetUserDataPath("title_list_cache.xml"));
+#endif
 	for (auto& it : GetConfig().game_paths)
 		CafeTitleList::AddScanPath(_utf8ToPath(it));
 	fs::path mlcPath = ActiveSettings::GetMlcPath();

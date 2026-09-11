@@ -1405,6 +1405,15 @@ static bool RETRO_CALLCONV libretro_update_options_display()
 			s_screen_layout_count = (unsigned)n;
 	}
 	libretro_update_screen_layout_visibility();
+
+	// Where the destinations are worked out. Doing it at load meant a snapshot
+	// that went stale - a tree mounted afterwards was never seen - and it spent
+	// the time whether or not anyone was going to look. Here it happens when the
+	// frontend is about to draw the options, and not otherwise. libretro has no
+	// signal for entering one submenu rather than another, so this is as narrow
+	// as it gets: opening Core Options, not every frame and not every boot.
+	if (!s_convert_mode.load())
+		libretro_collect_wua_destinations();
 	libretro_update_convert_visibility();
 	return true;
 }
@@ -1600,6 +1609,19 @@ static void libretro_apply_core_options()
 			if (libretro_iequals(v, "enabled"))
 			{
 				libretro_set_option_value("cemu_convert_to_wua", "disabled");
+				// Between the menu being drawn and the switch being acted on,
+				// the destination may have gone - unmounted, filled up, or now
+				// holding the .wua this would write. Ask again rather than
+				// starting a conversion that cannot finish.
+				libretro_collect_wua_destinations();
+				if (s_wua_destinations.empty())
+				{
+					libretro_show_message(RETRO_LOG_ERROR, 6000,
+						fmt::format("Cannot convert: {}", s_wua_unavailable_reason.empty()
+							? std::string("no destination is available") : s_wua_unavailable_reason));
+					libretro_update_convert_visibility();
+					return;
+				}
 				libretro_request_conversion();
 				return;
 			}
@@ -3398,7 +3420,6 @@ RETRO_API bool retro_load_game(const struct retro_game_info* game)
 	// they are worked out here and the option list is published again with
 	// them. A frontend that already built its menu sees the change through the
 	// update-display callback.
-	libretro_collect_wua_destinations();
 	if (environ_cb)
 		libretro_publish_core_options(environ_cb);
 	libretro_update_convert_visibility();
