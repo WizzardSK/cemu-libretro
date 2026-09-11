@@ -2077,6 +2077,14 @@ static bool libretro_set_core_options_v2(retro_environment_t cb, const struct re
 
 		for (const struct retro_variable* var = variables; var->key; ++var)
 		{
+			// An option the core declares is an option the frontend writes into
+			// its .opt file, so with nothing to convert to the pair is not
+			// declared at all - hiding them would still leave their names
+			// behind in there.
+			if (s_wua_destinations.empty() &&
+				(strcmp(var->key, "cemu_wua_output_dir") == 0 || strcmp(var->key, "cemu_convert_to_wua") == 0))
+				continue;
+
 			std::string desc(var->value ? var->value : "");
 			std::string values;
 			const size_t split = desc.find(';');
@@ -3243,10 +3251,8 @@ RETRO_API bool retro_load_game(const struct retro_game_info* game)
 	// which are applied once the emulator is up - and this decides whether it
 	// comes up at all.
 	// A conversion is asked for while a title is running and happens there and
-	// then, so loading content never starts one. The switch is put back to off
-	// in case an older build left it on: nothing about it belongs in the .opt.
+	// then, so loading content never starts one.
 	s_convert_mode.store(false);
-	libretro_set_option_value("cemu_convert_to_wua", "disabled");
 
 	// Set up pixel format
 	enum retro_pixel_format fmt = RETRO_PIXEL_FORMAT_XRGB8888;
@@ -3476,12 +3482,6 @@ static void libretro_stop_system_services()
 
 RETRO_API void retro_unload_game()
 {
-	// Content going away for any reason other than a restart - closed, or
-	// swapped for another game - means the conversion was not asked for after
-	// all. Restart does not come through here: it relaunches the frontend from
-	// retro_reset and never unloads, which is what leaves the switch armed for
-	// exactly that path.
-	libretro_set_option_value("cemu_convert_to_wua", "disabled");
 
 	// A GPU device/renderer may have been created even if the title failed to finish
 	// loading (s_game_loaded false), and that renderer still has to go.
