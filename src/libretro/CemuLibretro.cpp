@@ -1523,6 +1523,7 @@ static void libretro_next_screen_layout()
 static void libretro_start_wua_conversion(TitleId baseTitleId, const fs::path& gamePath);
 static bool libretro_shutdown_title_for_exit();
 static void libretro_prepare_and_launch_title();
+static void libretro_create_renderer();
 static void libretro_set_convert_status(std::string text, int progress = -1);
 
 // What the conversion has to read, in bytes: the base title plus whatever
@@ -2503,6 +2504,11 @@ RETRO_API void retro_reset()
 		return;
 	}
 
+	// The renderer went down with the title: LatteThread_Exit deletes it and
+	// releases g_renderer, and the Latte thread the relaunch starts dereferences
+	// that pointer before anything else it does.
+	libretro_create_renderer();
+
 	// CemuCommonInit is deliberately not repeated: it sets up the emulated
 	// machine, not the title, and it has already run. s_emu_initialized stays
 	// set throughout - a deinit landing in the middle of this still has a GPU
@@ -3035,6 +3041,65 @@ bool libretro_gpu_context_gone()
 	return s_frontend_context_gone.load(std::memory_order_acquire);
 }
 
+// Builds the renderer that wraps the frontend's device. Called from
+// context_reset the first time, and again from retro_reset: stopping a title
+// stops the GPU thread with it, and LatteThread_Exit deletes the renderer and
+// releases g_renderer on its way out (LatteThread.cpp). A restart then starts a
+// new Latte thread whose first act is g_renderer->Initialize() - on a null
+// pointer, which is a fault inside Latte_ThreadEntry and nothing else.
+static void libretro_create_renderer()
+{
+	// A context restore finds one already built and leaves it alone.
+	if (!g_renderer)
+	{
+#ifdef ENABLE_VULKAN
+		if (s_graphics_api == SelectedGraphicsAPI::Vulkan)
+		{
+			// Get Vulkan HW render interface from RetroArch
+			const struct retro_hw_render_interface* iface = nullptr;
+			if (environ_cb(RETRO_ENVIRONMENT_GET_HW_RENDER_INTERFACE, &iface) && iface &&
+				iface->interface_type == RETRO_HW_RENDER_INTERFACE_VULKAN)
+			{
+				s_vk_interface = (const struct retro_hw_render_interface_vulkan*)iface;
+				LibretroVkQueue::SetInterface(s_vk_interface);
+				if (log_cb)
+					log_cb(RETRO_LOG_INFO, "Cemu: Got Vulkan HW render interface (device=%p queue=%p)\n",
+						(void*)s_vk_interface->device, (void*)s_vk_interface->queue);
+
+				// Create VulkanRenderer using the shared device
+				auto vkRenderer = new VulkanRenderer(
+					s_vk_interface->instance,
+					s_vk_interface->gpu,
+					s_vk_interface->device,
+					s_vk_interface->queue,
+					s_vk_interface->queue_index);
+				g_renderer.reset(vkRenderer);
+
+				// Create presentation image
+				vkRenderer->CreatePresentationImage(SCREEN_WIDTH, SCREEN_HEIGHT);
+
+				if (log_cb)
+					log_cb(RETRO_LOG_INFO, "Cemu: VulkanRenderer created with shared device\n");
+			}
+			else
+			{
+				if (log_cb)
+					log_cb(RETRO_LOG_ERROR, "Cemu: Failed to get Vulkan HW render interface\n");
+			}
+		}
+#ifdef ENABLE_OPENGL
+		else
+#endif
+#endif
+#ifdef ENABLE_OPENGL
+		{
+			s_gl_callbacks = std::make_unique<LibretroGLCanvasCallbacks>();
+			g_renderer = std::make_unique<OpenGLRenderer>();
+		}
+#endif
+	}
+}
+
 static void libretro_context_reset()
 {
 	s_hw_render_initialized = true;
@@ -3103,55 +3168,7 @@ static void libretro_context_reset()
 	}
 #endif // ENABLE_OPENGL
 
-	// Only create renderer on first call - subsequent calls are context restores
-	if (!g_renderer)
-	{
-#ifdef ENABLE_VULKAN
-		if (s_graphics_api == SelectedGraphicsAPI::Vulkan)
-		{
-			// Get Vulkan HW render interface from RetroArch
-			const struct retro_hw_render_interface* iface = nullptr;
-			if (environ_cb(RETRO_ENVIRONMENT_GET_HW_RENDER_INTERFACE, &iface) && iface &&
-				iface->interface_type == RETRO_HW_RENDER_INTERFACE_VULKAN)
-			{
-				s_vk_interface = (const struct retro_hw_render_interface_vulkan*)iface;
-				LibretroVkQueue::SetInterface(s_vk_interface);
-				if (log_cb)
-					log_cb(RETRO_LOG_INFO, "Cemu: Got Vulkan HW render interface (device=%p queue=%p)\n",
-						(void*)s_vk_interface->device, (void*)s_vk_interface->queue);
-
-				// Create VulkanRenderer using the shared device
-				auto vkRenderer = new VulkanRenderer(
-					s_vk_interface->instance,
-					s_vk_interface->gpu,
-					s_vk_interface->device,
-					s_vk_interface->queue,
-					s_vk_interface->queue_index);
-				g_renderer.reset(vkRenderer);
-
-				// Create presentation image
-				vkRenderer->CreatePresentationImage(SCREEN_WIDTH, SCREEN_HEIGHT);
-
-				if (log_cb)
-					log_cb(RETRO_LOG_INFO, "Cemu: VulkanRenderer created with shared device\n");
-			}
-			else
-			{
-				if (log_cb)
-					log_cb(RETRO_LOG_ERROR, "Cemu: Failed to get Vulkan HW render interface\n");
-			}
-		}
-#ifdef ENABLE_OPENGL
-		else
-#endif
-#endif
-#ifdef ENABLE_OPENGL
-		{
-			s_gl_callbacks = std::make_unique<LibretroGLCanvasCallbacks>();
-			g_renderer = std::make_unique<OpenGLRenderer>();
-		}
-#endif
-	}
+	libretro_create_renderer();
 
 	// From this point on a GPU device/renderer may exist and normal C++ static-destructor
 	// teardown of this DLL is unsafe (see retro_unload_game / retro_deinit). Mark it so a
