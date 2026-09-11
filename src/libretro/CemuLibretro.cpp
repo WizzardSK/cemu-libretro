@@ -1555,9 +1555,9 @@ static uintmax_t libretro_title_input_size(const std::vector<TitleInfo*>& titles
 	return total;
 }
 
-// Acting on the conversion switch. The title stops first - its memory is the
-// memory the conversion wants - and the conversion then runs in this same
-// process, so nothing has to be written down and picked up on a later run.
+// Acting on the conversion switch. The conversion runs in this same process,
+// beside the title rather than instead of it, so nothing has to be written down
+// and picked up on a later run.
 //
 // Called from the option handler, which is the frontend's thread, and returns
 // as soon as the work is handed to the conversion thread.
@@ -1596,10 +1596,9 @@ static void libretro_request_conversion()
 static void libretro_apply_core_options()
 {
 	// The conversion switch is not a setting, it is a request, and it is acted
-	// on here rather than remembered: the title stops, which is what frees the
-	// memory the conversion wants, and the conversion starts in this same
-	// process. The switch goes straight back off, so nothing about it is ever
-	// written to the .opt file - there is no next run for it to survive into.
+	// on here rather than remembered: the conversion starts in this same process
+	// and the switch goes straight back off, so nothing about it is ever written
+	// to the .opt file - there is no next run for it to survive into.
 	if (!s_convert_mode.load())
 	{
 		if (const char* v = libretro_get_option_value("cemu_convert_to_wua"))
@@ -2124,11 +2123,10 @@ static bool libretro_set_core_options_v2(retro_environment_t cb, const struct re
 			def.category_key = libretro_option_category(var->key);
 
 			// What pressing it actually does, which is more than the name can
-			// carry: the title stops, the conversion runs, and the core closes
-			// when it is finished.
+			// carry: the conversion runs beside the title, which keeps playing.
 			if (strcmp(var->key, "cemu_convert_to_wua") == 0)
-				def.info = keep(std::string("Stops the running title and writes it to the output directory "
-					"as a single .wua archive. The core closes when the conversion is done."));
+				def.info = keep(std::string("Writes the running title to the output directory as a single "
+					".wua archive. The title keeps running while it is written; progress is shown on screen."));
 
 			// The output directory is whatever the frontend turned out to
 			// allow, so its values are built here rather than written above.
