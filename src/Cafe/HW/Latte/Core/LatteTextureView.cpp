@@ -113,6 +113,21 @@ inline uint32 _getViewBucketKeyNoRes(MPTR physAddress, uint32 pitch)
 LatteTexViewBucket texViewBucket[TEXTURE_VIEW_BUCKETS] = { };
 LatteTexViewBucket texViewBucket_nores[TEXTURE_VIEW_BUCKETS] = { };
 
+// See LatteTexture_ForgetAllWithoutFreeing: the views these buckets point at
+// belong to a device that is gone, so they are dropped rather than removed
+// through the objects themselves.
+uint32 LatteTextureViewLookupCache_ForgetAllWithoutFreeing()
+{
+	uint32 count = 0;
+	for (uint32 i = 0; i < TEXTURE_VIEW_BUCKETS; i++)
+	{
+		count += (uint32)texViewBucket[i].list.size();
+		texViewBucket[i].list.clear();
+		texViewBucket_nores[i].list.clear();
+	}
+	return count;
+}
+
 void LatteTextureViewLookupCache::Add(LatteTextureView* view, uint32 baseMip, uint32 baseSlice)
 {
 	LatteTexViewLookupDesc desc(view);

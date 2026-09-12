@@ -1342,6 +1342,26 @@ void LatteSHRC_Init()
 	cemu_assert_debug(s_shaderStateCacheKeys.empty());
 }
 
+// The counterpart to LatteSHRC_UnloadAll for a run that could not tear down:
+// LatteShader_free destroys the backend shader objects through a device that no
+// longer exists, so the caches are emptied and their contents left where they
+// are. Leaked once, against being inherited by the next title and used.
+uint32 LatteSHRC_ForgetAllWithoutFreeing()
+{
+	const uint32 count = (uint32)(sVertexShaders.size() + sGeometryShaders.size() + sPixelShaders.size());
+	sVertexShaders.clear();
+	sGeometryShaders.clear();
+	sPixelShaders.clear();
+	s_shaderStateCache.clear();
+	s_shaderStateCacheKeys.clear();
+	s_shaderStateCacheCleanupIndex = 0;
+	_activeFetchShader = nullptr;
+	_activeVertexShader = nullptr;
+	_activeGeometryShader = nullptr;
+	_activePixelShader = nullptr;
+	return count;
+}
+
 void LatteSHRC_UnloadAll()
 {
     while(!sVertexShaders.empty())

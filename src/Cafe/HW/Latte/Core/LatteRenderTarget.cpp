@@ -1166,6 +1166,14 @@ void LatteRenderTarget_updateScissorBox()
 	}
 }
 
+// Same reasoning as the texture and shader caches: the cached FBO is an object
+// of a device that has been destroyed, so the pointer is dropped rather than
+// handed to DeleteCachedFBO.
+void LatteRenderTarget_ForgetAllWithoutFreeing()
+{
+	g_emptyFBO = nullptr;
+}
+
 void LatteRenderTarget_unloadAll()
 {
 	if (g_emptyFBO)

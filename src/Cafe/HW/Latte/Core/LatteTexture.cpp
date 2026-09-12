@@ -1172,6 +1172,21 @@ LatteTextureSliceMipInfo* LatteTexture::GetSliceMipArrayEntry(sint32 sliceIndex,
 }
 
 std::vector<LatteTexture*> sAllTextures; // entries can be nullptr
+
+// Drops every texture this process still knows about without freeing any of
+// them. Only for the case where a run could not tear down - the objects belong
+// to a graphics device that has since been destroyed, so LatteTexture_Delete
+// would hand the driver dead handles - and leaving them registered is worse:
+// the next title picks them up and renders through them.
+uint32 LatteTexture_ForgetAllWithoutFreeing()
+{
+	uint32 count = 0;
+	for (LatteTexture* tex : sAllTextures)
+		if (tex)
+			count++;
+	sAllTextures.clear();
+	return count;
+}
 std::vector<size_t> sAllTextureFreeIndices;
 
 void _AddTextureToGlobalList(LatteTexture* tex)

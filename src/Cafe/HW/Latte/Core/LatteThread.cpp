@@ -56,6 +56,32 @@ static std::atomic_bool sLatteThreadAbandoned{false};
 static std::atomic_uint32_t sLatteGeneration{0};
 static thread_local uint32 t_latteGeneration = 0;
 
+// Set when a GPU thread had to leave without tearing down. What it leaves
+// behind is not freeable by anyone - the device those objects belong to is
+// destroyed on the way out, which is the whole reason the teardown was skipped -
+// so the next run drops them instead of inheriting them.
+static std::atomic_bool sLatteTeardownWasSkipped{false};
+
+void Latte_NoteTeardownWasSkipped()
+{
+	sLatteTeardownWasSkipped.store(true, std::memory_order_release);
+}
+
+// Called at the start of a run. Each cache says how much it dropped, because
+// this is a list that can be incomplete: a register nobody thought of here is a
+// crash one title later, and the counts are what points at the one that is
+// missing.
+void Latte_ForgetStateOfAbandonedRun()
+{
+	if (!sLatteTeardownWasSkipped.exchange(false, std::memory_order_acq_rel))
+		return;
+	const uint32 textures = LatteTexture_ForgetAllWithoutFreeing();
+	const uint32 views = LatteTextureViewLookupCache_ForgetAllWithoutFreeing();
+	const uint32 shaders = LatteSHRC_ForgetAllWithoutFreeing();
+	LatteRenderTarget_ForgetAllWithoutFreeing();
+	cemuLog_log(LogType::Force, "[LatteThread] the previous run could not tear down; dropping what it left: {} textures, {} texture views, {} shaders", textures, views, shaders);
+}
+
 bool Latte_IsThreadFromAnEarlierRun()
 {
 	return t_latteGeneration != sLatteGeneration.load(std::memory_order_acquire);
@@ -230,6 +256,10 @@ int Latte_ThreadEntry()
 	LatteTiming_Init();
 	LatteTexture_init();
 	LatteTC_Init();
+	// Before any cache is set up: whatever the last run could not free is still
+	// registered, and every one of those objects belongs to a device that has
+	// been destroyed since.
+	Latte_ForgetStateOfAbandonedRun();
 	LatteBufferCache_init(164 * 1024 * 1024);
 	LatteQuery_Init();
 	LatteSHRC_Init();
@@ -493,6 +523,7 @@ void LatteThread_Exit()
 	if (::libretro_gpu_context_gone())
 	{
 		cemuLog_log(LogType::Force, "[LatteThread] graphics context already gone, skipping GPU teardown");
+		Latte_NoteTeardownWasSkipped();
 		g_renderer.release();
 		std::memset(&LatteGPUState, 0, sizeof(LatteGPUState));
 		sLatteThreadExited.store(true, std::memory_order_release);

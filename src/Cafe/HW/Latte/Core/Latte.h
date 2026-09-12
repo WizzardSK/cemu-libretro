@@ -112,6 +112,15 @@ void LatteRenderTarget_itHLECopyColorBufferToScanBuffer(MPTR colorBufferPtr, uin
 
 void LatteRenderTarget_unloadAll();
 
+// Dropping what a run that could not tear down left behind. See
+// Latte_ForgetStateOfAbandonedRun().
+uint32 LatteTexture_ForgetAllWithoutFreeing();
+uint32 LatteTextureViewLookupCache_ForgetAllWithoutFreeing();
+uint32 LatteSHRC_ForgetAllWithoutFreeing();
+void LatteRenderTarget_ForgetAllWithoutFreeing();
+void Latte_NoteTeardownWasSkipped();
+void Latte_ForgetStateOfAbandonedRun();
+
 // texture cache
 
 void LatteTC_Init();
