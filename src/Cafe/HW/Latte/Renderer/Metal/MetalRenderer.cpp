@@ -164,6 +164,8 @@ MetalRenderer::MetalRenderer() : Renderer(RendererAPI::Metal)
     else
         m_vendor = GfxVendor::Generic;
 
+    m_selectedDeviceName = deviceName;
+
     // Feature support
     m_isAppleGPU = m_device->supportsFamily(MTL::GPUFamilyApple1);
     m_supportsFramebufferFetch = GetConfig().framebuffer_fetch.GetValue() ? m_device->supportsFamily(MTL::GPUFamilyApple2) : false;
@@ -963,7 +965,13 @@ void MetalRenderer::texture_copyImageSubData(LatteTexture* src, sint32 srcMip, s
 
 LatteTextureReadbackInfo* MetalRenderer::texture_createReadback(LatteTextureView* textureView)
 {
-    size_t uploadSize = static_cast<LatteTextureMtl*>(textureView->baseTexture)->GetTexture()->allocatedSize();
+    auto* baseTexture = static_cast<LatteTextureMtl*>(textureView->baseTexture);
+    if (baseTexture->m_isAlternateFormat)
+    {
+        cemuLog_logDebug(LogType::Force, "Metal does not support readback of texture format 0x{:x}", (uint32)baseTexture->format);
+        return nullptr;
+    }
+    size_t uploadSize = baseTexture->GetTexture()->allocatedSize();
 
     if ((m_readbackBufferWriteOffset + uploadSize) > TEXTURE_READBACK_SIZE)
 	{

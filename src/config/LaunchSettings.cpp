@@ -12,6 +12,7 @@
 #include "util/crypto/aes128.h"
 
 #include "Cafe/Filesystem/FST/FST.h"
+#include "Cafe/TitleList/TitleId.h"
 #include "util/helpers/StringHelpers.h"
 
 void requireConsole();
@@ -77,7 +78,8 @@ std::optional<int> LaunchSettings::HandleCommandline(const std::vector<std::wstr
 
 		("force-interpreter", po::value<bool>()->implicit_value(true), "Force interpreter CPU emulation, disables recompiler. Useful for debugging purposes where you want to get accurate memory accesses and stack traces.")
 		("force-multicore-interpreter", po::value<bool>()->implicit_value(true), "Force multi-core interpreter CPU emulation, disables recompiler. Only useful for getting stack traces, but slightly faster than the single-core interpreter mode.")
-		("enable-gdbstub", po::value<bool>()->implicit_value(true), "Enable GDB stub to debug executables inside Cemu using an external debugger");
+		("enable-gdbstub", po::value<bool>()->implicit_value(true), "Enable GDB stub to debug executables inside Cemu using an external debugger")
+		("open-debugger", po::value<bool>()->implicit_value(true), "Open the PPC debugger window on startup");
 
 	po::options_description hidden{ "Hidden options" };
 	hidden.add_options()
@@ -145,13 +147,14 @@ std::optional<int> LaunchSettings::HandleCommandline(const std::vector<std::wstr
 		}
         if (vm.count("title-id"))
         {
-            auto title_param = vm["title-id"].as<std::string>();
+            auto titleParam = vm["title-id"].as<std::string>();
             try {
-
-                if (title_param.starts_with('=')){
-                    title_param.erase(title_param.begin());
-                }
-                s_load_title_id = std::stoull(title_param, nullptr, 16);
+                if (titleParam.starts_with('='))
+                    titleParam.erase(titleParam.begin());
+            	TitleId titleId{};
+            	if (!TitleIdParser::ParseFromStr(titleParam, titleId))
+            		std::cerr << "Invalid title id format";
+                s_load_title_id = titleId;
             }
             catch (std::invalid_argument const& e)
             {
@@ -193,6 +196,9 @@ std::optional<int> LaunchSettings::HandleCommandline(const std::vector<std::wstr
 		if (vm.count("enable-gdbstub"))
 			s_enable_gdbstub = vm["enable-gdbstub"].as<bool>();
 
+		if (vm.count("open-debugger"))
+			s_open_debugger = vm["open-debugger"].as<bool>();
+
 		if (vm.count("forward-console-logging"))
 		{
 			requireConsole();
@@ -216,14 +222,22 @@ std::optional<int> LaunchSettings::HandleCommandline(const std::vector<std::wstr
 		{
 			for (const auto& argument : vm["cos-mounts"].as<std::vector<std::wstring>>())
 			{
-				size_t colon_location = argument.find(L':');
-				if (colon_location == std::wstring::npos)
+				sint32 winDriveColonOffset = 0;
+#if BOOST_OS_WINDOWS
+				// on Windows a path may start with \\?\C:\ or C:\ (where C can be an arbitrary drive letter), but the delimiter is also a colon, so filter out the drive colon
+				static const std::wregex winDrivePrefixRegex(LR"(^(?:\\\\\?\\)?[A-Za-z]:)");
+				std::wsmatch winDrivePrefixMatch;
+				if (std::regex_search(argument, winDrivePrefixMatch, winDrivePrefixRegex))
+					winDriveColonOffset = static_cast<sint32>(winDrivePrefixMatch.length());
+#endif
+				size_t colonLocation = argument.find(L':', winDriveColonOffset);
+				if (colonLocation == std::wstring::npos)
 				{
 					std::cerr << "Argument for a mount expects to be in the format: `path on host:path in emulated system`, was not: `" << boost::nowide::narrow(argument) << "`\n";
 					continue;
 				}
 
-				s_cos_mounts[argument.substr(0, colon_location)] = argument.substr(colon_location + 1);
+				s_cos_mounts[argument.substr(0, colonLocation)] = argument.substr(colonLocation + 1);
 			}
 		}
 

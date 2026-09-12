@@ -37,6 +37,7 @@ public:
 	static std::unordered_map<fs::path, std::wstring, _path_hash>& CosMounts() { return s_cos_mounts; }
 
 	static bool GDBStubEnabled() { return s_enable_gdbstub; }
+	static bool OpenDebuggerEnabled() { return s_open_debugger; }
 	static bool NSightModeEnabled() { return s_nsight_mode; }
 
 	static bool ForceInterpreter() { return s_force_interpreter; };
@@ -64,6 +65,7 @@ private:
 	inline static std::unordered_map<fs::path, std::wstring, _path_hash> s_cos_mounts{};
 
 	inline static bool s_enable_gdbstub = false;
+	inline static bool s_open_debugger = false;
 	inline static bool s_nsight_mode = false;
 
 	inline static bool s_force_interpreter = false;
