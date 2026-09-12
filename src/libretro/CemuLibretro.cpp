@@ -584,18 +584,52 @@ static bool libretro_vk_create_device(
 			extensions.push_back(ext);
 	}
 
-	// Device features
+	// Device features. Asking for one the driver does not have is not a
+	// warning, it is VK_ERROR_FEATURE_NOT_PRESENT and no device at all - and
+	// the frontend then quietly builds its own, which enables none of the
+	// extensions asked for above. That is what mobile looked like: every one of
+	// these is missing on Adreno and Mali (geometryShader and logicOp in
+	// particular), so the negotiation failed on every load and Cemu ran on a
+	// device without transform feedback, without custom border colours and
+	// without pipeline_creation_cache_control - the last of which is what
+	// decides whether pipelines may be compiled asynchronously at all.
+	// vkGetPhysicalDeviceFeatures2 is the one this build loads (VulkanAPI.h);
+	// its .features member is the same core feature set.
+	// It comes back null on a 1.0 instance, and asking for nothing extra is the
+	// safe reading of "cannot tell what this GPU has".
+	VkPhysicalDeviceFeatures2 supportedFeatures2{};
+	supportedFeatures2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
+	if (vkGetPhysicalDeviceFeatures2)
+		vkGetPhysicalDeviceFeatures2(gpu, &supportedFeatures2);
+	else if (log_cb)
+		log_cb(RETRO_LOG_WARN, "Cemu: cannot query device features, asking for none beyond the frontend's\n");
+	const VkPhysicalDeviceFeatures& supported = supportedFeatures2.features;
+
 	VkPhysicalDeviceFeatures features{};
 	if (required_features)
 		features = *required_features;
-	features.independentBlend = VK_TRUE;
-	features.samplerAnisotropy = VK_TRUE;
-	features.imageCubeArray = VK_TRUE;
-	features.logicOp = VK_TRUE;
-	features.geometryShader = VK_TRUE;
-	features.occlusionQueryPrecise = VK_TRUE;
-	features.depthClamp = VK_TRUE;
-	features.depthBiasClamp = VK_TRUE;
+
+	std::string missingFeatures;
+	const auto wantFeature = [&](VkBool32 VkPhysicalDeviceFeatures::*member, const char* name) {
+		if (supported.*member)
+			features.*member = VK_TRUE;
+		else
+		{
+			if (!missingFeatures.empty())
+				missingFeatures += ", ";
+			missingFeatures += name;
+		}
+	};
+	wantFeature(&VkPhysicalDeviceFeatures::independentBlend, "independentBlend");
+	wantFeature(&VkPhysicalDeviceFeatures::samplerAnisotropy, "samplerAnisotropy");
+	wantFeature(&VkPhysicalDeviceFeatures::imageCubeArray, "imageCubeArray");
+	wantFeature(&VkPhysicalDeviceFeatures::logicOp, "logicOp");
+	wantFeature(&VkPhysicalDeviceFeatures::geometryShader, "geometryShader");
+	wantFeature(&VkPhysicalDeviceFeatures::occlusionQueryPrecise, "occlusionQueryPrecise");
+	wantFeature(&VkPhysicalDeviceFeatures::depthClamp, "depthClamp");
+	wantFeature(&VkPhysicalDeviceFeatures::depthBiasClamp, "depthBiasClamp");
+	if (!missingFeatures.empty() && log_cb)
+		log_cb(RETRO_LOG_INFO, "Cemu: this GPU does not have %s - carrying on without them\n", missingFeatures.c_str());
 
 	float queuePriority = 1.0f;
 	VkDeviceQueueCreateInfo queueInfo{};
