@@ -941,7 +941,15 @@ VulkanRenderer::VulkanRenderer(VkInstance instance, VkPhysicalDevice physDevice,
 	for (sint32 i = 0; i < OCCLUSION_QUERY_POOL_SIZE; i++)
 		m_occlusionQueries.list_availableQueryIndices.emplace_back(i);
 
-	RendererShaderVk::Init();
+	// Both pools, the way the standalone constructor does it. Without the
+	// pipeline one, a draw whose pipeline is not in the cache is queued for
+	// asynchronous compilation and skipped - and with nothing consuming the
+	// queue it is skipped again on every frame after that. With async compile
+	// on and a cache that does not have the title in it yet, that is every draw
+	// there is: a black screen that never fills in, for as long as the title
+	// runs.
+	RendererShaderVk::Init();                    // shaders
+	PipelineCompiler::CompileThreadPool_Start(); // pipelines
 	cemuLog_log(LogType::Force, "VulkanRenderer (libretro shared device) initialized successfully");
 }
 
