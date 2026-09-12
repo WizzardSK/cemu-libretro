@@ -537,6 +537,26 @@ void PPCRecompiler_reserveLookupTableBlock(uint32 offset)
 	}
 }
 
+// Recompiled code reads ppcRecompilerDirectJumpTable[address/4] on every branch
+// it cannot resolve at compile time, and nothing checks that the entry is there.
+// A fault inside the table therefore says which guest address was branched to
+// and whether that part of the table was ever mapped - worth spelling out in a
+// crash log, because the address on its own looks like any other wild pointer.
+bool PPCRecompiler_lookupTableFaultInfo(uintptr_t address, PPCRecLookupTableFault& infoOut)
+{
+	if (!ppcRecompilerInstanceData)
+		return false;
+	const uintptr_t tableStart = (uintptr_t)ppcRecompilerInstanceData->ppcRecompilerDirectJumpTable;
+	const uintptr_t tableEnd = tableStart + sizeof(ppcRecompilerInstanceData->ppcRecompilerDirectJumpTable);
+	if (address < tableStart || address >= tableEnd)
+		return false;
+	const uint64 entryIndex = (address - tableStart) / sizeof(PPCREC_JUMP_ENTRY);
+	infoOut.ppcAddress = (uint32)(entryIndex * 4);
+	const uint32 blockIndex = infoOut.ppcAddress / PPC_REC_ALLOC_BLOCK_SIZE;
+	infoOut.blockReserved = blockIndex < PPCRecompiler_GetNumAddressSpaceBlocks() && ppcRecompiler_reservedBlockMask[blockIndex];
+	return true;
+}
+
 void PPCRecompiler_allocateRange(uint32 startAddress, uint32 size)
 {
 	if (ppcRecompilerInstanceData == nullptr)
@@ -695,6 +715,15 @@ void PPCRecompiler_init()
 	{
 		MemMapper::FreeReservation(ppcRecompilerInstanceData, sizeof(PPCRecompilerInstanceData_t));
 		ppcRecompilerInstanceData = nullptr;
+		// The committed blocks of the lookup table went with the reservation, so
+		// nothing may still be marked as reserved: a block left marked here is
+		// one that PPCRecompiler_reserveLookupTableBlock will skip, leaving that
+		// part of the table unmapped in the new reservation while recompiled
+		// code reads it anyway. That is a fault at
+		// ppcRecompilerDirectJumpTable[address/4] on the first branch into the
+		// range - which is the whole of a title's own code, on the second title
+		// a process runs.
+		ppcRecompiler_reservedBlockMask.reset();
 	}
 	cemuLog_logDebug(LogType::Force, "Reserving {}MB for recompiler instance data", (sint32)(sizeof(PPCRecompilerInstanceData_t) / 1024 / 1024));
 	ppcRecompilerInstanceData = (PPCRecompilerInstanceData_t*)MemMapper::ReserveMemory(nullptr, sizeof(PPCRecompilerInstanceData_t), MemMapper::PAGE_PERMISSION::P_RW);

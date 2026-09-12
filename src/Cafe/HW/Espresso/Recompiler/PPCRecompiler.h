@@ -155,6 +155,15 @@ extern PPCRecompilerInstanceData_t* ppcRecompilerInstanceData;
 void PPCRecompiler_init();
 void PPCRecompiler_Shutdown();
 
+// What a fault inside the lookup table means, decoded. See
+// PPCRecompiler_lookupTableFaultInfo().
+struct PPCRecLookupTableFault
+{
+	uint32 ppcAddress;   // the guest address whose entry was being read
+	bool blockReserved;  // whether that part of the table was ever mapped
+};
+bool PPCRecompiler_lookupTableFaultInfo(uintptr_t address, PPCRecLookupTableFault& infoOut);
+
 void PPCRecompiler_Enable();
 void PPCRecompiler_Disable();
 

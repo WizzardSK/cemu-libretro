@@ -24,6 +24,7 @@
 #include "util/helpers/StringHelpers.h"
 #include "Cafe/HW/Espresso/PPCState.h"
 #include "Cafe/HW/Espresso/PPCCallback.h"
+#include "Cafe/HW/Espresso/Recompiler/PPCRecompiler.h"
 #include "ExceptionHandler.h"
 #include "Breadcrumb.h"
 
@@ -208,7 +209,13 @@ void handlerDumpingSignal(int sig, siginfo_t *info, void *context)
 		CrashLog_WriteLine(fmt::format("  pc in {}", DescribeAddress((uintptr_t)mc.pc)));
 		CrashLog_WriteLine(fmt::format("  lr in {}", DescribeAddress((uintptr_t)mc.regs[30])));
 		if (fault != (uintptr_t)mc.pc)
+		{
 			CrashLog_WriteLine(fmt::format("  fault in {}", DescribeAddress(fault)));
+			PPCRecLookupTableFault recFault;
+			if (PPCRecompiler_lookupTableFaultInfo(fault, recFault))
+				CrashLog_WriteLine(fmt::format("  that is the recompiler lookup table entry for guest address {:08x}, in a block that is {}",
+					recFault.ppcAddress, recFault.blockReserved ? "mapped" : "NOT mapped"));
+		}
 	}
 #endif
 
