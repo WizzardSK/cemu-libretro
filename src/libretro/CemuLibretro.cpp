@@ -2072,16 +2072,19 @@ static bool libretro_set_core_options_v2(retro_environment_t cb, const struct re
 
 	static std::deque<std::string> storage;
 	static std::vector<struct retro_core_option_v2_definition> definitions;
+	// The frontend shows the submenus in this order, so it is the order the
+	// list is read in: picture first, then what plays it, then the machine,
+	// with the tools at the end.
 	static struct retro_core_option_v2_category categories[] = {
-		{"screen", "Screen", "Which of the Wii U's two screens the core presents, and how."},
-		{"video", "Video", "Resolution, scaling and how often a frame is drawn."},
-		{"shaders", "Shaders", "How the Wii U's shaders are translated, cached and compiled."},
-		{"system", "System", "The emulated machine: its CPU, its language, its scheduler."},
-		{"input", "Input", "Controllers beyond the GamePad."},
-		{"addons", "Add-ons", "The toys-to-life peripherals a few titles ask for."},
+		{"video", "Video", "Resolution, scaling and frame pacing."},
+		{"shaders", "Shaders", "Shader translation, caching and compilation."},
+		{"screen", "Screen", "Which Wii U screen is shown, and how."},
 		{"audio", "Audio", "Sound output."},
-		{"convert", "Convert to WUA", "Writing the loaded title out as a single .wua archive: disc image, extracted folder or NUS dump, with its update and DLC."},
-		{"logging", "Logging", "Extra logging, for working out why something misbehaves."},
+		{"input", "Input", "Controllers other than the GamePad."},
+		{"system", "System", "CPU, language and scheduling."},
+		{"addons", "Add-ons", "Skylanders, Infinity and Dimensions portals."},
+		{"logging", "Logging", "Extra log output, for diagnosing problems."},
+		{"convert", "Convert to WUA", "Write the loaded title out as a .wua archive."},
 		{nullptr, nullptr, nullptr},
 	};
 
@@ -2127,8 +2130,8 @@ static bool libretro_set_core_options_v2(retro_environment_t cb, const struct re
 			// What pressing it actually does, which is more than the name can
 			// carry: the conversion runs beside the title, which keeps playing.
 			if (strcmp(var->key, "cemu_convert_to_wua") == 0)
-				def.info = keep(std::string("Writes the running title to the output directory as a single "
-					".wua archive. The title keeps running while it is written; progress is shown on screen."));
+				def.info = keep(std::string("Writes the title to the output directory as a .wua. "
+					"It keeps running while this happens."));
 
 			// The output directory is whatever the frontend turned out to
 			// allow, so its values are built here rather than written above.
@@ -2138,8 +2141,7 @@ static bool libretro_set_core_options_v2(retro_environment_t cb, const struct re
 					? fmt::format("Nothing to convert to: {}.", s_wua_unavailable_reason.empty()
 						? std::string("no destination is available")
 						: s_wua_unavailable_reason)
-					: std::string("Where the .wua is written. The filesystem needs room for it - "
-						"a conversion that runs out of space fails at the end."));
+					: std::string("Where the .wua is written. Needs room for it."));
 
 				size_t index = 0;
 				for (const LibretroWuaDestination& destination : s_wua_destinations)
@@ -2148,7 +2150,7 @@ static bool libretro_set_core_options_v2(retro_environment_t cb, const struct re
 						break;
 					def.values[index].value = keep(destination.path);
 					def.values[index].label = keep(destination.hasExisting
-						? fmt::format("{} ({}) - overwrites the .wua already there", destination.label, destination.path)
+						? fmt::format("{} ({}) - overwrites", destination.label, destination.path)
 						: fmt::format("{} ({})", destination.label, destination.path));
 					++index;
 				}
