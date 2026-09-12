@@ -2293,7 +2293,14 @@ void VulkanRenderer::QueryAvailableFormats()
 	// on to create BC images anyway. That is a driver the spec says should
 	// refuse the image - this one creates it and then faults inside
 	// vkCmdCopyBufferToImage on the first upload.
+	// The fallback this gates only runs on devices without BC, which is every
+	// Mali and every Adreno on the Qualcomm driver - but not Adreno on Mesa,
+	// and no desktop GPU at all. Without a way to ask for it, the path cannot
+	// be tried anywhere it is convenient to debug.
+	const bool pretendNoBC = getenv("CEMU_NO_BC_FORMATS") != nullptr;
 	auto canSample = [&](VkFormat fmt) {
+		if (pretendNoBC)
+			return false;
 		VkFormatProperties prop{};
 		vkGetPhysicalDeviceFormatProperties(m_physicalDevice, fmt, &prop);
 		return (prop.optimalTilingFeatures & VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT) != 0 &&
