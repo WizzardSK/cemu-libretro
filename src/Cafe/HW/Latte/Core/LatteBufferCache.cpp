@@ -1619,6 +1619,21 @@ void LatteBufferCache_processDeallocations()
 
 void LatteBufferCache_init(size_t bufferSize)
 {
+	// The assert below is a debug build's way of saying this must not happen,
+	// and in a release build it happens anyway: a GPU thread that took the
+	// "graphics context is already gone" exit skipped its teardown, so the
+	// previous run's nodes are still here, still holding offsets from the heap
+	// that is replaced two lines down. The next teardown frees one of those
+	// into a heap that never handed it out - "VHeap internal error" and an
+	// abort, one title later, which is what a reset looked like on sco8487's
+	// device. Releasing them here is only bookkeeping: the node holds an offset
+	// in that heap and nothing else, and nothing in this path talks to the
+	// driver.
+	if (!g_gpuBufferCache.IsEmpty() && g_gpuBufferHeap)
+	{
+		cemuLog_log(LogType::Force, "LatteBufferCache_init: the previous title left its buffer cache behind, releasing it");
+		BufferCacheNode::UnloadAll();
+	}
 	cemu_assert_debug(g_gpuBufferCache.IsEmpty());
 	g_gpuBufferHeap.reset(new VHeap(nullptr, (uint32)bufferSize));
 	g_renderer->bufferCache_init((uint32)bufferSize);
