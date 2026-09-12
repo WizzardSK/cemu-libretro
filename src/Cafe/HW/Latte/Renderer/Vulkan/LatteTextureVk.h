@@ -92,6 +92,13 @@ private:
 
 	VKRObjectTexture* vkObjTex{};
 	VkImageLayout m_defaultLayout{ VK_IMAGE_LAYOUT_GENERAL }; // the targetted long term layout of the texture. Can be either VK_IMAGE_LAYOUT_GENERAL or VK_IMAGE_LAYOUT_ATTACHMENT_FEEDBACK_LOOP_OPTIMAL_EXT for potential rendertargets if supported
+
+	// What this texture costs, kept so the destructor can take back exactly
+	// what the constructor added. m_bcBytesIfKept is zero unless the texture
+	// arrived as BC and had to be decompressed, in which case it is what the
+	// image would have taken had the device been able to sample BC.
+	uint64 m_residentBytes{};
+	uint64 m_bcBytesIfKept{};
 	std::vector<VkImageLayout> m_layouts;
 	uint32 m_layoutsMips;
 	uint32 m_layoutsDepth;

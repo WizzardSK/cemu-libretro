@@ -1747,6 +1747,17 @@ static void libretro_apply_core_options()
 				logFlags |= cemuLog_getFlag(LogType::NN_PDM);
 			}
 		}
+		// Texture memory: what the decoded textures are costing, and how much
+		// of that is BC that the device could not sample. Its own switch
+		// because it is the only way to answer that on a phone - the numbers
+		// are meaningless from a desktop, where the fallback never runs. See
+		// issue #22.
+		if (const char* v = libretro_get_option_value("cemu_log_texture_memory"))
+		{
+			bool b;
+			if (libretro_parse_enabled_disabled(v, b) && b)
+				logFlags |= cemuLog_getFlag(LogType::TextureCache);
+		}
 		cemuLog_setActiveLoggingFlags(logFlags);
 
 		// Not a log flag: this one prints a table from retro_run rather than
@@ -2004,6 +2015,7 @@ static const char* libretro_option_category(const char* key)
 		{"cemu_log_thread_sync", "logging"},
 		{"cemu_log_thread_dump", "logging"},
 		{"cemu_log_system_api", "logging"},
+		{"cemu_log_texture_memory", "logging"},
 	};
 	for (const Entry& entry : entries)
 	{
@@ -2195,6 +2207,12 @@ static bool libretro_set_core_options_v2(retro_environment_t cb, const struct re
 				def.info = keep(std::string("Writes the title to the output directory as a .wua. "
 					"It keeps running while this happens."));
 
+			// Worth saying what the number is for, since it only means
+			// something on a device without BC support.
+			if (strcmp(var->key, "cemu_log_texture_memory") == 0)
+				def.info = keep(std::string("Reports how much of the texture memory is BC "
+					"that had to be decompressed because this GPU cannot sample it."));
+
 			// The output directory is whatever the frontend turned out to
 			// allow, so its values are built here rather than written above.
 			if (strcmp(var->key, "cemu_wua_output_dir") == 0)
@@ -2351,6 +2369,7 @@ static void libretro_publish_core_options(retro_environment_t cb)
 		{"cemu_log_thread_sync", "Log Thread Synchronisation (debugging); disabled|enabled"},
 		{"cemu_log_thread_dump", "Log Wii U Thread Snapshots (debugging); disabled|enabled"},
 		{"cemu_log_system_api", "Log System API Calls (debugging); disabled|enabled"},
+		{"cemu_log_texture_memory", "Log Texture Memory (debugging); disabled|enabled"},
 #if defined(ENABLE_VULKAN) && defined(ENABLE_OPENGL)
 		{"cemu_gpu_api", "Graphics API (restart); OpenGL|Vulkan"},
 #endif

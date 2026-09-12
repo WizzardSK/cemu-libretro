@@ -3,6 +3,88 @@
 #include "Cafe/HW/Latte/Renderer/Vulkan/VulkanRenderer.h"
 #include "Cafe/HW/Latte/Renderer/Vulkan/VulkanAPI.h"
 
+// How much texture memory is resident, and how much of it is the price of not
+// being able to sample BC. On a device whose driver reports no BC format, a
+// BC1 texture is decompressed to RGBA8 before upload and then occupies eight
+// times what the title stored - which is a memory and bandwidth cost on
+// exactly the hardware with least of both. Counting it here rather than
+// guessing at it: LatteTextureVk is where the guest format and the format
+// actually allocated are both known, and the allocator's own size is what the
+// heap will be asked for.
+//
+// Reported on the TextureCache log channel, so it costs nothing unless asked
+// for. See issue #22.
+namespace
+{
+	uint64 s_residentTextureBytes = 0;    // every texture, whatever the format
+	uint64 s_residentDecodedBcBytes = 0;  // of those, the ones BC was decoded into
+	uint64 s_bcBytesIfKept = 0;           // what those would have taken as BC
+	uint64 s_peakResidentBytes = 0;
+	uint64 s_lastReportedBytes = 0;
+
+	// Whether the image really is a block format. FormatInfoVK::isCompressed
+	// cannot answer this - it is initialised to false and never set anywhere -
+	// so ask the format that was actually chosen.
+	bool IsBlockFormat(VkFormat fmt)
+	{
+		return fmt >= VK_FORMAT_BC1_RGB_UNORM_BLOCK && fmt <= VK_FORMAT_BC7_SRGB_BLOCK;
+	}
+
+	// A BC image's size in bytes: whole 4x4 blocks, over every mip and layer.
+	uint64 BcNominalSize(Latte::E_GX2SURFFMT format, uint32 width, uint32 height, uint32 mipLevels, uint32 layers)
+	{
+		uint32 blockBytes;
+		switch (format)
+		{
+		case Latte::E_GX2SURFFMT::BC1_UNORM:
+		case Latte::E_GX2SURFFMT::BC1_SRGB:
+		case Latte::E_GX2SURFFMT::BC4_UNORM:
+		case Latte::E_GX2SURFFMT::BC4_SNORM:
+			blockBytes = 8;
+			break;
+		case Latte::E_GX2SURFFMT::BC2_UNORM:
+		case Latte::E_GX2SURFFMT::BC2_SRGB:
+		case Latte::E_GX2SURFFMT::BC3_UNORM:
+		case Latte::E_GX2SURFFMT::BC3_SRGB:
+		case Latte::E_GX2SURFFMT::BC5_UNORM:
+		case Latte::E_GX2SURFFMT::BC5_SNORM:
+			blockBytes = 16;
+			break;
+		default:
+			return 0;
+		}
+		uint64 total = 0;
+		for (uint32 mip = 0; mip < std::max(mipLevels, 1u); mip++)
+		{
+			const uint32 w = std::max(width >> mip, 1u);
+			const uint32 h = std::max(height >> mip, 1u);
+			total += (uint64)((w + 3) / 4) * ((h + 3) / 4) * blockBytes;
+		}
+		return total * std::max(layers, 1u);
+	}
+
+	void ReportTextureMemory()
+	{
+		if (!cemuLog_isLoggingEnabled(LogType::TextureCache))
+			return;
+		// Only when it has moved enough to be worth a line - a title creates
+		// and drops textures constantly and every one of them would log.
+		const uint64 delta = s_residentTextureBytes > s_lastReportedBytes
+			? s_residentTextureBytes - s_lastReportedBytes
+			: s_lastReportedBytes - s_residentTextureBytes;
+		if (delta < 16ull * 1024 * 1024)
+			return;
+		s_lastReportedBytes = s_residentTextureBytes;
+		const uint64 saved = s_residentDecodedBcBytes > s_bcBytesIfKept ? s_residentDecodedBcBytes - s_bcBytesIfKept : 0;
+		cemuLog_log(LogType::TextureCache,
+			"texture memory: {} MiB resident (peak {} MiB), of which {} MiB is decompressed BC that would be {} MiB compressed - {} MiB, {}% of all texture memory, is the cost of having no BC",
+			s_residentTextureBytes / 1024 / 1024, s_peakResidentBytes / 1024 / 1024,
+			s_residentDecodedBcBytes / 1024 / 1024, s_bcBytesIfKept / 1024 / 1024,
+			saved / 1024 / 1024,
+			s_residentTextureBytes ? (saved * 100 / s_residentTextureBytes) : 0);
+	}
+}
+
 LatteTextureVk::LatteTextureVk(class VulkanRenderer* vkRenderer, Latte::E_DIM dim, MPTR physAddress, MPTR physMipAddress, Latte::E_GX2SURFFMT format, uint32 width, uint32 height, uint32 depth, uint32 pitch, uint32 mipLevels, uint32 swizzle,
 	Latte::E_HWTILEMODE tileMode, bool isDepth)
 	: LatteTexture(dim, physAddress, physMipAddress, format, width, height, depth, pitch, mipLevels, swizzle, tileMode, isDepth), m_vkr(vkRenderer)
@@ -108,6 +190,26 @@ LatteTextureVk::LatteTextureVk(class VulkanRenderer* vkRenderer, Latte::E_DIM di
 	vkObjTex->m_flags = imageInfo.flags;
 	vkObjTex->m_format = imageInfo.format;
 
+	{
+		// The size the heap will be asked for, which is the honest number -
+		// it carries whatever the driver adds for tiling and alignment.
+		VkMemoryRequirements memRequirements{};
+		vkGetImageMemoryRequirements(m_vkr->GetLogicalDevice(), vkObjTex->m_image, &memRequirements);
+		m_residentBytes = memRequirements.size;
+		s_residentTextureBytes += m_residentBytes;
+		if (s_residentTextureBytes > s_peakResidentBytes)
+			s_peakResidentBytes = s_residentTextureBytes;
+		// A guest format that is BC, allocated as something that is not, is a
+		// texture that took the decompression fallback.
+		if (Latte::IsCompressedFormat(format) && !IsBlockFormat(imageInfo.format))
+		{
+			m_bcBytesIfKept = BcNominalSize(format, effectiveBaseWidth, effectiveBaseHeight, mipLevels, imageInfo.arrayLayers);
+			s_residentDecodedBcBytes += m_residentBytes;
+			s_bcBytesIfKept += m_bcBytesIfKept;
+		}
+		ReportTextureMemory();
+	}
+
 	// init layout array
 	m_layoutsMips = std::max(mipLevels, 1u); // todo - use effective mip count
 	m_layoutsDepth = std::max(depth, 1u);
@@ -120,6 +222,13 @@ LatteTextureVk::LatteTextureVk(class VulkanRenderer* vkRenderer, Latte::E_DIM di
 LatteTextureVk::~LatteTextureVk()
 {
 	cemu_assert_debug(views.empty());
+
+	s_residentTextureBytes -= m_residentBytes;
+	if (m_bcBytesIfKept != 0)
+	{
+		s_residentDecodedBcBytes -= m_residentBytes;
+		s_bcBytesIfKept -= m_bcBytesIfKept;
+	}
 
 	m_vkr->surfaceCopy_notifyTextureRelease(this);
 
