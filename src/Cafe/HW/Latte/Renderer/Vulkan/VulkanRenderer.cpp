@@ -2298,13 +2298,17 @@ void VulkanRenderer::QueryAvailableFormats()
 	// and no desktop GPU at all. Without a way to ask for it, the path cannot
 	// be tried anywhere it is convenient to debug.
 	const bool pretendNoBC = getenv("CEMU_NO_BC_FORMATS") != nullptr;
-	auto canSample = [&](VkFormat fmt) {
-		if (pretendNoBC)
-			return false;
+	auto deviceCanSample = [&](VkFormat fmt) {
 		VkFormatProperties prop{};
 		vkGetPhysicalDeviceFormatProperties(m_physicalDevice, fmt, &prop);
 		return (prop.optimalTilingFeatures & VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT) != 0 &&
 		       (prop.optimalTilingFeatures & VK_FORMAT_FEATURE_TRANSFER_DST_BIT) != 0;
+	};
+	// The override is about BC and only BC. Letting it answer for every format
+	// made the report below say the device had no ASTC and no ETC2 either,
+	// which is the opposite of what it is there to find out.
+	auto canSample = [&](VkFormat fmt) {
+		return pretendNoBC ? false : deviceCanSample(fmt);
 	};
 	// Both spellings of each have to work, since a texture may arrive as either.
 	m_supportedFormatInfo.fmt_bc1 = canSample(VK_FORMAT_BC1_RGBA_UNORM_BLOCK) && canSample(VK_FORMAT_BC1_RGBA_SRGB_BLOCK);
@@ -2319,6 +2323,18 @@ void VulkanRenderer::QueryAvailableFormats()
 			"BC texture formats unsupported (BC1 {}, BC2 {}, BC3 {}, BC4 {}, BC5 {}) - decompressing them on upload",
 			m_supportedFormatInfo.fmt_bc1, m_supportedFormatInfo.fmt_bc2, m_supportedFormatInfo.fmt_bc3,
 			m_supportedFormatInfo.fmt_bc4, m_supportedFormatInfo.fmt_bc5);
+		// What the device does have instead. A decompressed BC3 texture costs
+		// four times what it did; ASTC 4x4 and ETC2+EAC are both one byte per
+		// texel, the same as BC3, so a device with either has somewhere to put
+		// these that is not uncompressed. Whether transcoding into one is
+		// practical is issue #22 - this only says whether it is possible.
+		cemuLog_log(LogType::Force,
+			"  the device offers instead: ASTC 4x4 {}, ETC2 RGBA8 {}, ETC2 RGB8 {}, EAC R11 {}, EAC RG11 {}",
+			deviceCanSample(VK_FORMAT_ASTC_4x4_UNORM_BLOCK) && deviceCanSample(VK_FORMAT_ASTC_4x4_SRGB_BLOCK),
+			deviceCanSample(VK_FORMAT_ETC2_R8G8B8A8_UNORM_BLOCK),
+			deviceCanSample(VK_FORMAT_ETC2_R8G8B8_UNORM_BLOCK),
+			deviceCanSample(VK_FORMAT_EAC_R11_UNORM_BLOCK),
+			deviceCanSample(VK_FORMAT_EAC_R11G11_UNORM_BLOCK));
 	}
 }
 

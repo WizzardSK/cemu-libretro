@@ -3165,6 +3165,7 @@ static void libretro_create_renderer()
 					s_vk_interface->queue,
 					s_vk_interface->queue_index);
 				g_renderer.reset(vkRenderer);
+				cemuLog_log(LogType::Force, "[libretro] renderer created");
 
 				// Create presentation image
 				vkRenderer->CreatePresentationImage(SCREEN_WIDTH, SCREEN_HEIGHT);
@@ -3682,6 +3683,12 @@ RETRO_API void retro_unload_game()
 			// process does not come back from; the alternative is a crash on
 			// every exit.
 			(void)g_renderer.release();
+			// Into Cemu's log as well as the frontend's: a crash report comes
+			// with log.txt and rarely with RetroArch's, and without this the
+			// renderer vanishing is invisible in the only file that arrives.
+			cemuLog_log(LogType::Force, "[libretro] dropping the renderer without destroying it - {}",
+				libretro_gpu_context_gone() ? "the graphics context is already gone"
+					: "the GPU thread is still in its own teardown");
 			if (log_cb)
 				log_cb(RETRO_LOG_INFO, "Cemu: leaving the renderer alone - %s\n",
 					libretro_gpu_context_gone() ? "the graphics context is already gone"
@@ -3689,6 +3696,7 @@ RETRO_API void retro_unload_game()
 		}
 		else
 		{
+			cemuLog_log(LogType::Force, "[libretro] destroying the renderer on unload");
 			delete renderer;
 			(void)g_renderer.release();
 		}

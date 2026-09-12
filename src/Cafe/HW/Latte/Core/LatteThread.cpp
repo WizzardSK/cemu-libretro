@@ -405,6 +405,24 @@ void Latte_Start()
 	sLatteThreadAbandoned.store(false, std::memory_order_release);
 	sLatteGeneration.fetch_add(1, std::memory_order_acq_rel);
 #endif
+#ifdef ENABLE_LIBRETRO
+	// The first thing the GPU thread does is call g_renderer->Initialize(), so
+	// starting it without a renderer is a null dereference several seconds
+	// later, on another thread, with nothing in the log to say why - which is
+	// exactly the crash report that arrived from a Mali device. Refuse here
+	// instead, and say so. The caller must not be left waiting on an init that
+	// is never going to happen, so the flags are set as if the thread had come
+	// and gone.
+	if (!g_renderer)
+	{
+		cemuLog_log(LogType::Force, "[LatteThread] refusing to start: there is no renderer to run on. "
+			"Something released it between the frontend creating one and the title starting.");
+		sLatteThreadRunning = false;
+		sLatteThreadFinishedInit = true;
+		sLatteThreadExited.store(true, std::memory_order_release);
+		return;
+	}
+#endif
 	sLatteThreadRunning = true;
 	sLatteThreadFinishedInit = false;
 	sLatteThread = std::thread(Latte_ThreadEntry);
@@ -560,6 +578,10 @@ void LatteThread_Exit()
     // destroy renderer but make sure that g_renderer remains valid until the destructor has finished
 	if (g_renderer)
 	{
+		// Unconditionally logged, not behind the debug switch: this is one of
+		// the few places the renderer can disappear, and when one disappears
+		// under a run that still wants it, the log has to say who took it.
+		cemuLog_log(LogType::Force, "[LatteThread] destroying the renderer on the way out");
 		Renderer* renderer = g_renderer.get();
 		delete renderer;
 		g_renderer.release();
