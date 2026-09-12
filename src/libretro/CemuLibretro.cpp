@@ -25,6 +25,8 @@
 #include "Cafe/TitleList/TitleConverter.h"
 #include "Cafe/TitleList/GameInfo.h"
 #include "Cafe/HW/Latte/Core/Latte.h"
+#include "Cafe/HW/Latte/Core/LatteShader.h"
+#include "Cafe/HW/Latte/Core/LatteBufferCache.h"
 #include "Cafe/HW/Latte/Renderer/Renderer.h"
 #ifdef ENABLE_OPENGL
 #include "Cafe/HW/Latte/Renderer/OpenGL/OpenGLRenderer.h"
@@ -476,6 +478,20 @@ static bool s_next_layout_key_held = false;
 
 static retro_hw_render_callback s_hw_render{};
 
+// Where a renderer goes when its GPU thread had to leave without tearing down -
+// the frontend took the graphics context apart first, which it does before it
+// unloads. The device it was built on outlives that by one callback.
+static Renderer* s_renderer_awaiting_device_teardown = nullptr;
+
+void libretro_keep_renderer_for_device_teardown(Renderer* renderer)
+{
+	// Only ever one: a second would mean two runs left a renderer behind, which
+	// cannot happen - the next run builds its own and this one is already out of
+	// reach of everything except the callback below.
+	cemu_assert_debug(!s_renderer_awaiting_device_teardown || !renderer);
+	if (renderer)
+		s_renderer_awaiting_device_teardown = renderer;
+}
 #ifdef ENABLE_VULKAN
 // Vulkan HW render interface
 static const struct retro_hw_render_interface_vulkan* s_vk_interface = nullptr;
@@ -682,10 +698,38 @@ static bool libretro_vk_create_device(
 	return true;
 }
 
+// "Device provided to frontend is owned by the frontend, but any additional
+// device resources must be freed by core in destroy_device callback" - and this
+// is the last moment that device exists, which makes it the only place the
+// leftovers of a skipped teardown can still be freed through it. Before the
+// core created the device itself this callback was never reached at all, so
+// there was nowhere to do this and the caches went to the next core instance
+// instead, holding objects of a device that had died in between.
 static void libretro_vk_destroy_device()
 {
 	if (log_cb)
 		log_cb(RETRO_LOG_INFO, "Cemu: Vulkan destroy_device called\n");
+
+	if (Renderer* renderer = s_renderer_awaiting_device_teardown)
+	{
+		s_renderer_awaiting_device_teardown = nullptr;
+		if (log_cb)
+			log_cb(RETRO_LOG_INFO, "Cemu: finishing the GPU teardown the context loss interrupted\n");
+		// GetInstance() reads g_renderer, and the caches free their objects
+		// through it, so it has to be the current renderer for the length of
+		// this - the same order LatteThread_Exit uses when it gets to do this
+		// itself.
+		g_renderer.reset(renderer);
+		renderer->Shutdown();
+		LatteBufferCache_UnloadAll();
+		LatteTC_UnloadAllTextures();
+		LatteSHRC_UnloadAll();
+		LatteShaderCache_Close();
+		RendererOutputShader::ShutdownStatic();
+		delete renderer;
+		(void)g_renderer.release();
+	}
+
 	s_vk_device_created = false;
 }
 

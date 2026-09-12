@@ -459,6 +459,7 @@ bool Latte_GetStopSignal()
 #ifdef ENABLE_LIBRETRO
 // Defined at global scope by the libretro glue (src/libretro/CemuLibretro.cpp).
 bool libretro_gpu_context_gone();
+void libretro_keep_renderer_for_device_teardown(Renderer* renderer);
 #endif
 
 void LatteThread_Exit()
@@ -492,8 +493,13 @@ void LatteThread_Exit()
 	// unfreed instead; this thread is on its way out and so is the process.
 	if (::libretro_gpu_context_gone())
 	{
-		cemuLog_log(LogType::Force, "[LatteThread] graphics context already gone, skipping GPU teardown");
-		g_renderer.release();
+		cemuLog_log(LogType::Force, "[LatteThread] graphics context already gone, handing the renderer to the device teardown");
+		// Not dropped on the floor: the device this renderer was built on is
+		// still alive until the frontend calls destroy_device, and that is where
+		// everything below would have been freed. Handing it over is what keeps
+		// the caches reachable until then - left here, they are inherited by the
+		// next core instance, which is where they used to crash.
+		::libretro_keep_renderer_for_device_teardown(g_renderer.release());
 		std::memset(&LatteGPUState, 0, sizeof(LatteGPUState));
 		sLatteThreadExited.store(true, std::memory_order_release);
 		#if BOOST_OS_WINDOWS
