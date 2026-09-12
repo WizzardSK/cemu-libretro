@@ -22,6 +22,39 @@ namespace
 	uint64 s_peakResidentBytes = 0;
 	uint64 s_lastReportedBytes = 0;
 
+	// The same split per BC format, because the total cannot say whether
+	// anything is worth narrowing. BC3's alpha is an 8-bit ramp and has
+	// nowhere smaller to go, so bytes sitting in BC3 are bytes that stay;
+	// BC1's alpha is one bit and BC2's is four, which do have somewhere.
+	enum BcKind { BcKind_1, BcKind_2, BcKind_3, BcKind_4, BcKind_5, BcKind_Count, BcKind_None = -1 };
+	const char* const s_bcKindName[BcKind_Count] = { "BC1", "BC2", "BC3", "BC4", "BC5" };
+	uint64 s_residentByKind[BcKind_Count] = {};
+	uint64 s_bcBytesByKind[BcKind_Count] = {};
+
+	int BcKindOf(Latte::E_GX2SURFFMT format)
+	{
+		switch (format)
+		{
+		case Latte::E_GX2SURFFMT::BC1_UNORM:
+		case Latte::E_GX2SURFFMT::BC1_SRGB:
+			return BcKind_1;
+		case Latte::E_GX2SURFFMT::BC2_UNORM:
+		case Latte::E_GX2SURFFMT::BC2_SRGB:
+			return BcKind_2;
+		case Latte::E_GX2SURFFMT::BC3_UNORM:
+		case Latte::E_GX2SURFFMT::BC3_SRGB:
+			return BcKind_3;
+		case Latte::E_GX2SURFFMT::BC4_UNORM:
+		case Latte::E_GX2SURFFMT::BC4_SNORM:
+			return BcKind_4;
+		case Latte::E_GX2SURFFMT::BC5_UNORM:
+		case Latte::E_GX2SURFFMT::BC5_SNORM:
+			return BcKind_5;
+		default:
+			return BcKind_None;
+		}
+	}
+
 	// Whether the image really is a block format. FormatInfoVK::isCompressed
 	// cannot answer this - it is initialised to false and never set anywhere -
 	// so ask the format that was actually chosen.
@@ -34,20 +67,15 @@ namespace
 	uint64 BcNominalSize(Latte::E_GX2SURFFMT format, uint32 width, uint32 height, uint32 mipLevels, uint32 layers)
 	{
 		uint32 blockBytes;
-		switch (format)
+		switch (BcKindOf(format))
 		{
-		case Latte::E_GX2SURFFMT::BC1_UNORM:
-		case Latte::E_GX2SURFFMT::BC1_SRGB:
-		case Latte::E_GX2SURFFMT::BC4_UNORM:
-		case Latte::E_GX2SURFFMT::BC4_SNORM:
+		case BcKind_1:
+		case BcKind_4:
 			blockBytes = 8;
 			break;
-		case Latte::E_GX2SURFFMT::BC2_UNORM:
-		case Latte::E_GX2SURFFMT::BC2_SRGB:
-		case Latte::E_GX2SURFFMT::BC3_UNORM:
-		case Latte::E_GX2SURFFMT::BC3_SRGB:
-		case Latte::E_GX2SURFFMT::BC5_UNORM:
-		case Latte::E_GX2SURFFMT::BC5_SNORM:
+		case BcKind_2:
+		case BcKind_3:
+		case BcKind_5:
 			blockBytes = 16;
 			break;
 		default:
@@ -82,6 +110,20 @@ namespace
 			s_residentDecodedBcBytes / 1024 / 1024, s_bcBytesIfKept / 1024 / 1024,
 			saved / 1024 / 1024,
 			s_residentTextureBytes ? (saved * 100 / s_residentTextureBytes) : 0);
+		// Per format, in KiB: the totals cannot say where the cost sits, and
+		// which formats hold it decides whether narrowing any of them is worth
+		// doing at all.
+		for (int kind = 0; kind < BcKind_Count; kind++)
+		{
+			if (s_residentByKind[kind] == 0)
+				continue;
+			cemuLog_log(LogType::TextureCache,
+				"  {}: {} KiB decompressed, {} KiB as {} - costs {} KiB ({}x)",
+				s_bcKindName[kind], s_residentByKind[kind] / 1024, s_bcBytesByKind[kind] / 1024,
+				s_bcKindName[kind],
+				(s_residentByKind[kind] - std::min(s_residentByKind[kind], s_bcBytesByKind[kind])) / 1024,
+				s_bcBytesByKind[kind] ? fmt::format("{:.1f}", (double)s_residentByKind[kind] / (double)s_bcBytesByKind[kind]) : std::string("-"));
+		}
 	}
 }
 
@@ -206,6 +248,12 @@ LatteTextureVk::LatteTextureVk(class VulkanRenderer* vkRenderer, Latte::E_DIM di
 			m_bcBytesIfKept = BcNominalSize(format, effectiveBaseWidth, effectiveBaseHeight, mipLevels, imageInfo.arrayLayers);
 			s_residentDecodedBcBytes += m_residentBytes;
 			s_bcBytesIfKept += m_bcBytesIfKept;
+			m_bcKind = BcKindOf(format);
+			if (m_bcKind >= 0)
+			{
+				s_residentByKind[m_bcKind] += m_residentBytes;
+				s_bcBytesByKind[m_bcKind] += m_bcBytesIfKept;
+			}
 		}
 		ReportTextureMemory();
 	}
@@ -228,6 +276,11 @@ LatteTextureVk::~LatteTextureVk()
 	{
 		s_residentDecodedBcBytes -= m_residentBytes;
 		s_bcBytesIfKept -= m_bcBytesIfKept;
+		if (m_bcKind >= 0)
+		{
+			s_residentByKind[m_bcKind] -= m_residentBytes;
+			s_bcBytesByKind[m_bcKind] -= m_bcBytesIfKept;
+		}
 	}
 
 	m_vkr->surfaceCopy_notifyTextureRelease(this);

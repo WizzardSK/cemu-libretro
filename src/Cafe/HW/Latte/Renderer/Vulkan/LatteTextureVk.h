@@ -99,6 +99,7 @@ private:
 	// image would have taken had the device been able to sample BC.
 	uint64 m_residentBytes{};
 	uint64 m_bcBytesIfKept{};
+	int m_bcKind{-1}; // which of BC1..BC5, so the destructor subtracts from the right one
 	std::vector<VkImageLayout> m_layouts;
 	uint32 m_layoutsMips;
 	uint32 m_layoutsDepth;
