@@ -3610,7 +3610,16 @@ RETRO_API void retro_unload_game()
 	// unwinds in, where the renderer outlives its own teardown by construction.
 	if (Renderer* renderer = g_renderer.get())
 	{
-		if (libretro_gpu_context_gone())
+		// A GPU thread that would not stop is inside its own teardown - phase
+		// "exiting" is where Latte_Stop gave up and detached it - and part of
+		// that teardown is deleting this very renderer. Deleting it here as
+		// well is two threads destroying one object: the one that gets there
+		// first nulls g_renderer, and the other faults reading it back from
+		// inside ~VulkanRenderer, which is what sco8487's close crash is
+		// (fault at 0x18f0, VulkanRenderer::GetInstance() returning null 6384
+		// bytes in). The thread is still live and still owns it, so leave it
+		// alone and let the process take it.
+		if (libretro_gpu_context_gone() || Latte_WasThreadAbandoned())
 		{
 			// Nothing to destroy it with. ~VulkanRenderer submits a final
 			// command buffer and frees its objects through the frontend's
@@ -3621,7 +3630,9 @@ RETRO_API void retro_unload_game()
 			// every exit.
 			(void)g_renderer.release();
 			if (log_cb)
-				log_cb(RETRO_LOG_INFO, "Cemu: graphics context already gone, leaving the renderer alone\n");
+				log_cb(RETRO_LOG_INFO, "Cemu: leaving the renderer alone - %s\n",
+					libretro_gpu_context_gone() ? "the graphics context is already gone"
+						: "the GPU thread is still in its own teardown");
 		}
 		else
 		{
