@@ -45,6 +45,21 @@ static std::atomic_bool sLatteThreadExited{false};
 // and still rendering through the frontend's device, which is exactly the state
 // in which nothing downstream may take that device apart.
 static std::atomic_bool sLatteThreadAbandoned{false};
+// Which run a GPU thread belongs to. sLatteThreadRunning alone cannot say: a
+// thread that outlived its own title sees the flag set back to true by the run
+// that followed, and carries on as if it were that run's thread - reading the
+// new title's ring buffer, and dereferencing g_renderer in the window where the
+// old renderer is gone and the new one is still being built. That is a crash in
+// LatteCP_readU32Deprc, and it is the good outcome; the other one is two
+// threads driving one GPU. A thread stamps itself at entry and stops for good
+// as soon as the stamp is out of date.
+static std::atomic_uint32_t sLatteGeneration{0};
+static thread_local uint32 t_latteGeneration = 0;
+
+bool Latte_IsThreadFromAnEarlierRun()
+{
+	return t_latteGeneration != sLatteGeneration.load(std::memory_order_acquire);
+}
 
 bool Latte_WasThreadAbandoned()
 {
@@ -199,6 +214,9 @@ void LatteThread_HandleOSScreen()
 int Latte_ThreadEntry()
 {
 	SetThreadName("LatteThread");
+#ifdef ENABLE_LIBRETRO
+	t_latteGeneration = sLatteGeneration.load(std::memory_order_acquire);
+#endif
 	sint32 w,h;
 	WindowSystem::GetWindowPhysSize(w,h);
 
@@ -355,6 +373,7 @@ void Latte_Start()
 #ifdef ENABLE_LIBRETRO
 	sLatteThreadExited.store(false, std::memory_order_release);
 	sLatteThreadAbandoned.store(false, std::memory_order_release);
+	sLatteGeneration.fetch_add(1, std::memory_order_acq_rel);
 #endif
 	sLatteThreadRunning = true;
 	sLatteThreadFinishedInit = false;
@@ -374,7 +393,12 @@ void Latte_Stop()
 		cemuLog_log(LogType::Force, "[LatteThread] Latte_Stop begin running={} finishedInit={}", sLatteThreadRunning.load() ? 1 : 0, sLatteThreadFinishedInit.load() ? 1 : 0);
 	std::unique_lock _lock(sLatteThreadStateMutex);
 	if (!sLatteThreadRunning)
+	{
+		// Nothing to stop, as far as this flag knows - but if a thread is still
+		// alive out there, this is the line that says nobody ever waited for it.
+		cemuLog_log(LogType::Force, "[LatteThread] Latte_Stop: the GPU thread was already marked stopped, not waiting for one");
 		return;
+	}
 	sLatteThreadRunning = false;
 	_lock.unlock();
 #ifdef ENABLE_LIBRETRO
@@ -422,6 +446,13 @@ void Latte_Stop()
 
 bool Latte_GetStopSignal()
 {
+#ifdef ENABLE_LIBRETRO
+	// Every caller of this is the GPU thread asking whether to leave, so a
+	// thread whose run is over is told to leave even while the current run's
+	// flag says keep going.
+	if (Latte_IsThreadFromAnEarlierRun())
+		return true;
+#endif
 	return !sLatteThreadRunning;
 }
 
@@ -434,6 +465,21 @@ void LatteThread_Exit()
 {
 #ifdef ENABLE_LIBRETRO
 	LatteThread_SetPhase("exiting");
+	// A thread from an earlier run owns none of this any more: the renderer,
+	// LatteGPUState and the bookkeeping Latte_Stop reads all belong to the run
+	// that is going now. Tearing any of it down here would take the GPU out from
+	// under a title that is using it, so leave quietly and let the current run
+	// carry on. Worth a line in the log, because a thread that outlives its own
+	// title is still a bug even when it ends tidily.
+	if (Latte_IsThreadFromAnEarlierRun())
+	{
+		cemuLog_log(LogType::Force, "[LatteThread] a GPU thread from an earlier run is stopping now, without touching this one's renderer");
+		#if BOOST_OS_WINDOWS
+		ExitThread(0);
+		#else
+		pthread_exit(nullptr);
+		#endif
+	}
 #endif
 	if (LatteThread_libretro_debug_enabled())
 		cemuLog_log(LogType::Force, "[LatteThread] LatteThread_Exit begin renderer={}", g_renderer ? 1 : 0);

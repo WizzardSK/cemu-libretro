@@ -2461,7 +2461,15 @@ RETRO_API void retro_set_controller_port_device(unsigned port, unsigned device)
 static bool libretro_shutdown_title_for_exit()
 {
 	if (!s_game_loaded)
+	{
+		// Reported as stopped, and nothing is stopped: the scheduler, the GPU
+		// thread and the title's memory are all left as they are. True whenever
+		// the title is genuinely down, and the thing to suspect when a thread
+		// turns up alive after a close.
+		if (log_cb)
+			log_cb(RETRO_LOG_INFO, "Cemu: no title was loaded, nothing to shut down\n");
 		return true;
+	}
 	s_game_loaded = false;
 
 	s_shutting_down = true;

@@ -1093,7 +1093,13 @@ namespace CafeSystem
 	void ShutdownTitle()
 	{
 		if(!sSystemRunning)
+		{
+			// Which means nothing below runs: no scheduler stop, no Latte_Stop,
+			// no memory released. Harmless when the title really is down, and
+			// the first thing to look at when something outlived it.
+			cemuLog_log(LogType::Force, "ShutdownTitle: no title was running, nothing to stop");
 			return;
+		}
 		auto phase = [](const char* name) { s_shutdownPhase.store(name, std::memory_order_release); };
 		phase("stopping the scheduler");
 		coreinit::OSSchedulerEnd();
