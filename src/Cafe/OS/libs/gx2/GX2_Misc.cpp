@@ -183,6 +183,12 @@ namespace GX2
         sGX2MainCoreIndex = 0;
         GX2CommandResetToDefaultState();
         GX2EventResetToDefaultState();
+        // The shared area was allocated from the system area, which is given
+        // back when the title stops. GX2Init only allocates a new one if this
+        // is null, so a kept pointer would have the next title reading and
+        // writing whatever ends up at that address instead.
+        LatteGPUState.sharedAreaAddr = MPTR_NULL;
+        LatteGPUState.sharedArea = nullptr;
 	}
 
 	sint32 GX2GetMainCoreId(PPCInterpreter_t* hCPU)

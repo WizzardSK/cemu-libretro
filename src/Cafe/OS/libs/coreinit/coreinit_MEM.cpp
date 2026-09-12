@@ -10,6 +10,25 @@
 // the system area is a block of memory that exists only in the emulator. It is used to simplify dynamic memory allocation for system data
 // this partially overlaps with the system heap from coreinit_SysHeap.cpp -> Use SysHeap for everything
 MPTR sysAreaAllocatorOffset = 0;
+// Where the allocator stood once the allocations that outlive a title had been
+// made (the SysAllocators, which hand out their addresses for the life of the
+// process). Everything above this line belongs to the title that is running.
+static MPTR sysAreaPersistentOffset = 0;
+
+// There is no free for this allocator, so without this a title's allocations -
+// the 8MB system heap above all - stay taken after it stops, and the next title
+// starts 8MB further up a 32MB area. The fourth launch in a process used to run
+// it out and take the emulator down with "Ran out of system memory", which is
+// what a reset, or a second game in one session, is.
+void coreinit_markSysAreaPersistent()
+{
+	sysAreaPersistentOffset = sysAreaAllocatorOffset;
+}
+
+void coreinit_releaseSysAreaForTitle()
+{
+	sysAreaAllocatorOffset = sysAreaPersistentOffset;
+}
 
 MPTR coreinit_allocFromSysArea(uint32 size, uint32 alignment)
 {
@@ -27,6 +46,11 @@ MPTR coreinit_allocFromSysArea(uint32 size, uint32 alignment)
 		cemu_assert(false); // out of bounds
 	}
 	s_allocator_mutex.unlock();
+	// The area is handed back when a title stops, so the second title to run in
+	// a process gets memory the first one wrote in. A fresh mapping would have
+	// been zero, and some of what is allocated here is read before it is
+	// written, so give every caller the same thing the first one saw.
+	memset(memory_getPointerFromVirtualOffset(newMemOffset), 0, size);
 	return newMemOffset;
 }
 

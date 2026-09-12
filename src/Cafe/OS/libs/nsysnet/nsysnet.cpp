@@ -2211,6 +2211,14 @@ namespace nsysnet
 			return "nsysnet";
 		}
 
+		void RPLUnmapped() override
+		{
+			// inet_ntoa's buffer comes from the system heap, which is created
+			// again for the next title over the same memory. Keeping the
+			// pointer would have it write into somebody else's allocation.
+			_ntoa_tempString = nullptr;
+		}
+
 		void RPLMapped() override
 		{
 			cafeExportRegister("nsysnet", inet_ntop, LogType::Socket);

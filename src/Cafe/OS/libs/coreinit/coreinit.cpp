@@ -375,7 +375,10 @@ namespace coreinit
 			}
 			else if (reason == coreinit::RplEntryReason::Unloaded)
 			{
-				// todo
+				// The placeholder font sits in the system area, which is given
+				// back when the title stops. It is loaded again on demand.
+				placeholderFont = MPTR_NULL;
+				placeholderFontSize = 0;
 			}
 		}
 	}s_COSCoreinitModule;

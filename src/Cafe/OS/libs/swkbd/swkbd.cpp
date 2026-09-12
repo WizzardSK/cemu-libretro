@@ -708,7 +708,9 @@ namespace swkbd
 			}
 			else if (reason == coreinit::RplEntryReason::Unloaded)
 			{
-				// todo
+				// The state lives in the system area, which is given back when
+				// the title stops.
+				swkbdInternalState = nullptr;
 			}
 		}
 	}s_COSswkbdModule;

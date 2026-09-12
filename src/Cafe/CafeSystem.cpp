@@ -19,6 +19,7 @@
 #include "Cafe/TitleList/TitleList.h"
 #include "Cafe/TitleList/GameInfo.h"
 #include "Cafe/OS/libs/coreinit/coreinit_Alarm.h"
+#include "Cafe/OS/libs/coreinit/coreinit_MEM.h"
 #include "Cafe/OS/libs/snd_core/ax.h"
 #include "Cafe/OS/RPL/rpl.h"
 #include "Cafe/HW/Latte/Core/Latte.h"
@@ -650,6 +651,11 @@ namespace CafeSystem
 		// init hardware register interfaces
 		cemuLog_log(LogType::Force, "Init: HW_SI");
 		HW_SI::Initialize();
+		// Everything allocated from the system area up to here belongs to the
+		// process - the SysAllocators above all, which hand out their addresses
+		// for as long as it lives. What a title allocates comes after this line
+		// and is given back when it stops.
+		coreinit_markSysAreaPersistent();
 		cemuLog_log(LogType::Force, "Init: done");
 	}
 
@@ -1121,6 +1127,12 @@ namespace CafeSystem
 		UnmountBaseDirectories();
 		phase("releasing memory");
 		DestroyMemorySpace();
+		// The system area is a bump allocator with no free, and CEMU_AREA stays
+		// mapped across titles, so this has to be given back by hand. The
+		// modules that cache a pointer into it (the placeholder font, the swkbd
+		// state, the uds workspace, the GX2 shared area) have dropped theirs by
+		// now - RPLUnmapped and _GX2DriverReset both ran above.
+		coreinit_releaseSysAreaForTitle();
 		LaunchSettings::ClearCosArgstr();
 		sSystemRunning = false;
 		phase("done");
