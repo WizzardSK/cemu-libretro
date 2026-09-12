@@ -500,6 +500,11 @@ static void LinuxBreathOfTheWildWorkaround(VkInstance& instance, const VkInstanc
 
 #endif
 
+#ifdef ENABLE_LIBRETRO
+// Defined at global scope by the libretro glue (src/libretro/CemuLibretro.cpp).
+bool libretro_gpu_context_gone();
+#endif
+
 VulkanRenderer::VulkanRenderer() : Renderer(RendererAPI::Vulkan)
 {
 	glslang::InitializeProcess();
@@ -1019,9 +1024,27 @@ void VulkanRenderer::DestroyPresentationImage()
 
 VulkanRenderer::~VulkanRenderer()
 {
+#ifdef ENABLE_LIBRETRO
+	// Submitting is not allowed once the frontend has taken its context apart:
+	// the swapchain images and semaphores this command buffer refers to are
+	// gone, and the driver faults inside vkQueueSubmit rather than complaining.
+	// Destroying objects stays legal - the device is still there - which is all
+	// the teardown below needs.
+	if (!::libretro_gpu_context_gone())
+	{
+		SubmitCommandBuffer();
+		WaitDeviceIdle();
+		WaitCommandBufferFinished(GetCurrentCommandBufferId());
+	}
+	else
+	{
+		WaitDeviceIdle();
+	}
+#else
 	SubmitCommandBuffer();
 	WaitDeviceIdle();
 	WaitCommandBufferFinished(GetCurrentCommandBufferId());
+#endif
 #ifdef RETRO_CORE
 	DestroyPresentationImage();
 #endif
@@ -2080,7 +2103,14 @@ void VulkanRenderer::Initialize()
 
 void VulkanRenderer::Shutdown()
 {
+#ifdef ENABLE_LIBRETRO
+	// Same as the destructor: with the context gone there is nothing left to
+	// submit to, and trying is a fault in the driver.
+	if (!::libretro_gpu_context_gone())
+		SubmitCommandBuffer();
+#else
 	SubmitCommandBuffer();
+#endif
 	WaitDeviceIdle();
 	// stop compilation threads
 	RendererShaderVk::Shutdown();
