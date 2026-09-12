@@ -1098,7 +1098,6 @@ static void libretro_init_paths()
 	std::error_code ec;
 	fs::create_directories(sysPath, ec);
 	fs::create_directories(savePath, ec);
-	fs::create_directories(sysPath / "shaderCache", ec);
 	// mlc01 is where every save goes, and by libretro convention writable
 	// per-user data belongs in the save directory rather than the system one.
 	// It used to land in system/Cemu/mlc01, because that is what Cemu derives
@@ -1106,16 +1105,45 @@ static void libretro_init_paths()
 	s_mlc_path = savePath / "mlc01";
 	fs::create_directories(s_mlc_path, ec);
 
+	// The cache path is the directory the shader cache lives *in*, not the
+	// shader cache itself: everything that uses it asks for
+	// "shaderCache/transferable/..." and so on. Handing it
+	// system/Cemu/shaderCache is what produced
+	// system/Cemu/shaderCache/shaderCache, with the outer one left empty.
 	std::set<fs::path> failedWriteAccess;
 	ActiveSettings::SetPaths(
 		false,               // not portable
 		sysPath / "Cemu",    // executable path (dummy)
 		sysPath,             // user data path
 		sysPath,             // config path
-		sysPath / "shaderCache", // cache path
+		sysPath,             // cache path
 		sysPath,             // data path
 		failedWriteAccess
 	);
+
+	// One-time move for anyone who built a cache under the doubled path, and
+	// only while nothing is at the right place yet, so it can never merge two
+	// caches or overwrite one.
+	const fs::path strayCache = sysPath / "shaderCache" / "shaderCache";
+	if (fs::is_directory(strayCache, ec))
+	{
+		const fs::path properCache = sysPath / "shaderCache";
+		bool occupied = false;
+		for (const char* sub : {"transferable", "precompiled", "driver"})
+			occupied = occupied || fs::exists(properCache / sub, ec);
+		if (!occupied)
+		{
+			for (fs::directory_iterator it(strayCache, ec), end; it != end && !ec; it.increment(ec))
+				fs::rename(it->path(), properCache / it->path().filename(), ec);
+			if (!ec)
+			{
+				fs::remove(strayCache, ec);
+				if (log_cb)
+					log_cb(RETRO_LOG_INFO, "Cemu: moved the shader cache out of shaderCache/shaderCache\n");
+			}
+		}
+	}
+	ec.clear();
 }
 
 // ============================================================================
