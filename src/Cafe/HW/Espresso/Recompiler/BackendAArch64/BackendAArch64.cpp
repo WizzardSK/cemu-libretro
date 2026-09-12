@@ -1650,8 +1650,18 @@ void AArch64GenContext_t::enterRecompilerCode()
 	st4((v8.d - v11.d)[0], AdrPostImm(x9, 32));
 	st4((v12.d - v15.d)[0], AdrPostImm(x9, 32));
 	mov(HCPU_REG, x1); // call argument 2
-	mov(PPC_REC_INSTANCE_REG, (uint64)ppcRecompilerInstanceData);
-	mov(MEM_BASE_REG, (uint64)memory_base);
+	// Read these out of their globals instead of baking the values in. This
+	// code is generated once per process - see initializedInterfaceFunctions
+	// below - while PPCRecompiler_init() reserves fresh instance data for every
+	// title that is launched, at whatever address mmap returns. A relaunch that
+	// did not land on the old address left every recompiled branch in the new
+	// title reading the jump table of the reservation before it: a fault on an
+	// unmapped page, or worse, an entry that happened to be mapped. That is
+	// what a reset is, and the second one usually found it.
+	mov(PPC_REC_INSTANCE_REG, (uint64)&ppcRecompilerInstanceData);
+	ldr(PPC_REC_INSTANCE_REG, AdrUimm(PPC_REC_INSTANCE_REG, 0));
+	mov(MEM_BASE_REG, (uint64)&memory_base);
+	ldr(MEM_BASE_REG, AdrUimm(MEM_BASE_REG, 0));
 
 	// branch to recFunc
 	blr(x0); // call argument 1
