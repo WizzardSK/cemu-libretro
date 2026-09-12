@@ -1009,14 +1009,6 @@ void LatteRenderTarget_itHLECopyColorBufferToScanBuffer(MPTR colorBufferPtr, uin
 
 	bool showDRC = swkbd_hasKeyboardInputHook() == false && (isDRCPrimary ^ altScreenRequested);
 
-#ifdef ENABLE_LIBRETRO
-	{
-		static int s_rt_log = 0;
-		if (s_rt_log++ < 10)
-			cemuLog_log(LogType::Force, "CopyToScanBuffer: renderTarget=0x{:x} showDRC={} isDRCPrimary={}", renderTarget, showDRC, isDRCPrimary);
-	}
-#endif
-
 #ifdef RETRO_CORE
 	// In libretro composite display modes (SBS / TopBottom / PiP) both screens
 	// are presented simultaneously, so the standalone showDRC toggle-swap (which
