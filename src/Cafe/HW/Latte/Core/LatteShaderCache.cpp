@@ -499,32 +499,40 @@ void LatteShaderCache_Load()
 	cemuLog_log(LogType::Force, "Shader cache loaded with {} shaders. Commited mem {}MB. Took {}ms", numLoadedShaders, (sint32)(memCommited/1024/1024), timeLoad);
 #endif
 	LatteShaderCache_finish();
+	// Same reason as in ShowProgress: the content can be closed while this
+	// is still loading, and everything from here on draws the final frame
+	// of the loading screen through the renderer. If it has gone there is
+	// nothing left to draw it with, and nothing to clean up either - the
+	// textures below belonged to it.
+	Renderer* renderer = g_renderer.get();
+	if (!renderer)
+		return;
 	// if Vulkan or Metal then also load pipeline cache
 #if defined(ENABLE_VULKAN) || defined(ENABLE_METAL)
-	if (g_renderer->GetType() == RendererAPI::Vulkan || g_renderer->GetType() == RendererAPI::Metal)
+	if (renderer->GetType() == RendererAPI::Vulkan || renderer->GetType() == RendererAPI::Metal)
         LatteShaderCache_LoadPipelineCache(cacheTitleId);
 #endif
 
 
-	g_renderer->BeginFrame(true);
-	if (g_renderer->ImguiBegin(true))
+	renderer->BeginFrame(true);
+	if (renderer->ImguiBegin(true))
 	{
 		LatteShaderCache_drawBackgroundImage(g_shaderCacheLoaderState.textureTVId, 1280, 720);
-		g_renderer->ImguiEnd();
+		renderer->ImguiEnd();
 	}
-	g_renderer->BeginFrame(false);
-	if (g_renderer->ImguiBegin(false))
+	renderer->BeginFrame(false);
+	if (renderer->ImguiBegin(false))
 	{
 		LatteShaderCache_drawBackgroundImage(g_shaderCacheLoaderState.textureDRCId, 854, 480);
-		g_renderer->ImguiEnd();
+		renderer->ImguiEnd();
 	}
 
-	g_renderer->SwapBuffers(true, true);
+	renderer->SwapBuffers(true, true);
 
 	if (g_shaderCacheLoaderState.textureTVId)
-		g_renderer->DeleteTexture(g_shaderCacheLoaderState.textureTVId);
+		renderer->DeleteTexture(g_shaderCacheLoaderState.textureTVId);
 	if (g_shaderCacheLoaderState.textureDRCId)
-		g_renderer->DeleteTexture(g_shaderCacheLoaderState.textureDRCId);
+		renderer->DeleteTexture(g_shaderCacheLoaderState.textureDRCId);
 
 	g_bootSndPlayer.FadeOutSound();
 
@@ -543,6 +551,14 @@ void LatteShaderCache_ShowProgress(const std::function <bool(void)>& loadUpdateF
 	{
         if (Latte_GetStopSignal())
             break; // thread stop requested, cancel shader loading
+		// Closing content while this is still loading releases the renderer
+		// from under this thread, and everything below draws through it - a
+		// null dereference on the GPU thread, right after "dropping the
+		// renderer". Take it once and stop if it has gone; release() does not
+		// delete, so a pointer read here stays good for the rest of the pass.
+		Renderer* renderer = g_renderer.get();
+		if (!renderer)
+			break;
 		bool r = loadUpdateFunc();
 		if (!r)
 			break;
@@ -559,8 +575,8 @@ void LatteShaderCache_ShowProgress(const std::function <bool(void)>& loadUpdateF
 		ImGui_GetFont(window_size.y / 32.0f); // = 24 by default
 		ImGui_GetFont(window_size.y / 48.0f); // = 16
 
-		g_renderer->BeginFrame(true);
-		if (g_renderer->ImguiBegin(true))
+		renderer->BeginFrame(true);
+		if (renderer->ImguiBegin(true))
 		{
 			auto& io = ImGui::GetIO();
 
@@ -647,19 +663,19 @@ void LatteShaderCache_ShowProgress(const std::function <bool(void)>& loadUpdateF
 				ImGui::PopStyleColor();
 				ImGui::PopFont();
 			}
-			g_renderer->ImguiEnd();
+			renderer->ImguiEnd();
 			lastFrameUpdate = tick_cached();
 		}
 
-		g_renderer->BeginFrame(false);
-		if (g_renderer->ImguiBegin(false))
+		renderer->BeginFrame(false);
+		if (renderer->ImguiBegin(false))
 		{
 			LatteShaderCache_drawBackgroundImage(g_shaderCacheLoaderState.textureDRCId, 854, 480);
-			g_renderer->ImguiEnd();
+			renderer->ImguiEnd();
 		}
 
 		// finish frame
-		g_renderer->SwapBuffers(true, true);
+		renderer->SwapBuffers(true, true);
 	}
 }
 
