@@ -1441,6 +1441,11 @@ static std::optional<CafeConsoleLanguage> libretro_parse_console_language(const 
 static bool libretro_parse_internal_resolution(const char* v, unsigned& outWidth, unsigned& outHeight)
 {
 	if (!v) return false;
+	// Below the Wii U's own 720p, for hardware that cannot keep up with it.
+	// The presentation image stays 1280x720, so these render fewer pixels and
+	// are scaled up to it - a quarter of the fill rate at half resolution.
+	if (libretro_iequals(v, "640x360")) { outWidth = 640; outHeight = 360; return true; }
+	if (libretro_iequals(v, "960x540")) { outWidth = 960; outHeight = 540; return true; }
 	if (libretro_iequals(v, "1280x720")) { outWidth = 1280; outHeight = 720; return true; }
 	if (libretro_iequals(v, "1920x1080")) { outWidth = 1920; outHeight = 1080; return true; }
 	if (libretro_iequals(v, "2560x1440")) { outWidth = 2560; outHeight = 1440; return true; }
@@ -2266,6 +2271,12 @@ static bool libretro_set_core_options_v2(retro_environment_t cb, const struct re
 			// Worth saying what the number is for, since it only means
 			// something on a device without BC support.
 			// Only means anything where BC has to be decompressed, so say so.
+			// The two below 720p are the reason this needs saying: they are not
+			// "worse quality" so much as "fewer pixels to draw".
+			if (strcmp(var->key, "cemu_internal_resolution") == 0)
+				def.info = keep(std::string("What the console renders at, before it is scaled to the output. "
+					"640x360 draws a quarter of the pixels of 720p."));
+
 			if (strcmp(var->key, "cemu_bc1_16bit") == 0)
 				def.info = keep(std::string("Halves what BC1 textures cost on a GPU that cannot sample BC, "
 					"at the price of one bit of green. No effect where BC is supported."));
@@ -2425,7 +2436,7 @@ static void libretro_publish_core_options(retro_environment_t cb)
 		{"cemu_shader_fast_math", "Shader Fast Math; enabled|disabled"},
 		{"cemu_upscale_filter", "Upscale Filter; linear|bicubic|bicubic_hermite|nearest"},
 		{"cemu_downscale_filter", "Downscale Filter; linear|bicubic|bicubic_hermite|nearest"},
-		{"cemu_internal_resolution", "Internal Resolution; 1280x720|1920x1080|2560x1440|3840x2160"},
+		{"cemu_internal_resolution", "Internal Resolution; 1280x720|640x360|960x540|1920x1080|2560x1440|3840x2160"},
 		{"cemu_fullscreen_scaling", "Fullscreen Scaling; keep_aspect|stretch"},
 		{"cemu_thread_quantum", "Thread Quantum; 45000|20000|60000|80000|100000"},
 		{"cemu_wua_output_dir", "Output Directory; <dynamic>"},
