@@ -67,8 +67,8 @@ std::optional<bool> VFSFileStream::IsReadOnly(const fs::path& path)
 {
 #ifdef RETRO_CORE
 	// RETRO_VFS_STAT_IS_READONLY arrived with VFS v5. Below that the frontend
-	// has no way to say, which is not the same as "writable" - the caller has
-	// to find out some other way.
+	// has no way to say, so the answer is nothing rather than "writable" - the
+	// two are different and the caller decides what to do with the silence.
 	if (UsesVFS() && s_vfs_version >= 5 && s_vfs_interface->stat)
 	{
 		const int32_t flags = s_vfs_interface->stat(path.string().c_str(), nullptr);

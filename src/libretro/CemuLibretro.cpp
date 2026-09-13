@@ -1294,46 +1294,34 @@ static std::string libretro_path_join(const std::string& dir, const std::string&
 	return joined;
 }
 
+// Whether a directory can be written to, as reported by the frontend: VFS v5
+// stats it and sets RETRO_VFS_STAT_IS_READONLY. (The authorized-locations list
+// has a "flags" field that looks like it should answer this, but nothing fills
+// it in - RetroArch returns 0 for every entry - and the header defines no bit
+// for it, so it is the stat that is asked.) Going through the VFS means SAF
+// paths are covered too. A frontend too old to answer is taken at its silence
+// and the destination is offered.
+//
+// Nothing is written to find this out. A probe file used to be created and
+// deleted in every candidate, on the reasoning that being allowed to write is
+// not the same as having room - but that is a write and a delete per candidate
+// at startup, possibly over the network, to pre-empt a failure the conversion
+// itself reports perfectly well if it ever happens.
+static bool libretro_directory_is_writable(const std::string& dir)
+{
+	const std::optional<bool> readOnly = VFSFileStream::IsReadOnly(_utf8ToPath(dir));
+	return !readOnly || !*readOnly;
+}
+
 // Everything a conversion could write to, in the order it is worth offering:
 // beside the content, the system directory and its downloads folder, then
 // whatever the frontend has been authorised to write to (SAF trees on
 // Android). A candidate has to be a directory, has to be writable, and must
 // not already hold the .wua this title would produce.
-// Whether a directory can actually be written to, asked by writing to it. The
-// authorized-locations list carries a "flags" field that looks like it should
-// answer this, but nothing fills it in - RetroArch sets it to 0 for every entry
-// it returns - and the header defines no bit for it either. So the only honest
-// answer comes from trying, which also covers the cases a flag never would: a
-// full volume, a tree whose permission was revoked since it was granted, or
-// read-only media. It goes through the VFS, so it works for SAF paths too.
-static bool libretro_directory_is_writable(const std::string& dir)
-{
-	// VFS v5 answers this outright, which is what sco8487 asked for and is
-	// cheaper and less intrusive than writing a file. Below v5 the frontend
-	// cannot say, so fall through to asking by doing.
-	if (const std::optional<bool> readOnly = VFSFileStream::IsReadOnly(_utf8ToPath(dir)))
-	{
-		if (*readOnly)
-			return false;
-		// Writable per the frontend still does not mean there is room, so the
-		// probe below is not skipped - it is the stronger of the two answers.
-	}
-
-	const fs::path probe = _utf8ToPath(libretro_path_join(dir, ".cemu_write_test"));
-	VFSFileStream* file = VFSFileStream::createFile2(probe);
-	if (!file)
-		return false;
-	delete file;
-	VFSFileStream::Remove(probe);
-	return true;
-}
-
-// Collected once and kept. It used to be redone every time the options were
-// drawn, which was already the narrowest hook libretro offers, but the probe
-// above writes a file per candidate and doing that on every menu open is not
-// reasonable. A destination that goes away between the check and the
-// conversion is caught where it matters: the conversion re-collects before it
-// starts, and fails there if nothing is left.
+//
+// Collected once and kept, rather than on every draw of the options. A
+// destination that goes away in between is caught where it matters: the
+// conversion re-collects before it starts, and fails there if nothing is left.
 static bool s_wua_destinations_collected = false;
 
 static void libretro_collect_wua_destinations(bool force = false)
@@ -1400,7 +1388,7 @@ static void libretro_collect_wua_destinations(bool force = false)
 		if (!libretro_directory_is_writable(candidate.path))
 		{
 			if (log_cb)
-				log_cb(RETRO_LOG_INFO, "Cemu: not offering %s - it cannot be written to\n",
+				log_cb(RETRO_LOG_INFO, "Cemu: not offering %s - the frontend says it is read-only\n",
 					candidate.path.c_str());
 			continue;
 		}
