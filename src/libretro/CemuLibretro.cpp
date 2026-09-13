@@ -3463,6 +3463,20 @@ static void libretro_context_destroy()
 	// thread to park is a wait that always times out.
 	libretro_frame_gate_hold_open(true);
 	Latte_RequestGpuPause();
+	// Parking happens at a command boundary, and there is one stretch of the GPU
+	// thread's life that has no command boundaries in it: the renderer's own
+	// bring-up, which runs from the thread starting until it reports its init
+	// finished and which is inside the driver nearly the whole way. Asking a
+	// thread in there to park times out, and the context then goes away under
+	// calls that are still being made through it - a jump through a null entry
+	// in the Mali driver's dispatch table (pc=0, lr in libGLES_mali.so), on a
+	// title that was closed about a second after it started. So wait for the
+	// bring-up to end first; after that the thread is in the command processor
+	// and the park below is a wait that can actually finish.
+	for (int i = 0; i < 3000 && !Latte_HasFinishedRendererInit(); i++)
+		std::this_thread::sleep_for(std::chrono::milliseconds(1));
+	if (log_cb && !Latte_HasFinishedRendererInit())
+		log_cb(RETRO_LOG_WARN, "Cemu: the renderer was still coming up when the context went away\n");
 	for (int i = 0; i < 500 && !Latte_IsGpuParked(); i++)
 		std::this_thread::sleep_for(std::chrono::milliseconds(1));
 	const bool parked = Latte_IsGpuParked();

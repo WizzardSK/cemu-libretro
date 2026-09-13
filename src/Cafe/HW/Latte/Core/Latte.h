@@ -205,6 +205,7 @@ void Latte_ReleaseGpuPause();
 bool Latte_IsGpuParked();
 void Latte_GpuPauseGate(); // called by the command processor
 bool Latte_WasThreadAbandoned(); // true if Latte_Stop had to detach a GPU thread that would not stop
+bool Latte_HasFinishedRendererInit(); // false while the GPU thread is still bringing the renderer up
 const char* Latte_GetThreadPhase(); // where that thread was when it was asked to stop
 #endif
 void LatteThread_Exit();

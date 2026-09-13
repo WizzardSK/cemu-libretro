@@ -114,6 +114,11 @@ const char* Latte_GetThreadPhase()
 #endif
 
 #ifdef ENABLE_LIBRETRO
+// Defined at global scope by the libretro glue (src/libretro/CemuLibretro.cpp).
+bool libretro_gpu_context_gone();
+#endif
+
+#ifdef ENABLE_LIBRETRO
 static std::atomic_bool sGpuPauseRequested{false};
 static std::atomic_bool sGpuParked{false};
 static std::mutex sGpuPauseMutex;
@@ -151,6 +156,25 @@ void Latte_GpuPauseGate()
 }
 #endif
 std::atomic_bool sLatteThreadFinishedInit = false;
+
+#ifdef ENABLE_LIBRETRO
+// The stretch between the GPU thread starting and this turning true is the
+// one part of its life where it is not in the command processor and cannot
+// park - it is inside the renderer's own bring-up, calling into the driver
+// the whole time. A frontend taking its graphics context apart has to know
+// about that stretch, because waiting for a park that cannot happen just
+// times out and pulls the device out from under those calls.
+bool Latte_HasFinishedRendererInit()
+{
+	// No GPU thread means nothing is in the middle of a bring-up, so the answer
+	// is yes rather than the flag's initial false - otherwise a context that
+	// goes away before any title started waits out its whole deadline for a
+	// thread that does not exist.
+	if (!sLatteThreadRunning.load(std::memory_order_acquire))
+		return true;
+	return sLatteThreadFinishedInit.load(std::memory_order_acquire);
+}
+#endif
 
 void LatteThread_Exit();
 
@@ -252,6 +276,21 @@ int Latte_ThreadEntry()
 	// renderer
 #ifdef ENABLE_LIBRETRO
 	LatteThread_SetPhase("renderer init");
+	// Everything from here to sLatteThreadFinishedInit goes into the graphics
+	// driver. If the frontend has already taken its context apart - a title
+	// closed a second after it started gets here - then the device behind
+	// those calls is gone, and on a Mali device that is a jump through a null
+	// entry in the driver's own dispatch table: pc=0, with the return address
+	// inside libGLES_mali.so and nothing of ours on the stack. Leave before
+	// making the first of them. Init is reported as finished either way, or
+	// Latte_Start waits for a thread that is already on its way out.
+	if (::libretro_gpu_context_gone() || !g_renderer)
+	{
+		cemuLog_log(LogType::Force, "[LatteThread] the graphics context went away before the renderer came up - stopping without touching it");
+		sLatteThreadFinishedInit = true;
+		LatteThread_Exit();
+		return 0;
+	}
 #endif
 	g_renderer->Initialize();
 	RendererOutputShader::InitializeStatic();
@@ -507,10 +546,6 @@ bool Latte_GetStopSignal()
 	return !sLatteThreadRunning;
 }
 
-#ifdef ENABLE_LIBRETRO
-// Defined at global scope by the libretro glue (src/libretro/CemuLibretro.cpp).
-bool libretro_gpu_context_gone();
-#endif
 
 void LatteThread_Exit()
 {
