@@ -40,6 +40,13 @@
 #include <psapi.h>
 #endif
 
+#ifdef ENABLE_LIBRETRO
+// Defined at global scope by the libretro glue (src/libretro/CemuLibretro.cpp).
+bool libretro_gpu_context_gone();
+#else
+static bool libretro_gpu_context_gone() { return false; }
+#endif
+
 #define SHADER_CACHE_COMPILE_QUEUE_SIZE		(32)
 
 struct
@@ -451,8 +458,18 @@ void LatteShaderCache_Load()
 		}
 	};
 
+#ifdef ENABLE_LIBRETRO
+	// The pictures are only ever used by the loading screen, which draws
+	// nowhere in a libretro core (see LatteShaderCache_ShowProgress). Reading
+	// and decoding two TGAs out of the title to hand them to a GenerateTexture
+	// that returns nullptr is work with no output at all.
+	g_shaderCacheLoaderState.textureTVId = nullptr;
+	g_shaderCacheLoaderState.textureDRCId = nullptr;
+	(void)loadBackgroundTexture;
+#else
 	loadBackgroundTexture(true, g_shaderCacheLoaderState.textureTVId);
 	loadBackgroundTexture(false, g_shaderCacheLoaderState.textureDRCId);
+#endif
 
 	if(GetConfig().play_boot_sound)
 		g_bootSndPlayer.StartSound();
@@ -505,7 +522,7 @@ void LatteShaderCache_Load()
 	// nothing left to draw it with, and nothing to clean up either - the
 	// textures below belonged to it.
 	Renderer* renderer = g_renderer.get();
-	if (!renderer)
+	if (!renderer || ::libretro_gpu_context_gone())
 		return;
 	// if Vulkan or Metal then also load pipeline cache
 #if defined(ENABLE_VULKAN) || defined(ENABLE_METAL)
@@ -514,6 +531,9 @@ void LatteShaderCache_Load()
 #endif
 
 
+#ifndef ENABLE_LIBRETRO
+	// The last frame of a loading screen that was never drawn, and the two
+	// textures it would have used, which were never created.
 	renderer->BeginFrame(true);
 	if (renderer->ImguiBegin(true))
 	{
@@ -533,6 +553,7 @@ void LatteShaderCache_Load()
 		renderer->DeleteTexture(g_shaderCacheLoaderState.textureTVId);
 	if (g_shaderCacheLoaderState.textureDRCId)
 		renderer->DeleteTexture(g_shaderCacheLoaderState.textureDRCId);
+#endif
 
 	g_bootSndPlayer.FadeOutSound();
 
@@ -557,11 +578,25 @@ void LatteShaderCache_ShowProgress(const std::function <bool(void)>& loadUpdateF
 		// renderer". Take it once and stop if it has gone; release() does not
 		// delete, so a pointer read here stays good for the rest of the pass.
 		Renderer* renderer = g_renderer.get();
-		if (!renderer)
+		if (!renderer || ::libretro_gpu_context_gone())
 			break;
 		bool r = loadUpdateFunc();
 		if (!r)
 			break;
+
+#ifdef ENABLE_LIBRETRO
+		// Everything below draws the loading screen, and in a libretro core it
+		// reaches nobody: the renderer has no swapchain of its own, so
+		// ImguiBegin fails on every pass and the whole screen - background
+		// image, progress bar, shader counts - is built and thrown away. The
+		// cost is not thrown away with it. Twenty times a second for the length
+		// of the cache load this does a BeginFrame, two font lookups and a
+		// SwapBuffers, and those renderer calls are the only thing on this path
+		// that can fault when the content is closed underneath it. So load, and
+		// leave showing progress to the frontend, which is the only one here
+		// with a screen.
+		continue;
+#endif
 
 		// in order to slightly speed up shader loading, we don't update the display if little time passed
 		// this also avoids delayed loading in case third party software caps the framerate at 30
