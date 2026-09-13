@@ -57,8 +57,19 @@ uint32 VulkanPipelineStableCache::BeginLoading(uint64 cacheTitleId)
 		compileThread.detach();
 	}
 
-	// open cache file or create it
-	cemu_assert_debug(s_cache == nullptr);
+	// open cache file or create it.
+	//
+	// Close() leaves the previous title's cache behind rather than deleting it,
+	// so this is where it goes. The reason is ownership: Close() runs on the
+	// unload path while the GPU thread may still be part-way through
+	// UpdateLoading, and freeing it there is a use-after-free on that thread -
+	// closing content a second after opening it did exactly that. Here there
+	// is no loading in flight, because this is what starts one.
+	if (s_cache)
+	{
+		delete s_cache;
+		s_cache = nullptr;
+	}
 	s_cache = FileCache::Open(pathCacheFile, true, LatteShaderCache_getPipelineCacheExtraVersion(cacheTitleId));
 	if (!s_cache)
 	{
@@ -77,6 +88,12 @@ bool VulkanPipelineStableCache::UpdateLoading(uint32& pipelinesLoadedTotal, uint
 {
 	pipelinesLoadedTotal = g_vkCacheState.pipelinesLoaded;
 	pipelinesMissingShaders = 0;
+	// This runs on the GPU thread while the title starts, and Close() can take
+	// the cache file out from under it - closing content a second after
+	// opening it does exactly that. Report the loading as finished rather than
+	// reading through a pointer that is no longer there.
+	if (!s_cache)
+		return false;
 	while (g_vkCacheState.pipelineLoadIndex <= g_vkCacheState.pipelineMaxFileIndex)
 	{
 		if (m_compilationQueue.size() >= 50)
@@ -124,17 +141,13 @@ void VulkanPipelineStableCache::Close()
 	{
 		// Every hash in here names a pipeline built against the device that is
 		// going away. Kept across titles, the next one believes its pipelines
-		// are already accounted for and never writes them again - and
-		// BeginLoading asserts on the cache file still being open.
+		// are already accounted for and never writes them again.
 		m_pipelineIsCachedLock.lock();
 		m_pipelineIsCached.clear();
 		m_pipelineIsCachedLock.unlock();
 	}
-    if(s_cache)
-    {
-        delete s_cache;
-        s_cache = nullptr;
-    }
+	// The cache file is deliberately not freed here; BeginLoading does it for
+	// the next title. See the note there.
 }
 
 
