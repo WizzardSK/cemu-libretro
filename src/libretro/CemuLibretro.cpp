@@ -1965,14 +1965,6 @@ static void libretro_apply_core_options()
 			cfg.vsync = enabled ? 1 : 0;
 	}
 
-	// Shader compile notification
-	if (const char* v = libretro_get_option_value("cemu_shader_compile_notification"))
-	{
-		bool enabled;
-		if (libretro_parse_enabled_disabled(v, enabled))
-			cfg.notification.shader_compiling = enabled;
-	}
-
 	// USB Device emulation
 	if (const char* v = libretro_get_option_value("cemu_emulate_skylander_portal"))
 	{
@@ -2007,6 +1999,14 @@ static const char* libretro_option_default(const char* key)
 		const char* value;
 	};
 	static const Entry entries[] = {
+		// These three read as a scale, and a list that starts at its default
+		// and then counts from the bottom reads as a mistake - 2, 1, 3, 4 for
+		// a latency, 45000 before 20000 for a quantum, 720p above 360p. The
+		// values are written in their own order above and the default named
+		// here instead, which is the same default either way.
+		{"cemu_audio_latency", "2"},
+		{"cemu_thread_quantum", "45000"},
+		{"cemu_internal_resolution", "1280x720"},
 		{"cemu_number_of_screen_layouts", "2"},
 		{"cemu_screen_layout2", "GamePad Screen"},
 		{"cemu_screen_layout3", "Side by Side"},
@@ -2054,7 +2054,6 @@ static const char* libretro_option_category(const char* key)
 		{"cemu_accurate_shader_mul", "shaders"},
 		{"cemu_shader_fast_math", "shaders"},
 		{"cemu_gx2drawdone_sync", "shaders"},
-		{"cemu_shader_compile_notification", "shaders"},
 
 		{"cemu_cpu_mode", "system"},
 		{"cemu_console_language", "system"},
@@ -2435,14 +2434,13 @@ static void libretro_publish_core_options(retro_environment_t cb)
 		{"cemu_shader_fast_math", "Shader Fast Math; enabled|disabled"},
 		{"cemu_upscale_filter", "Upscale Filter; linear|bicubic|bicubic_hermite|nearest"},
 		{"cemu_downscale_filter", "Downscale Filter; linear|bicubic|bicubic_hermite|nearest"},
-		{"cemu_internal_resolution", "Internal Resolution; 1280x720|640x360|960x540|1920x1080|2560x1440|3840x2160"},
+		{"cemu_internal_resolution", "Internal Resolution; 640x360|960x540|1280x720|1920x1080|2560x1440|3840x2160"},
 		{"cemu_fullscreen_scaling", "Fullscreen Scaling; keep_aspect|stretch"},
-		{"cemu_thread_quantum", "Thread Quantum; 45000|20000|60000|80000|100000"},
+		{"cemu_thread_quantum", "Thread Quantum; 20000|45000|60000|80000|100000"},
 		{"cemu_wua_output_dir", "Output Directory; <dynamic>"},
 		{"cemu_convert_to_wua", "Start Conversion to WUA; disabled|enabled"},
-		{"cemu_audio_latency", "Audio Latency; 2|1|3|4"},
+		{"cemu_audio_latency", "Audio Latency; 1|2|3|4"},
 		{"cemu_vsync", "VSync; disabled|enabled"},
-		{"cemu_shader_compile_notification", "Shader Compile Notification; enabled|disabled"},
 		{"cemu_emulate_skylander_portal", "Emulate Skylander Portal; disabled|enabled"},
 		{"cemu_emulate_infinity_base", "Emulate Infinity Base; disabled|enabled"},
 		{"cemu_emulate_dimensions_toypad", "Emulate Dimensions Toypad; disabled|enabled"},
