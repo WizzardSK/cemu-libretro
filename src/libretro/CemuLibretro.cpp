@@ -1984,14 +1984,6 @@ static void libretro_apply_core_options()
 		}
 	}
 
-	// VSync
-	if (const char* v = libretro_get_option_value("cemu_vsync"))
-	{
-		bool enabled;
-		if (libretro_parse_enabled_disabled(v, enabled))
-			cfg.vsync = enabled ? 1 : 0;
-	}
-
 	// USB Device emulation
 	if (const char* v = libretro_get_option_value("cemu_emulate_skylander_portal"))
 	{
@@ -2073,7 +2065,6 @@ static const char* libretro_option_category(const char* key)
 		{"cemu_upscale_filter", "video"},
 		{"cemu_downscale_filter", "video"},
 		{"cemu_fullscreen_scaling", "video"},
-		{"cemu_vsync", "video"},
 		{"cemu_skip_draw_on_dupe", "video"},
 
 		{"cemu_async_shader_compile", "shaders"},
@@ -2467,7 +2458,6 @@ static void libretro_publish_core_options(retro_environment_t cb)
 		{"cemu_wua_output_dir", "Output Directory; <dynamic>"},
 		{"cemu_convert_to_wua", "Start Conversion to WUA; disabled|enabled"},
 		{"cemu_audio_latency", "Audio Latency; 1|2|3|4"},
-		{"cemu_vsync", "VSync; disabled|enabled"},
 		{"cemu_emulate_skylander_portal", "Emulate Skylander Portal; disabled|enabled"},
 		{"cemu_emulate_infinity_base", "Emulate Infinity Base; disabled|enabled"},
 		{"cemu_emulate_dimensions_toypad", "Emulate Dimensions Toypad; disabled|enabled"},
