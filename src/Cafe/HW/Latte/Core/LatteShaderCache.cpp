@@ -43,6 +43,8 @@
 #ifdef ENABLE_LIBRETRO
 // Defined at global scope by the libretro glue (src/libretro/CemuLibretro.cpp).
 bool libretro_gpu_context_gone();
+// Hands the frontend something to draw while this runs. A null text ends it.
+void libretro_set_load_progress(const char* text, int percent);
 #else
 static bool libretro_gpu_context_gone() { return false; }
 #endif
@@ -502,9 +504,18 @@ void LatteShaderCache_Load()
 		return true;
 	};
 
+	const auto timeShadersStart = now_cached();
 	LatteShaderCache_ShowProgress(LoadShadersUpdate, false);
 
 	LatteShaderCache_updateCompileQueue(0);
+	// Both phases, in the log of every build. "Black screen for two minutes on
+	// the second run" arrived as a report with nothing in the log to say which
+	// half of this it was, or whether it was this at all - and a first run and
+	// a second run differ here precisely because the first one fills the
+	// pipeline cache that the second one then has to compile through.
+	cemuLog_log(LogType::Force, "Shader cache: {} shaders loaded in {}ms",
+		g_shaderCacheLoaderState.loadedShaderFiles,
+		(sint32)std::chrono::duration_cast<std::chrono::milliseconds>(now_cached() - timeShadersStart).count());
 	// write load time and RAM usage to log file (in dev build)
 #if BOOST_OS_WINDOWS
 	const auto timeLoadEnd = now_cached();
@@ -523,11 +534,22 @@ void LatteShaderCache_Load()
 	// textures below belonged to it.
 	Renderer* renderer = g_renderer.get();
 	if (!renderer || ::libretro_gpu_context_gone())
+	{
+#ifdef ENABLE_LIBRETRO
+		libretro_set_load_progress(nullptr, -1);
+#endif
 		return;
+	}
 	// if Vulkan or Metal then also load pipeline cache
 #if defined(ENABLE_VULKAN) || defined(ENABLE_METAL)
 	if (renderer->GetType() == RendererAPI::Vulkan || renderer->GetType() == RendererAPI::Metal)
-        LatteShaderCache_LoadPipelineCache(cacheTitleId);
+	{
+		const auto timePipelinesStart = now_cached();
+		LatteShaderCache_LoadPipelineCache(cacheTitleId);
+		cemuLog_log(LogType::Force, "Shader cache: {} of {} pipelines loaded in {}ms",
+			g_shaderCacheLoaderState.loadedPipelines, g_shaderCacheLoaderState.pipelineFileCount,
+			(sint32)std::chrono::duration_cast<std::chrono::milliseconds>(now_cached() - timePipelinesStart).count());
+	}
 #endif
 
 
@@ -556,6 +578,11 @@ void LatteShaderCache_Load()
 #endif
 
 	g_bootSndPlayer.FadeOutSound();
+
+#ifdef ENABLE_LIBRETRO
+	// Loaded. Take the bar down before the title's first frame arrives behind it.
+	libretro_set_load_progress(nullptr, -1);
+#endif
 
 	if(Latte_GetStopSignal())
 		LatteThread_Exit();
@@ -592,9 +619,23 @@ void LatteShaderCache_ShowProgress(const std::function <bool(void)>& loadUpdateF
 		// cost is not thrown away with it. Twenty times a second for the length
 		// of the cache load this does a BeginFrame, two font lookups and a
 		// SwapBuffers, and those renderer calls are the only thing on this path
-		// that can fault when the content is closed underneath it. So load, and
-		// leave showing progress to the frontend, which is the only one here
-		// with a screen.
+		// that can fault when the content is closed underneath it.
+		//
+		// So the drawing goes and the progress stays, handed to the frontend,
+		// which is the only one here with a screen. This is the longest wait in
+		// a session - a first pipeline cache load on a slow device runs for
+		// minutes - and with nothing on screen it is indistinguishable from a
+		// hang. Four times a second is enough for a bar to look alive.
+		if ((tick_cached() - lastFrameUpdate) >= std::chrono::milliseconds(250))
+		{
+			lastFrameUpdate = tick_cached();
+			const sint32 total = isPipelines ? g_shaderCacheLoaderState.pipelineFileCount
+				: g_shaderCacheLoaderState.shaderFileCount;
+			const sint32 done = isPipelines ? (sint32)g_shaderCacheLoaderState.loadedPipelines
+				: g_shaderCacheLoaderState.loadedShaderFiles;
+			libretro_set_load_progress(isPipelines ? "Loading cached pipelines" : "Loading cached shaders",
+				total > 0 ? (int)((sint64)done * 100 / total) : -1);
+		}
 		continue;
 #endif
 

@@ -270,6 +270,33 @@ static std::string s_convert_status;
 static int s_convert_progress = -1;
 static std::unique_ptr<GameInfo2> s_convert_game_info;
 
+// What the GPU thread is loading and how far in, for the frontend to draw. The
+// core's own loading screen was removed because nothing it drew could reach the
+// screen - the renderer has no swapchain here - which left the longest wait in
+// a session with no feedback at all: a first pipeline cache load on a slow
+// device runs for minutes and looks exactly like a hang. The frontend is the
+// one with a screen, so it gets told instead.
+//
+// Set from the GPU thread and read from retro_run rather than calling the
+// environment callback from there directly: the frontend's message queue
+// belongs to its own thread, and nothing here needs it sooner than the next
+// frame.
+static std::mutex s_load_progress_mutex;
+static std::string s_load_progress_text;
+static int s_load_progress_percent = -1;
+static std::atomic_bool s_load_progress_active{false};
+
+void libretro_set_load_progress(const char* text, int percent)
+{
+	{
+		std::lock_guard lock(s_load_progress_mutex);
+		if (text)
+			s_load_progress_text = text;
+		s_load_progress_percent = percent;
+	}
+	s_load_progress_active.store(text != nullptr, std::memory_order_release);
+}
+
 // Where a conversion is allowed to write. The frontend decides that - on
 // Android it is a set of SAF trees rather than anything open() would take - so
 // the destinations are collected from it once the content is known, and only
@@ -4310,6 +4337,43 @@ RETRO_API void retro_run()
 	{
 		cemuLog_log(LogType::Force, "[Libretro] emulated process exited, asking the frontend to shut down");
 		environ_cb(RETRO_ENVIRONMENT_SHUTDOWN, nullptr);
+	}
+
+	if (s_load_progress_active.load(std::memory_order_acquire) && environ_cb)
+	{
+		// Same bar the conversion uses, for the same reason: a progress message
+		// is kept on screen and updated in place, where a notification is a
+		// toast that comes and goes. Sent every frame so the figure moves.
+		static std::string s_shown_load;
+		std::string text;
+		int percent;
+		{
+			std::lock_guard lock(s_load_progress_mutex);
+			text = s_load_progress_text;
+			percent = s_load_progress_percent;
+		}
+		unsigned version = 0;
+		if (environ_cb(RETRO_ENVIRONMENT_GET_MESSAGE_INTERFACE_VERSION, &version) && version >= 1)
+		{
+			s_shown_load = text;
+			struct retro_message_ext message = {};
+			message.msg = s_shown_load.c_str();
+			message.duration = 4000;
+			message.priority = 3;
+			message.level = RETRO_LOG_INFO;
+			message.target = RETRO_MESSAGE_TARGET_OSD;
+			message.type = RETRO_MESSAGE_TYPE_PROGRESS;
+			message.progress = (int8_t)((percent < 0) ? -1 : (percent > 100 ? 100 : percent));
+			environ_cb(RETRO_ENVIRONMENT_SET_MESSAGE_EXT, &message);
+		}
+		else if (text != s_shown_load)
+		{
+			// The old call takes a frame count rather than a bar, so it only
+			// goes out when the words change and not on every percent.
+			s_shown_load = text;
+			struct retro_message message{s_shown_load.c_str(), 240};
+			environ_cb(RETRO_ENVIRONMENT_SET_MESSAGE, &message);
+		}
 	}
 
 	if (s_convert_mode.load())
