@@ -83,5 +83,12 @@ PipelineInfo::~PipelineInfo()
 	}
 
 	// remove from cache
-	VulkanRenderer::GetInstance()->unregisterGraphicsPipeline(this);
+	// A pipeline can outlive the renderer that owns the registry: the stable
+	// cache's compiler threads are detached, and on a fast title exit one can
+	// still be destroying a pipeline after the renderer has been dropped.
+	// There is nothing to unregister from at that point, and the registry is
+	// going with it, so leaving quietly is right - faulting here was
+	// sco8487's "quick close content took RetroArch down with it".
+	if (g_renderer)
+		VulkanRenderer::GetInstance()->unregisterGraphicsPipeline(this);
 }

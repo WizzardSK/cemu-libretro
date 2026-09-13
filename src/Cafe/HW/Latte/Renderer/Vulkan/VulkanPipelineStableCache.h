@@ -42,6 +42,7 @@ public:
 	void EndLoading();
 	void LoadPipelineFromCache(std::span<uint8> fileData);
     void Close(); // called on title exit
+	void StopCompilerThreads(); // must run before the renderer goes away
 
 	bool HasPipelineCached(uint64 baseHash, uint64 pipelineStateHash);
 	void AddCurrentStateToCache(uint64 baseHash, uint64 pipelineStateHash);
@@ -61,6 +62,9 @@ private:
 	class FileCache* s_cache;
 
 	std::atomic_uint32_t m_numCompilationThreads{ 0 };
+	// The compiler threads are detached, so they cannot be joined; this counts
+	// how many are still inside CompilerThread so Close can wait them out.
+	std::atomic_uint32_t m_compilerThreadsLive{ 0 };
 	ConcurrentQueue<std::vector<uint8>> m_compilationQueue;
 	std::atomic_uint32_t m_compilationCount;
 };

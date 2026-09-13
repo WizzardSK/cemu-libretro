@@ -31,6 +31,7 @@
 #endif
 #ifdef ENABLE_VULKAN
 #include "Cafe/HW/Latte/Renderer/Vulkan/VulkanRenderer.h"
+#include "Cafe/HW/Latte/Renderer/Vulkan/VulkanPipelineStableCache.h"
 #include "Cafe/HW/Latte/Renderer/Vulkan/VulkanAPI.h"
 #include "libretro_vulkan.h"
 #endif
@@ -3653,6 +3654,19 @@ RETRO_API void retro_unload_game()
 	// memory, plus "terminate called without an active exception" from the
 	// still-joinable std::thread.
 	InputManager::instance().Shutdown();
+
+#ifdef ENABLE_VULKAN
+	// Before the renderer goes, not after: the pipeline stable cache's compiler
+	// threads are detached and run until told to stop, and each pipeline they
+	// finish is unregistered from the renderer when it is destroyed. Normally
+	// LatteShaderCache_Close stops them on the GPU thread's way out, but that
+	// path does not always run - when the frontend has already taken the
+	// graphics context apart, the GPU thread skips its teardown entirely and
+	// this is the only place left. A title closed a second after it started is
+	// exactly when one is still in flight.
+	if (s_graphics_api == SelectedGraphicsAPI::Vulkan)
+		VulkanPipelineStableCache::GetInstance().StopCompilerThreads();
+#endif
 
 	// Not g_renderer.reset(): ~VulkanRenderer reaches back through
 	// VulkanRenderer::GetInstance(), which reads g_renderer itself - the sampler

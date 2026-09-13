@@ -119,6 +119,7 @@ void VulkanPipelineStableCache::EndLoading()
 
 void VulkanPipelineStableCache::Close()
 {
+	StopCompilerThreads();
     if(s_cache)
     {
         delete s_cache;
@@ -409,6 +410,7 @@ bool VulkanPipelineStableCache::DeserializePipeline(MemStreamReader& memReader, 
 int VulkanPipelineStableCache::CompilerThread()
 {
 	SetThreadName("plCacheCompiler");
+	++m_compilerThreadsLive;
 	while (m_numCompilationThreads != 0)
 	{
 		std::vector<uint8> pipelineData = m_compilationQueue.pop();
@@ -417,7 +419,30 @@ int VulkanPipelineStableCache::CompilerThread()
 		LoadPipelineFromCache(pipelineData);
 		++g_vkCacheState.pipelinesLoaded;
 	}
+	--m_compilerThreadsLive;
 	return 0;
+}
+
+// These threads are detached and outlive everything unless told otherwise:
+// their loop blocks in the queue, so clearing the count alone leaves them
+// asleep. Every pipeline they build is registered with the renderer and
+// unregistered when it is destroyed, so one still running while the renderer
+// is taken apart faults in ~PipelineInfo - which is a title closed a second
+// after it started, with pipelines still in flight.
+void VulkanPipelineStableCache::StopCompilerThreads()
+{
+	const uint32 threadCount = m_numCompilationThreads.exchange(0);
+	if (threadCount == 0 && m_compilerThreadsLive.load() == 0)
+		return;
+	// One empty entry each: the loop skips empties, and re-tests the count.
+	for (uint32 i = 0; i < threadCount + 1; i++)
+		m_compilationQueue.push(std::vector<uint8>());
+	// Bounded, because a hung compile must not become a hung exit.
+	for (uint32 i = 0; i < 2000 && m_compilerThreadsLive.load() != 0; i++)
+		std::this_thread::sleep_for(std::chrono::milliseconds(1));
+	if (m_compilerThreadsLive.load() != 0)
+		cemuLog_log(LogType::Force, "[VulkanPipelineStableCache] {} compiler thread(s) did not stop in time",
+			m_compilerThreadsLive.load());
 }
 
 void VulkanPipelineStableCache::WorkerThread()
