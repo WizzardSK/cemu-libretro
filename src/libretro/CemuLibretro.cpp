@@ -32,6 +32,7 @@
 #ifdef ENABLE_VULKAN
 #include "Cafe/HW/Latte/Renderer/Vulkan/VulkanRenderer.h"
 #include "Cafe/HW/Latte/Renderer/Vulkan/VulkanPipelineStableCache.h"
+#include "Cafe/HW/Latte/Renderer/Vulkan/RendererShaderVk.h"
 #include "Cafe/HW/Latte/Renderer/Vulkan/VulkanAPI.h"
 #include "libretro_vulkan.h"
 #endif
@@ -2664,6 +2665,21 @@ RETRO_API void retro_reset()
 		return;
 	}
 
+#ifdef ENABLE_VULKAN
+	// Both compile pools have to be down before a new device is built. They are
+	// normally stopped by VulkanRenderer::Shutdown, but that does not run when
+	// the GPU thread takes the "graphics context already gone" way out, and
+	// then a shader still being compiled against the old device faults the
+	// moment the new one appears - RendererShaderVk::CompileInternal on
+	// vkShaderComp, 0.1 seconds before "renderer created", which is exactly
+	// what a reset of Deus Ex produced here.
+	if (s_graphics_api == SelectedGraphicsAPI::Vulkan)
+	{
+		RendererShaderVk::Shutdown();
+		VulkanPipelineStableCache::GetInstance().StopCompilerThreads();
+	}
+#endif
+
 	// The renderer went down with the title: LatteThread_Exit deletes it and
 	// releases g_renderer, and the Latte thread the relaunch starts dereferences
 	// that pointer before anything else it does.
@@ -3735,7 +3751,10 @@ RETRO_API void retro_unload_game()
 	// this is the only place left. A title closed a second after it started is
 	// exactly when one is still in flight.
 	if (s_graphics_api == SelectedGraphicsAPI::Vulkan)
+	{
+		RendererShaderVk::Shutdown();
 		VulkanPipelineStableCache::GetInstance().StopCompilerThreads();
+	}
 #endif
 
 	// Not g_renderer.reset(): ~VulkanRenderer reaches back through
