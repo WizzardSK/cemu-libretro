@@ -1278,13 +1278,18 @@ LatteTexture::LatteTexture(Latte::E_DIM dim, MPTR physAddress, MPTR physMipAddre
 	// stand-in: any texture the size of a screen-shaped render target is
 	// created at the requested fraction of it instead.
 	//
-	// "Screen-shaped" is the whole safety margin - 16:9 and at least 256 on
+	// "Screen-shaped" is most of the safety margin - 16:9 and at least 256 on
 	// both sides, which is what a colour or depth target for the TV output
-	// looks like and what an ordinary art asset does not. A game that renders
+	// looks like and what an ordinary art asset does not. The tile mode is the
+	// rest of it: a render target is macro-tiled, while a surface the guest
+	// fills from memory - a decoded movie frame, say - is linear or 1D tiled.
+	// Scaling one of those leaves it with nothing to fill it, which is the
+	// green video sco8487 saw over the intro logos. A game that renders
 	// to something else is left alone, and so is one whose graphic pack
 	// already set a size below, since a pack that names the title beats a
 	// guess that does not.
-	if (g_libretroRenderScale != 1.0f && width >= 256 && height >= 256 && width * 9 == height * 16)
+	if (g_libretroRenderScale != 1.0f && width >= 256 && height >= 256 && width * 9 == height * 16 &&
+		tileMode >= Latte::E_HWTILEMODE::TM_2D_TILED_THIN1)
 	{
 		const uint32 scaledWidth = std::max<uint32>(4, ((uint32)(width * g_libretroRenderScale) + 3) & ~3u);
 		const uint32 scaledHeight = std::max<uint32>(4, ((uint32)(height * g_libretroRenderScale) + 3) & ~3u);
