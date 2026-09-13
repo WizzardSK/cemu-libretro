@@ -2355,15 +2355,14 @@ RETRO_API void retro_set_environment(retro_environment_t cb)
 	// stat, v2 truncate, and VFSFileStream keeps to whichever version answers.
 	{
 		static const uint32_t vfs_versions[] = { 5, 4, 3, 2, 1 };
-		// Capped at 3 deliberately. Asking for v5 gets a v5 interface, and on
-		// it LatteShaderCache_Load faults on a null cache file - the same
-		// build, the same frontend and the same title load cleanly when this
-		// is 3, which is how it was pinned down. RetroArch changed the create
-		// semantics of the VFS open function ("Specify the file creation
-		// semantics of the VFS open function", #19339), and this core has not
-		// been taught them, so it must not claim to speak that version yet.
-		// Raise it here once it has - CEMU_VFS_MAX_VERSION=5 is how to try.
-		uint32_t maxVersion = 3;
+		// No cap. It sat at 3 because a v5 interface appeared to fault in
+		// LatteShaderCache_Load, and that was wrong: the runs it was drawn from
+		// never reached retro_load_game at all, for a reason outside this core.
+		// v1 through v5 have since been walked one after another against a v5
+		// frontend and all five load the same title, so what the frontend
+		// actually has is what to take. CEMU_VFS_MAX_VERSION still pins a
+		// version for debugging.
+		uint32_t maxVersion = 5;
 		if (const char* pin = getenv("CEMU_VFS_MAX_VERSION"))
 		{
 			const int v = atoi(pin);
