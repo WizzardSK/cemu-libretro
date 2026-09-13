@@ -2256,14 +2256,27 @@ void VulkanRenderer::QueryAvailableFormats()
 	{
 		m_supportedFormatInfo.fmt_a1r5g5b5_unorm_pack = true;
 	}
-	// R5G5B5A1, the target of the narrowed BC1 fallback
+	// R5G5B5A1, the target of the narrowed BC1 fallback. Linear filtering is
+	// required, not just sampling: game textures are sampled bilinearly, and a
+	// format that can be sampled but not filtered leaves the driver to make up
+	// the difference. Whatever it does then costs more than the memory saved -
+	// which is the shape of the slowdown sco8487 measured on Mali, where the
+	// narrowed textures were slower to draw than the RGBA8 ones they replaced.
+	// Without the bit the option now does nothing at all, which is the right
+	// answer for a device that cannot take the format properly.
 	fmtProp = {};
 	vkGetPhysicalDeviceFormatProperties(m_physicalDevice, VK_FORMAT_R5G5B5A1_UNORM_PACK16, &fmtProp);
-	if ((fmtProp.optimalTilingFeatures & VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT) != 0 &&
-	    (fmtProp.optimalTilingFeatures & VK_FORMAT_FEATURE_TRANSFER_DST_BIT) != 0)
-	{
-		m_supportedFormatInfo.fmt_r5g5b5a1_unorm_pack = true;
-	}
+	const VkFormatFeatureFlags narrowBC1Needs =
+		VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT |
+		VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT |
+		VK_FORMAT_FEATURE_TRANSFER_DST_BIT;
+	m_supportedFormatInfo.fmt_r5g5b5a1_unorm_pack =
+		(fmtProp.optimalTilingFeatures & narrowBC1Needs) == narrowBC1Needs;
+	cemuLog_log(LogType::Force, "R5G5B5A1_UNORM_PACK16: sampled={} filter_linear={} transfer_dst={} -> narrowed BC1 {}",
+		(fmtProp.optimalTilingFeatures & VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT) != 0,
+		(fmtProp.optimalTilingFeatures & VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT) != 0,
+		(fmtProp.optimalTilingFeatures & VK_FORMAT_FEATURE_TRANSFER_DST_BIT) != 0,
+		m_supportedFormatInfo.fmt_r5g5b5a1_unorm_pack ? "available" : "unavailable");
 	// print info about unsupported formats to log
 	for (auto& it : requestedFormatList)
 	{
