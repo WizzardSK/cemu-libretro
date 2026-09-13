@@ -1734,6 +1734,13 @@ enum retro_mod
  * saf:// paths that only the VFS interface can open - which is what makes them
  * usable as a destination for a conversion. Guarded so that syncing the header
  * later does not collide with it. */
+/* VFS API v5 (RetroArch, 2026-09-12) reports whether a path is read-only.
+ * Declared here for the same reason as the environment call below: this header
+ * is a vendored copy and predates it. */
+#ifndef RETRO_VFS_STAT_IS_READONLY
+#define RETRO_VFS_STAT_IS_READONLY (1 << 3)
+#endif
+
 #ifndef RETRO_ENVIRONMENT_GET_VFS_AUTHORIZED_LOCATIONS
 #define RETRO_ENVIRONMENT_GET_VFS_AUTHORIZED_LOCATIONS (93 | RETRO_ENVIRONMENT_EXPERIMENTAL)
 

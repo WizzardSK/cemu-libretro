@@ -63,6 +63,22 @@ bool VFSFileStream::IsDirectory(const fs::path& path)
 	return fs::is_directory(path, ec);
 }
 
+std::optional<bool> VFSFileStream::IsReadOnly(const fs::path& path)
+{
+#ifdef RETRO_CORE
+	// RETRO_VFS_STAT_IS_READONLY arrived with VFS v5. Below that the frontend
+	// has no way to say, which is not the same as "writable" - the caller has
+	// to find out some other way.
+	if (UsesVFS() && s_vfs_version >= 5 && s_vfs_interface->stat)
+	{
+		const int32_t flags = s_vfs_interface->stat(path.string().c_str(), nullptr);
+		if ((flags & RETRO_VFS_STAT_IS_VALID) != 0)
+			return (flags & RETRO_VFS_STAT_IS_READONLY) != 0;
+	}
+#endif
+	return std::nullopt;
+}
+
 bool VFSFileStream::Exists(const fs::path& path)
 {
 #ifdef RETRO_CORE

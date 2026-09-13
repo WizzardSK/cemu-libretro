@@ -1,5 +1,6 @@
 #pragma once
 #include "Common/precompiled.h"
+#include <optional>
 
 struct retro_vfs_interface;
 
@@ -17,6 +18,10 @@ public:
 	static bool IsRegularFile(const fs::path& path);
 	static bool IsDirectory(const fs::path& path);
 	static bool Exists(const fs::path& path);
+	// Tri-state on purpose: only VFS v5 answers this, so "read-only",
+	// "writable" and "the frontend cannot say" are three different things and
+	// the caller has to handle the last one.
+	static std::optional<bool> IsReadOnly(const fs::path& path);
 	// Deleting through the frontend as well, so that a file created on a SAF
 	// tree can be taken back off it.
 	static bool Remove(const fs::path& path);

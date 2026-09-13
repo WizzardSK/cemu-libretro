@@ -1307,6 +1307,17 @@ static std::string libretro_path_join(const std::string& dir, const std::string&
 // read-only media. It goes through the VFS, so it works for SAF paths too.
 static bool libretro_directory_is_writable(const std::string& dir)
 {
+	// VFS v5 answers this outright, which is what sco8487 asked for and is
+	// cheaper and less intrusive than writing a file. Below v5 the frontend
+	// cannot say, so fall through to asking by doing.
+	if (const std::optional<bool> readOnly = VFSFileStream::IsReadOnly(_utf8ToPath(dir)))
+	{
+		if (*readOnly)
+			return false;
+		// Writable per the frontend still does not mean there is room, so the
+		// probe below is not skipped - it is the stronger of the two answers.
+	}
+
 	const fs::path probe = _utf8ToPath(libretro_path_join(dir, ".cemu_write_test"));
 	VFSFileStream* file = VFSFileStream::createFile2(probe);
 	if (!file)
@@ -2328,10 +2339,10 @@ RETRO_API void retro_set_environment(retro_environment_t cb)
 	// On Android the Play Store build reaches storage through SAF, so the path
 	// handed to retro_load_game is a content:// URI that no open() will take -
 	// only the frontend can turn it into a readable file. Ask for the newest
-	// interface and walk down: v3 brings stat, v2 truncate, and VFSFileStream
-	// keeps to whichever version answers.
+	// interface and walk down: v5 reports whether a path is read-only, v3 brings
+	// stat, v2 truncate, and VFSFileStream keeps to whichever version answers.
 	{
-		static const uint32_t vfs_versions[] = { 3, 2, 1 };
+		static const uint32_t vfs_versions[] = { 5, 4, 3, 2, 1 };
 		for (uint32_t wanted : vfs_versions)
 		{
 			struct retro_vfs_interface_info vfs_info{};
