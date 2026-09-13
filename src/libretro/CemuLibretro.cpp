@@ -1298,8 +1298,37 @@ static std::string libretro_path_join(const std::string& dir, const std::string&
 // whatever the frontend has been authorised to write to (SAF trees on
 // Android). A candidate has to be a directory, has to be writable, and must
 // not already hold the .wua this title would produce.
-static void libretro_collect_wua_destinations()
+// Whether a directory can actually be written to, asked by writing to it. The
+// authorized-locations list carries a "flags" field that looks like it should
+// answer this, but nothing fills it in - RetroArch sets it to 0 for every entry
+// it returns - and the header defines no bit for it either. So the only honest
+// answer comes from trying, which also covers the cases a flag never would: a
+// full volume, a tree whose permission was revoked since it was granted, or
+// read-only media. It goes through the VFS, so it works for SAF paths too.
+static bool libretro_directory_is_writable(const std::string& dir)
 {
+	const fs::path probe = _utf8ToPath(libretro_path_join(dir, ".cemu_write_test"));
+	VFSFileStream* file = VFSFileStream::createFile2(probe);
+	if (!file)
+		return false;
+	delete file;
+	VFSFileStream::Remove(probe);
+	return true;
+}
+
+// Collected once and kept. It used to be redone every time the options were
+// drawn, which was already the narrowest hook libretro offers, but the probe
+// above writes a file per candidate and doing that on every menu open is not
+// reasonable. A destination that goes away between the check and the
+// conversion is caught where it matters: the conversion re-collects before it
+// starts, and fails there if nothing is left.
+static bool s_wua_destinations_collected = false;
+
+static void libretro_collect_wua_destinations(bool force = false)
+{
+	if (s_wua_destinations_collected && !force)
+		return;
+	s_wua_destinations_collected = true;
 	s_wua_destinations.clear();
 	s_wua_unavailable_reason.clear();
 
@@ -1356,6 +1385,13 @@ static void libretro_collect_wua_destinations()
 			continue;
 		if (!VFSFileStream::IsDirectory(fs::path(candidate.path)))
 			continue;
+		if (!libretro_directory_is_writable(candidate.path))
+		{
+			if (log_cb)
+				log_cb(RETRO_LOG_INFO, "Cemu: not offering %s - it cannot be written to\n",
+					candidate.path.c_str());
+			continue;
+		}
 		candidate.hasExisting = VFSFileStream::Exists(fs::path(libretro_path_join(candidate.path, outputName)));
 		s_wua_destinations.push_back(std::move(candidate));
 	}
@@ -1675,7 +1711,7 @@ static void libretro_apply_core_options()
 				// the destination may have gone - unmounted, filled up, or now
 				// holding the .wua this would write. Ask again rather than
 				// starting a conversion that cannot finish.
-				libretro_collect_wua_destinations();
+				libretro_collect_wua_destinations(true);
 				if (s_wua_destinations.empty())
 				{
 					libretro_show_message(RETRO_LOG_ERROR, 6000,
@@ -3526,10 +3562,12 @@ RETRO_API bool retro_load_game(const struct retro_game_info* game)
 	// Whether the conversion options are declared at all depends on there being
 	// somewhere to write, so the destinations have to be known before the list
 	// is published: an option the core does not declare here is one the
-	// frontend has no way of being told about later. They are worked out again
-	// when the menu is drawn, which is what keeps them current; this pass only
-	// decides whether the two options exist.
-	libretro_collect_wua_destinations();
+	// frontend has no way of being told about later.
+	//
+	// Forced, because the answer belongs to this title - where it sits decides
+	// whether "beside the content" is offered at all - and the previous one in
+	// this process will have left its own behind.
+	libretro_collect_wua_destinations(true);
 	if (environ_cb)
 		libretro_publish_core_options(environ_cb);
 	libretro_update_convert_visibility();
@@ -3741,6 +3779,11 @@ RETRO_API void retro_unload_game()
 	}
 	s_ppc_process_exited = false;
 	s_game_path.clear();
+	// The destinations belong to the title that just stopped; the next load
+	// works out its own.
+	s_wua_destinations_collected = false;
+	s_wua_destinations.clear();
+	s_wua_unavailable_reason.clear();
 	s_frontend_read_fbo = 0;
 	s_frontend_read_rbo_attached = 0;
 	s_frontend_upload_tex = 0;
