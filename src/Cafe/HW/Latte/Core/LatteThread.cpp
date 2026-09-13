@@ -13,6 +13,9 @@
 #include "Cafe/HW/Latte/Core/LatteBufferCache.h"
 
 #include "Cafe/HW/Latte/Renderer/Renderer.h"
+#if defined(ENABLE_VULKAN) && defined(ENABLE_LIBRETRO)
+#include "Cafe/HW/Latte/Renderer/Vulkan/VulkanRenderer.h"
+#endif
 #include "Cafe/HW/Latte/Core/LatteTexture.h"
 #include "util/helpers/helpers.h"
 
@@ -542,6 +545,15 @@ void LatteThread_Exit()
 	{
 		cemuLog_log(LogType::Force, "[LatteThread] graphics context already gone, skipping GPU teardown");
 		Latte_NoteTeardownWasSkipped();
+		// The renderer is about to be dropped without being destroyed, so its
+		// destructor will not run and the pipeline cache save thread it owns
+		// would outlive the title - and still be there when the next one
+		// builds a device. Stopping it writes files and touches no device, so
+		// it is safe even here, with the context already gone.
+#ifdef ENABLE_VULKAN
+		if (g_renderer && g_renderer->GetType() == RendererAPI::Vulkan)
+			static_cast<VulkanRenderer*>(g_renderer.get())->StopPipelineCacheSaveThread();
+#endif
 		g_renderer.release();
 		std::memset(&LatteGPUState, 0, sizeof(LatteGPUState));
 		sLatteThreadExited.store(true, std::memory_order_release);

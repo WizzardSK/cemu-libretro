@@ -1057,9 +1057,7 @@ VulkanRenderer::~VulkanRenderer()
 	// make sure compilation threads have been shut down
 	RendererShaderVk::Shutdown();
 	// shut down pipeline save thread
-	m_destructionRequested = true;
-	m_pipeline_cache_semaphore.notify();
-	m_pipeline_cache_save_thread.join();
+	StopPipelineCacheSaveThread();
 
 	vkDestroyPipelineCache(m_logicalDevice, m_pipeline_cache, nullptr);
 
@@ -2649,6 +2647,15 @@ void VulkanRenderer::WaitCommandBufferFinished(uint64 commandBufferId)
 		SubmitCommandBuffer();
 	while (HasCommandBufferFinished(commandBufferId) == false)
 		WaitForNextFinishedCommandBuffer();
+}
+
+void VulkanRenderer::StopPipelineCacheSaveThread()
+{
+	if (!m_pipeline_cache_save_thread.joinable())
+		return;
+	m_destructionRequested = true;
+	m_pipeline_cache_semaphore.notify();
+	m_pipeline_cache_save_thread.join();
 }
 
 void VulkanRenderer::PipelineCacheSaveThread(size_t cache_size)

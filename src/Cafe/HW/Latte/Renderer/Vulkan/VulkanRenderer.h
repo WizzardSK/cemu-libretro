@@ -284,6 +284,9 @@ public:
 	std::vector<VKRDestructibleObject*> m_destructionQueue;
 
 	void PipelineCacheSaveThread(size_t cache_size);
+	// Stops the thread above without needing the device. The destructor does
+	// this too, but on the libretro unload path the destructor is skipped.
+	void StopPipelineCacheSaveThread();
 
 	void ClearColorbuffer(bool padView) override;
 	void ClearColorImageRaw(VkImage image, uint32 sliceIndex, uint32 mipIndex, const VkClearColorValue& color, VkImageLayout inputLayout, VkImageLayout outputLayout);

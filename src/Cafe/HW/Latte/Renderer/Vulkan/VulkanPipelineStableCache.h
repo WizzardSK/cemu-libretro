@@ -43,6 +43,7 @@ public:
 	void LoadPipelineFromCache(std::span<uint8> fileData);
     void Close(); // called on title exit
 	void StopCompilerThreads(); // must run before the renderer goes away
+	void StopCacheStoreThread();
 
 	bool HasPipelineCached(uint64 baseHash, uint64 pipelineStateHash);
 	void AddCurrentStateToCache(uint64 baseHash, uint64 pipelineStateHash);
@@ -56,6 +57,10 @@ private:
 	void WorkerThread();
 
 	std::thread* m_pipelineCacheStoreThread;
+	// The writer is detached and its loop had no way out at all, so it
+	// outlived every title the core ever loaded.
+	std::atomic_bool m_stopCacheStoreThread{ false };
+	std::atomic_bool m_cacheStoreThreadLive{ false };
 
 	std::unordered_set<PipelineHash, PipelineHash::HashFunc> m_pipelineIsCached;
 	FSpinlock m_pipelineIsCachedLock;

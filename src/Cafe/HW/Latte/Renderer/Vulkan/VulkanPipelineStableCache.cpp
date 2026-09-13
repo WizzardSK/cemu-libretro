@@ -120,12 +120,14 @@ void VulkanPipelineStableCache::EndLoading()
 void VulkanPipelineStableCache::Close()
 {
 	StopCompilerThreads();
+	StopCacheStoreThread();
     if(s_cache)
     {
         delete s_cache;
         s_cache = nullptr;
     }
 }
+
 
 struct CachedPipeline
 {
@@ -312,12 +314,30 @@ bool VulkanPipelineStableCache::HasPipelineCached(uint64 baseHash, uint64 pipeli
 }
 
 ConcurrentQueue<CachedPipeline*> g_pipelineCachingQueue;
+// The writer thread is detached, so there is nothing to join - wake it, give it
+// a moment to leave its loop, and note it if it does not. It only writes files,
+// so it is not the one that will be holding the device, but it does hold
+// s_cache, and Close deletes that right after this returns.
+void VulkanPipelineStableCache::StopCacheStoreThread()
+{
+	if (!m_pipelineCacheStoreThread)
+		return;
+	m_stopCacheStoreThread = true;
+	g_pipelineCachingQueue.push(nullptr); // wake it so it sees the flag
+	for (uint32 i = 0; i < 2000 && m_cacheStoreThreadLive.load(); i++)
+		std::this_thread::sleep_for(std::chrono::milliseconds(1));
+	if (m_cacheStoreThreadLive.load())
+		cemuLog_log(LogType::Force, "[VulkanPipelineStableCache] the cache writer thread did not stop in time");
+	delete m_pipelineCacheStoreThread;
+	m_pipelineCacheStoreThread = nullptr;
+}
 
 void VulkanPipelineStableCache::AddCurrentStateToCache(uint64 baseHash, uint64 pipelineStateHash)
 {
 	m_pipelineIsCached.emplace(baseHash, pipelineStateHash);
 	if (!m_pipelineCacheStoreThread)
 	{
+		m_stopCacheStoreThread = false;
 		m_pipelineCacheStoreThread = new std::thread(&VulkanPipelineStableCache::WorkerThread, this);
 		m_pipelineCacheStoreThread->detach();
 	}
@@ -448,10 +468,17 @@ void VulkanPipelineStableCache::StopCompilerThreads()
 void VulkanPipelineStableCache::WorkerThread()
 {
 	SetThreadName("plCacheWriter");
+	m_cacheStoreThreadLive = true;
+	struct LiveFlag { std::atomic_bool& f; ~LiveFlag() { f = false; } } liveFlag{ m_cacheStoreThreadLive };
 	while (true)
 	{
 		CachedPipeline* job;
 		g_pipelineCachingQueue.pop(job);
+		if (m_stopCacheStoreThread)
+		{
+			delete job;
+			return;
+		}
 		if (!s_cache)
 		{
 			delete job;

@@ -33,6 +33,7 @@
 #include "Cafe/HW/Latte/Renderer/Vulkan/VulkanRenderer.h"
 #include "Cafe/HW/Latte/Renderer/Vulkan/VulkanPipelineStableCache.h"
 #include "Cafe/HW/Latte/Renderer/Vulkan/RendererShaderVk.h"
+#include "Cafe/HW/Latte/Renderer/Vulkan/VulkanPipelineCompiler.h"
 #include "Cafe/HW/Latte/Renderer/Vulkan/VulkanAPI.h"
 #include "libretro_vulkan.h"
 #endif
@@ -2687,7 +2688,15 @@ RETRO_API void retro_reset()
 	if (s_graphics_api == SelectedGraphicsAPI::Vulkan)
 	{
 		RendererShaderVk::Shutdown();
+		// All of this stops threads without touching the device, which is why
+		// it can run even once the context has gone. Until it was added, a
+		// closed title left seven compilePl threads, the driver cache thread
+		// and the cache writer behind, still alive while the next title built
+		// a device of its own - which is sco8487's Deus Ex hanging on boot
+		// after a run that had not closed RetroArch as well.
 		VulkanPipelineStableCache::GetInstance().StopCompilerThreads();
+		VulkanPipelineStableCache::GetInstance().StopCacheStoreThread();
+		PipelineCompiler::CompileThreadPool_Stop();
 	}
 #endif
 
@@ -3764,7 +3773,15 @@ RETRO_API void retro_unload_game()
 	if (s_graphics_api == SelectedGraphicsAPI::Vulkan)
 	{
 		RendererShaderVk::Shutdown();
+		// All of this stops threads without touching the device, which is why
+		// it can run even once the context has gone. Until it was added, a
+		// closed title left seven compilePl threads, the driver cache thread
+		// and the cache writer behind, still alive while the next title built
+		// a device of its own - which is sco8487's Deus Ex hanging on boot
+		// after a run that had not closed RetroArch as well.
 		VulkanPipelineStableCache::GetInstance().StopCompilerThreads();
+		VulkanPipelineStableCache::GetInstance().StopCacheStoreThread();
+		PipelineCompiler::CompileThreadPool_Stop();
 	}
 #endif
 
@@ -3789,6 +3806,12 @@ RETRO_API void retro_unload_game()
 		// alone and let the process take it.
 		if (libretro_gpu_context_gone() || Latte_WasThreadAbandoned())
 		{
+			// The destructor is what normally stops this one, and it is about
+			// to be skipped. Stopping it needs no device - it writes files.
+#ifdef ENABLE_VULKAN
+			if (s_graphics_api == SelectedGraphicsAPI::Vulkan)
+				static_cast<VulkanRenderer*>(renderer)->StopPipelineCacheSaveThread();
+#endif
 			// Nothing to destroy it with. ~VulkanRenderer submits a final
 			// command buffer and frees its objects through the frontend's
 			// device, and that device is already gone by the time an exiting
