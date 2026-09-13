@@ -2343,16 +2343,37 @@ RETRO_API void retro_set_environment(retro_environment_t cb)
 	// stat, v2 truncate, and VFSFileStream keeps to whichever version answers.
 	{
 		static const uint32_t vfs_versions[] = { 5, 4, 3, 2, 1 };
+		// Capped at 3 deliberately. Asking for v5 gets a v5 interface, and on
+		// it LatteShaderCache_Load faults on a null cache file - the same
+		// build, the same frontend and the same title load cleanly when this
+		// is 3, which is how it was pinned down. RetroArch changed the create
+		// semantics of the VFS open function ("Specify the file creation
+		// semantics of the VFS open function", #19339), and this core has not
+		// been taught them, so it must not claim to speak that version yet.
+		// Raise it here once it has - CEMU_VFS_MAX_VERSION=5 is how to try.
+		uint32_t maxVersion = 3;
+		if (const char* pin = getenv("CEMU_VFS_MAX_VERSION"))
+		{
+			const int v = atoi(pin);
+			if (v >= 1 && v <= 5)
+				maxVersion = (uint32_t)v;
+		}
 		for (uint32_t wanted : vfs_versions)
 		{
+			if (wanted > maxVersion)
+				continue;
 			struct retro_vfs_interface_info vfs_info{};
 			vfs_info.required_interface_version = wanted;
 			vfs_info.iface = nullptr;
 			if (cb(RETRO_ENVIRONMENT_GET_VFS_INTERFACE, &vfs_info) && vfs_info.iface)
 			{
-				// The frontend reports its own version here, which is at least
-				// the one we asked for.
-				uint32_t version = std::max<uint32_t>(wanted, vfs_info.required_interface_version);
+				// What we hold is the interface we asked for, not whatever the
+				// frontend reports it is capable of. Taking the larger of the
+				// two was wrong twice over: it recorded a version whose
+				// functions this interface may not have, and it made the log
+				// line say v5 for a v3 negotiation, which hid exactly that
+				// while it was being investigated.
+				const uint32_t version = wanted;
 				VFSFileStream::SetVFSInterface(vfs_info.iface, version);
 				if (log_cb)
 					log_cb(RETRO_LOG_INFO, "Cemu: using the frontend's VFS interface (v%u)\n", version);
