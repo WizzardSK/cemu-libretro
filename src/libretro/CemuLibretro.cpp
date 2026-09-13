@@ -1886,17 +1886,24 @@ static void libretro_apply_core_options()
 	if (const char* v = libretro_get_option_value("cemu_drc_position"))
 		g_libretroDRCPositionSwapped = libretro_drc_iequals(v, "swapped");
 
-	// Internal resolution
+	// Internal resolution, as a factor applied to screen-shaped render targets
+	// (see g_libretroRenderScale). This used to write the chosen size into
+	// WindowSystem's window size instead, which did nothing of the sort: that
+	// size only feeds LatteRenderTarget_getScreenImageArea, the rectangle the
+	// finished image is blitted into. Shrinking it would have drawn the frame
+	// into a corner of the output rather than rendering fewer pixels, and
+	// growing it did nothing at all - so the window stays at the output size
+	// and the scale does the work.
 	if (const char* v = libretro_get_option_value("cemu_internal_resolution"))
 	{
 		unsigned newWidth, newHeight;
 		if (libretro_parse_internal_resolution(v, newWidth, newHeight))
 		{
-			auto& windowInfo = WindowSystem::GetWindowInfo();
-			windowInfo.width = newWidth;
-			windowInfo.height = newHeight;
-			windowInfo.phys_width = newWidth;
-			windowInfo.phys_height = newHeight;
+			extern float g_libretroRenderScale;
+			g_libretroRenderScale = (float)newHeight / 720.0f;
+			if (log_cb && g_libretroRenderScale != 1.0f)
+				log_cb(RETRO_LOG_INFO, "Cemu: rendering screen-sized targets at %ux%u (%.2fx)\n",
+					newWidth, newHeight, g_libretroRenderScale);
 		}
 	}
 

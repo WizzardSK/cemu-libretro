@@ -1242,6 +1242,12 @@ bool LatteTexture_GX2FormatHasStencil(bool isDepth, Latte::E_GX2SURFFMT format)
 		   format == Latte::E_GX2SURFFMT::D32_S8_FLOAT;
 }
 
+#ifdef ENABLE_LIBRETRO
+// 1.0 leaves every texture at the size the game asked for, which is what the
+// core does unless the internal resolution option says otherwise.
+float g_libretroRenderScale = 1.0f;
+#endif
+
 LatteTexture::LatteTexture(Latte::E_DIM dim, MPTR physAddress, MPTR physMipAddress, Latte::E_GX2SURFFMT format, uint32 width, uint32 height, uint32 depth, uint32 pitch, uint32 mipLevels, uint32 swizzle,
 	Latte::E_HWTILEMODE tileMode, bool isDepth)
 {
@@ -1264,6 +1270,33 @@ LatteTexture::LatteTexture(Latte::E_DIM dim, MPTR physAddress, MPTR physMipAddre
 	this->physMipAddress = physMipAddress;
 	this->lastUpdateEventCounter = LatteTexture_getNextUpdateEventCounter();
 	this->lastWriteEventCounter = LatteTexture_getNextUpdateEventCounter();
+
+#ifdef ENABLE_LIBRETRO
+	// A render scale without per-game rules. Cemu changes internal resolution
+	// only through graphic pack texture rules, which name a title's render
+	// target sizes outright; there is no global factor. This is the generic
+	// stand-in: any texture the size of a screen-shaped render target is
+	// created at the requested fraction of it instead.
+	//
+	// "Screen-shaped" is the whole safety margin - 16:9 and at least 256 on
+	// both sides, which is what a colour or depth target for the TV output
+	// looks like and what an ordinary art asset does not. A game that renders
+	// to something else is left alone, and so is one whose graphic pack
+	// already set a size below, since a pack that names the title beats a
+	// guess that does not.
+	if (g_libretroRenderScale != 1.0f && width >= 256 && height >= 256 && width * 9 == height * 16)
+	{
+		const uint32 scaledWidth = std::max<uint32>(4, ((uint32)(width * g_libretroRenderScale) + 3) & ~3u);
+		const uint32 scaledHeight = std::max<uint32>(4, ((uint32)(height * g_libretroRenderScale) + 3) & ~3u);
+		if (scaledWidth != width || scaledHeight != height)
+		{
+			this->overwriteInfo.hasResolutionOverwrite = true;
+			this->overwriteInfo.width = scaledWidth;
+			this->overwriteInfo.height = scaledHeight;
+			this->overwriteInfo.depth = depth;
+		}
+	}
+#endif
 
 	// handle graphic pack overwrite rules
 	for (const auto& gp : GraphicPack2::GetActiveGraphicPacks())

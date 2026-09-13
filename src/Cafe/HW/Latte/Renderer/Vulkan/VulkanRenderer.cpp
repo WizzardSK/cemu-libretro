@@ -3742,9 +3742,19 @@ void VulkanRenderer::DrawBackbufferQuad(LatteTextureView* texView, RendererOutpu
 			int dx = 0, dy = 0, dw = (int)m_presentWidth, dh = (int)m_presentHeight;
 			LibretroDRC_ComputeViewport(padView, (int)m_presentWidth, (int)m_presentHeight, dx, dy, dw, dh);
 
+			// The source rectangle has to be the size of the host image, not
+			// the size the guest asked for. They differ whenever a resolution
+			// overwrite is in effect - a graphic pack, or the core's own
+			// render scale - and reading baseTexture->width there asks for a
+			// region larger than the image, which lands the picture in the top
+			// left corner of the output with the rest of it stretched off
+			// screen.
+			sint32 srcWidth, srcHeight;
+			baseTexture->GetEffectiveSize(srcWidth, srcHeight, 0);
+
 			VkImageBlit blitRegion{};
 			blitRegion.srcSubresource = {VK_IMAGE_ASPECT_COLOR_BIT, 0, 0, 1};
-			blitRegion.srcOffsets[1] = {(int32_t)baseTexture->width, (int32_t)baseTexture->height, 1};
+			blitRegion.srcOffsets[1] = {(int32_t)srcWidth, (int32_t)srcHeight, 1};
 			blitRegion.dstSubresource = {VK_IMAGE_ASPECT_COLOR_BIT, 0, 0, 1};
 			blitRegion.dstOffsets[0] = {dx, dy, 0};
 			blitRegion.dstOffsets[1] = {dx + dw, dy + dh, 1};
