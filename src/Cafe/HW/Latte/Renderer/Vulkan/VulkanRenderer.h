@@ -13,6 +13,10 @@
 #include "util/containers/flat_hash_map.hpp"
 #include "util/containers/robin_hood.h"
 
+// Set from the libretro core option cemu_bc1_16bit. Declared here rather than
+// pulled in from the libretro glue, which this file must not depend on.
+extern bool g_libretroNarrowBC1;
+
 struct VkSupportedFormatInfo_t
 {
 	bool fmt_d24_unorm_s8_uint{};
@@ -28,6 +32,8 @@ struct VkSupportedFormatInfo_t
 	bool fmt_bc3{};
 	bool fmt_bc4{};
 	bool fmt_bc5{};
+	// For the narrowed BC1 fallback - see cemu_bc1_16bit.
+	bool fmt_r5g5b5a1_unorm_pack{};
 };
 
 struct VkDescriptorSetInfo

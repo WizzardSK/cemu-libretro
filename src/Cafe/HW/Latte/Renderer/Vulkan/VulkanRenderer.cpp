@@ -1164,6 +1164,9 @@ VulkanRenderer::~VulkanRenderer()
 	//glslang::FinalizeProcess();
 }
 
+// Default off: it trades colour precision for memory, so it is the user's call.
+bool g_libretroNarrowBC1 = false;
+
 VulkanRenderer* VulkanRenderer::GetInstance()
 {
 	cemu_assert_debug(g_renderer->GetType() == RendererAPI::Vulkan);
@@ -2253,6 +2256,14 @@ void VulkanRenderer::QueryAvailableFormats()
 	{
 		m_supportedFormatInfo.fmt_a1r5g5b5_unorm_pack = true;
 	}
+	// R5G5B5A1, the target of the narrowed BC1 fallback
+	fmtProp = {};
+	vkGetPhysicalDeviceFormatProperties(m_physicalDevice, VK_FORMAT_R5G5B5A1_UNORM_PACK16, &fmtProp);
+	if ((fmtProp.optimalTilingFeatures & VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT) != 0 &&
+	    (fmtProp.optimalTilingFeatures & VK_FORMAT_FEATURE_TRANSFER_DST_BIT) != 0)
+	{
+		m_supportedFormatInfo.fmt_r5g5b5a1_unorm_pack = true;
+	}
 	// print info about unsupported formats to log
 	for (auto& it : requestedFormatList)
 	{
@@ -3065,6 +3076,15 @@ void VulkanRenderer::GetTextureFormatInfoVK(Latte::E_GX2SURFFMT format, bool isD
 			{
 				formatInfoOut->vkImageFormat = VK_FORMAT_BC1_RGBA_UNORM_BLOCK; // todo - verify
 				formatInfoOut->decoder = TextureDecoder_BC1::getInstance();
+			}
+			else if (g_libretroNarrowBC1 && m_supportedFormatInfo.fmt_r5g5b5a1_unorm_pack)
+			{
+				// Half the memory of RGBA8, with BC1's single bit of alpha kept
+				// exactly and green reduced from six bits to five. Only on the
+				// devices that have to decompress in the first place, and only
+				// when asked for.
+				formatInfoOut->vkImageFormat = VK_FORMAT_R5G5B5A1_UNORM_PACK16;
+				formatInfoOut->decoder = TextureDecoder_BC1_rgb5a1::getInstance();
 			}
 			else
 			{

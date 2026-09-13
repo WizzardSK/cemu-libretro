@@ -1801,6 +1801,12 @@ static void libretro_apply_core_options()
 		// because it is the only way to answer that on a phone - the numbers
 		// are meaningless from a desktop, where the fallback never runs. See
 		// issue #22.
+		if (const char* v = libretro_get_option_value("cemu_bc1_16bit"))
+		{
+			bool b;
+			if (libretro_parse_enabled_disabled(v, b))
+				g_libretroNarrowBC1 = b;
+		}
 		if (const char* v = libretro_get_option_value("cemu_log_texture_memory"))
 		{
 			bool b;
@@ -2065,6 +2071,7 @@ static const char* libretro_option_category(const char* key)
 		{"cemu_log_thread_dump", "logging"},
 		{"cemu_log_system_api", "logging"},
 		{"cemu_log_texture_memory", "logging"},
+		{"cemu_bc1_16bit", "graphics"},
 	};
 	for (const Entry& entry : entries)
 	{
@@ -2258,6 +2265,11 @@ static bool libretro_set_core_options_v2(retro_environment_t cb, const struct re
 
 			// Worth saying what the number is for, since it only means
 			// something on a device without BC support.
+			// Only means anything where BC has to be decompressed, so say so.
+			if (strcmp(var->key, "cemu_bc1_16bit") == 0)
+				def.info = keep(std::string("Halves what BC1 textures cost on a GPU that cannot sample BC, "
+					"at the price of one bit of green. No effect where BC is supported."));
+
 			if (strcmp(var->key, "cemu_log_texture_memory") == 0)
 				def.info = keep(std::string("Reports how much of the texture memory is BC "
 					"that had to be decompressed because this GPU cannot sample it."));
@@ -2440,6 +2452,7 @@ static void libretro_publish_core_options(retro_environment_t cb)
 		{"cemu_log_thread_dump", "Log Wii U Thread Snapshots (debugging); disabled|enabled"},
 		{"cemu_log_system_api", "Log System API Calls (debugging); disabled|enabled"},
 		{"cemu_log_texture_memory", "Log Texture Memory (debugging); disabled|enabled"},
+		{"cemu_bc1_16bit", "Reduce BC1 Texture Memory; disabled|enabled"},
 #if defined(ENABLE_VULKAN) && defined(ENABLE_OPENGL)
 		{"cemu_gpu_api", "Graphics API (restart); OpenGL|Vulkan"},
 #endif

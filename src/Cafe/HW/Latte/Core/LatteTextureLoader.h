@@ -2297,6 +2297,70 @@ public:
 };
 
 class TextureDecoder_BC1_rgba8 : public TextureDecoder_BCn_rgba8<_bcDecodeBC1_rgba8>, public SingletonClass<TextureDecoder_BC1_rgba8> {};
+
+/*
+** BC1 decoded to 16 bits per texel instead of 32, for devices that have to
+** decompress it. BC1 is half a byte per texel, so RGBA8 is an eight-fold
+** expansion - on Deus Ex that is 137 MB of a 211 MB working set, the single
+** largest item there, on hardware with 4 GB in total.
+**
+** R5G5B5A1 halves it. The alpha is exact: BC1 carries one bit of it, and so
+** does this. The colour is not - green goes from six bits to five, and the
+** interpolated entries are rounded once more than before - so this is a
+** trade, and it lives behind an option rather than being the default.
+**
+** SRGB is deliberately not narrowed: Vulkan has no SRGB variant of a 5551
+** packed format, and silently treating one as UNORM would change more than
+** the precision.
+*/
+static inline uint16 _bcPack5551(uint32 rgba8)
+{
+	// Each channel rounds to nearest rather than truncating, which is what
+	// keeps a flat colour from drifting darker every time it passes through.
+	const uint32 r = (((rgba8 >>  0) & 0xFF) * 31 + 127) / 255;
+	const uint32 g = (((rgba8 >>  8) & 0xFF) * 31 + 127) / 255;
+	const uint32 b = (((rgba8 >> 16) & 0xFF) * 31 + 127) / 255;
+	const uint32 a = ((rgba8 >> 24) & 0x80) ? 1u : 0u;
+	// VK_FORMAT_R5G5B5A1_UNORM_PACK16: R 15..11, G 10..6, B 5..1, A 0.
+	return (uint16)((r << 11) | (g << 6) | (b << 1) | a);
+}
+
+class TextureDecoder_BC1_rgb5a1 : public TextureDecoder, public SingletonClass<TextureDecoder_BC1_rgb5a1>
+{
+public:
+	sint32 getBytesPerTexel(LatteTextureLoaderCtx* textureLoader) override
+	{
+		return 2;
+	}
+
+	void decode(LatteTextureLoaderCtx* textureLoader, uint8* outputData) override
+	{
+		for (sint32 y = 0; y < textureLoader->height; y += textureLoader->stepY)
+		{
+			for (sint32 x = 0; x < textureLoader->width; x += textureLoader->stepX)
+			{
+				uint8* blockData = LatteTextureLoader_GetInput(textureLoader, x, y);
+				sint32 blockSizeX = (std::min)(4, textureLoader->width - x);
+				sint32 blockSizeY = (std::min)(4, textureLoader->height - y);
+				uint32 rgbaBlock[4 * 4];
+				_bcDecodeBC1_rgba8(blockData, rgbaBlock);
+				for (sint32 py = 0; py < blockSizeY; py++)
+				{
+					uint16* out = (uint16*)outputData + (x + (y + py) * textureLoader->width);
+					for (sint32 px = 0; px < blockSizeX; px++)
+						out[px] = _bcPack5551(rgbaBlock[px + py * 4]);
+				}
+			}
+		}
+	}
+
+	void decodePixelToRGBA(uint8* blockData, uint8* outputPixel, uint8 blockOffsetX, uint8 blockOffsetY) override
+	{
+		uint32 rgbaBlock[4 * 4];
+		_bcDecodeBC1_rgba8(blockData, rgbaBlock);
+		memcpy(outputPixel, rgbaBlock + (blockOffsetX + blockOffsetY * 4), sizeof(uint32));
+	}
+};
 class TextureDecoder_BC2_rgba8 : public TextureDecoder_BCn_rgba8<_bcDecodeBC2_rgba8>, public SingletonClass<TextureDecoder_BC2_rgba8> {};
 class TextureDecoder_BC3_rgba8 : public TextureDecoder_BCn_rgba8<_bcDecodeBC3_rgba8>, public SingletonClass<TextureDecoder_BC3_rgba8> {};
 
