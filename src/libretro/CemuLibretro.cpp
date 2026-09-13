@@ -3809,6 +3809,12 @@ RETRO_API void retro_unload_game()
 	// callback is closed off instead and late submissions become no-ops.
 	s_audio_submission_allowed = false;
 
+	// A close during the shader cache load never reaches the line that turns
+	// this off - LatteShaderCache_ShowProgress leaves through LatteThread_Exit
+	// - and it is a static that outlives the title, so the next one would start
+	// with a progress bar it never asked for and an environment call behind it.
+	libretro_set_load_progress(nullptr, -1);
+
 	// A GPU device/renderer may have been created even if the title failed to finish
 	// loading (s_game_loaded false), and that renderer still has to go.
 	if (!s_game_loaded && !s_gpu_context_created)
@@ -4331,10 +4337,15 @@ RETRO_API void retro_run()
 
 	if (s_load_progress_active.load(std::memory_order_acquire) && environ_cb)
 	{
-		// Same bar the conversion uses, for the same reason: a progress message
-		// is kept on screen and updated in place, where a notification is a
-		// toast that comes and goes. Sent every frame so the figure moves.
+		// Only when the figure or the words have actually moved, not every
+		// frame. The frontend keeps a progress message up for its duration and
+		// updates the one already on screen, so re-sending an unchanged one
+		// buys nothing and puts an environment call and a queue push in the
+		// middle of every frame - which is exactly the sort of thing that gets
+		// reported as stutter and is hard to argue with afterwards. The GPU
+		// thread only moves this four times a second.
 		static std::string s_shown_load;
+		static int s_shown_load_percent = -2;
 		std::string text;
 		int percent;
 		{
@@ -4342,27 +4353,30 @@ RETRO_API void retro_run()
 			text = s_load_progress_text;
 			percent = s_load_progress_percent;
 		}
-		unsigned version = 0;
-		if (environ_cb(RETRO_ENVIRONMENT_GET_MESSAGE_INTERFACE_VERSION, &version) && version >= 1)
+		if (percent != s_shown_load_percent || text != s_shown_load)
 		{
 			s_shown_load = text;
-			struct retro_message_ext message = {};
-			message.msg = s_shown_load.c_str();
-			message.duration = 4000;
-			message.priority = 3;
-			message.level = RETRO_LOG_INFO;
-			message.target = RETRO_MESSAGE_TARGET_OSD;
-			message.type = RETRO_MESSAGE_TYPE_PROGRESS;
-			message.progress = (int8_t)((percent < 0) ? -1 : (percent > 100 ? 100 : percent));
-			environ_cb(RETRO_ENVIRONMENT_SET_MESSAGE_EXT, &message);
-		}
-		else if (text != s_shown_load)
-		{
-			// The old call takes a frame count rather than a bar, so it only
-			// goes out when the words change and not on every percent.
-			s_shown_load = text;
-			struct retro_message message{s_shown_load.c_str(), 240};
-			environ_cb(RETRO_ENVIRONMENT_SET_MESSAGE, &message);
+			s_shown_load_percent = percent;
+			unsigned version = 0;
+			if (environ_cb(RETRO_ENVIRONMENT_GET_MESSAGE_INTERFACE_VERSION, &version) && version >= 1)
+			{
+				struct retro_message_ext message = {};
+				message.msg = s_shown_load.c_str();
+				message.duration = 4000;
+				message.priority = 3;
+				message.level = RETRO_LOG_INFO;
+				message.target = RETRO_MESSAGE_TARGET_OSD;
+				message.type = RETRO_MESSAGE_TYPE_PROGRESS;
+				message.progress = (int8_t)((percent < 0) ? -1 : (percent > 100 ? 100 : percent));
+				environ_cb(RETRO_ENVIRONMENT_SET_MESSAGE_EXT, &message);
+			}
+			else
+			{
+				// The old call takes a frame count rather than a bar, so it
+				// only goes out when the words change, not on every percent.
+				struct retro_message message{s_shown_load.c_str(), 240};
+				environ_cb(RETRO_ENVIRONMENT_SET_MESSAGE, &message);
+			}
 		}
 	}
 
