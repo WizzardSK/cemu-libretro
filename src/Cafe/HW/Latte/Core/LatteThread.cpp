@@ -550,9 +550,19 @@ void LatteThread_Exit()
 		// would outlive the title - and still be there when the next one
 		// builds a device. Stopping it writes files and touches no device, so
 		// it is safe even here, with the context already gone.
+		//
+		// Read g_renderer once. Testing it and then dereferencing it reads it
+		// twice, and the unload path can release it in between - which is a
+		// null dereference on this thread, and was: a fault at 0x8 on
+		// LatteThread, immediately after "dropping the renderer without
+		// destroying it". release() only drops ownership, so a pointer taken
+		// before that still points at a live object.
 #ifdef ENABLE_VULKAN
-		if (g_renderer && g_renderer->GetType() == RendererAPI::Vulkan)
-			static_cast<VulkanRenderer*>(g_renderer.get())->StopPipelineCacheSaveThread();
+		if (Renderer* renderer = g_renderer.get())
+		{
+			if (renderer->GetType() == RendererAPI::Vulkan)
+				static_cast<VulkanRenderer*>(renderer)->StopPipelineCacheSaveThread();
+		}
 #endif
 		g_renderer.release();
 		std::memset(&LatteGPUState, 0, sizeof(LatteGPUState));
