@@ -2699,10 +2699,13 @@ RETRO_API void retro_reset()
 		// it can run even once the context has gone. Until it was added, a
 		// closed title left seven compilePl threads, the driver cache thread
 		// and the cache writer behind, still alive while the next title built
-		// a device of its own - which is sco8487's Deus Ex hanging on boot
+		// a device of its own - which shows up as a title hanging on boot
 		// after a run that had not closed RetroArch as well.
-		VulkanPipelineStableCache::GetInstance().StopCompilerThreads();
-		VulkanPipelineStableCache::GetInstance().StopCacheStoreThread();
+		// Close() rather than just stopping the threads: it also drops the set
+		// of pipelines the cache believes it has and closes the cache file,
+		// both of which belong to the title that is ending. BeginLoading for
+		// the next one asserts if the file is still open.
+		VulkanPipelineStableCache::GetInstance().Close();
 		PipelineCompiler::CompileThreadPool_Stop();
 	}
 #endif
@@ -3784,10 +3787,13 @@ RETRO_API void retro_unload_game()
 		// it can run even once the context has gone. Until it was added, a
 		// closed title left seven compilePl threads, the driver cache thread
 		// and the cache writer behind, still alive while the next title built
-		// a device of its own - which is sco8487's Deus Ex hanging on boot
+		// a device of its own - which shows up as a title hanging on boot
 		// after a run that had not closed RetroArch as well.
-		VulkanPipelineStableCache::GetInstance().StopCompilerThreads();
-		VulkanPipelineStableCache::GetInstance().StopCacheStoreThread();
+		// Close() rather than just stopping the threads: it also drops the set
+		// of pipelines the cache believes it has and closes the cache file,
+		// both of which belong to the title that is ending. BeginLoading for
+		// the next one asserts if the file is still open.
+		VulkanPipelineStableCache::GetInstance().Close();
 		PipelineCompiler::CompileThreadPool_Stop();
 	}
 #endif
@@ -3807,7 +3813,7 @@ RETRO_API void retro_unload_game()
 		// that teardown is deleting this very renderer. Deleting it here as
 		// well is two threads destroying one object: the one that gets there
 		// first nulls g_renderer, and the other faults reading it back from
-		// inside ~VulkanRenderer, which is what sco8487's close crash is
+		// inside ~VulkanRenderer, which is what the close crash was
 		// (fault at 0x18f0, VulkanRenderer::GetInstance() returning null 6384
 		// bytes in). The thread is still live and still owns it, so leave it
 		// alone and let the process take it.

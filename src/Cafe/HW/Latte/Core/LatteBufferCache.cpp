@@ -1625,8 +1625,8 @@ void LatteBufferCache_init(size_t bufferSize)
 	// previous run's nodes are still here, still holding offsets from the heap
 	// that is replaced two lines down. The next teardown frees one of those
 	// into a heap that never handed it out - "VHeap internal error" and an
-	// abort, one title later, which is what a reset looked like on sco8487's
-	// device. Releasing them here is only bookkeeping: the node holds an offset
+	// abort, one title later, which is what a reset turned into on a device
+	// that got there. Releasing them here is only bookkeeping: the node holds an offset
 	// in that heap and nothing else, and nothing in this path talks to the
 	// driver.
 	if (!g_gpuBufferCache.IsEmpty() && g_gpuBufferHeap)

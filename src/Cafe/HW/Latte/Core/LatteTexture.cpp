@@ -1284,7 +1284,7 @@ LatteTexture::LatteTexture(Latte::E_DIM dim, MPTR physAddress, MPTR physMipAddre
 	// rest of it: a render target is macro-tiled, while a surface the guest
 	// fills from memory - a decoded movie frame, say - is linear or 1D tiled.
 	// Scaling one of those leaves it with nothing to fill it, which is the
-	// green video sco8487 saw over the intro logos. A game that renders
+	// flat green where an intro movie should be. A game that renders
 	// to something else is left alone, and so is one whose graphic pack
 	// already set a size below, since a pack that names the title beats a
 	// guess that does not.

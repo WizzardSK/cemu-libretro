@@ -2258,7 +2258,7 @@ void VulkanRenderer::QueryAvailableFormats()
 	// required, not just sampling: game textures are sampled bilinearly, and a
 	// format that can be sampled but not filtered leaves the driver to make up
 	// the difference. Whatever it does then costs more than the memory saved -
-	// which is the shape of the slowdown sco8487 measured on Mali, where the
+	// which is the shape of the slowdown measured on Mali, where the
 	// narrowed textures were slower to draw than the RGBA8 ones they replaced.
 	// Without the bit the option now does nothing at all, which is the right
 	// answer for a device that cannot take the format properly.

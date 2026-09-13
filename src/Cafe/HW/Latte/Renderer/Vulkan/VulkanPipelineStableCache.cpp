@@ -121,6 +121,15 @@ void VulkanPipelineStableCache::Close()
 {
 	StopCompilerThreads();
 	StopCacheStoreThread();
+	{
+		// Every hash in here names a pipeline built against the device that is
+		// going away. Kept across titles, the next one believes its pipelines
+		// are already accounted for and never writes them again - and
+		// BeginLoading asserts on the cache file still being open.
+		m_pipelineIsCachedLock.lock();
+		m_pipelineIsCached.clear();
+		m_pipelineIsCachedLock.unlock();
+	}
     if(s_cache)
     {
         delete s_cache;
