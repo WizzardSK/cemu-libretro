@@ -275,14 +275,6 @@ namespace vpad
 			if (libretro_get_button_state(15)) status->hold |= LR_VPAD_STICK_L;
 			if (libretro_get_button_state(16)) status->hold |= LR_VPAD_STICK_R;
 
-			// Debug: log when any button is pressed
-			if (status->hold != 0)
-			{
-				static int s_btn_log = 0;
-				if (s_btn_log++ < 20)
-					cemuLog_log(LogType::Force, "libretro VPADRead: hold=0x{:x}", (uint32)status->hold);
-			}
-
 			// Touchscreen
 			uint16_t tp_x, tp_y;
 			if (libretro_get_touch_state(&tp_x, &tp_y))
