@@ -408,6 +408,9 @@ static std::mutex s_frame_mutex;
 static std::condition_variable s_frame_cv;
 std::atomic_bool s_frame_ready{false};
 static std::atomic_bool s_shutting_down{false};
+// Whether audio may still be handed to the frontend. Cleared as unload starts
+// and set again when a title is loaded.
+static std::atomic_bool s_audio_submission_allowed{true};
 
 // Framebuffer for software readback
 static constexpr uint32_t SCREEN_WIDTH = 1280;
@@ -2483,7 +2486,7 @@ RETRO_API void retro_init()
 		return;
 
 	LibretroAudioAPI::SetAudioCallback([](const int16_t* data, size_t frames) -> size_t {
-		if (audio_batch_cb && data && frames > 0)
+		if (s_audio_submission_allowed && audio_batch_cb && data && frames > 0)
 			return audio_batch_cb(data, frames);
 		return 0;
 	});
@@ -3023,6 +3026,7 @@ static void libretro_launch_game()
 	libretro_apply_core_options();
 
 	// Init audio through libretro
+	s_audio_submission_allowed = true;
 	libretro_init_audio();
 
 	// Hand the Wii Remote channels a libretro pad each
@@ -3768,6 +3772,13 @@ static void libretro_stop_system_services()
 
 RETRO_API void retro_unload_game()
 {
+	// Before anything else: stop handing the frontend audio. Cemu's AX thread
+	// is what submits it, and a thread that outlives the close keeps calling
+	// into an audio driver the frontend is taking apart - which is a crash
+	// inside the frontend's own audio stack, with nothing of ours on the
+	// stack to show for it. Nothing here can join that thread in time, so the
+	// callback is closed off instead and late submissions become no-ops.
+	s_audio_submission_allowed = false;
 
 	// A GPU device/renderer may have been created even if the title failed to finish
 	// loading (s_game_loaded false), and that renderer still has to go.
