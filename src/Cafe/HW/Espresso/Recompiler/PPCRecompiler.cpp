@@ -751,6 +751,11 @@ void PPCRecompiler_init()
 
 void PPCRecompiler_Shutdown()
 {
+    // Nothing to take down, and the memory below has not been mapped yet. The
+    // worker thread only exists once initialized is set, so this also means
+    // there is no thread outstanding.
+    if(!s_ppcRecompilerState.initialized)
+        return;
     // shut down recompiler thread
     s_ppcRecompilerState.workerThreadStopSignal = true;
     if(s_ppcRecompilerState.workerThread.joinable())

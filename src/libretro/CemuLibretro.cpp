@@ -16,6 +16,7 @@
 #include "config/NetworkSettings.h"
 
 #include "Cafe/CafeSystem.h"
+#include "Cafe/HW/Espresso/Recompiler/PPCRecompiler.h"
 #include "Cafe/OS/libs/coreinit/coreinit_Thread.h"
 #include "Cafe/OS/common/OSCommon.h"
 #include "Cafe/OS/RPL/rpl_structs.h"
@@ -2610,6 +2611,15 @@ static bool libretro_shutdown_title_for_exit()
 		// turns up alive after a close.
 		if (log_cb)
 			log_cb(RETRO_LOG_INFO, "Cemu: no title was loaded, nothing to shut down\n");
+		// Except the recompiler, which starts while the title is still being
+		// prepared and so can be running even when no title ever finished
+		// loading. CafeSystem::ShutdownTitle is what normally joins it, and
+		// that is exactly what is being skipped here - leaving its thread
+		// alive inside a static object whose destructor then runs at exit and
+		// calls std::terminate on a joinable thread. Closing content a second
+		// after opening it does this every time. Shutdown is a no-op if the
+		// recompiler never started.
+		PPCRecompiler_Shutdown();
 		return true;
 	}
 	s_game_loaded = false;
@@ -3398,8 +3408,36 @@ static void libretro_context_reset()
 	{
 		s_launch_thread_running = true;
 		std::thread([]() {
-			libretro_launch_game();
-			s_launch_thread_running = false;
+			// An exception leaving a thread function is std::terminate, which
+			// is an abort with the whole process behind it - and closing the
+			// content while this is still preparing the title is enough to
+			// produce one. A cancelled launch is not a reason to take
+			// RetroArch down, so say what happened and let the thread end.
+			//
+			// The flag is cleared by the guard rather than at the end, so it
+			// is cleared on the way out of an exception too; leaving it set
+			// would make every later load believe a launch was still running.
+			struct ClearRunningFlag
+			{
+				~ClearRunningFlag() { s_launch_thread_running = false; }
+			} clearRunningFlag;
+
+			try
+			{
+				libretro_launch_game();
+			}
+			catch (const std::exception& ex)
+			{
+				cemuLog_log(LogType::Force, "[libretro] the launch thread ended with an exception: {}", ex.what());
+				if (log_cb)
+					log_cb(RETRO_LOG_ERROR, "Cemu: could not launch the title: %s\n", ex.what());
+			}
+			catch (...)
+			{
+				cemuLog_log(LogType::Force, "[libretro] the launch thread ended with an exception of unknown type");
+				if (log_cb)
+					log_cb(RETRO_LOG_ERROR, "Cemu: could not launch the title\n");
+			}
 		}).detach();
 	}
 }
