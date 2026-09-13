@@ -1010,6 +1010,13 @@ LatteCMDPtr LatteCP_itHLECopyColorBufferToScanBuffer(LatteCMDPtr cmd, uint32 nWo
 
 void LatteCP_dumpCommandBufferError(LatteCMDPtr cmdStart, LatteCMDPtr cmdEnd, LatteCMDPtr cmdError)
 {
+	// One buffer of this is a page of log; a ring full of it is a log nobody can
+	// read and a device that spends its time writing it.
+	static uint32 s_reported = 0;
+	if (s_reported >= 8)
+		return;
+	if (++s_reported == 8)
+		cemuLog_log(LogType::Force, "Further command buffer errors will not be dumped");
 	cemuLog_log(LogType::Force, "Detected error in GPU command buffer");
 	cemuLog_log(LogType::Force, "Dumping contents and info");
 	cemuLog_log(LogType::Force, "Buffer 0x{0:08x} Size 0x{1:08x}", memory_getVirtualOffsetFromPointer(cmdStart), memory_getVirtualOffsetFromPointer(cmdEnd));
@@ -1457,6 +1464,7 @@ void LatteCP_processCommandBuffer(DrawPassContext& drawPassCtx)
 				{
 					LatteCP_dumpCommandBufferError(cmdStart, cmdEnd, cmd);
 					cemu_assert_debug(false);
+					cmd = cmdEnd; // see below
 				}
 			}
 			else
@@ -1464,6 +1472,16 @@ void LatteCP_processCommandBuffer(DrawPassContext& drawPassCtx)
 				debug_printf("invalid itHeaderType %08x\n", itHeaderType);
 				LatteCP_dumpCommandBufferError(cmdStart, cmdEnd, cmd);
 				cemu_assert_debug(false);
+				// Give up on this buffer rather than carrying on through it. In
+				// a release build the assert above is nothing, and what follows
+				// a packet header the parser cannot read at all is not going to
+				// parse either - the rest is read as opcodes, lengths and
+				// addresses that mean nothing, and one of those handlers then
+				// reads somewhere it should not. That is the crash this came
+				// from: a buffer of pure noise, dumped, then walked to a fault
+				// a few packets later. The buffer is already lost; the thread
+				// does not have to go with it.
+				cmd = cmdEnd;
 			}
 		}
 		cemu_assert_debug(cmd == cmdEnd);
