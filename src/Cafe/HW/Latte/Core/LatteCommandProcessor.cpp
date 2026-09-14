@@ -178,7 +178,19 @@ uint32 LatteCP_readU32Deprc()
 		if ( TCL::TCLGPUReadRBWord(cmdWord) )
 			return cmdWord;
 
-		g_renderer->NotifyLatteCommandProcessorIdle(); // let the renderer know in case it wants to flush any commands
+		// Taken once, and checked. Closing content releases the renderer from
+		// under this thread - the unload path drops it without destroying it
+		// when the graphics context has already gone - and this is the line the
+		// GPU thread spends nearly all of its idle time on, so it is where that
+		// lands: a virtual call through a null pointer, fault at 0x0, with
+		// LatteCP_readU32Deprc under LatteCP_ProcessRingbuffer under
+		// Latte_ThreadEntry and nothing else on the stack. Reported as a crash
+		// from closing a title early and starting it again.
+		//
+		// Nothing below needs the renderer, so the idle pass carries on without
+		// it and the stop signal a few lines down takes the thread out.
+		if (Renderer* renderer = g_renderer.get())
+			renderer->NotifyLatteCommandProcessorIdle(); // let the renderer know in case it wants to flush any commands
 		performanceMonitor.gpuTime_idleTime.beginMeasuring();
 		// no command data available, spin in a busy loop for a bit then check again
 		for (sint32 busy = 0; busy < 80; busy++)
@@ -531,7 +543,11 @@ LatteCMDPtr LatteCP_itWaitRegMem(LatteCMDPtr cmd, uint32 nWords)
 				assert_dbg();
 			if (!stalls)
 			{
-				g_renderer->NotifyLatteCommandProcessorIdle();
+				// Same reason as in LatteCP_readU32Deprc: this loop is entered
+				// while a title is stopping, which is exactly when the renderer
+				// can be released from under it.
+				if (Renderer* renderer = g_renderer.get())
+					renderer->NotifyLatteCommandProcessorIdle();
 				stalls = true;
 			}
 
