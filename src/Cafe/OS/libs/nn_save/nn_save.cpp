@@ -235,28 +235,17 @@ namespace save
 
 		if (!g_nn_save->initialized)
 		{
-			// Each step named as it is passed. A title that is started, closed
-			// and started again stops dead inside this function on the second
-			// run - the thread snapshot has it parked here and nothing else in
-			// the emulated machine doing anything - and every step below talks
-			// to a different IOSU service, so "it hangs in SAVEInit" is not a
-			// narrow enough answer to act on. One line each, once per title.
 			OSInitMutexEx(&g_nn_save->mutex, nullptr);
-			cemuLog_log(LogType::Force, "[SAVEInit] act::Initialize");
 			act::Initialize();
-			cemuLog_log(LogType::Force, "[SAVEInit] FSAddClientEx");
 			coreinit::FSAddClientEx(&g_nn_save->fsClient, 0, 0);
 			coreinit::FSInitCmdBlock(&g_nn_save->fsCmdBlock);
-			cemuLog_log(LogType::Force, "[SAVEInit] reading persistent ids");
 			for(uint8 accountId = SAVE_ACCOUNT_ID_MIN; accountId <= SAVE_ACCOUNT_ID_MAX; ++accountId)
 			{
 				uint32 persistentId = act::GetPersistentIdEx(accountId);
 				SetPersistentIdToLocalCache(accountId, persistentId);
 			}
 			
-			cemuLog_log(LogType::Force, "[SAVEInit] SAVEMountSaveDir");
 			SAVEMountSaveDir();
-			cemuLog_log(LogType::Force, "[SAVEInit] creating save directories");
 			g_nn_save->initialized = true;
 
 			uint32 high = GetTitleIdHigh(titleId) & (~0xC);
@@ -272,7 +261,6 @@ namespace save
 			fsc_createDir(path, &fscStatus);
 
 			iosu::acp::CreateSaveMetaFiles(ActiveSettings::GetPersistentId(), titleId);
-			cemuLog_log(LogType::Force, "[SAVEInit] done");
 		}
 
 		return SAVE_STATUS_OK;
