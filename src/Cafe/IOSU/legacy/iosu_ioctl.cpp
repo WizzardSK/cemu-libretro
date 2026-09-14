@@ -6,6 +6,8 @@
 #include "util/helpers/Semaphore.h"
 
 #include <atomic>
+#include <thread>
+#include <chrono>
 
 // deprecated IOCTL handling code
 
@@ -59,6 +61,55 @@ bool iosuIoctl_hasWaiters()
 	return sIoctlWaiters.load(std::memory_order_acquire) > 0;
 }
 
+// How many workers are inside their loop. Not the same as the waiter count
+// above: that one counts threads blocked in the semaphore, and a thread that
+// has been woken but has not yet reached the end of its function is in neither
+// state. Stopping has to mean gone.
+static std::atomic<uint32> sIoctlWorkersRunning{0};
+
+IosuIoctlWorkerScope::IosuIoctlWorkerScope()
+{
+	sIoctlWorkersRunning.fetch_add(1, std::memory_order_acq_rel);
+}
+
+IosuIoctlWorkerScope::~IosuIoctlWorkerScope()
+{
+	sIoctlWorkersRunning.fetch_sub(1, std::memory_order_acq_rel);
+}
+
+uint32 iosuIoctl_runningWorkerCount()
+{
+	return sIoctlWorkersRunning.load(std::memory_order_acquire);
+}
+
+bool iosuIoctl_waitForWorkersToStop(int timeoutMs)
+{
+	for (int i = 0; i < timeoutMs && sIoctlWorkersRunning.load(std::memory_order_acquire) != 0; i++)
+		std::this_thread::sleep_for(std::chrono::milliseconds(1));
+	return sIoctlWorkersRunning.load(std::memory_order_acquire) == 0;
+}
+
+// requestShutdown posts once per device to let each worker out, including the
+// devices that never had one - so every shutdown leaves posts behind that
+// nobody consumes, and they were still there for the next run to walk through.
+// The next run coped with them instead of being spared them, which is the kind
+// of thing worth removing rather than documenting.
+//
+// It can be removed now only because the wait above became an answer: a reset
+// while a worker is inside decrementWithWait would be a race, and before there
+// was no way to know whether one was.
+void iosuIoctl_resetAfterWorkersStopped()
+{
+	cemu_assert_debug(sIoctlWorkersRunning.load(std::memory_order_acquire) == 0);
+	for (sint32 i = 0; i < IOS_DEVICE_COUNT; i++)
+	{
+		_ioctlRingbufferSemaphore[i].reset();
+		// Anything still queued belongs to a title that has ended, and the
+		// emulated thread that put it there went with it.
+		_ioctlRingbuffer[i].Clear();
+	}
+}
+
 // The shutdown above is a latch, and a libretro core is asked to come back:
 // the frontend deinitialises this core when content is closed and initialises
 // it again for the next content, in the same process, without unloading the
@@ -81,10 +132,10 @@ ioQueueEntry_t* iosuIoctl_getNextWithWait(uint32 deviceIndex)
 			return nullptr;
 		if (_ioctlRingbuffer[deviceIndex].HasData())
 			return _ioctlRingbuffer[deviceIndex].Pop();
-		// Woken with nothing behind it. requestShutdown posts once per device
-		// to let each worker out, including devices that never had one, so a
-		// restart can find a post left over from a shutdown that has since been
-		// undone. Wait again rather than popping an empty queue.
+		// Woken with nothing behind it, which after a clean shutdown should not
+		// happen any more - the semaphores are reset once the workers are known
+		// to be gone. Kept because a spurious wake is a spurious wake, and
+		// popping an empty queue would be worse than waiting again.
 	}
 }
 

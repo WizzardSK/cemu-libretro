@@ -276,6 +276,9 @@ namespace iosu
 
 		void iosuNim_thread()
 		{
+		// Counts itself in for the whole of its life, so a shutdown can wait for
+		// it to be gone rather than for it to be merely unblocked.
+		IosuIoctlWorkerScope workerScope;
 			SetThreadName("iosuNim_thread");
 			while (true)
 			{

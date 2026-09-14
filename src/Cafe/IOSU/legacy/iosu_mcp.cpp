@@ -104,6 +104,9 @@ namespace iosu
 
 	int iosuMcp_thread()
 	{
+		// Counts itself in for the whole of its life, so a shutdown can wait for
+		// it to be gone rather than for it to be merely unblocked.
+		IosuIoctlWorkerScope workerScope;
 		SetThreadName("iosuMcp_thread");
 		while (true)
 		{

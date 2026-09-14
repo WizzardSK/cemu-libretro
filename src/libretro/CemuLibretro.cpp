@@ -1100,6 +1100,9 @@ static uint32_t s_polled_ports = kLibretroMaxPorts;
 // include path, which this one does not have.
 void iosuIoctl_requestShutdown();
 bool iosuIoctl_hasWaiters();
+bool iosuIoctl_waitForWorkersToStop(int timeoutMs);
+uint32_t iosuIoctl_runningWorkerCount();
+void iosuIoctl_resetAfterWorkersStopped();
 
 namespace iosu
 {
@@ -3896,13 +3899,29 @@ static void libretro_stop_system_services()
 	libretro_stop_service("/dev/act", &iosu::act::Stop);
 	libretro_stop_service("/dev/mcp", &iosu::mcp::Shutdown);
 	libretro_stop_service("/dev/fsa", &iosu::fsa::Shutdown);
-	// The deprecated IOSU threads (act, mcp, acp, nim) are detached and their
-	// loops never end, so they cannot be joined - but they must stop waiting on
-	// the ioctl semaphores before those are destroyed at dlclose, or the
-	// destructor blocks in pthread_cond_destroy() and the frontend hangs.
+	// The deprecated IOSU workers (act, mcp, acp, nim) are started detached, so
+	// there is no thread object left to join - but they do leave their loops
+	// when asked, and now they say so, which is the half that was missing. What
+	// used to be here waited 200 ms for the semaphore waiter count to reach
+	// zero and carried on regardless, and a waiter count is not the question:
+	// it counts threads blocked in the semaphore, not threads that have gone.
+	//
+	// They must be gone before the semaphores are destroyed at dlclose, or the
+	// destructor blocks in pthread_cond_destroy() and the frontend hangs - and
+	// a worker that outlives the request is one still answering ioctls for a
+	// title that ended, which is the shape of every bug this evening.
 	iosuIoctl_requestShutdown();
-	for (int i = 0; i < 200 && iosuIoctl_hasWaiters(); i++)
-		std::this_thread::sleep_for(std::chrono::milliseconds(1));
+	if (!iosuIoctl_waitForWorkersToStop(5000))
+	{
+		cemuLog_log(LogType::Force, "[IOSU] {} deprecated worker(s) did not stop when asked. They answer ioctls for a title that has ended, and the semaphores they are parked on are about to be destroyed.",
+			iosuIoctl_runningWorkerCount());
+		cemuLog_waitForFlush();
+		std::abort();
+	}
+	// They are gone, so the queues and their semaphores can go back to how init
+	// left them rather than being handed to the next run with a shutdown's
+	// worth of leftover posts in them.
+	iosuIoctl_resetAfterWorkersStopped();
 
 	// The modules' own hooks, which is where /dev/ccr_nfc joins its thread.
 	// Without them that thread is still joinable when this library is unloaded,

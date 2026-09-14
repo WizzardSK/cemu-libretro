@@ -57,6 +57,30 @@ void iosuIoctl_init();
 
 // for use by IOSU
 ioQueueEntry_t* iosuIoctl_getNextWithWait(uint32 deviceIndex); // nullptr once a shutdown was requested
+// The stop protocol for the deprecated IOSU workers, and the reason it exists
+// is the one the GPU thread taught: a thread nobody waits for is a thread that
+// is still running when the next title starts, and what that costs arrives
+// somewhere else entirely.
+//
+// Each worker counts itself in while it is alive and out on its way past the
+// loop, so "have they stopped" is a question with an answer rather than the
+// waiter count it used to be inferred from - that counted threads blocked in
+// the semaphore, which is not the same as threads that have gone.
+struct IosuIoctlWorkerScope
+{
+	IosuIoctlWorkerScope();
+	~IosuIoctlWorkerScope();
+};
+// Waits for every worker to have left its loop. Returns false if they have not
+// within the timeout, which the caller is expected to treat as fatal: there is
+// nothing useful to do with a worker that will not stop except say so.
+bool iosuIoctl_waitForWorkersToStop(int timeoutMs);
+uint32 iosuIoctl_runningWorkerCount();
+// Puts the queues and their semaphores back to how init left them. Only safe
+// once the workers are confirmed gone, which is the whole reason the wait
+// above had to become an answer rather than an estimate.
+void iosuIoctl_resetAfterWorkersStopped();
+
 // Wakes the deprecated IOSU threads so they can leave their wait, which they
 // have to do before anything destroys the semaphores they are waiting on.
 void iosuIoctl_requestShutdown();

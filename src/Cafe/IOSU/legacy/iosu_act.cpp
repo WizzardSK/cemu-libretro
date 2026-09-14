@@ -667,6 +667,9 @@ if (_actAccountData[accountIndex].isValid == false) \
 
 int iosuAct_thread()
 {
+	// Counts itself in for the whole of its life, so a shutdown can wait for
+	// it to be gone rather than for it to be merely unblocked.
+	IosuIoctlWorkerScope workerScope;
 	SetThreadName("iosuAct_thread");
 	// Started once for the life of the process and never restarted - the guard
 	// in iosuAct_init_depr sees to that - so a second title depends entirely on
