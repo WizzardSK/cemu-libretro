@@ -18,6 +18,10 @@
 
 #include <boost/container/small_vector.hpp>
 
+#ifdef ENABLE_LIBRETRO
+void LatteCP_NoteCommand(uint32 itHeader); // see the definition further down
+#endif
+
 void LatteCP_DebugPrintCmdBuffer(uint32be* bufferPtr, uint32 size);
 
 #define CP_TIMER_RECHECK	1024
@@ -1211,6 +1215,15 @@ void LatteCP_processCommandBuffer(DrawPassContext& drawPassCtx)
 		{
 			itHeader = LatteReadCMD();
 			uint32 itHeaderType = (itHeader >> 30) & 3;
+#ifdef ENABLE_LIBRETRO
+			// Counted here as well as in the ring loop, which is the correction:
+			// the ring's count froze on an indirect buffer, and everything
+			// inside a display list is processed here rather than there - so a
+			// frozen ring count could equally have meant a display list that
+			// never ends. With both counted, standing still means stuck in one
+			// handler and the header names it. Temporary.
+			LatteCP_NoteCommand(itHeader);
+#endif
 			if (itHeaderType == 3)
 			{
 				uint32 itCode = (itHeader >> 8) & 0xFF;
