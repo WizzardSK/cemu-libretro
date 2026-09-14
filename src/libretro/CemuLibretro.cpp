@@ -506,6 +506,10 @@ enum class LibretroLayoutButton
 	L3R3,
 	SelectL3,
 	SelectR3,
+	// Every shoulder, trigger and stick click at once. Nothing asks for six of
+	// those together, which is the point: it can be the default without taking
+	// anything away from a title, and an overlay can carry it as one button.
+	AllShoulders,
 };
 static LibretroLayoutButton s_next_layout_button = LibretroLayoutButton::None;
 static bool s_next_layout_button_held = false;
@@ -1504,6 +1508,7 @@ static LibretroLayoutButton libretro_parse_layout_button(const char* v)
 	if (libretro_drc_iequals(v, "L3 + R3")) return LibretroLayoutButton::L3R3;
 	if (libretro_drc_iequals(v, "Select + L3")) return LibretroLayoutButton::SelectL3;
 	if (libretro_drc_iequals(v, "Select + R3")) return LibretroLayoutButton::SelectR3;
+	if (libretro_drc_iequals(v, "L + R + L2 + R2 + L3 + R3")) return LibretroLayoutButton::AllShoulders;
 	return LibretroLayoutButton::None;
 }
 
@@ -1653,6 +1658,7 @@ static void libretro_read_screen_layout_options()
 		case LibretroLayoutButton::L3R3: name = "L3 + R3"; break;
 		case LibretroLayoutButton::SelectL3: name = "Select + L3"; break;
 		case LibretroLayoutButton::SelectR3: name = "Select + R3"; break;
+		case LibretroLayoutButton::AllShoulders: name = "L + R + L2 + R2 + L3 + R3"; break;
 		}
 		log_cb(RETRO_LOG_INFO, "Cemu: next screen layout is on %s\n", name);
 	}
@@ -2044,6 +2050,10 @@ static const char* libretro_option_default(const char* key)
 		// a latency, 45000 before 20000 for a quantum, 720p above 360p. The
 		// values are written in their own order above and the default named
 		// here instead, which is the same default either way.
+		// Six buttons at once, which no title asks for, so it can be on by
+		// default without taking anything away - and an overlay can carry it as
+		// a single button without the user configuring anything first.
+		{"cemu_next_screen_layout_button", "L + R + L2 + R2 + L3 + R3"},
 		{"cemu_audio_latency", "2"},
 		{"cemu_thread_quantum", "45000"},
 		{"cemu_internal_resolution", "1280x720"},
@@ -2489,7 +2499,7 @@ static void libretro_publish_core_options(retro_environment_t cb)
 		{"cemu_screen_layout3", "Layout 3; Default Screen|GamePad Screen|Side by Side|Top Bottom|Picture in Picture"},
 		{"cemu_screen_layout4", "Layout 4; Default Screen|GamePad Screen|Side by Side|Top Bottom|Picture in Picture"},
 		{"cemu_screen_layout5", "Layout 5; Default Screen|GamePad Screen|Side by Side|Top Bottom|Picture in Picture"},
-		{"cemu_next_screen_layout_button", "Next Screen Layout; Disabled|Select|L3|R3|L3 + R3|Select + L3|Select + R3"},
+		{"cemu_next_screen_layout_button", "Next Screen Layout; Disabled|L + R + L2 + R2 + L3 + R3|Select|L3|R3|L3 + R3|Select + L3|Select + R3"},
 		{"cemu_next_screen_layout_key", "Next Screen Layout Key; Disabled|F1|F2|F3|F4|F5|F6|F7|F8|F9|F10|F11|F12|Tab|Backspace|Insert|Delete|Home|End|Page Up|Page Down"},
 		{"cemu_drc_position", "GamePad Position; normal|swapped"},
 		{"cemu_wiimote_input", "Wii Remote Input; port1_shared|ports2_4|disabled"},
@@ -3725,8 +3735,8 @@ RETRO_API bool retro_load_game(const struct retro_game_info* game)
 		{ 0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_DOWN,   "D-Pad Down" },
 		{ 0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_LEFT,   "D-Pad Left" },
 		{ 0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_RIGHT,  "D-Pad Right" },
-		{ 0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_L3,     "L Stick" },
-		{ 0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_R3,     "R Stick" },
+		{ 0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_L3,     "LS" },
+		{ 0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_R3,     "RS" },
 		{ 0, RETRO_DEVICE_POINTER, 0, RETRO_DEVICE_ID_POINTER_X,     "Touchscreen X" },
 		{ 0, RETRO_DEVICE_POINTER, 0, RETRO_DEVICE_ID_POINTER_Y,     "Touchscreen Y" },
 		{ 0, RETRO_DEVICE_POINTER, 0, RETRO_DEVICE_ID_POINTER_PRESSED, "Touchscreen Press" },
@@ -4134,6 +4144,12 @@ static void libretro_poll_input()
 		case LibretroLayoutButton::L3R3: down = l3 && r3; break;
 		case LibretroLayoutButton::SelectL3: down = select && l3; break;
 		case LibretroLayoutButton::SelectR3: down = select && r3; break;
+		case LibretroLayoutButton::AllShoulders:
+			down = pad.buttons[RETRO_DEVICE_ID_JOYPAD_L] != 0 &&
+				pad.buttons[RETRO_DEVICE_ID_JOYPAD_R] != 0 &&
+				pad.buttons[RETRO_DEVICE_ID_JOYPAD_L2] != 0 &&
+				pad.buttons[RETRO_DEVICE_ID_JOYPAD_R2] != 0 && l3 && r3;
+			break;
 		}
 		if (down && !s_next_layout_button_held)
 			libretro_next_screen_layout();
