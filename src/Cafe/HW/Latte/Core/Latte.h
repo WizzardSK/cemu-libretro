@@ -194,6 +194,7 @@ bool Latte_GetStopSignal(); // returns true if stop was requested or if in stopp
 void Latte_RequestGpuPause();
 void Latte_ReleaseGpuPause();
 bool Latte_IsGpuParked();
+bool Latte_IsGpuAtPauseGate(); // reached the gate; parked is only true once it has finished there
 // Asks the GPU thread to hand back everything it built on the graphics context,
 // which it does at the pause gate. Request it before asking for the pause.
 void Latte_RequestGpuTeardownForContextLoss();
@@ -203,7 +204,7 @@ bool Latte_GpuTeardownForContextLossDone();
 // is the last moment it can - a context that goes away with the core's objects
 // still on it leaves them for the next run, which is the failure this whole
 // path exists to end.
-[[noreturn]] void Latte_FailNotParked();
+[[noreturn]] void Latte_FailGpuThread(const char* what);
 bool Latte_IsRendererRebuildPending();
 void Latte_GpuPauseGate(); // called by the command processor
 bool Latte_HasFinishedRendererInit(); // false while the GPU thread is still bringing the renderer up

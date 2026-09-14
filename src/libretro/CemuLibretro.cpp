@@ -3584,16 +3584,29 @@ static void libretro_context_destroy()
 		std::this_thread::sleep_for(std::chrono::milliseconds(1));
 	if (log_cb && !Latte_HasFinishedRendererInit())
 		log_cb(RETRO_LOG_WARN, "Cemu: the renderer was still coming up when the context went away\n");
-	for (int i = 0; i < 500 && !Latte_IsGpuParked(); i++)
+	// Two waits, because they are two questions and only one of them is about
+	// liveness. Reaching the gate is the thread answering at all - it happens
+	// at a command boundary, so half a second is generous and a thread that
+	// misses it is stuck inside a command handler.
+	for (int i = 0; i < 500 && !Latte_IsGpuAtPauseGate(); i++)
+		std::this_thread::sleep_for(std::chrono::milliseconds(1));
+	if (!Latte_IsGpuAtPauseGate())
+	{
+		libretro_frame_gate_hold_open(false);
+		Latte_FailGpuThread("the GPU thread did not reach the pause gate before the graphics context went away");
+	}
+	// Finishing there is work rather than an answer: freeing every texture,
+	// shader and pipeline this run built and then destroying the renderer.
+	// Measured between 120 ms and over half a second on the same title, which
+	// is why it had a budget of its own after the first version put both
+	// questions behind one half-second wait and aborted on a teardown that was
+	// simply still going. Ten seconds is long enough that only a wedge reaches
+	// it.
+	for (int i = 0; i < 10000 && !Latte_IsGpuParked(); i++)
 		std::this_thread::sleep_for(std::chrono::milliseconds(1));
 	libretro_frame_gate_hold_open(false);
-	// Not parking is not survivable. Only the GPU thread can hand the context
-	// its contents back, and this is the last moment it can: letting the
-	// context go with the core's objects still on it means the next run
-	// inherits them, which is the whole class of failure this was written to
-	// end. Say so and stop, with the log on disk first.
 	if (!Latte_IsGpuParked())
-		Latte_FailNotParked();
+		Latte_FailGpuThread("the GPU thread reached the pause gate but did not finish handing the graphics context back");
 	if (log_cb && Latte_GpuTeardownForContextLossDone())
 		log_cb(RETRO_LOG_INFO, "Cemu: handed the core's GPU objects back before the context went away\n");
 

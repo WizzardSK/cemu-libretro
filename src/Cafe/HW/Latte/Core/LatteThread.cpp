@@ -92,9 +92,9 @@ void Latte_RequestGpuTeardownForContextLoss()
 	sTeardownForContextLoss.store(true, std::memory_order_release);
 }
 
-[[noreturn]] void Latte_FailNotParked()
+[[noreturn]] void Latte_FailGpuThread(const char* what)
 {
-	Latte_FailStuckThread("the GPU thread did not park before the graphics context went away");
+	Latte_FailStuckThread(what);
 }
 
 bool Latte_GpuTeardownForContextLossDone()
@@ -133,6 +133,12 @@ bool libretro_gpu_context_gone();
 #ifdef ENABLE_LIBRETRO
 static std::atomic_bool sGpuPauseRequested{false};
 static std::atomic_bool sGpuParked{false};
+// Set when the GPU thread has reached the gate, which is before it starts
+// handing the context back. Parked is only true once that is finished, so
+// without this the caller cannot tell a thread that never arrived from one
+// that arrived and is still working - and those are different failures with
+// very different budgets.
+static std::atomic_bool sGpuAtPauseGate{false};
 static std::mutex sGpuPauseMutex;
 static std::condition_variable sGpuPauseCv;
 
@@ -155,10 +161,16 @@ bool Latte_IsGpuParked()
 	return sGpuParked.load(std::memory_order_acquire);
 }
 
+bool Latte_IsGpuAtPauseGate()
+{
+	return sGpuAtPauseGate.load(std::memory_order_acquire);
+}
+
 void Latte_GpuPauseGate()
 {
 	if (!sGpuPauseRequested.load(std::memory_order_acquire)) [[likely]]
 		return;
+	sGpuAtPauseGate.store(true, std::memory_order_release);
 	// Below the gate is a command boundary, which makes this the one point in
 	// the thread's life where it holds no half-finished GPU work - so it is
 	// where the contents of the context can be handed back.
@@ -176,6 +188,7 @@ void Latte_GpuPauseGate()
 		});
 		sGpuParked.store(false, std::memory_order_release);
 	}
+	sGpuAtPauseGate.store(false, std::memory_order_release);
 	Latte_RebuildRendererIfNeeded();
 }
 #endif
