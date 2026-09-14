@@ -423,6 +423,7 @@ static void libretro_frame_gate_grant()
 	std::lock_guard lock(s_gate_mutex);
 	s_gate_tokens = 1;
 	s_frame_permit = true;
+	s_gate_grants.fetch_add(1, std::memory_order_relaxed);
 	s_gate_cv.notify_all();
 }
 
@@ -459,6 +460,14 @@ static bool s_log_thread_dump = false;
 // nothing is either producing frames the frontend is not drawing or producing
 // none at all, and those are different bugs in different places.
 static std::atomic<uint64> s_frames_presented{0};
+// How many times the frontend has asked for a frame, and how many times the
+// gate let the GPU thread past. The emulated machine stops being given vsync
+// events at the exact moment it starts waiting for one, and vsync is only
+// serviced while the command processor is idling - which it cannot do while it
+// is held at the gate. These two say whether the frontend stopped asking or the
+// gate stopped opening.
+static std::atomic<uint64> s_runs_entered{0};
+static std::atomic<uint64> s_gate_grants{0};
 
 enum class SelectedGraphicsAPI { OpenGL, Vulkan };
 static SelectedGraphicsAPI s_graphics_api = SelectedGraphicsAPI::OpenGL;
@@ -4280,9 +4289,11 @@ static void DumpEmulatedThreads()
 	// The three numbers that say whether the picture is the emulator's problem
 	// or the frontend's: where the GPU thread is, how many vsync events the
 	// title has been given, and how many frames have actually gone out.
-	cemuLog_log(LogType::Force, "  gpu: phase={} vsync={} framesPresented={}",
+	cemuLog_log(LogType::Force, "  gpu: phase={} vsync={} framesPresented={} retroRun={} gateGrants={}",
 		Latte_GetThreadPhase(), LatteTiming_GetVsyncCount(),
-		s_frames_presented.load(std::memory_order_relaxed));
+		s_frames_presented.load(std::memory_order_relaxed),
+		s_runs_entered.load(std::memory_order_relaxed),
+		s_gate_grants.load(std::memory_order_relaxed));
 
 	// What the title is polling, if anything. An event with a five-figure count
 	// between two snapshots is a spin loop waiting on something that never
@@ -4356,6 +4367,7 @@ static void DumpEmulatedThreads()
 
 RETRO_API void retro_run()
 {
+	s_runs_entered.fetch_add(1, std::memory_order_relaxed);
 	// Off unless the option is on; every few seconds is enough to tell a parked
 	// thread from a busy one, and cheap next to a frame.
 	if (s_log_thread_dump)
@@ -4565,6 +4577,7 @@ RETRO_API void retro_run()
 			}
 		}
 		video_cb(RETRO_HW_FRAME_BUFFER_VALID, SCREEN_WIDTH, SCREEN_HEIGHT, 0);
+		s_frames_presented++;
 		LibretroAudioAPI::FlushAudio();
 		return;
 	}
