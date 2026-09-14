@@ -82,7 +82,13 @@ void Latte_ForgetStateOfAbandonedRun()
 	const uint32 views = LatteTextureViewLookupCache_ForgetAllWithoutFreeing();
 	const uint32 shaders = LatteSHRC_ForgetAllWithoutFreeing();
 	LatteRenderTarget_ForgetAllWithoutFreeing();
-	cemuLog_log(LogType::Force, "[LatteThread] the previous run could not tear down; dropping what it left: {} textures, {} texture views, {} shaders", textures, views, shaders);
+	// The two that were missing, and they are the ones that hang rather than
+	// fault: a texture readback or an occlusion query left in flight belongs to
+	// a device that no longer exists, so it can never report itself finished,
+	// and both force-finish paths loop until their queue is empty.
+	const uint32 readbacks = LatteTextureReadback_ForgetAllWithoutFreeing();
+	const uint32 queries = LatteQuery_ForgetAllWithoutFreeing();
+	cemuLog_log(LogType::Force, "[LatteThread] the previous run could not tear down; dropping what it left: {} textures, {} texture views, {} shaders, {} readbacks, {} queries", textures, views, shaders, readbacks, queries);
 }
 
 bool Latte_IsThreadFromAnEarlierRun()

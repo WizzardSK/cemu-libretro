@@ -105,6 +105,17 @@ void LatteQuery_UpdateFinishedQueries()
 	}
 }
 
+// Same reason as the texture readbacks: a query started against the previous
+// run's device never finishes, and the loop below has no way out but an empty
+// list. Dropped without freeing.
+uint32 LatteQuery_ForgetAllWithoutFreeing()
+{
+	const uint32 count = (uint32)list_queriesInFlight.size() + (_currentlyActiveRendererQuery ? 1u : 0u);
+	list_queriesInFlight.clear();
+	_currentlyActiveRendererQuery = nullptr;
+	return count;
+}
+
 void LatteQuery_UpdateFinishedQueriesForceFinishAll()
 {
 	cemu_assert_debug(_currentlyActiveRendererQuery == nullptr);

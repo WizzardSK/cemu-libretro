@@ -149,6 +149,7 @@ void LatteTextureReadback_StartTransfer(LatteTextureView* textureView);
 bool LatteTextureReadback_Update(bool forceStart = false);
 void LatteTextureReadback_NotifyTextureDeletion(LatteTexture* texture);
 void LatteTextureReadback_UpdateFinishedTransfers(bool forceFinish);
+uint32 LatteTextureReadback_ForgetAllWithoutFreeing();
 bool LatteTextureReadback_ReadbackToLinearBlocking(LatteTextureView* sourceView, uint8* dstPtr, uint32 dstWidth, uint32 dstHeight, uint32 dstPitch);
 
 // query
@@ -157,6 +158,7 @@ void LatteQuery_Init();
 void LatteQuery_BeginOcclusionQuery(MPTR queryMPTR);
 void LatteQuery_EndOcclusionQuery(MPTR queryMPTR);
 void LatteQuery_UpdateFinishedQueries();
+uint32 LatteQuery_ForgetAllWithoutFreeing();
 void LatteQuery_UpdateFinishedQueriesForceFinishAll();
 void LatteQuery_CancelActiveGPU7Queries();
 
