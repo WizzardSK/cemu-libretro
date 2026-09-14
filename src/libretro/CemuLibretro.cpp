@@ -3970,12 +3970,15 @@ RETRO_API void retro_unload_game()
 #ifdef ENABLE_VULKAN
 	// Before the renderer goes, not after: the pipeline stable cache's compiler
 	// threads are detached and run until told to stop, and each pipeline they
-	// finish is unregistered from the renderer when it is destroyed. Normally
-	// LatteShaderCache_Close stops them on the GPU thread's way out, but that
-	// path does not always run - when the frontend has already taken the
-	// graphics context apart, the GPU thread skips its teardown entirely and
-	// this is the only place left. A title closed a second after it started is
-	// exactly when one is still in flight.
+	// finish is unregistered from the renderer when it is destroyed.
+	//
+	// LatteShaderCache_Close stops them on the GPU thread's way out, and since
+	// the teardown moved to context_destroy that is where it happens on a close
+	// as well as on a reset - so this is a fallback rather than the usual path.
+	// What is left for it is the run where the GPU thread would not park and
+	// its teardown was withdrawn: the threads are still there and nothing else
+	// will stop them. A title closed a second after it started is exactly when
+	// one is still in flight.
 	if (s_graphics_api == SelectedGraphicsAPI::Vulkan)
 	{
 		RendererShaderVk::Shutdown();

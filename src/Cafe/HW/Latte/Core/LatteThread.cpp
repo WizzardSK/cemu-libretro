@@ -115,10 +115,18 @@ bool Latte_IsRendererRebuildPending()
 	return sRendererRebuildPending.load(std::memory_order_acquire);
 }
 
-// Called at the start of a run. Each cache says how much it dropped, because
-// this is a list that can be incomplete: a register nobody thought of here is a
-// crash one title later, and the counts are what points at the one that is
-// missing.
+// Called at the start of a run, and by design it should now find nothing to do.
+// Closing content, quitting the frontend and resetting all hand the graphics
+// context its contents back while the device is still there - the first two at
+// context_destroy, the third in LatteThread_Exit, since a reset never takes the
+// context down at all. What is left for this is the run where the GPU thread
+// would not park and the teardown was withdrawn, which is the only way anything
+// still reaches the next run.
+//
+// So the line it prints is a report of a bug rather than housekeeping: if it
+// says anything other than nothing, the thread did not stop when it was asked
+// to. Each cache still says how much it dropped, because the list can be
+// incomplete and the counts are what point at the entry that is missing.
 void Latte_ForgetStateOfAbandonedRun()
 {
 	if (!sLatteTeardownWasSkipped.exchange(false, std::memory_order_acq_rel))
@@ -530,9 +538,9 @@ void Latte_InitRendererState()
 	LatteTiming_Init();
 	LatteTexture_init();
 	LatteTC_Init();
-	// Before any cache is set up: whatever the last run could not free is still
-	// registered, and every one of those objects belongs to a device that has
-	// been destroyed since.
+	// Before any cache is set up, in case the last run could not free what it
+	// held - see Latte_ForgetStateOfAbandonedRun, which is a no-op unless that
+	// happened.
 	Latte_ForgetStateOfAbandonedRun();
 	LatteBufferCache_init(164 * 1024 * 1024);
 	LatteQuery_Init();
