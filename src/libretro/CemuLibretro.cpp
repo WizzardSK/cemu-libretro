@@ -3988,6 +3988,15 @@ RETRO_API void retro_unload_game()
 		}
 	}
 
+	// A GPU thread parked at the pause gate is asleep with no renderer to come
+	// back to, and nothing here wakes it - the next thing that does is the
+	// *next* title's context_reset, seconds later, by which point it is a
+	// thread from a finished run running against a renderer that does not exist
+	// yet. That is where the close-early-then-run-again crash came from. Waking
+	// it now lets it see there is nothing to render on and leave while this is
+	// still its own close.
+	Latte_ReleaseGpuPause();
+
 #ifdef ENABLE_OPENGL
 	s_gl_callbacks.reset();
 #endif

@@ -62,7 +62,14 @@ public:
 		m_drawcallContext.gsUniformBufferDirtyMask = 0;
 		m_drawcallContext.aluConstVSDirty = false;
 		m_drawcallContext.aluConstPSDirty = false;
-		g_renderer->draw_beginSequence();
+		// A display list runs from beginning to end with no stop check in
+		// between, and the renderer can be released while this thread is part
+		// way through one - so a draw whose renderer has gone is skipped
+		// rather than made through a null pointer. The list still has to run
+		// itself out; the stop check at the end of it is what takes the thread
+		// away.
+		if (Renderer* renderer = g_renderer.get())
+			renderer->draw_beginSequence();
 	}
 
 	void executeDraw(uint32 count, bool isAutoIndex, MPTR physIndices)
@@ -77,11 +84,13 @@ public:
 			if (physIndices == MPTR_NULL)
 				return;
 			auto indexType = LatteGPUState.contextNew.VGT_DMA_INDEX_TYPE.get_INDEX_TYPE();
-			g_renderer->draw_execute(baseVertex, baseInstance, numInstances, count, physIndices, indexType, m_drawcallContext);
+			if (Renderer* renderer = g_renderer.get())
+				renderer->draw_execute(baseVertex, baseInstance, numInstances, count, physIndices, indexType, m_drawcallContext);
 		}
 		else
 		{
-			g_renderer->draw_execute(baseVertex, baseInstance, numInstances, count, MPTR_NULL, Latte::LATTE_VGT_DMA_INDEX_TYPE::E_INDEX_TYPE::AUTO, m_drawcallContext);
+			if (Renderer* renderer = g_renderer.get())
+				renderer->draw_execute(baseVertex, baseInstance, numInstances, count, MPTR_NULL, Latte::LATTE_VGT_DMA_INDEX_TYPE::E_INDEX_TYPE::AUTO, m_drawcallContext);
 		}
 		performanceMonitor.cycle[performanceMonitor.cycleIndex].drawCallCounter++;
 		if (!m_drawcallContext.isFirst)
@@ -97,7 +106,8 @@ public:
 
 	void endDrawPass()
 	{
-		g_renderer->draw_endSequence();
+		if (Renderer* renderer = g_renderer.get())
+			renderer->draw_endSequence();
 		m_drawPassActive = false;
 	}
 
@@ -232,7 +242,10 @@ LatteCMDPtr LatteCP_itSurfaceSync(LatteCMDPtr cmd)
 
 	// let the renderer know about colorbuffer invalidation
 	if (static_cast<uint32>(invalidationFlags & (Latte::E_COHER_CNTL::CB_ACTION_ENA | Latte::E_COHER_CNTL::CB_ALL_DEST_BASE_ENA)) != 0)
-		g_renderer->SurfaceSync(invalidationFlags, addressPhys, size);
+	{
+		if (Renderer* renderer = g_renderer.get())
+			renderer->SurfaceSync(invalidationFlags, addressPhys, size);
+	}
 
 	if (addressPhys == MPTR_NULL || size == 0xFFFFFFFF)
 		return cmd; // block global invalidations because they are too expensive
@@ -551,16 +564,22 @@ LatteCMDPtr LatteCP_itWaitRegMem(LatteCMDPtr cmd, uint32 nWords)
 				stalls = true;
 			}
 
-			// check if any GPU events happened
-			LatteTiming_HandleTimedVsync();
-			LatteAsyncCommands_checkAndExecute();
-
+			// Asked before the vsync work rather than after it: servicing vsync
+			// goes on to update occlusion queries and texture readbacks, and
+			// both of those talk to the renderer. On the way out of a title
+			// the renderer is the thing that has just gone, so a stop check
+			// that comes second is a fault at 0x0 that never reaches it.
+			//
 			// The value this is waiting for is written by the emulated CPU, and
 			// once the title is being stopped its cores are gone: nothing will
 			// ever write it. Without this the GPU thread stays here forever and
 			// the title never finishes stopping.
 			if (Latte_GetStopSignal())
 				LatteThread_Exit();
+
+			// check if any GPU events happened
+			LatteTiming_HandleTimedVsync();
+			LatteAsyncCommands_checkAndExecute();
 		}
 		performanceMonitor.gpuTime_fenceTime.endMeasuring();
 	}
@@ -1001,12 +1020,14 @@ LatteCMDPtr LatteCP_itHLEWaitForFlip(LatteCMDPtr cmd, uint32 nWords)
 		{
 			break;
 		}
+		// No more flips are coming once the title is stopping, and asked here
+		// rather than after the vsync work for the same reason as the fence
+		// wait above: that work reaches the renderer, which is already gone.
+		if (Latte_GetStopSignal())
+			LatteThread_Exit();
 		// check if any GPU events happened
 		LatteTiming_HandleTimedVsync();
 		std::this_thread::yield();
-		// No more flips are coming once the title is stopping.
-		if (Latte_GetStopSignal())
-			LatteThread_Exit();
 	}
 	return cmd;
 }
@@ -1566,6 +1587,13 @@ void LatteCP_ProcessRingbuffer()
 		// for frames - otherwise this loop spins on a ring that the parked
 		// emulated cores are not filling.
 		Latte_GpuPauseGate();
+		// Coming out of the gate is the one place this thread can find the
+		// world changed under it: it parks while the frontend takes its
+		// graphics context apart, the unload releases the renderer with it
+		// still parked, and opening content again is what wakes it. Ask before
+		// reading a command, not after.
+		if (Latte_GetStopSignal())
+			LatteThread_Exit();
 		::libretro_frame_window_wait();
 #endif
 		uint32 itHeader = LatteCP_readU32Deprc();

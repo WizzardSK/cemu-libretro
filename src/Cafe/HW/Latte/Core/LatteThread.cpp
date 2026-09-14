@@ -548,6 +548,27 @@ bool Latte_GetStopSignal()
 	// flag says keep going.
 	if (Latte_IsThreadFromAnEarlierRun())
 		return true;
+	// And a thread whose renderer is gone has nothing left to do either. Nearly
+	// everything this thread touches goes through g_renderer, so once the
+	// unload path has dropped it every one of those is a fault at 0x0 - which
+	// is what two crash reports in a row were, at two different call sites
+	// (NotifyLatteCommandProcessorIdle, then occlusionQuery_updateState one
+	// line further on). Null-checking them one at a time only moves the crash
+	// to the next one, so the answer belongs here instead: there is no renderer,
+	// therefore stop, and the checks the loops already make take the thread out
+	// at the next command boundary.
+	//
+	// How it gets into that state: closing content parks the GPU thread at the
+	// pause gate while the frontend takes its graphics context apart, and the
+	// unload then releases the renderer with the thread still parked. Opening
+	// content again releases the gate, and the thread wakes into a run that is
+	// not its own with a renderer that no longer exists.
+	//
+	// g_renderer is only ever null between one run's teardown and the next
+	// one's renderer being built, and no GPU thread is meant to be alive in
+	// that window, so this cannot end a run that is still going.
+	if (!g_renderer)
+		return true;
 #endif
 	return !sLatteThreadRunning;
 }
