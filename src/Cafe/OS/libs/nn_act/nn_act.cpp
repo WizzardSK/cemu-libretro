@@ -763,6 +763,23 @@ namespace nn::act
 
 		};
 
+		void rpl_entry(uint32 moduleHandle, coreinit::RplEntryReason reason) override
+		{
+			// g_initializeCount lives on the host and belongs to the title that
+			// incremented it, but nothing was putting it back. nn_save does
+			// exactly this for its own state a few files over; this module was
+			// simply missing the same hook. Left alone, the second title to run
+			// in one session finds the count already above zero and skips the
+			// IOSU_ARC_INIT request that /dev/act is sent before anything else
+			// is asked of it.
+			//
+			// Whether that is what leaves a second run parked inside SAVEInit
+			// is not settled - the logging added there says which step it stops
+			// at, and this is one of them - but per-title state that survives
+			// its title is wrong on its own terms either way.
+			g_initializeCount = 0;
+		}
+
 	}s_COSnnActModule;
 
 	COSModule* GetModule()
