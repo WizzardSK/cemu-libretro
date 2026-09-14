@@ -233,6 +233,13 @@ LatteTextureVk::LatteTextureVk(class VulkanRenderer* vkRenderer, Latte::E_DIM di
 	vkObjTex->m_flags = imageInfo.flags;
 	vkObjTex->m_format = imageInfo.format;
 
+	// Only while the texture memory log is on. All of this is measurement: an
+	// extra driver call and a per-mip size calculation for every texture a
+	// title creates, and a title creates them constantly. It was running
+	// whether or not anyone had asked for the numbers. The destructor subtracts
+	// only what was added, so a texture made while the log was off simply does
+	// not take part.
+	if (cemuLog_isLoggingEnabled(LogType::TextureCache))
 	{
 		// The size the heap will be asked for, which is the honest number -
 		// it carries whatever the driver adds for tiling and alignment.

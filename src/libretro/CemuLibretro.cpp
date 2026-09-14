@@ -2127,7 +2127,7 @@ static const char* libretro_option_category(const char* key)
 		{"cemu_log_thread_dump", "logging"},
 		{"cemu_log_system_api", "logging"},
 		{"cemu_log_texture_memory", "logging"},
-		{"cemu_bc1_16bit", "graphics"},
+		{"cemu_bc1_16bit", "video"},
 	};
 	for (const Entry& entry : entries)
 	{
