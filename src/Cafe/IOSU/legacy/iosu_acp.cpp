@@ -523,7 +523,11 @@ namespace iosu
 			uint32 returnValue = 0; // Ioctl return value
 			ioQueueEntry_t* ioQueueEntry = iosuIoctl_getNextWithWait(IOS_DEVICE_ACP_MAIN);
 			if (!ioQueueEntry)
+			{
+				// See iosu_act: the flag has to follow the thread.
+				iosuAcp.isInitialized = false;
 				return 0; // shutting down
+			}
 			if (ioQueueEntry->request == IOSU_ACP_REQUEST_CEMU)
 			{
 				iosuAcpCemuRequest_t* acpCemuRequest = (iosuAcpCemuRequest_t*)ioQueueEntry->bufferVectors[0].buffer.GetPtr();

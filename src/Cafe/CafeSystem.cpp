@@ -658,6 +658,26 @@ namespace CafeSystem
 		cemuLog_log(LogType::Force, "Init: done");
 	}
 
+	// Initialize() runs once for the life of the process, so anything it starts
+	// that can be stopped again has to have a way back. The deprecated IOSU
+	// workers below are stopped when a libretro core is deinitialised - which a
+	// frontend does when content is closed, not only when it is finished with
+	// the core - and the next title then has no one reading its act, mcp, acp
+	// or nim queues. Its first request into one of them suspends the emulated
+	// thread that made it and nothing ever resumes it: the title boots, reaches
+	// its first save call, and stops there for good.
+	//
+	// Each worker clears its own "initialized" flag on the way out, so the
+	// guards inside these four start a replacement rather than refusing.
+	void RestartDeprecatedIOSUServices()
+	{
+		iosuIoctl_clearShutdown();
+		iosuAct_init_depr();
+		iosu::iosuMcp_init();
+		iosu::iosuAcp_init();
+		iosu::nim::Initialize();
+	}
+
 	void SetImplementation(SystemImplementation* impl)
 	{
 		s_implementation = impl;

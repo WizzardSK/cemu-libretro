@@ -252,6 +252,11 @@ static bool s_emu_initialized = false;
 // CemuCommonInit() has run at least once, so the IOSU services exist and can
 // be stopped. Never cleared: they are started once per process, not per title.
 static bool s_cafe_system_initialized = false;
+// Set when libretro_stop_system_services has taken the deprecated IOSU workers
+// down. It is not the end of the road it looks like: the frontend deinitialises
+// this core when content is closed and initialises it again for the next one,
+// so the next load has to put them back.
+static bool s_system_services_stopped = false;
 
 // Converting a title to .wua instead of running it. A conversion is minutes of
 // work over the whole title, so it runs on its own thread and retro_run reports
@@ -3016,6 +3021,22 @@ static void libretro_launch_game()
 	CemuCommonInit();
 	s_cafe_system_initialized = true;
 
+	// CafeSystem::Initialize only runs the once, so a second title inherits
+	// whatever the first one left behind - and retro_deinit stops the
+	// deprecated IOSU workers, which a frontend calls when content is closed
+	// and not only when it is done with this core. Without this, the second
+	// title in a session pushes its first act request into a queue with no
+	// reader, the emulated thread that made it is suspended waiting for a reply
+	// that cannot come, and the title sits at a black screen for good. That was
+	// the second-run hang, reported from the other end and cornered from a
+	// thread snapshot.
+	if (s_system_services_stopped)
+	{
+		cemuLog_log(LogType::Force, "[libretro] restarting the IOSU services stopped by the last deinit");
+		CafeSystem::RestartDeprecatedIOSUServices();
+		s_system_services_stopped = false;
+	}
+
 	if (log_cb)
 		log_cb(RETRO_LOG_INFO, "Cemu: common init done\n");
 
@@ -3775,10 +3796,9 @@ static bool libretro_stop_service(const char* name, void (*stop)())
 // pass would be a std::terminate on an already-joined thread.
 static void libretro_stop_system_services()
 {
-	static bool s_services_stopped = false;
-	if (s_services_stopped || !s_cafe_system_initialized)
+	if (s_system_services_stopped || !s_cafe_system_initialized)
 		return;
-	s_services_stopped = true;
+	s_system_services_stopped = true;
 
 	libretro_stop_service("/dev/odm", &iosu::odm::Shutdown);
 	libretro_stop_service("/dev/act", &iosu::act::Stop);

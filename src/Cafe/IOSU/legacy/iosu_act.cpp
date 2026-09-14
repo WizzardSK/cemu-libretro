@@ -681,7 +681,11 @@ int iosuAct_thread()
 		ioQueueEntry_t* ioQueueEntry = iosuIoctl_getNextWithWait(IOS_DEVICE_ACT);
 		if (!ioQueueEntry)
 		{
+			// "Initialized" has to mean "the worker is running", or the guard in
+			// iosuAct_init_depr refuses to start a replacement and every later
+			// request is pushed into a queue with no reader.
 			cemuLog_log(LogType::Force, "[IOSU-act] worker stopping");
+			iosuAct.isInitialized = false;
 			return 0; // shutting down
 		}
 		if (ioQueueEntry->request == 0)

@@ -67,16 +67,33 @@ bool iosuIoctl_hasWaiters()
 	return sIoctlWaiters.load(std::memory_order_acquire) > 0;
 }
 
+// The shutdown above is a latch, and a libretro core is asked to come back:
+// the frontend deinitialises this core when content is closed and initialises
+// it again for the next content, in the same process, without unloading the
+// library. With the latch left set, every worker below had already left and
+// the next title's requests went into queues nobody was reading - which is a
+// title that boots and then stops dead in its first save call, for good.
+void iosuIoctl_clearShutdown()
+{
+	sIoctlShuttingDown.store(false, std::memory_order_release);
+}
+
 ioQueueEntry_t* iosuIoctl_getNextWithWait(uint32 deviceIndex)
 {
-	sIoctlWaiters.fetch_add(1, std::memory_order_acq_rel);
-	_ioctlRingbufferSemaphore[deviceIndex].decrementWithWait();
-	sIoctlWaiters.fetch_sub(1, std::memory_order_acq_rel);
-	if (sIoctlShuttingDown.load(std::memory_order_acquire))
-		return nullptr;
-	if (_ioctlRingbuffer[deviceIndex].HasData() == false)
-		assert_dbg();
-	return _ioctlRingbuffer[deviceIndex].Pop();
+	while (true)
+	{
+		sIoctlWaiters.fetch_add(1, std::memory_order_acq_rel);
+		_ioctlRingbufferSemaphore[deviceIndex].decrementWithWait();
+		sIoctlWaiters.fetch_sub(1, std::memory_order_acq_rel);
+		if (sIoctlShuttingDown.load(std::memory_order_acquire))
+			return nullptr;
+		if (_ioctlRingbuffer[deviceIndex].HasData())
+			return _ioctlRingbuffer[deviceIndex].Pop();
+		// Woken with nothing behind it. requestShutdown posts once per device
+		// to let each worker out, including devices that never had one, so a
+		// restart can find a post left over from a shutdown that has since been
+		// undone. Wait again rather than popping an empty queue.
+	}
 }
 
 ioQueueEntry_t* iosuIoctl_getNextWithTimeout(uint32 deviceIndex, sint32 ms)

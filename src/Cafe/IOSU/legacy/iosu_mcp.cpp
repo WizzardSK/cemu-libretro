@@ -110,7 +110,12 @@ namespace iosu
 			uint32 returnValue = 0; // Ioctl return value
 			ioQueueEntry_t* ioQueueEntry = iosuIoctl_getNextWithWait(IOS_DEVICE_MCP);
 			if (!ioQueueEntry)
+			{
+				// See iosu_act: the flag has to follow the thread, or nothing
+				// will start a replacement for the next title.
+				iosuMcp.isInitialized = false;
 				return 0; // shutting down
+			}
 			if (ioQueueEntry->request == IOSU_MCP_REQUEST_CEMU)
 			{
 				iosuMcpCemuRequest_t* mcpCemuRequest = (iosuMcpCemuRequest_t*)ioQueueEntry->bufferVectors[0].buffer.GetPtr();

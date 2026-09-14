@@ -23,6 +23,10 @@ namespace CafeSystem
 	};
 
 	void Initialize();
+	// Brings the deprecated IOSU worker threads back after something stopped
+	// them. Initialize() only ever runs once, so without this a core that is
+	// deinitialised and initialised again has no one reading those queues.
+	void RestartDeprecatedIOSUServices();
 	void SetImplementation(SystemImplementation* impl);
     void Shutdown();
 	// Which step ShutdownTitle() is on, for whoever has to report that it did
