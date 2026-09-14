@@ -3392,9 +3392,6 @@ static void libretro_context_reset()
 	// A context exists again, so GPU teardown is allowed again.
 	s_frontend_context_gone = false;
 
-	// the frontend's context is back - let the GPU thread run again
-	Latte_ReleaseGpuPause();
-
 	// Reset frontend GL objects - context was recreated, old objects are invalid
 	s_frontend_read_fbo = 0;
 	s_frontend_read_rbo_attached = 0;
@@ -3455,6 +3452,13 @@ static void libretro_context_reset()
 #endif // ENABLE_OPENGL
 
 	libretro_create_renderer();
+
+	// After the renderer, never before it. A GPU thread let go while g_renderer
+	// is still null wakes into a run with nothing to render on: it either reads
+	// that as its run being over and leaves, or - before the stop signal knew
+	// about it - dereferenced the null. The thread's own rebuild runs off the
+	// back of this release and needs the renderer to already be there.
+	Latte_ReleaseGpuPause();
 
 	// From this point on a GPU device/renderer may exist and normal C++ static-destructor
 	// teardown of this DLL is unsafe (see retro_unload_game / retro_deinit). Mark it so a
@@ -3527,6 +3531,13 @@ static void libretro_context_destroy()
 	// thread the frame gate is holding never reaches one. Waiting for a parked
 	// thread to park is a wait that always times out.
 	libretro_frame_gate_hold_open(true);
+	// Before the pause, because the gate is where it happens: the GPU thread
+	// hands back everything it built on this context on its way into the park.
+	// This is the last moment that is possible - a close arrives after
+	// context_destroy, with the device already gone - so a teardown that does
+	// not happen here does not happen at all, and what used to follow was the
+	// objects being forgotten rather than freed.
+	Latte_RequestGpuTeardownForContextLoss();
 	Latte_RequestGpuPause();
 	// Parking happens at a command boundary, and there is one stretch of the GPU
 	// thread's life that has no command boundaries in it: the renderer's own
@@ -3548,6 +3559,18 @@ static void libretro_context_destroy()
 	libretro_frame_gate_hold_open(false);
 	if (log_cb && !parked)
 		log_cb(RETRO_LOG_WARN, "Cemu: GPU thread did not park before the context went away\n");
+	if (!parked)
+	{
+		// Only the GPU thread can do it, and it never got there. Withdraw the
+		// request rather than leave it standing: a thread that parks later,
+		// after the context has gone, would tear down through a device that is
+		// no longer there.
+		Latte_CancelGpuTeardownForContextLoss();
+		if (log_cb)
+			log_cb(RETRO_LOG_WARN, "Cemu: the context is going away with the core's objects still on it\n");
+	}
+	else if (log_cb && Latte_GpuTeardownForContextLossDone())
+		log_cb(RETRO_LOG_INFO, "Cemu: handed the core's GPU objects back before the context went away\n");
 
 	s_hw_render_initialized = false;
 	s_frontend_read_fbo = 0;
@@ -3555,9 +3578,10 @@ static void libretro_context_destroy()
 	s_gpu_context_made_current = false;
 	s_frontend_context_gone = true;
 
-	// Vulkan: do NOT clean up here — the title is still running and its GPU thread
-	// is only parked, not stopped. The renderer is torn down in retro_unload_game,
-	// after the title has actually stopped.
+	// Nothing is left to clean up here: the GPU thread gave the context its
+	// contents back on the way into the park, including the renderer itself.
+	// If it did not park, the request above was withdrawn and the objects go
+	// with the context - which is the old behaviour, now only the fallback.
 }
 
 // A .wud/.wux is encrypted, and without its disc key nothing downstream says so

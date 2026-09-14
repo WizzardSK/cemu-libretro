@@ -205,6 +205,12 @@ bool Latte_GetStopSignal(); // returns true if stop was requested or if in stopp
 void Latte_RequestGpuPause();
 void Latte_ReleaseGpuPause();
 bool Latte_IsGpuParked();
+// Asks the GPU thread to hand back everything it built on the graphics context,
+// which it does at the pause gate. Request it before asking for the pause.
+void Latte_RequestGpuTeardownForContextLoss();
+void Latte_CancelGpuTeardownForContextLoss();
+bool Latte_GpuTeardownForContextLossDone();
+bool Latte_IsRendererRebuildPending();
 void Latte_GpuPauseGate(); // called by the command processor
 bool Latte_WasThreadAbandoned(); // true if Latte_Stop had to detach a GPU thread that would not stop
 bool Latte_HasFinishedRendererInit(); // false while the GPU thread is still bringing the renderer up

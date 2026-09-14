@@ -71,6 +71,50 @@ void Latte_NoteTeardownWasSkipped()
 	sLatteTeardownWasSkipped.store(true, std::memory_order_release);
 }
 
+// Freeing what this core built on the graphics context has exactly one safe
+// moment, and it is while the context is still there. The frontend names that
+// moment - context_destroy - and it is the last one: the close arrives after
+// it, by which time the device is gone. That is the whole reason the teardown
+// used to be skipped and the objects only forgotten, which is a leak and was
+// only ever the lesser of two bad outcomes.
+//
+// So the teardown is asked for here and carried out by the GPU thread at the
+// pause gate rather than by the caller. Not a detail: under OpenGL the objects
+// belong to that thread's context and no other thread can free them, and under
+// either API it is the thread that might otherwise still be using them.
+static std::atomic_bool sTeardownForContextLoss{false};
+static std::atomic_bool sTeardownForContextLossDone{false};
+// Set for as long as there is deliberately no renderer. Without it the GPU
+// thread reads a null g_renderer as "this run is over" and leaves - which is
+// right when a title is closing and wrong here, because the context is coming
+// back and the thread has to still be there when it does.
+static std::atomic_bool sRendererRebuildPending{false};
+
+void Latte_TeardownGpuState(const char* reason);
+void Latte_RebuildRendererIfNeeded();
+void Latte_InitRendererState();
+
+void Latte_RequestGpuTeardownForContextLoss()
+{
+	sTeardownForContextLossDone.store(false, std::memory_order_release);
+	sTeardownForContextLoss.store(true, std::memory_order_release);
+}
+
+void Latte_CancelGpuTeardownForContextLoss()
+{
+	sTeardownForContextLoss.store(false, std::memory_order_release);
+}
+
+bool Latte_GpuTeardownForContextLossDone()
+{
+	return sTeardownForContextLossDone.load(std::memory_order_acquire);
+}
+
+bool Latte_IsRendererRebuildPending()
+{
+	return sRendererRebuildPending.load(std::memory_order_acquire);
+}
+
 // Called at the start of a run. Each cache says how much it dropped, because
 // this is a list that can be incomplete: a register nobody thought of here is a
 // crash one title later, and the counts are what points at the one that is
@@ -159,12 +203,24 @@ void Latte_GpuPauseGate()
 {
 	if (!sGpuPauseRequested.load(std::memory_order_acquire)) [[likely]]
 		return;
-	std::unique_lock<std::mutex> lock(sGpuPauseMutex);
-	sGpuParked.store(true, std::memory_order_release);
-	sGpuPauseCv.wait(lock, [] {
-		return !sGpuPauseRequested.load(std::memory_order_acquire) || Latte_GetStopSignal();
-	});
-	sGpuParked.store(false, std::memory_order_release);
+	// Below the gate is a command boundary, which makes this the one point in
+	// the thread's life where it holds no half-finished GPU work - so it is
+	// where the contents of the context can be handed back.
+	if (sTeardownForContextLoss.exchange(false, std::memory_order_acq_rel))
+	{
+		sRendererRebuildPending.store(true, std::memory_order_release);
+		Latte_TeardownGpuState("the graphics context is going away");
+		sTeardownForContextLossDone.store(true, std::memory_order_release);
+	}
+	{
+		std::unique_lock<std::mutex> lock(sGpuPauseMutex);
+		sGpuParked.store(true, std::memory_order_release);
+		sGpuPauseCv.wait(lock, [] {
+			return !sGpuPauseRequested.load(std::memory_order_acquire) || Latte_GetStopSignal();
+		});
+		sGpuParked.store(false, std::memory_order_release);
+	}
+	Latte_RebuildRendererIfNeeded();
 }
 #endif
 std::atomic_bool sLatteThreadFinishedInit = false;
@@ -282,9 +338,6 @@ int Latte_ThreadEntry()
 #ifdef ENABLE_LIBRETRO
 	t_latteGeneration = sLatteGeneration.load(std::memory_order_acquire);
 #endif
-	sint32 w,h;
-	WindowSystem::GetWindowPhysSize(w,h);
-
 	// renderer
 #ifdef ENABLE_LIBRETRO
 	LatteThread_SetPhase("renderer init");
@@ -304,43 +357,7 @@ int Latte_ThreadEntry()
 		return 0;
 	}
 #endif
-	g_renderer->Initialize();
-	RendererOutputShader::InitializeStatic();
-
-	LatteTiming_Init();
-	LatteTexture_init();
-	LatteTC_Init();
-	// Before any cache is set up: whatever the last run could not free is still
-	// registered, and every one of those objects belongs to a device that has
-	// been destroyed since.
-	Latte_ForgetStateOfAbandonedRun();
-	LatteBufferCache_init(164 * 1024 * 1024);
-	LatteQuery_Init();
-	LatteSHRC_Init();
-	LatteStreamout_InitCache();
-
-	g_renderer->renderTarget_setViewport(0, 0, w, h, 0.0f, 1.0f);
-	
-	// enable GLSL gl_PointSize support
-	// glEnable(GL_PROGRAM_POINT_SIZE); // breaks shader caching on AMD (as of 2018)
-	
-	LatteGPUState.glVendor = GLVENDOR_UNKNOWN;
-	switch(g_renderer->GetVendor())
-	{
-	case GfxVendor::AMD: 
-		LatteGPUState.glVendor = GLVENDOR_AMD;
-		break;
-	case GfxVendor::Intel:
-		LatteGPUState.glVendor = GLVENDOR_INTEL; 
-		break;
-	case GfxVendor::Nvidia: 
-		LatteGPUState.glVendor = GLVENDOR_NVIDIA; 
-		break;
-	case GfxVendor::Apple:
-		LatteGPUState.glVendor = GLVENDOR_APPLE;
-	default:
-		break;
-	}
+	Latte_InitRendererState();
 
 	sLatteThreadFinishedInit = true;
 
@@ -441,6 +458,109 @@ int Latte_ThreadEntry()
 	LatteCP_ProcessRingbuffer();
 	cemu_assert_debug(false); // should never reach
 	return 0;
+}
+
+// Hands back everything this core built on the graphics context, in the order
+// that keeps each step's dependencies alive: the renderer's own shutdown, then
+// the caches that free their objects through it, then the renderer itself.
+//
+// Only ever called on the GPU thread. Under OpenGL these objects belong to that
+// thread's context and no other thread could free them; under Vulkan it is
+// still the thread that would otherwise be using them.
+void Latte_TeardownGpuState(const char* reason)
+{
+	cemuLog_log(LogType::Force, "[LatteThread] giving the graphics context its contents back - {}", reason);
+	if (!g_renderer)
+	{
+		cemuLog_log(LogType::Force, "[LatteThread] there was no renderer to give anything back to");
+		return;
+	}
+	g_renderer->Shutdown();
+	// Before the renderer goes, because every one of these frees through it.
+	// The index cache is on this list for the reason the last commit gives: its
+	// entries are reservations belonging to this renderer's allocator, and an
+	// entry that outlives it is handed to the next one's.
+	LatteIndices_invalidateAll();
+	LatteBufferCache_UnloadAll();
+	LatteTC_UnloadAllTextures();
+	LatteSHRC_UnloadAll();
+	LatteShaderCache_Close();
+	RendererOutputShader::ShutdownStatic();
+	Renderer* renderer = g_renderer.get();
+	delete renderer;
+	g_renderer.release();
+	cemuLog_log(LogType::Force, "[LatteThread] the graphics context has everything back and the renderer is gone");
+}
+
+// The other half: a context that went away has come back, the frontend has
+// built a renderer on it, and everything the last one held has to exist again.
+// The title itself never stopped, so its registers and its memory are still
+// good - what has to be rebuilt is only what lived on the device.
+void Latte_RebuildRendererIfNeeded()
+{
+	if (!sRendererRebuildPending.load(std::memory_order_acquire))
+		return;
+	// The context is gone and the new one is not here yet. Nothing to do but
+	// come back; the caller is the pause gate, which is where this thread waits.
+	if (!g_renderer)
+		return;
+	sRendererRebuildPending.store(false, std::memory_order_release);
+	cemuLog_log(LogType::Force, "[LatteThread] the graphics context is back, building everything again");
+	LatteThread_SetPhase("renderer init");
+	Latte_InitRendererState();
+	LatteThread_SetPhase("loading the shader cache");
+	// Every shader the title had compiled went with the old device, so this is
+	// not an optimisation - without it the first draw has nothing to draw with.
+	LatteShaderCache_Load();
+	LatteThread_SetPhase("command processor");
+	cemuLog_log(LogType::Force, "[LatteThread] back in the command processor on the new context");
+}
+
+// Everything the renderer has to have before a single command is read, in one
+// place because it is needed twice: once when the GPU thread starts, and once
+// more when a lost graphics context comes back and the whole lot has to be
+// built again on a new device.
+void Latte_InitRendererState()
+{
+	sint32 w, h;
+	WindowSystem::GetWindowPhysSize(w, h);
+	g_renderer->Initialize();
+	RendererOutputShader::InitializeStatic();
+
+	LatteTiming_Init();
+	LatteTexture_init();
+	LatteTC_Init();
+	// Before any cache is set up: whatever the last run could not free is still
+	// registered, and every one of those objects belongs to a device that has
+	// been destroyed since.
+	Latte_ForgetStateOfAbandonedRun();
+	LatteBufferCache_init(164 * 1024 * 1024);
+	LatteQuery_Init();
+	LatteSHRC_Init();
+	LatteStreamout_InitCache();
+
+	g_renderer->renderTarget_setViewport(0, 0, w, h, 0.0f, 1.0f);
+	
+	// enable GLSL gl_PointSize support
+	// glEnable(GL_PROGRAM_POINT_SIZE); // breaks shader caching on AMD (as of 2018)
+	
+	LatteGPUState.glVendor = GLVENDOR_UNKNOWN;
+	switch(g_renderer->GetVendor())
+	{
+	case GfxVendor::AMD: 
+		LatteGPUState.glVendor = GLVENDOR_AMD;
+		break;
+	case GfxVendor::Intel:
+		LatteGPUState.glVendor = GLVENDOR_INTEL; 
+		break;
+	case GfxVendor::Nvidia: 
+		LatteGPUState.glVendor = GLVENDOR_NVIDIA; 
+		break;
+	case GfxVendor::Apple:
+		LatteGPUState.glVendor = GLVENDOR_APPLE;
+	default:
+		break;
+	}
 }
 
 std::thread sLatteThread;
@@ -573,7 +693,12 @@ bool Latte_GetStopSignal()
 	// g_renderer is only ever null between one run's teardown and the next
 	// one's renderer being built, and no GPU thread is meant to be alive in
 	// that window, so this cannot end a run that is still going.
-	if (!g_renderer)
+	//
+	// The one exception is a context that has gone and is coming back - a
+	// fullscreen toggle - where the renderer is deliberately destroyed with the
+	// title still running. There the thread has to wait rather than leave, so
+	// the rebuild flag says which of the two nulls this is.
+	if (!g_renderer && !sRendererRebuildPending.load(std::memory_order_acquire))
 		return true;
 #endif
 	return !sLatteThreadRunning;
@@ -611,6 +736,22 @@ void LatteThread_Exit()
 	// unfreed instead; this thread is on its way out and so is the process.
 	if (::libretro_gpu_context_gone())
 	{
+		// Two ways to get here, and they are not the same. If the context went
+		// away through context_destroy then everything was already handed back
+		// at the pause gate and there is nothing left to skip - which is the
+		// point of doing it there. Anything else means the context vanished
+		// without notice and the objects really are stranded.
+		if (sRendererRebuildPending.load(std::memory_order_acquire) && !g_renderer)
+		{
+			cemuLog_log(LogType::Force, "[LatteThread] the graphics context is gone and everything was given back to it already, nothing stranded");
+			std::memset(&LatteGPUState, 0, sizeof(LatteGPUState));
+			sLatteThreadExited.store(true, std::memory_order_release);
+			#if BOOST_OS_WINDOWS
+			ExitThread(0);
+			#else
+			pthread_exit(nullptr);
+			#endif
+		}
 		cemuLog_log(LogType::Force, "[LatteThread] graphics context already gone, skipping GPU teardown");
 		Latte_NoteTeardownWasSkipped();
 		// The renderer is about to be dropped without being destroyed, so its
@@ -642,42 +783,11 @@ void LatteThread_Exit()
 		#endif
 	}
 #endif
-	if (g_renderer)
-		g_renderer->Shutdown();
+	// The same teardown a lost context gets, for the same reason: it is the one
+	// that frees rather than forgets, and there should only be one of them.
+	Latte_TeardownGpuState("the title is stopping");
 	if (LatteThread_libretro_debug_enabled())
-		cemuLog_log(LogType::Force, "[LatteThread] LatteThread_Exit after renderer->Shutdown");
-    // clean up vertex/uniform cache
-    LatteBufferCache_UnloadAll();
-	if (LatteThread_libretro_debug_enabled())
-		cemuLog_log(LogType::Force, "[LatteThread] LatteThread_Exit after LatteBufferCache_UnloadAll");
-	// clean up texture cache
-	LatteTC_UnloadAllTextures();
-	if (LatteThread_libretro_debug_enabled())
-		cemuLog_log(LogType::Force, "[LatteThread] LatteThread_Exit after LatteTC_UnloadAllTextures");
-	// clean up runtime shader cache
-    LatteSHRC_UnloadAll();
-	if (LatteThread_libretro_debug_enabled())
-		cemuLog_log(LogType::Force, "[LatteThread] LatteThread_Exit after LatteSHRC_UnloadAll");
-    // close disk cache
-    LatteShaderCache_Close();
-	if (LatteThread_libretro_debug_enabled())
-		cemuLog_log(LogType::Force, "[LatteThread] LatteThread_Exit after LatteShaderCache_Close");
-	RendererOutputShader::ShutdownStatic();
-	if (LatteThread_libretro_debug_enabled())
-		cemuLog_log(LogType::Force, "[LatteThread] LatteThread_Exit after RendererOutputShader::ShutdownStatic");
-    // destroy renderer but make sure that g_renderer remains valid until the destructor has finished
-	if (g_renderer)
-	{
-		// Unconditionally logged, not behind the debug switch: this is one of
-		// the few places the renderer can disappear, and when one disappears
-		// under a run that still wants it, the log has to say who took it.
-		cemuLog_log(LogType::Force, "[LatteThread] destroying the renderer on the way out");
-		Renderer* renderer = g_renderer.get();
-		delete renderer;
-		g_renderer.release();
-	}
-	if (LatteThread_libretro_debug_enabled())
-		cemuLog_log(LogType::Force, "[LatteThread] LatteThread_Exit after renderer delete/release");
+		cemuLog_log(LogType::Force, "[LatteThread] LatteThread_Exit after the GPU teardown");
 	// reset GPU7 state
 	std::memset(&LatteGPUState, 0, sizeof(LatteGPUState));
 	if (LatteThread_libretro_debug_enabled())
