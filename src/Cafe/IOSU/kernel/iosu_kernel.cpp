@@ -371,6 +371,25 @@ namespace iosu
 			}
 		}
 
+		// The pair for IOS_RegisterResourceManager, which refuses a path it
+		// already knows. Nothing needed one while the process only ever started
+		// its services once, but a libretro core is stopped and started inside
+		// one process: the frontend deinitialises it when content is closed and
+		// initialises it again for the next content. Without this, a service
+		// that stops cannot come back - its second registration is refused and
+		// the path is left pointing at a message queue nobody is reading, which
+		// is a title that boots and then waits forever on its first request.
+		IOS_ERROR IOS_UnregisterResourceManager(const char* devicePath)
+		{
+			std::unique_lock _lock(sInternalMutex);
+			IOSResourceManager* resourceMgr = _IOS_FindResourceManager(devicePath);
+			if (!resourceMgr)
+				return IOS_ERROR_INVALID;
+			resourceMgr->isSet = false;
+			resourceMgr->path.clear();
+			return IOS_ERROR_OK;
+		}
+
 		IOS_ERROR IOS_DeviceAssociateId(const char* devicePath, uint32 id)
 		{
 			// not yet implemented

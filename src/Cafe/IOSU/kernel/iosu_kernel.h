@@ -18,6 +18,7 @@ namespace iosu
 		IOS_ERROR IOS_DestroyTimer(IOSTimerId timerId);
 
 		IOS_ERROR IOS_RegisterResourceManager(const char* devicePath, IOSMsgQueueId msgQueueId);
+		IOS_ERROR IOS_UnregisterResourceManager(const char* devicePath);
 		IOS_ERROR IOS_DeviceAssociateId(const char* devicePath, uint32 id);
 		IOS_ERROR IOS_ResourceReply(IPCCommandBody* cmd, IOS_ERROR result);
 

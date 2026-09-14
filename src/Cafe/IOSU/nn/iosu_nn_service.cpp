@@ -110,6 +110,10 @@ namespace iosu
 					IOS_ResourceReply(cmd, IOS_ERROR_INVALID);
 				}
 			}
+			// Symmetry with the registration above: without it the path stays
+			// claimed, pointing at a message queue that is about to be destroyed,
+			// and this service can never be started again in this process.
+			IOS_UnregisterResourceManager(m_devicePath.c_str());
 			IOS_DestroyMessageQueue(m_msgQueueId);
 			m_threadInitialized = false;
 		}
@@ -235,6 +239,10 @@ namespace iosu
 					IOS_ResourceReply(cmd, IOS_ERROR_INVALID);
 				}
 			}
+			// Symmetry with the registration above: without it the path stays
+			// claimed, pointing at a message queue that is about to be destroyed,
+			// and this service can never be started again in this process.
+			IOS_UnregisterResourceManager(m_devicePath.c_str());
 			IOS_DestroyMessageQueue(m_msgQueueId);
 			m_threadInitialized = false;
 		}

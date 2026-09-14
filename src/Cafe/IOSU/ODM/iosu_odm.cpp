@@ -132,6 +132,10 @@ namespace iosu
 					IOS_ResourceReply(cmd, IOS_ERROR_INVALID);
 				}
 			}
+			// Symmetry with the registration above, so this can be started again
+			// in the same process - see iosu_fsa.
+			IOS_UnregisterResourceManager(s_devicePath.c_str());
+			IOS_DestroyMessageQueue(s_msgQueueId);
 			s_threadInitialized = false;
 		}
 

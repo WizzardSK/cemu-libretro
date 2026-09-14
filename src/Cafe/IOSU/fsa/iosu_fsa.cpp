@@ -940,6 +940,12 @@ namespace iosu
 		{
 			IOS_SendMessage(sFSAIoMsgQueue, 0, 0);
 			sFSAIoThread.join();
+			// Symmetry with Initialize. Without it the path stays claimed by a
+			// queue nobody is reading, Initialize's registration is refused the
+			// next time round, and every FSAddClient a later title makes waits
+			// for a reply that cannot come.
+			IOS_UnregisterResourceManager("/dev/fsa");
+			IOS_DestroyMessageQueue(sFSAIoMsgQueue);
 		}
 	} // namespace fsa
 } // namespace iosu

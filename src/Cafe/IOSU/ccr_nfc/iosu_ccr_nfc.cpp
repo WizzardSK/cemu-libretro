@@ -393,6 +393,9 @@ namespace iosu
 				iosu::kernel::IOS_SendMessage(sCCRNFCMsgQueue, 0xf00dd00d, 0);
 				sCCRNFCThread.join();
 
+				// Symmetry with SystemLaunch, so a later SystemLaunch in the
+				// same process is not refused the path - see iosu_fsa.
+				iosu::kernel::IOS_UnregisterResourceManager("/dev/ccr_nfc");
 				iosu::kernel::IOS_DestroyMessageQueue(sCCRNFCMsgQueue);
 				sCCRNFCMsgQueue = -1;
 			}

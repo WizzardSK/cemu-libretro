@@ -676,6 +676,20 @@ namespace CafeSystem
 		iosu::iosuMcp_init();
 		iosu::iosuAcp_init();
 		iosu::nim::Initialize();
+		// The resource managers go back up too, in the order Initialize brings
+		// them up. Each unregisters its device path on the way out now, so the
+		// registration below is accepted rather than refused - which it was, and
+		// silently, leaving /dev/fsa claimed by a queue with no reader. That was
+		// the second step of the same hang: past act, into FSAddClientEx, and
+		// stopped there.
+		iosu::fsa::Initialize();
+		iosu::act::Initialize();
+		iosu::mcp::Init();
+		iosu::odm::Initialize();
+		// And the modules, which SystemLaunch starts and ShutdownIOSUModules
+		// stops. /dev/ccr_nfc is one of these.
+		for (auto& module : s_iosuModules)
+			module->SystemLaunch();
 	}
 
 	void SetImplementation(SystemImplementation* impl)

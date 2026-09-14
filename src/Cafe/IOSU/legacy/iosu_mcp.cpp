@@ -273,6 +273,9 @@ namespace iosu
 		{
 			IOS_SendMessage(sMCPIoMsgQueue, 0, 0);
 			sMCPIoThread.join();
+			// Symmetry with Init, so this can be started again - see iosu_fsa.
+			IOS_UnregisterResourceManager("/dev/mcp");
+			IOS_DestroyMessageQueue(sMCPIoMsgQueue);
 		}
 	};
 }
