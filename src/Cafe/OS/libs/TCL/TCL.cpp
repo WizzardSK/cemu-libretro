@@ -172,16 +172,43 @@ namespace TCL
 			cafeExportRegister("TCL", TCLWaitTimestamp, LogType::Placeholder);
 		};
 
+		// The ring buffer belongs to the title as much as the retire marker
+		// does, and only the marker was being put back. Its read and write
+		// indices are host-side and live for as long as the process, so a title
+		// that is stopped part-way through a submission leaves them unequal -
+		// and unequal is the only thing that means "there is work here". The
+		// next title's GPU thread then starts by reading command words the
+		// previous one wrote, pointing into a memory space that has since been
+		// destroyed and built again.
+		//
+		// That is the second-run hang, and it explains the shape of it: a ring
+		// that never reads empty is a command processor that never idles, and
+		// idling is where the emulated vsync is serviced. Hence a GPU thread
+		// that sits in the command processor for ever, giving the title no
+		// vsync, producing no frame, and faulting nowhere.
+		//
+		// A GPU thread that outlived its own title may still be reading this.
+		// It is already reading words that mean nothing; what matters is that
+		// the next title starts from an empty ring rather than that one's
+		// leftovers.
+		static void ResetRingBuffer()
+		{
+			tclRingBufferA_readIndex.store(0, std::memory_order::relaxed);
+			tclRingBufferA_writeIndex.store(0, std::memory_order::release);
+		}
+
 		void rpl_entry(uint32 moduleHandle, coreinit::RplEntryReason reason) override
 		{
 			if (reason == coreinit::RplEntryReason::Loaded)
 			{
+				ResetRingBuffer();
 				s_currentRetireMarker = 0;
 				s_tclStatePPC->gpuRetireMarker = 0;
 				coreinit::OSInitEvent(s_updateRetirementEvent.GetPtr(), coreinit::OSEvent::EVENT_STATE::STATE_NOT_SIGNALED, coreinit::OSEvent::EVENT_MODE::MODE_AUTO);
 			}
 			else if (reason == coreinit::RplEntryReason::Unloaded)
 			{
+				ResetRingBuffer();
 				s_currentRetireMarker = 0;
 				s_tclStatePPC->gpuRetireMarker = 0;
 			}
