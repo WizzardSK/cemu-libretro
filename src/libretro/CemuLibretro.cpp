@@ -3670,7 +3670,7 @@ RETRO_API bool retro_load_game(const struct retro_game_info* game)
 		// av_info change). Every Vulkan object the renderer owns lives on the
 		// frontend's device, so letting RetroArch throw that away mid-title
 		// leaves the driver calling through freed memory.
-		s_hw_render.cache_context = true;
+		s_hw_render.cache_context = false; // TEST BRANCH ONLY - forces a real context loss on a fullscreen toggle
 		s_hw_render.debug_context = false;
 
 		if (environ_cb(RETRO_ENVIRONMENT_SET_HW_RENDER, &s_hw_render))
@@ -3710,7 +3710,7 @@ RETRO_API bool retro_load_game(const struct retro_game_info* game)
 		s_hw_render.bottom_left_origin = true;
 		s_hw_render.depth = true;
 		s_hw_render.stencil = true;
-		s_hw_render.cache_context = true;
+		s_hw_render.cache_context = false; // TEST BRANCH ONLY - forces a real context loss on a fullscreen toggle
 
 		// Request shared GL context so Cemu GPU thread can use it from another thread
 		environ_cb(RETRO_ENVIRONMENT_SET_HW_SHARED_CONTEXT, nullptr);
