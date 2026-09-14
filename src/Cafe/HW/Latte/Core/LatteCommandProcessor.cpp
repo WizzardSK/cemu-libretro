@@ -58,14 +58,7 @@ public:
 		m_drawcallContext.gsUniformBufferDirtyMask = 0;
 		m_drawcallContext.aluConstVSDirty = false;
 		m_drawcallContext.aluConstPSDirty = false;
-		// A display list runs from beginning to end with no stop check in
-		// between, and the renderer can be released while this thread is part
-		// way through one - so a draw whose renderer has gone is skipped
-		// rather than made through a null pointer. The list still has to run
-		// itself out; the stop check at the end of it is what takes the thread
-		// away.
-		if (Renderer* renderer = g_renderer.get())
-			renderer->draw_beginSequence();
+		g_renderer->draw_beginSequence();
 	}
 
 	void executeDraw(uint32 count, bool isAutoIndex, MPTR physIndices)
@@ -80,13 +73,11 @@ public:
 			if (physIndices == MPTR_NULL)
 				return;
 			auto indexType = LatteGPUState.contextNew.VGT_DMA_INDEX_TYPE.get_INDEX_TYPE();
-			if (Renderer* renderer = g_renderer.get())
-				renderer->draw_execute(baseVertex, baseInstance, numInstances, count, physIndices, indexType, m_drawcallContext);
+			g_renderer->draw_execute(baseVertex, baseInstance, numInstances, count, physIndices, indexType, m_drawcallContext);
 		}
 		else
 		{
-			if (Renderer* renderer = g_renderer.get())
-				renderer->draw_execute(baseVertex, baseInstance, numInstances, count, MPTR_NULL, Latte::LATTE_VGT_DMA_INDEX_TYPE::E_INDEX_TYPE::AUTO, m_drawcallContext);
+			g_renderer->draw_execute(baseVertex, baseInstance, numInstances, count, MPTR_NULL, Latte::LATTE_VGT_DMA_INDEX_TYPE::E_INDEX_TYPE::AUTO, m_drawcallContext);
 		}
 		performanceMonitor.cycle[performanceMonitor.cycleIndex].drawCallCounter++;
 		if (!m_drawcallContext.isFirst)
@@ -102,8 +93,7 @@ public:
 
 	void endDrawPass()
 	{
-		if (Renderer* renderer = g_renderer.get())
-			renderer->draw_endSequence();
+		g_renderer->draw_endSequence();
 		m_drawPassActive = false;
 	}
 
@@ -184,19 +174,7 @@ uint32 LatteCP_readU32Deprc()
 		if ( TCL::TCLGPUReadRBWord(cmdWord) )
 			return cmdWord;
 
-		// Taken once, and checked. Closing content releases the renderer from
-		// under this thread - the unload path drops it without destroying it
-		// when the graphics context has already gone - and this is the line the
-		// GPU thread spends nearly all of its idle time on, so it is where that
-		// lands: a virtual call through a null pointer, fault at 0x0, with
-		// LatteCP_readU32Deprc under LatteCP_ProcessRingbuffer under
-		// Latte_ThreadEntry and nothing else on the stack. Reported as a crash
-		// from closing a title early and starting it again.
-		//
-		// Nothing below needs the renderer, so the idle pass carries on without
-		// it and the stop signal a few lines down takes the thread out.
-		if (Renderer* renderer = g_renderer.get())
-			renderer->NotifyLatteCommandProcessorIdle(); // let the renderer know in case it wants to flush any commands
+		g_renderer->NotifyLatteCommandProcessorIdle(); // let the renderer know in case it wants to flush any commands
 		performanceMonitor.gpuTime_idleTime.beginMeasuring();
 		// no command data available, spin in a busy loop for a bit then check again
 		for (sint32 busy = 0; busy < 80; busy++)
@@ -238,10 +216,7 @@ LatteCMDPtr LatteCP_itSurfaceSync(LatteCMDPtr cmd)
 
 	// let the renderer know about colorbuffer invalidation
 	if (static_cast<uint32>(invalidationFlags & (Latte::E_COHER_CNTL::CB_ACTION_ENA | Latte::E_COHER_CNTL::CB_ALL_DEST_BASE_ENA)) != 0)
-	{
-		if (Renderer* renderer = g_renderer.get())
-			renderer->SurfaceSync(invalidationFlags, addressPhys, size);
-	}
+		g_renderer->SurfaceSync(invalidationFlags, addressPhys, size);
 
 	if (addressPhys == MPTR_NULL || size == 0xFFFFFFFF)
 		return cmd; // block global invalidations because they are too expensive
@@ -552,11 +527,7 @@ LatteCMDPtr LatteCP_itWaitRegMem(LatteCMDPtr cmd, uint32 nWords)
 				assert_dbg();
 			if (!stalls)
 			{
-				// Same reason as in LatteCP_readU32Deprc: this loop is entered
-				// while a title is stopping, which is exactly when the renderer
-				// can be released from under it.
-				if (Renderer* renderer = g_renderer.get())
-					renderer->NotifyLatteCommandProcessorIdle();
+				g_renderer->NotifyLatteCommandProcessorIdle();
 				stalls = true;
 			}
 

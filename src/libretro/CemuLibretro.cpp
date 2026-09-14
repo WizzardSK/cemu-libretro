@@ -2730,26 +2730,21 @@ static bool libretro_shutdown_title_for_exit()
 	for (int i = 0; i < kShutdownTimeoutMs && !*finished; i++)
 		std::this_thread::sleep_for(std::chrono::milliseconds(1));
 
-	// A GPU thread that would not stop was detached rather than joined, so the
-	// title is only half stopped: save data is on disk, but a live thread is
-	// still rendering through the frontend's Vulkan device. Tearing that device
-	// down under it is the crash this used to end in, so report it as not
-	// stopped and let the caller take the exit path instead.
-	const bool abandoned = Latte_WasThreadAbandoned();
-
+	// A GPU thread that would not stop no longer gets here at all: Latte_Stop
+	// says so and ends the process, because the alternative was a half-stopped
+	// title - save data on disk, a live thread still rendering through the
+	// frontend's device - and every crash that came of it arrived somewhere
+	// else entirely.
 	if (log_cb)
 	{
-		if (*finished && !abandoned)
+		if (*finished)
 			log_cb(RETRO_LOG_INFO, "Cemu: title shut down, save data flushed\n");
-		else if (*finished)
-			log_cb(RETRO_LOG_WARN, "Cemu: title shut down and save data flushed, but the GPU thread would not stop (it was %s)\n",
-				Latte_GetThreadPhase());
 		else
 			log_cb(RETRO_LOG_WARN, "Cemu: title did not shut down in time (it was %s), save data may be incomplete\n",
 				CafeSystem::GetShutdownPhase());
 	}
 
-	return *finished && !abandoned;
+	return *finished;
 }
 
 RETRO_API void retro_reset()
@@ -3591,21 +3586,15 @@ static void libretro_context_destroy()
 		log_cb(RETRO_LOG_WARN, "Cemu: the renderer was still coming up when the context went away\n");
 	for (int i = 0; i < 500 && !Latte_IsGpuParked(); i++)
 		std::this_thread::sleep_for(std::chrono::milliseconds(1));
-	const bool parked = Latte_IsGpuParked();
 	libretro_frame_gate_hold_open(false);
-	if (log_cb && !parked)
-		log_cb(RETRO_LOG_WARN, "Cemu: GPU thread did not park before the context went away\n");
-	if (!parked)
-	{
-		// Only the GPU thread can do it, and it never got there. Withdraw the
-		// request rather than leave it standing: a thread that parks later,
-		// after the context has gone, would tear down through a device that is
-		// no longer there.
-		Latte_CancelGpuTeardownForContextLoss();
-		if (log_cb)
-			log_cb(RETRO_LOG_WARN, "Cemu: the context is going away with the core's objects still on it\n");
-	}
-	else if (log_cb && Latte_GpuTeardownForContextLossDone())
+	// Not parking is not survivable. Only the GPU thread can hand the context
+	// its contents back, and this is the last moment it can: letting the
+	// context go with the core's objects still on it means the next run
+	// inherits them, which is the whole class of failure this was written to
+	// end. Say so and stop, with the log on disk first.
+	if (!Latte_IsGpuParked())
+		Latte_FailNotParked();
+	if (log_cb && Latte_GpuTeardownForContextLossDone())
 		log_cb(RETRO_LOG_INFO, "Cemu: handed the core's GPU objects back before the context went away\n");
 
 	s_hw_render_initialized = false;
@@ -3616,8 +3605,6 @@ static void libretro_context_destroy()
 
 	// Nothing is left to clean up here: the GPU thread gave the context its
 	// contents back on the way into the park, including the renderer itself.
-	// If it did not park, the request above was withdrawn and the objects go
-	// with the context - which is the old behaviour, now only the fallback.
 }
 
 // A .wud/.wux is encrypted, and without its disc key nothing downstream says so
@@ -4005,50 +3992,15 @@ RETRO_API void retro_unload_game()
 	// ~VKRObjectSampler every time. Deleting first and releasing after keeps the
 	// pointer valid for the whole destructor - the order the standalone build
 	// unwinds in, where the renderer outlives its own teardown by construction.
+	// Usually there is nothing here: the GPU thread gave the context its
+	// contents back, the renderer included, before this was reached. What is
+	// left for this is a load that built a renderer and never started a title,
+	// so no GPU thread ever existed to tear it down.
 	if (Renderer* renderer = g_renderer.get())
 	{
-		// A GPU thread that would not stop is inside its own teardown - phase
-		// "exiting" is where Latte_Stop gave up and detached it - and part of
-		// that teardown is deleting this very renderer. Deleting it here as
-		// well is two threads destroying one object: the one that gets there
-		// first nulls g_renderer, and the other faults reading it back from
-		// inside ~VulkanRenderer, which is what the close crash was
-		// (fault at 0x18f0, VulkanRenderer::GetInstance() returning null 6384
-		// bytes in). The thread is still live and still owns it, so leave it
-		// alone and let the process take it.
-		if (libretro_gpu_context_gone() || Latte_WasThreadAbandoned())
-		{
-			// The destructor is what normally stops this one, and it is about
-			// to be skipped. Stopping it needs no device - it writes files.
-#ifdef ENABLE_VULKAN
-			if (s_graphics_api == SelectedGraphicsAPI::Vulkan)
-				static_cast<VulkanRenderer*>(renderer)->StopPipelineCacheSaveThread();
-#endif
-			// Nothing to destroy it with. ~VulkanRenderer submits a final
-			// command buffer and frees its objects through the frontend's
-			// device, and that device is already gone by the time an exiting
-			// frontend gets here - the destructor faults inside the driver.
-			// Dropping ownership leaks the host-side object on a path the
-			// process does not come back from; the alternative is a crash on
-			// every exit.
-			(void)g_renderer.release();
-			// Into Cemu's log as well as the frontend's: a crash report comes
-			// with log.txt and rarely with RetroArch's, and without this the
-			// renderer vanishing is invisible in the only file that arrives.
-			cemuLog_log(LogType::Force, "[libretro] dropping the renderer without destroying it - {}",
-				libretro_gpu_context_gone() ? "the graphics context is already gone"
-					: "the GPU thread is still in its own teardown");
-			if (log_cb)
-				log_cb(RETRO_LOG_INFO, "Cemu: leaving the renderer alone - %s\n",
-					libretro_gpu_context_gone() ? "the graphics context is already gone"
-						: "the GPU thread is still in its own teardown");
-		}
-		else
-		{
-			cemuLog_log(LogType::Force, "[libretro] destroying the renderer on unload");
-			delete renderer;
-			(void)g_renderer.release();
-		}
+		cemuLog_log(LogType::Force, "[libretro] destroying the renderer on unload");
+		delete renderer;
+		(void)g_renderer.release();
 	}
 
 	// A GPU thread parked at the pause gate is asleep with no renderer to come

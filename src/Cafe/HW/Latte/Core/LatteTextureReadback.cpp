@@ -99,22 +99,6 @@ void LatteTextureReadback_Initate(LatteTextureView* textureView)
 	sTextureScheduledReadbacks.emplace_back(queueEntry);
 }
 
-// Everything the last run left in flight. Those transfers were started against
-// a device that has since been destroyed, so they can never report themselves
-// finished - and the force-finish path below loops until the queue is empty,
-// which for a dead transfer is forever. The GPU thread then sits inside the
-// command processor without ever reaching its idle loop again: no vsync, no
-// frames, and a title that boots and shows nothing. Dropped rather than freed,
-// like every other leftover from a run that could not tear down.
-uint32 LatteTextureReadback_ForgetAllWithoutFreeing()
-{
-	const uint32 count = (uint32)(sTextureActiveReadbackQueue.size() + sTextureScheduledReadbacks.size());
-	while (!sTextureActiveReadbackQueue.empty())
-		sTextureActiveReadbackQueue.pop();
-	sTextureScheduledReadbacks.clear();
-	return count;
-}
-
 void LatteTextureReadback_UpdateFinishedTransfers(bool forceFinish)
 {
 	if (forceFinish)

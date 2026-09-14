@@ -112,15 +112,6 @@ void LatteRenderTarget_itHLECopyColorBufferToScanBuffer(MPTR colorBufferPtr, uin
 
 void LatteRenderTarget_unloadAll();
 
-// Dropping what a run that could not tear down left behind. See
-// Latte_ForgetStateOfAbandonedRun().
-uint32 LatteTexture_ForgetAllWithoutFreeing();
-uint32 LatteTextureViewLookupCache_ForgetAllWithoutFreeing();
-uint32 LatteSHRC_ForgetAllWithoutFreeing();
-void LatteRenderTarget_ForgetAllWithoutFreeing();
-void Latte_NoteTeardownWasSkipped();
-void Latte_ForgetStateOfAbandonedRun();
-
 // texture cache
 
 void LatteTC_Init();
@@ -149,7 +140,6 @@ void LatteTextureReadback_StartTransfer(LatteTextureView* textureView);
 bool LatteTextureReadback_Update(bool forceStart = false);
 void LatteTextureReadback_NotifyTextureDeletion(LatteTexture* texture);
 void LatteTextureReadback_UpdateFinishedTransfers(bool forceFinish);
-uint32 LatteTextureReadback_ForgetAllWithoutFreeing();
 bool LatteTextureReadback_ReadbackToLinearBlocking(LatteTextureView* sourceView, uint8* dstPtr, uint32 dstWidth, uint32 dstHeight, uint32 dstPitch);
 
 // query
@@ -158,7 +148,6 @@ void LatteQuery_Init();
 void LatteQuery_BeginOcclusionQuery(MPTR queryMPTR);
 void LatteQuery_EndOcclusionQuery(MPTR queryMPTR);
 void LatteQuery_UpdateFinishedQueries();
-uint32 LatteQuery_ForgetAllWithoutFreeing();
 void LatteQuery_UpdateFinishedQueriesForceFinishAll();
 void LatteQuery_CancelActiveGPU7Queries();
 
@@ -208,14 +197,16 @@ bool Latte_IsGpuParked();
 // Asks the GPU thread to hand back everything it built on the graphics context,
 // which it does at the pause gate. Request it before asking for the pause.
 void Latte_RequestGpuTeardownForContextLoss();
-void Latte_CancelGpuTeardownForContextLoss();
 bool Latte_GpuTeardownForContextLossDone();
+// Ends the process, with the log flushed and a line saying why. Only the GPU
+// thread can hand the graphics context its contents back, and context_destroy
+// is the last moment it can - a context that goes away with the core's objects
+// still on it leaves them for the next run, which is the failure this whole
+// path exists to end.
+[[noreturn]] void Latte_FailNotParked();
 bool Latte_IsRendererRebuildPending();
 void Latte_GpuPauseGate(); // called by the command processor
-bool Latte_WasThreadAbandoned(); // true if Latte_Stop had to detach a GPU thread that would not stop
 bool Latte_HasFinishedRendererInit(); // false while the GPU thread is still bringing the renderer up
-// Temporary, for the second-run hang: how many commands the command processor
-// has read, and the header of the last one.
 const char* Latte_GetThreadPhase(); // where that thread was when it was asked to stop
 #endif
 void LatteThread_Exit();
