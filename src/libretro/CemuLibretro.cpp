@@ -26,6 +26,7 @@
 #include "Cafe/TitleList/TitleConverter.h"
 #include "Cafe/TitleList/GameInfo.h"
 #include "Cafe/HW/Latte/Core/Latte.h"
+#include "Cafe/HW/Latte/Core/LatteTiming.h"
 #include "Cafe/HW/Latte/Renderer/Renderer.h"
 #ifdef ENABLE_OPENGL
 #include "Cafe/HW/Latte/Renderer/OpenGL/OpenGLRenderer.h"
@@ -454,6 +455,10 @@ static bool s_hw_render_initialized = false;
 static bool s_core_options_supported = false;
 // Periodic thread snapshots; see DumpEmulatedThreads().
 static bool s_log_thread_dump = false;
+// How many frames have gone to the frontend. A second run that boots but shows
+// nothing is either producing frames the frontend is not drawing or producing
+// none at all, and those are different bugs in different places.
+static std::atomic<uint64> s_frames_presented{0};
 
 enum class SelectedGraphicsAPI { OpenGL, Vulkan };
 static SelectedGraphicsAPI s_graphics_api = SelectedGraphicsAPI::OpenGL;
@@ -4263,6 +4268,12 @@ static std::string_view ResolveHLEFunctionName(uint32 pc)
 static void DumpEmulatedThreads()
 {
 	cemuLog_log(LogType::Force, "--- Wii U threads ---");
+	// The three numbers that say whether the picture is the emulator's problem
+	// or the frontend's: where the GPU thread is, how many vsync events the
+	// title has been given, and how many frames have actually gone out.
+	cemuLog_log(LogType::Force, "  gpu: phase={} vsync={} framesPresented={}",
+		Latte_GetThreadPhase(), LatteTiming_GetVsyncCount(),
+		s_frames_presented.load(std::memory_order_relaxed));
 
 	// What the title is polling, if anything. An event with a five-figure count
 	// between two snapshots is a spin loop waiting on something that never
@@ -4633,6 +4644,7 @@ RETRO_API void retro_run()
 #endif // ENABLE_OPENGL
 
 	video_cb(RETRO_HW_FRAME_BUFFER_VALID, SCREEN_WIDTH, SCREEN_HEIGHT, 0);
+	s_frames_presented++;
 
 	// Flush audio
 	LibretroAudioAPI::FlushAudio();

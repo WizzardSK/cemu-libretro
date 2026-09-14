@@ -6,6 +6,7 @@
 #include "util/highresolutiontimer/HighResolutionTimer.h"
 #include "config/CemuConfig.h"
 #include "Cafe/CafeSystem.h"
+#include <atomic>
 
 sint32 s_customVsyncFrequency = -1;
 
@@ -96,12 +97,25 @@ void LatteTiming_Init()
 	LatteGPUState.timer_nextVSync = LatteGPUState.timer_bootUp + LatteTime_CalculateTimeBetweenVSync();
 }
 
+// How many vsync events the emulated machine has been given since the core
+// started. A title that parks in GX2WaitForVsync and never comes back - which
+// is what a second run does now that it gets that far - is either being given
+// none, or being given them and not noticing, and one number tells the two
+// apart.
+static std::atomic<uint64> s_vsyncSignalCount{0};
+
+uint64 LatteTiming_GetVsyncCount()
+{
+	return s_vsyncSignalCount.load(std::memory_order_relaxed);
+}
+
 void LatteTiming_signalVsync()
 {
 	static uint32 s_vsyncIntervalCounter = 0;
 
 	if (!LatteGPUState.gx2InitCalled)
 		return;
+	s_vsyncSignalCount.fetch_add(1, std::memory_order_relaxed);
 	s_vsyncIntervalCounter++;
 	uint32 swapInterval = 1;
 	if (LatteGPUState.sharedArea)
