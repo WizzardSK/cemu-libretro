@@ -1084,6 +1084,13 @@ struct LibretroPortState
 
 static LibretroPortState s_port_state[kLibretroMaxPorts];
 
+// How many of them are worth asking the frontend about. Every port costs
+// twenty calls into the frontend per frame, and the ones above this are not
+// bound to anything: with Wii Remote input off, ports 2 to 4 drive nothing at
+// all, so polling them is sixty calls a frame spent on answers nobody reads.
+// Set when the remotes are set up; until then assume they all matter.
+static uint32_t s_polled_ports = kLibretroMaxPorts;
+
 // ============================================================================
 // Forward declarations from main.cpp
 // ============================================================================
@@ -2800,10 +2807,14 @@ static void libretro_setup_wiimotes()
 
 	if (mode == "disabled")
 	{
+		// Nothing above port 1 is bound to anything, so nothing above port 1 is
+		// worth asking about: sixty frontend calls a frame that went nowhere.
+		s_polled_ports = 1;
 		if (log_cb)
 			log_cb(RETRO_LOG_INFO, "Cemu: Wii Remote input disabled\n");
 		return;
 	}
+	s_polled_ports = kLibretroMaxPorts;
 
 	// port1_shared: port 1 drives the GamePad and the first remote at the same
 	// time, so a single pad also gets past screens that ask for a remote
@@ -4110,7 +4121,24 @@ static void libretro_poll_input()
 
 	input_poll_cb();
 
+	// Raw pad state for the ports that drive something, for the Wii Remotes
+	// behind InputManager - and for the GamePad below, which is built from
+	// port 0 rather than asking the frontend the same twenty questions a
+	// second time.
+	for (uint32_t port = 0; port < s_polled_ports; ++port)
+	{
+		auto& pad = s_port_state[port];
+		for (uint32_t id = 0; id < 16; ++id)
+			pad.buttons[id] = input_state_cb(port, RETRO_DEVICE_JOYPAD, 0, id);
+
+		pad.left_x = input_state_cb(port, RETRO_DEVICE_ANALOG, RETRO_DEVICE_INDEX_ANALOG_LEFT, RETRO_DEVICE_ID_ANALOG_X);
+		pad.left_y = input_state_cb(port, RETRO_DEVICE_ANALOG, RETRO_DEVICE_INDEX_ANALOG_LEFT, RETRO_DEVICE_ID_ANALOG_Y);
+		pad.right_x = input_state_cb(port, RETRO_DEVICE_ANALOG, RETRO_DEVICE_INDEX_ANALOG_RIGHT, RETRO_DEVICE_ID_ANALOG_X);
+		pad.right_y = input_state_cb(port, RETRO_DEVICE_ANALOG, RETRO_DEVICE_INDEX_ANALOG_RIGHT, RETRO_DEVICE_ID_ANALOG_Y);
+	}
+
 	auto& state = s_input_state;
+	const auto& pad0 = s_port_state[0];
 
 	// Map libretro joypad buttons to Wii U GamePad.
 	//
@@ -4124,47 +4152,38 @@ static void libretro_poll_input()
 	// it made the pad answer with the wrong one of each pair: pressing the
 	// south button, which is B on a RetroPad and B on a GamePad, arrived in the
 	// title as A. Reported from the other end as "b is a ingame".
-	state.buttons[VPADController::kButtonId_A] = input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_A); // east
-	state.buttons[VPADController::kButtonId_B] = input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_B); // south
-	state.buttons[VPADController::kButtonId_X] = input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_X); // north
-	state.buttons[VPADController::kButtonId_Y] = input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_Y); // west
+	state.buttons[VPADController::kButtonId_A] = pad0.buttons[RETRO_DEVICE_ID_JOYPAD_A]; // east
+	state.buttons[VPADController::kButtonId_B] = pad0.buttons[RETRO_DEVICE_ID_JOYPAD_B]; // south
+	state.buttons[VPADController::kButtonId_X] = pad0.buttons[RETRO_DEVICE_ID_JOYPAD_X]; // north
+	state.buttons[VPADController::kButtonId_Y] = pad0.buttons[RETRO_DEVICE_ID_JOYPAD_Y]; // west
 
-	state.buttons[VPADController::kButtonId_L] = input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_L);
-	state.buttons[VPADController::kButtonId_R] = input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_R);
-	state.buttons[VPADController::kButtonId_ZL] = input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_L2);
-	state.buttons[VPADController::kButtonId_ZR] = input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_R2);
+	state.buttons[VPADController::kButtonId_L] = pad0.buttons[RETRO_DEVICE_ID_JOYPAD_L];
+	state.buttons[VPADController::kButtonId_R] = pad0.buttons[RETRO_DEVICE_ID_JOYPAD_R];
+	state.buttons[VPADController::kButtonId_ZL] = pad0.buttons[RETRO_DEVICE_ID_JOYPAD_L2];
+	state.buttons[VPADController::kButtonId_ZR] = pad0.buttons[RETRO_DEVICE_ID_JOYPAD_R2];
 
-	state.buttons[VPADController::kButtonId_Plus] = input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_START);
-	state.buttons[VPADController::kButtonId_Minus] = input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_SELECT);
+	state.buttons[VPADController::kButtonId_Plus] = pad0.buttons[RETRO_DEVICE_ID_JOYPAD_START];
+	state.buttons[VPADController::kButtonId_Minus] = pad0.buttons[RETRO_DEVICE_ID_JOYPAD_SELECT];
 
-	state.buttons[VPADController::kButtonId_Up] = input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_UP);
-	state.buttons[VPADController::kButtonId_Down] = input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_DOWN);
-	state.buttons[VPADController::kButtonId_Left] = input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_LEFT);
-	state.buttons[VPADController::kButtonId_Right] = input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_RIGHT);
+	state.buttons[VPADController::kButtonId_Up] = pad0.buttons[RETRO_DEVICE_ID_JOYPAD_UP];
+	state.buttons[VPADController::kButtonId_Down] = pad0.buttons[RETRO_DEVICE_ID_JOYPAD_DOWN];
+	state.buttons[VPADController::kButtonId_Left] = pad0.buttons[RETRO_DEVICE_ID_JOYPAD_LEFT];
+	state.buttons[VPADController::kButtonId_Right] = pad0.buttons[RETRO_DEVICE_ID_JOYPAD_RIGHT];
 
-	state.buttons[VPADController::kButtonId_StickL] = input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_L3);
-	state.buttons[VPADController::kButtonId_StickR] = input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_R3);
+	state.buttons[VPADController::kButtonId_StickL] = pad0.buttons[RETRO_DEVICE_ID_JOYPAD_L3];
+	state.buttons[VPADController::kButtonId_StickR] = pad0.buttons[RETRO_DEVICE_ID_JOYPAD_R3];
 
 	// Analog sticks
-	state.left_x = input_state_cb(0, RETRO_DEVICE_ANALOG, RETRO_DEVICE_INDEX_ANALOG_LEFT, RETRO_DEVICE_ID_ANALOG_X);
-	state.left_y = input_state_cb(0, RETRO_DEVICE_ANALOG, RETRO_DEVICE_INDEX_ANALOG_LEFT, RETRO_DEVICE_ID_ANALOG_Y);
-	state.right_x = input_state_cb(0, RETRO_DEVICE_ANALOG, RETRO_DEVICE_INDEX_ANALOG_RIGHT, RETRO_DEVICE_ID_ANALOG_X);
-	state.right_y = input_state_cb(0, RETRO_DEVICE_ANALOG, RETRO_DEVICE_INDEX_ANALOG_RIGHT, RETRO_DEVICE_ID_ANALOG_Y);
+	state.left_x = pad0.left_x;
+	state.left_y = pad0.left_y;
+	state.right_x = pad0.right_x;
+	state.right_y = pad0.right_y;
 
-	// Raw pad state for every port, for the Wii Remotes behind InputManager
-	for (uint32_t port = 0; port < kLibretroMaxPorts; ++port)
-	{
-		auto& pad = s_port_state[port];
-		for (uint32_t id = 0; id < 16; ++id)
-			pad.buttons[id] = input_state_cb(port, RETRO_DEVICE_JOYPAD, 0, id);
-
-		pad.left_x = input_state_cb(port, RETRO_DEVICE_ANALOG, RETRO_DEVICE_INDEX_ANALOG_LEFT, RETRO_DEVICE_ID_ANALOG_X);
-		pad.left_y = input_state_cb(port, RETRO_DEVICE_ANALOG, RETRO_DEVICE_INDEX_ANALOG_LEFT, RETRO_DEVICE_ID_ANALOG_Y);
-		pad.right_x = input_state_cb(port, RETRO_DEVICE_ANALOG, RETRO_DEVICE_INDEX_ANALOG_RIGHT, RETRO_DEVICE_ID_ANALOG_X);
-		pad.right_y = input_state_cb(port, RETRO_DEVICE_ANALOG, RETRO_DEVICE_INDEX_ANALOG_RIGHT, RETRO_DEVICE_ID_ANALOG_Y);
-	}
-
-	// The layout button, on the press rather than while it is held.
+	// The layout button, on the press rather than while it is held. Skipped
+	// outright when nothing is bound to it, which is the default and so the
+	// common case - the switch below is cheap but it is not free, and neither
+	// is reading six buttons to decide that none of them counts.
+	if (s_next_layout_button != LibretroLayoutButton::None)
 	{
 		const auto& pad = s_port_state[0];
 		const bool l3 = pad.buttons[RETRO_DEVICE_ID_JOYPAD_L3] != 0;
@@ -4173,7 +4192,7 @@ static void libretro_poll_input()
 		bool down = false;
 		switch (s_next_layout_button)
 		{
-		case LibretroLayoutButton::None: break;
+		case LibretroLayoutButton::None: break; // unreachable, see the test above
 		case LibretroLayoutButton::Select: down = select; break;
 		case LibretroLayoutButton::L3: down = l3; break;
 		case LibretroLayoutButton::R3: down = r3; break;
@@ -4193,10 +4212,11 @@ static void libretro_poll_input()
 	}
 
 	// The same step from the keyboard, which is also what an overlay key ends
-	// up as once the frontend has bound one to it.
+	// up as once the frontend has bound one to it. Also skipped when unbound,
+	// so the default costs one comparison rather than a call into the frontend.
+	if (s_next_layout_key != RETROK_UNKNOWN)
 	{
-		const bool down = s_next_layout_key != RETROK_UNKNOWN &&
-			input_state_cb(0, RETRO_DEVICE_KEYBOARD, 0, s_next_layout_key) != 0;
+		const bool down = input_state_cb(0, RETRO_DEVICE_KEYBOARD, 0, s_next_layout_key) != 0;
 		if (down && !s_next_layout_key_held)
 			libretro_next_screen_layout();
 		s_next_layout_key_held = down;
