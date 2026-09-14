@@ -2064,6 +2064,13 @@ static const char* libretro_option_default(const char* key)
 		// default without taking anything away - and an overlay can carry it as
 		// a single button without the user configuring anything first.
 		{"cemu_next_screen_layout_button", "L + R + L2 + R2 + L3 + R3"},
+		// Off by default. The list reads best from the most useful setting
+		// down, but most titles never ask for a remote and every port that
+		// carries one costs twenty calls into the frontend per frame - so the
+		// setting that does nothing for most people should not be the one they
+		// pay for. Anything that does want a remote turns it on, and
+		// port1_shared is still there for the single-pad case.
+		{"cemu_wiimote_input", "disabled"},
 		{"cemu_audio_latency", "2"},
 		{"cemu_thread_quantum", "45000"},
 		{"cemu_internal_resolution", "1280x720"},
@@ -2801,7 +2808,9 @@ static void libretro_setup_wiimotes()
 	// Player index 0 is the GamePad; remotes take the ones after it.
 	constexpr size_t kWiimotePlayerIndexBase = 1;
 
-	std::string_view mode = "port1_shared";
+	// Matches the default declared in libretro_option_default, for the frontend
+	// that answers nothing at all.
+	std::string_view mode = "disabled";
 	if (const char* v = libretro_get_option_value("cemu_wiimote_input"))
 		mode = v;
 
