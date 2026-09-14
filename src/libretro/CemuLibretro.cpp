@@ -373,6 +373,9 @@ static unsigned s_gate_hold_open = 0;
 // nothing is either producing frames the frontend is not drawing or producing
 // none at all, and those are different bugs in different places.
 static std::atomic<uint64> s_frames_presented{0};
+// New pictures the GPU thread has actually produced, which is a different
+// number from the one above and the one that matters when the screen is stuck.
+std::atomic<uint64> s_frames_from_gpu{0};
 // How many times the frontend has asked for a frame, and how many times the
 // gate let the GPU thread past. The emulated machine stops being given vsync
 // events at the exact moment it starts waiting for one, and vsync is only
@@ -4307,8 +4310,10 @@ static void DumpEmulatedThreads()
 	// The three numbers that say whether the picture is the emulator's problem
 	// or the frontend's: where the GPU thread is, how many vsync events the
 	// title has been given, and how many frames have actually gone out.
-	cemuLog_log(LogType::Force, "  gpu: phase={} vsync={} framesPresented={} retroRun={} gateGrants={}",
-		Latte_GetThreadPhase(), LatteTiming_GetVsyncCount(),
+	cemuLog_log(LogType::Force, "  gpu: phase={} vsync={} vsyncChecks={} gx2Init={} framesFromGpu={} framesPresented={} retroRun={} gateGrants={}",
+		Latte_GetThreadPhase(), LatteTiming_GetVsyncCount(), LatteTiming_GetVsyncCheckCount(),
+		(uint32)LatteGPUState.gx2InitCalled,
+		s_frames_from_gpu.load(std::memory_order_relaxed),
 		s_frames_presented.load(std::memory_order_relaxed),
 		s_runs_entered.load(std::memory_order_relaxed),
 		s_gate_grants.load(std::memory_order_relaxed));

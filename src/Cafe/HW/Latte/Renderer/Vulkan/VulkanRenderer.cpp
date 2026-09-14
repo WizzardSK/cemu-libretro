@@ -3782,6 +3782,12 @@ void VulkanRenderer::DrawBackbufferQuad(LatteTextureView* texView, RendererOutpu
 		}
 
 		extern std::atomic_bool s_frame_ready;
+		// Counted here rather than where retro_run hands the image over: that
+		// runs every call whether or not anything new was drawn, so it measured
+		// the frontend asking rather than the emulator producing. This is the
+		// GPU thread saying it has a new picture.
+		extern std::atomic<uint64> s_frames_from_gpu;
+		s_frames_from_gpu.fetch_add(1, std::memory_order_relaxed);
 		s_frame_ready.store(true, std::memory_order_release);
 	}
 	return;

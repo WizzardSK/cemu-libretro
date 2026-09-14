@@ -109,6 +109,16 @@ uint64 LatteTiming_GetVsyncCount()
 	return s_vsyncSignalCount.load(std::memory_order_relaxed);
 }
 
+// How many times the GPU thread has come round to ask whether a vsync is due.
+// Next to the count above it separates "nobody is running the timer" from "the
+// timer is running and signalVsync is turning back at its own front door".
+static std::atomic<uint64> s_vsyncCheckCount{0};
+
+uint64 LatteTiming_GetVsyncCheckCount()
+{
+	return s_vsyncCheckCount.load(std::memory_order_relaxed);
+}
+
 void LatteTiming_signalVsync()
 {
 	static uint32 s_vsyncIntervalCounter = 0;
@@ -190,6 +200,7 @@ void LatteTiming_NotifyHostVSync()
 // handle timed vsync event
 void LatteTiming_HandleTimedVsync()
 {
+	s_vsyncCheckCount.fetch_add(1, std::memory_order_relaxed);
 	// simulate VSync
 	uint64 currentTimer = HighResolutionTimer::now().getTick();
 	if( currentTimer >= LatteGPUState.timer_nextVSync )
