@@ -369,6 +369,20 @@ static bool s_frame_permit = false;
 // cannot open the gate for each other.
 static unsigned s_gate_hold_open = 0;
 
+// How many frames have gone to the frontend. A second run that boots but shows
+// nothing is either producing frames the frontend is not drawing or producing
+// none at all, and those are different bugs in different places.
+static std::atomic<uint64> s_frames_presented{0};
+// How many times the frontend has asked for a frame, and how many times the
+// gate let the GPU thread past. The emulated machine stops being given vsync
+// events at the exact moment it starts waiting for one, and vsync is only
+// serviced while the command processor is idling - which it cannot do while it
+// is held at the gate. These two say whether the frontend stopped asking or the
+// gate stopped opening.
+static std::atomic<uint64> s_runs_entered{0};
+static std::atomic<uint64> s_gate_grants{0};
+
+
 // GPU thread, at a swap.
 //
 // Not before a title is running: loading one blocks inside retro_load_game
@@ -456,18 +470,6 @@ static bool s_hw_render_initialized = false;
 static bool s_core_options_supported = false;
 // Periodic thread snapshots; see DumpEmulatedThreads().
 static bool s_log_thread_dump = false;
-// How many frames have gone to the frontend. A second run that boots but shows
-// nothing is either producing frames the frontend is not drawing or producing
-// none at all, and those are different bugs in different places.
-static std::atomic<uint64> s_frames_presented{0};
-// How many times the frontend has asked for a frame, and how many times the
-// gate let the GPU thread past. The emulated machine stops being given vsync
-// events at the exact moment it starts waiting for one, and vsync is only
-// serviced while the command processor is idling - which it cannot do while it
-// is held at the gate. These two say whether the frontend stopped asking or the
-// gate stopped opening.
-static std::atomic<uint64> s_runs_entered{0};
-static std::atomic<uint64> s_gate_grants{0};
 
 enum class SelectedGraphicsAPI { OpenGL, Vulkan };
 static SelectedGraphicsAPI s_graphics_api = SelectedGraphicsAPI::OpenGL;
