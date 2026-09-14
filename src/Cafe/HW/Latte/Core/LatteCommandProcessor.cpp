@@ -1063,6 +1063,16 @@ void LatteCP_processCommandBuffer_continuousDrawPass(DrawPassContext& drawPassCt
 			LatteCMDPtr cmdBeforeCommand = cmd;
 			uint32 itHeader = LatteReadCMD();
 			uint32 itHeaderType = (itHeader >> 30) & 3;
+#ifdef ENABLE_LIBRETRO
+			// The third and last loop that reads commands. Each time one of
+			// these was left uncounted the count froze on whichever command
+			// hands over to it - the ring's froze on the indirect buffer that
+			// enters a display list, the display list's froze on the draw that
+			// enters this one - which looks exactly like being stuck in that
+			// command and is not. With all three counted there is nowhere left
+			// for it to hide. Temporary.
+			LatteCP_NoteCommand(itHeader);
+#endif
 			if (itHeaderType == 3)
 			{
 				uint32 itCode = (itHeader >> 8) & 0xFF;
