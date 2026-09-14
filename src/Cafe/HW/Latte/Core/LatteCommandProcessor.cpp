@@ -1488,9 +1488,31 @@ void LatteCP_processCommandBuffer(DrawPassContext& drawPassCtx)
 	}
 }
 
+#include <atomic>
+
 #ifdef ENABLE_LIBRETRO
 // Defined at global scope by the libretro glue (src/libretro/CemuLibretro.cpp).
 void libretro_frame_window_wait();
+
+// See the call site in LatteCP_ProcessRingbuffer. Temporary.
+static std::atomic<uint64> s_cpCommandCount{0};
+static std::atomic<uint32> s_cpLastCommand{0};
+
+void LatteCP_NoteCommand(uint32 itHeader)
+{
+	s_cpCommandCount.fetch_add(1, std::memory_order_relaxed);
+	s_cpLastCommand.store(itHeader, std::memory_order_relaxed);
+}
+
+uint64 LatteCP_GetCommandCount()
+{
+	return s_cpCommandCount.load(std::memory_order_relaxed);
+}
+
+uint32 LatteCP_GetLastCommand()
+{
+	return s_cpLastCommand.load(std::memory_order_relaxed);
+}
 #endif
 
 void LatteCP_ProcessRingbuffer()
@@ -1509,6 +1531,15 @@ void LatteCP_ProcessRingbuffer()
 #endif
 		uint32 itHeader = LatteCP_readU32Deprc();
 		uint32 itHeaderType = (itHeader >> 30) & 3;
+#ifdef ENABLE_LIBRETRO
+		// Temporary, for the second-run hang. The GPU thread stops servicing
+		// vsync while its phase still says it is here, and there are only two
+		// shapes that can be: spinning through commands so fast it never goes
+		// idle, or stopped inside one command's handler. A count that races and
+		// a count that stands still tell those apart, and the last opcode names
+		// the handler if it is the second. Goes when the bug does.
+		LatteCP_NoteCommand(itHeader);
+#endif
 		if (itHeaderType == 3)
 		{
 			uint32 itCode = (itHeader >> 8) & 0xFF;

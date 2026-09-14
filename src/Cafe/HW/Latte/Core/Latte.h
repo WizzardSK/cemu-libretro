@@ -208,6 +208,10 @@ bool Latte_IsGpuParked();
 void Latte_GpuPauseGate(); // called by the command processor
 bool Latte_WasThreadAbandoned(); // true if Latte_Stop had to detach a GPU thread that would not stop
 bool Latte_HasFinishedRendererInit(); // false while the GPU thread is still bringing the renderer up
+// Temporary, for the second-run hang: how many commands the command processor
+// has read, and the header of the last one.
+uint64 LatteCP_GetCommandCount();
+uint32 LatteCP_GetLastCommand();
 const char* Latte_GetThreadPhase(); // where that thread was when it was asked to stop
 #endif
 void LatteThread_Exit();
