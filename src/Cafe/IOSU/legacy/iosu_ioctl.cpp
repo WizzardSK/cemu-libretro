@@ -22,6 +22,13 @@ sint32 iosuIoctl_pushAndWait(uint32 ioctlHandle, ioQueueEntry_t* ioQueueEntry)
 		cemu_assert_debug(false);
 		return 0;
 	}
+	// A title started, closed and started again stops dead on its second run
+	// with the emulated thread parked here - "ready suspend=1", suspended by
+	// the line below and never resumed. Whether the worker for that device ever
+	// saw the request is the whole question, and there was nothing in the log
+	// either way. These three lines answer it. This path carries a handful of
+	// requests per title, so they cost nothing.
+	cemuLog_log(LogType::Force, "[IOSU-ioctl] push device={} request={}", ioctlHandle, (uint32)ioQueueEntry->request);
 	__OSLockScheduler();
 	ioctlMutex.lock();
 	ioQueueEntry->ppcThread = coreinit::OSGetCurrentThread();
@@ -33,6 +40,7 @@ sint32 iosuIoctl_pushAndWait(uint32 ioctlHandle, ioQueueEntry_t* ioQueueEntry)
 	if (ioQueueEntry->isCompleted == false)
 		assert_dbg();
 	__OSUnlockScheduler();
+	cemuLog_log(LogType::Force, "[IOSU-ioctl] returned device={} result={}", ioctlHandle, (uint32)ioQueueEntry->returnValue);
 	return ioQueueEntry->returnValue;
 }
 
@@ -84,6 +92,7 @@ void iosuIoctl_completeRequest(ioQueueEntry_t* ioQueueEntry, uint32 returnValue)
 {
 	ioQueueEntry->returnValue = returnValue;
 	ioQueueEntry->isCompleted = true;
+	cemuLog_log(LogType::Force, "[IOSU-ioctl] complete request={} result={}", (uint32)ioQueueEntry->request, returnValue);
 	coreinit::OSResumeThread(ioQueueEntry->ppcThread);
 }
 

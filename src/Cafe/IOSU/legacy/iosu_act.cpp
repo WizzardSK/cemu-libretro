@@ -668,12 +668,22 @@ if (_actAccountData[accountIndex].isValid == false) \
 int iosuAct_thread()
 {
 	SetThreadName("iosuAct_thread");
+	// Started once for the life of the process and never restarted - the guard
+	// in iosuAct_init_depr sees to that - so a second title depends entirely on
+	// this thread still being here. If it is not, every act request a title
+	// makes is pushed into a queue nobody reads and the emulated thread that
+	// made it stays suspended. Both ends say so now rather than leaving it to
+	// be inferred.
+	cemuLog_log(LogType::Force, "[IOSU-act] worker started");
 	while (true)
 	{
 		uint32 ioctlReturnValue = 0;
 		ioQueueEntry_t* ioQueueEntry = iosuIoctl_getNextWithWait(IOS_DEVICE_ACT);
 		if (!ioQueueEntry)
+		{
+			cemuLog_log(LogType::Force, "[IOSU-act] worker stopping");
 			return 0; // shutting down
+		}
 		if (ioQueueEntry->request == 0)
 		{
 			if (ioQueueEntry->countIn != 1 || ioQueueEntry->countOut != 1)
