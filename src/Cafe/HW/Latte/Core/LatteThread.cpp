@@ -17,6 +17,7 @@
 #include "Cafe/HW/Latte/Renderer/Vulkan/VulkanRenderer.h"
 #endif
 #include "Cafe/HW/Latte/Core/LatteTexture.h"
+#include "Cafe/HW/Latte/Core/LatteIndices.h"
 #include "util/helpers/helpers.h"
 
 #include <imgui.h>
@@ -88,7 +89,12 @@ void Latte_ForgetStateOfAbandonedRun()
 	// and both force-finish paths loop until their queue is empty.
 	const uint32 readbacks = LatteTextureReadback_ForgetAllWithoutFreeing();
 	const uint32 queries = LatteQuery_ForgetAllWithoutFreeing();
-	cemuLog_log(LogType::Force, "[LatteThread] the previous run could not tear down; dropping what it left: {} textures, {} texture views, {} shaders, {} readbacks, {} queries", textures, views, shaders, readbacks, queries);
+	// The third one that was missing, and the one that hangs rather than
+	// leaks: index allocations handed back to a different renderer's allocator
+	// corrupt its heap, and the first indexed draw of the new run never
+	// returns. See LatteIndices_ForgetAllWithoutFreeing.
+	const uint32 indices = LatteIndices_ForgetAllWithoutFreeing();
+	cemuLog_log(LogType::Force, "[LatteThread] the previous run could not tear down; dropping what it left: {} textures, {} texture views, {} shaders, {} readbacks, {} queries, {} index allocations", textures, views, shaders, readbacks, queries, indices);
 }
 
 bool Latte_IsThreadFromAnEarlierRun()

@@ -55,6 +55,40 @@ void LatteIndices_invalidateAll()
 	}
 }
 
+// The index cache is eight host-side entries that live for as long as the
+// process, and each one holds an allocation belonging to whichever renderer
+// made it. A run that could not tear down leaves them pointing into a renderer
+// that is gone, and the next run hands them straight back to a different
+// allocator: VulkanRenderer::indexData_releaseIndexMemory looks the reservation
+// up by chunk and offset in the *new* allocator's active list, does not find
+// it, and frees a chunk address read from past the end of that list. From then
+// on the new run's index heap has a corrupt free list, and the first indexed
+// draw that has to allocate from it never comes back - which is a GPU thread
+// stopped inside IT_DRAW_INDEX_2 with the title still healthy around it,
+// waiting for a frame that is never produced.
+//
+// It is also reached without any draw at all: the memory manager calls
+// LatteIndices_invalidateAll every time a command buffer completes, so the
+// stale entries go back to the new allocator within the first frames of the
+// run whether the title asks for indices or not.
+//
+// Dropped without freeing, the same way the textures, shaders, readbacks and
+// queries of an abandoned run are.
+uint32 LatteIndices_ForgetAllWithoutFreeing()
+{
+	uint32 count = 0;
+	for (auto& entry : LatteIndexCache.entry)
+	{
+		if (entry.lastPtr == nullptr)
+			continue;
+		count++;
+		entry.lastPtr = nullptr;
+		entry.lastCount = 0;
+		entry.indexAllocation = {};
+	}
+	return count;
+}
+
 uint64 LatteIndices_GetNextUsageIndex()
 {
 	return LatteIndexCache.currentUsageCounter++;

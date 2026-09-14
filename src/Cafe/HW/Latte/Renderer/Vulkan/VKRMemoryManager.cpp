@@ -199,6 +199,17 @@ void VKRSynchronizedHeapAllocator::FreeReservation(AllocatorReservation* uploadR
 	uint64 currentCommandBufferId = VulkanRenderer::GetInstance()->GetCurrentCommandBufferId();
 	auto it = std::find_if(m_activeAllocations.begin(), m_activeAllocations.end(), [&uploadReservation](const TrackedAllocation& allocation) { return allocation.allocation.chunkIndex == uploadReservation->bufferIndex && allocation.allocation.offset == uploadReservation->bufferOffset; });
 	cemu_assert_debug(it != m_activeAllocations.end());
+	if (it == m_activeAllocations.end())
+	{
+		// A reservation this allocator never made. In release builds the assert
+		// above is nothing, and what followed read a chunk address from past
+		// the end of the list and queued it for release - so the next cleanup
+		// freed an address the heap had never allocated and the free list was
+		// wrong from then on. Nothing to release here; say so once rather than
+		// corrupt the heap.
+		cemuLog_logOnce(LogType::Force, "[Vulkan] an index allocation was returned to an allocator that did not make it, ignoring it");
+		return;
+	}
 	m_releaseQueue[currentCommandBufferId].emplace_back(it->allocation);
 	m_activeAllocations.erase(it);
 	m_poolAllocatorReservation.freeObj(uploadReservation);
