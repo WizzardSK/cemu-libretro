@@ -352,11 +352,17 @@ namespace erreula
 			g_errEula.errEulaInstance->DoCalc();
 	}
 
+	bool hasVisibleDialog()
+	{
+		if (!g_errEula.errEulaInstance)
+			return false;
+		const ErrEulaState state = g_errEula.errEulaInstance->GetState();
+		return state == ErrEulaState::Visible || state == ErrEulaState::Appearing || state == ErrEulaState::Disappearing;
+	}
+
 	void render(bool mainWindow)
 	{
-		if(!g_errEula.errEulaInstance)
-			return;
-		if(g_errEula.errEulaInstance->GetState() != ErrEulaState::Visible && g_errEula.errEulaInstance->GetState() != ErrEulaState::Appearing && g_errEula.errEulaInstance->GetState() != ErrEulaState::Disappearing)
+		if(!hasVisibleDialog())
 			return;
 		const AppearError& appearArg = g_errEula.currentDialog;
 		std::string text;
