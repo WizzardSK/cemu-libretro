@@ -3695,12 +3695,15 @@ RETRO_API bool retro_load_game(const struct retro_game_info* game)
 	}
 #endif // ENABLE_OPENGL
 
-	// Register input descriptors
+	// Register input descriptors. These are the names a frontend puts on its
+	// remapping screen and on an overlay button, so they have to say the same
+	// thing the core actually does - they used to carry the same crossed-over
+	// pair as the mapping did, which meant the remapper agreed with the bug.
 	static const struct retro_input_descriptor input_desc[] = {
-		{ 0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_B,      "A" },
-		{ 0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_A,      "B" },
-		{ 0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_Y,      "X" },
-		{ 0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_X,      "Y" },
+		{ 0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_A,      "A" },
+		{ 0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_B,      "B" },
+		{ 0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_X,      "X" },
+		{ 0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_Y,      "Y" },
 		{ 0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_L,      "L" },
 		{ 0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_R,      "R" },
 		{ 0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_L2,     "ZL" },
@@ -4052,16 +4055,22 @@ static void libretro_poll_input()
 
 	auto& state = s_input_state;
 
-	// Map libretro joypad buttons to Wii U GamePad
-	// Debug: log any button press
-	static int s_poll_log = 0;
-	int16_t a_val = input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_B);
-	if (a_val && s_poll_log++ < 10 && log_cb)
-		log_cb(RETRO_LOG_INFO, "Cemu: input_state_cb JOYPAD_B=%d\n", a_val);
-	state.buttons[VPADController::kButtonId_A] = a_val; // B = Wii U A (east button)
-	state.buttons[VPADController::kButtonId_B] = input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_A); // A = Wii U B (south button)
-	state.buttons[VPADController::kButtonId_X] = input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_Y); // Y = Wii U X (north button)
-	state.buttons[VPADController::kButtonId_Y] = input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_X); // X = Wii U Y (west button)
+	// Map libretro joypad buttons to Wii U GamePad.
+	//
+	// One for one, and the reason is worth writing down because the code here
+	// used to swap both pairs. The RetroPad is modelled on a SNES controller:
+	// libretro.h says B is the south face button, A the east, Y the west and X
+	// the north. The Wii U GamePad has exactly that arrangement - A east, B
+	// south, X north, Y west - so matching by name and matching by position are
+	// the same thing, and nothing needs crossing over. The swap that was here
+	// came from the Xbox convention, where the button printed B sits east, and
+	// it made the pad answer with the wrong one of each pair: pressing the
+	// south button, which is B on a RetroPad and B on a GamePad, arrived in the
+	// title as A. Reported from the other end as "b is a ingame".
+	state.buttons[VPADController::kButtonId_A] = input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_A); // east
+	state.buttons[VPADController::kButtonId_B] = input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_B); // south
+	state.buttons[VPADController::kButtonId_X] = input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_X); // north
+	state.buttons[VPADController::kButtonId_Y] = input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_Y); // west
 
 	state.buttons[VPADController::kButtonId_L] = input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_L);
 	state.buttons[VPADController::kButtonId_R] = input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_R);
