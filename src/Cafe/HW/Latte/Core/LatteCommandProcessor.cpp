@@ -18,9 +18,6 @@
 
 #include <boost/container/small_vector.hpp>
 
-#ifdef ENABLE_LIBRETRO
-#endif
-
 void LatteCP_DebugPrintCmdBuffer(uint32be* bufferPtr, uint32 size);
 
 #define CP_TIMER_RECHECK	1024
