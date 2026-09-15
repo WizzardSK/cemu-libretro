@@ -46,6 +46,9 @@ std::atomic_bool sLatteThreadRunning = false;
 // Set by the GPU thread once it is past everything that touches the renderer,
 // so Latte_Stop can tell "still tearing down" from "safe to join".
 static std::atomic_bool sLatteThreadExited{false};
+// Set by the GPU thread as its first act, so a caller can tell "created but not
+// running yet" from "running".
+static std::atomic_bool sLatteThreadEntered{false};
 // Freeing what this core built on the graphics context has exactly one safe
 // moment, and it is while the context is still there. The frontend names that
 // moment - context_destroy - and it is the last one: the close arrives after
@@ -177,6 +180,15 @@ std::atomic_bool sLatteThreadFinishedInit = false;
 // the whole time. A frontend taking its graphics context apart has to know
 // about that stretch, because waiting for a park that cannot happen just
 // times out and pulls the device out from under those calls.
+// Whether the GPU thread has begun running its own body. Latte_Start sets the
+// running flag and creates the thread, and the thread may not be scheduled for
+// a while after that - a window a close can land in, and one where nothing has
+// touched the graphics context yet because the thread has not executed a line.
+bool Latte_HasGpuThreadEntered()
+{
+	return sLatteThreadEntered.load(std::memory_order_acquire);
+}
+
 bool Latte_HasFinishedRendererInit()
 {
 	// No GPU thread means nothing is in the middle of a bring-up, so the answer
@@ -281,6 +293,7 @@ int Latte_ThreadEntry()
 {
 	SetThreadName("LatteThread");
 #ifdef ENABLE_LIBRETRO
+	sLatteThreadEntered.store(true, std::memory_order_release);
 #endif
 	// renderer
 #ifdef ENABLE_LIBRETRO
@@ -537,6 +550,9 @@ void Latte_Start()
 #endif
 	sLatteThreadRunning = true;
 	sLatteThreadFinishedInit = false;
+#ifdef ENABLE_LIBRETRO
+	sLatteThreadEntered.store(false, std::memory_order_release);
+#endif
 	sLatteThread = std::thread(Latte_ThreadEntry);
 	// wait until initialized
 	while (!sLatteThreadFinishedInit)

@@ -3823,6 +3823,28 @@ static void libretro_context_destroy()
 	// objects being forgotten rather than freed.
 	Latte_RequestGpuTeardownForContextLoss();
 	Latte_RequestGpuPause();
+	// A thread that has not run a line of its own body has not touched this
+	// context, so there is nothing here to hand back and nothing to wait for.
+	// Latte_Start sets the running flag and creates the thread, and scheduling
+	// it can take a moment; closing content in that moment used to spend the
+	// whole budget waiting for a park that could not happen and then end the
+	// process over it - reported as "the GPU thread did not reach the pause
+	// gate (phase: not started)", which is the phase saying precisely this.
+	// The pause and teardown requests stay set: if the thread does start, it
+	// reads them at its first gate rather than building on a dead context.
+	if (!Latte_HasGpuThreadEntered())
+	{
+		libretro_frame_gate_hold_open(false);
+		cemuLog_log(LogType::Force, "[LatteThread] the graphics context went away before the GPU thread started; nothing of ours was on it");
+		if (log_cb)
+			log_cb(RETRO_LOG_INFO, "Cemu: the context went away before the GPU thread started, nothing to hand back\n");
+		s_hw_render_initialized = false;
+		s_frontend_read_fbo = 0;
+		s_frontend_read_rbo_attached = 0;
+		s_gpu_context_made_current = false;
+		s_frontend_context_gone = true;
+		return;
+	}
 	// Parking happens at a command boundary, and there is one stretch of the GPU
 	// thread's life that has no command boundaries in it: the renderer's own
 	// bring-up, which runs from the thread starting until it reports its init

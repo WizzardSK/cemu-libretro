@@ -208,6 +208,7 @@ bool Latte_GpuTeardownForContextLossDone();
 bool Latte_IsRendererRebuildPending();
 void Latte_GpuPauseGate(); // called by the command processor
 bool Latte_HasFinishedRendererInit(); // false while the GPU thread is still bringing the renderer up
+bool Latte_HasGpuThreadEntered(); // false between the thread being created and its first line running
 const char* Latte_GetThreadPhase(); // where that thread was when it was asked to stop
 #endif
 void LatteThread_Exit();
