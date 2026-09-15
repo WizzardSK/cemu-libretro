@@ -44,6 +44,8 @@
 #include "input/InputManager.h"
 #include "input/emulated/VPADController.h"
 #include "input/emulated/WiimoteController.h"
+#include "input/emulated/ProController.h"
+#include "input/emulated/ClassicController.h"
 #include "input/api/Libretro/LibretroController.h"
 
 #include "Common/ExceptionHandler/ExceptionHandler.h"
@@ -1076,8 +1078,41 @@ static LibretroPortState s_port_state[kLibretroMaxPorts];
 // twenty calls into the frontend per frame, and the ones above this are not
 // bound to anything: with Wii Remote input off, ports 2 to 4 drive nothing at
 // all, so polling them is sixty calls a frame spent on answers nobody reads.
-// Set when the remotes are set up; until then assume they all matter.
+// Set when the controllers are set up; until then assume they all matter.
 static uint32_t s_polled_ports = kLibretroMaxPorts;
+
+// ---- Emulated controller profiles ------------------------------------------
+//
+// What a port drives is a libretro device type, which is what the frontend has
+// a menu for (RetroArch: Controls > Port N > Device Type), so there is no core
+// option for it.
+//
+// Ports 2-4 can each be a Wii Remote, a Wii U Pro Controller or a Classic
+// Controller. All three derive from WPADController, so padscore already knows
+// what to do with any of them - get_device_type() is what tells the title which
+// one it found, and nothing else in the emulation has to change.
+//
+// Port 1 is the GamePad and stays the GamePad. It is the one port that does not
+// go through InputManager at all: vpad.cpp reads the libretro callbacks
+// directly (see libretro_poll_input), so giving it another profile means
+// teaching VPADRead to report no controller on channel 0, which titles react to
+// in ways worth testing separately. The one thing port 1 can do here is drive a
+// Wii Remote as well as the GamePad, which is not a profile change - it is one
+// pad answering for both.
+#define RETRO_DEVICE_WIIMOTE          RETRO_DEVICE_SUBCLASS(RETRO_DEVICE_JOYPAD, 0)
+#define RETRO_DEVICE_PRO              RETRO_DEVICE_SUBCLASS(RETRO_DEVICE_JOYPAD, 1)
+#define RETRO_DEVICE_CLASSIC          RETRO_DEVICE_SUBCLASS(RETRO_DEVICE_JOYPAD, 2)
+#define RETRO_DEVICE_GAMEPAD_WIIMOTE  RETRO_DEVICE_SUBCLASS(RETRO_DEVICE_JOYPAD, 3)
+
+// Port 1 is the GamePad; the rest start empty, which is what the core did
+// before any of this was selectable.
+static unsigned s_port_device[kLibretroMaxPorts] = {
+	RETRO_DEVICE_JOYPAD, RETRO_DEVICE_NONE, RETRO_DEVICE_NONE, RETRO_DEVICE_NONE,
+};
+
+// Defined below, next to the mappings it applies; called from
+// retro_set_controller_port_device, which comes before it.
+static void libretro_setup_controllers();
 
 // ============================================================================
 // Forward declarations from main.cpp
@@ -2041,7 +2076,6 @@ static const char* libretro_option_default(const char* key)
 		// setting that does nothing for most people should not be the one they
 		// pay for. Anything that does want a remote turns it on, and
 		// port1_shared is still there for the single-pad case.
-		{"cemu_wiimote_input", "disabled"},
 		{"cemu_audio_latency", "2"},
 		{"cemu_thread_quantum", "45000"},
 		{"cemu_internal_resolution", "1280x720"},
@@ -2098,7 +2132,6 @@ static const char* libretro_option_category(const char* key)
 		{"cemu_wua_output_dir", "convert"},
 		{"cemu_convert_to_wua", "convert"},
 
-		{"cemu_wiimote_input", "input"},
 
 		{"cemu_onscreen_notifications", "video"},
 
@@ -2191,24 +2224,14 @@ static bool libretro_set_core_variables(retro_environment_t cb, const struct ret
 // mechanical ones one, and leave what is already written for display (anything
 // with a capital or a space in it) and anything starting with a digit (a
 // resolution, a number of microseconds) alone.
+//
+// There used to be a table of per-value exceptions above this rule, holding the
+// two Wii Remote port values the rule read badly. Those values are gone with
+// the option - the ports are a frontend device type now - and every value left
+// reads correctly, so the exception is gone with them.
 static std::string libretro_option_value_label(const char* key, const std::string& value)
 {
-	static const struct
-	{
-		const char* key;
-		const char* value;
-		const char* label;
-	} overrides[] = {
-		// "Port1 Shared" and "Ports2 4" is what the rule below would make of these.
-		{"cemu_wiimote_input", "port1_shared", "Port 1, shared with the GamePad"},
-		{"cemu_wiimote_input", "ports2_4", "Ports 2-4"},
-	};
-
-	for (const auto& o : overrides)
-	{
-		if (strcmp(key, o.key) == 0 && value == o.value)
-			return o.label;
-	}
+	(void)key;
 
 	if (value.empty() || value.front() < 'a' || value.front() > 'z')
 		return std::string();
@@ -2252,7 +2275,8 @@ static bool libretro_set_core_options_v2(retro_environment_t cb, const struct re
 		{"shaders", "Shaders", "Shader translation, caching and compilation."},
 		{"screen", "Screen", "Which Wii U screen is shown, and how."},
 		{"audio", "Audio", "Sound output."},
-		{"input", "Input", "Controllers other than the GamePad."},
+		// No Input category: what a port drives is a frontend device type, not
+		// a core option, and an empty submenu is worse than no submenu.
 		{"system", "System", "CPU, language and scheduling."},
 		{"addons", "Add-ons", "Skylanders, Infinity and Dimensions portals."},
 		{"logging", "Logging", "Extra log output, for diagnosing problems."},
@@ -2448,6 +2472,31 @@ RETRO_API void retro_set_environment(retro_environment_t cb)
 	bool no_game = false;
 	cb(RETRO_ENVIRONMENT_SET_SUPPORT_NO_GAME, &no_game);
 
+	// What each port can be, for the frontend's own device menu (RetroArch:
+	// Controls > Port N > Device Type). Port 1 is the GamePad either way; the
+	// rest start empty and the user plugs in what a title asks for.
+	{
+		static const struct retro_controller_description port1[] = {
+			{"Wii U GamePad", RETRO_DEVICE_JOYPAD},
+			{"Wii U GamePad + Wii Remote", RETRO_DEVICE_GAMEPAD_WIIMOTE},
+		};
+		static const struct retro_controller_description wpad[] = {
+			{"None", RETRO_DEVICE_NONE},
+			{"Wii Remote", RETRO_DEVICE_WIIMOTE},
+			{"Wii U Pro Controller", RETRO_DEVICE_PRO},
+			{"Classic Controller", RETRO_DEVICE_CLASSIC},
+		};
+		static const struct retro_controller_info ports[] = {
+			{port1, (unsigned)std::size(port1)},
+			{wpad, (unsigned)std::size(wpad)},
+			{wpad, (unsigned)std::size(wpad)},
+			{wpad, (unsigned)std::size(wpad)},
+			{nullptr, 0},
+		};
+		static_assert(std::size(ports) == kLibretroMaxPorts + 1);
+		cb(RETRO_ENVIRONMENT_SET_CONTROLLER_INFO, (void*)ports);
+	}
+
 	// Set up core options (matching danprice/Cemu-Libretro Windows core where applicable)
 	libretro_publish_core_options(cb);
 
@@ -2490,7 +2539,6 @@ static void libretro_publish_core_options(retro_environment_t cb)
 		{"cemu_screen_layout5", "Layout 5; Default Screen|GamePad Screen|Side by Side|Top Bottom|Picture in Picture"},
 		{"cemu_next_screen_layout_button", "Next Screen Layout; Disabled|L + R + L2 + R2 + L3 + R3|Select + L3|Select + R3|Tab"},
 		{"cemu_drc_position", "GamePad Position; normal|swapped"},
-		{"cemu_wiimote_input", "Wii Remote Input; port1_shared|ports2_4|disabled"},
 		{"cemu_log_filesystem", "Log File Access (debugging); disabled|enabled"},
 		{"cemu_log_thread_sync", "Log Thread Synchronisation (debugging); disabled|enabled"},
 		{"cemu_log_thread_dump", "Log Wii U Thread Snapshots (debugging); disabled|enabled"},
@@ -2620,10 +2668,31 @@ RETRO_API void retro_get_system_av_info(struct retro_system_av_info* info)
 	info->timing.sample_rate = 48000.0;
 }
 
+// Port 0 is the GamePad (VPAD); ports 1-3 are WPAD channels - a Wii Remote, a
+// Wii U Pro Controller or a Classic Controller. See the device ids near
+// s_port_device for why port 0 does not take the other three.
 RETRO_API void retro_set_controller_port_device(unsigned port, unsigned device)
 {
-	// Port 0 = VPAD (Wii U GamePad)
-	// Ports 1-4 = WPAD (Wii Remote / Pro Controller)
+	if (port >= kLibretroMaxPorts)
+		return;
+
+	// The GamePad is not optional and no device type takes it away; all port 0
+	// decides is whether a Wii Remote reads the same pad.
+	if (port == 0 && device != RETRO_DEVICE_GAMEPAD_WIIMOTE)
+		device = RETRO_DEVICE_JOYPAD;
+
+	if (s_port_device[port] == device)
+		return;
+	s_port_device[port] = device;
+
+	// Before a title is loaded this is just recorded: libretro_setup_controllers
+	// runs as part of the launch and will read it then. Changing a port while a
+	// title runs takes effect on the spot - InputManager hands padscore a
+	// shared_ptr, so swapping one out from under it is safe - but a title that
+	// has already asked what is connected will not be told again until it asks,
+	// and some only ask once.
+	if (s_game_loaded)
+		libretro_setup_controllers();
 }
 
 // Bring a running title down cleanly before this process leaves.
@@ -2772,74 +2841,217 @@ RETRO_API void retro_reset()
 }
 
 
-// Wii Remotes. The GamePad reads libretro input directly (see vpad.cpp), but the
-// remotes have to go through Cemu's InputManager: padscore only tells a game that
-// a remote is connected when it finds a WPAD controller there (TickFunction in
-// padscore.cpp), and a game that is never told will not read one either.
-static void libretro_setup_wiimotes()
+// The emulated controllers on ports 2-4, and the Wii Remote port 1 can share
+// with the GamePad. The GamePad reads libretro input directly (see vpad.cpp),
+// but everything WPAD has to go through Cemu's InputManager: padscore only
+// tells a title that a controller is connected when it finds a WPADController
+// on that channel (TickFunction in padscore.cpp), and a title that is never
+// told will not read one either.
+
+// A RetroPad as a Wii Remote. B and A keep the meaning they already have on the
+// GamePad (B confirms), 1 and 2 take the two remaining face buttons.
+static void libretro_map_wiimote(const EmulatedControllerPtr& remote,
+	const std::shared_ptr<LibretroController>& pad)
 {
-	// Player index 0 is the GamePad; remotes take the ones after it.
-	constexpr size_t kWiimotePlayerIndexBase = 1;
+	remote->set_mapping(WiimoteController::kButtonId_A, pad, kButton0 + RETRO_DEVICE_ID_JOYPAD_B);
+	remote->set_mapping(WiimoteController::kButtonId_B, pad, kButton0 + RETRO_DEVICE_ID_JOYPAD_A);
+	remote->set_mapping(WiimoteController::kButtonId_1, pad, kButton0 + RETRO_DEVICE_ID_JOYPAD_Y);
+	remote->set_mapping(WiimoteController::kButtonId_2, pad, kButton0 + RETRO_DEVICE_ID_JOYPAD_X);
 
-	// Matches the default declared in libretro_option_default, for the frontend
-	// that answers nothing at all.
-	std::string_view mode = "disabled";
-	if (const char* v = libretro_get_option_value("cemu_wiimote_input"))
-		mode = v;
+	remote->set_mapping(WiimoteController::kButtonId_Plus, pad, kButton0 + RETRO_DEVICE_ID_JOYPAD_START);
+	remote->set_mapping(WiimoteController::kButtonId_Minus, pad, kButton0 + RETRO_DEVICE_ID_JOYPAD_SELECT);
+	// Home on L, not on a stick click: pressing Home is how a game is asked to
+	// bring up its controller screen, and L is bound out of the box in
+	// RetroArch's default keyboard and pad layouts where L3 is not. A remote has
+	// no shoulder button for L to collide with; the two pads below do.
+	remote->set_mapping(WiimoteController::kButtonId_Home, pad, kButton0 + RETRO_DEVICE_ID_JOYPAD_L);
 
-	if (mode == "disabled")
+	remote->set_mapping(WiimoteController::kButtonId_Up, pad, kButton0 + RETRO_DEVICE_ID_JOYPAD_UP);
+	remote->set_mapping(WiimoteController::kButtonId_Down, pad, kButton0 + RETRO_DEVICE_ID_JOYPAD_DOWN);
+	remote->set_mapping(WiimoteController::kButtonId_Left, pad, kButton0 + RETRO_DEVICE_ID_JOYPAD_LEFT);
+	remote->set_mapping(WiimoteController::kButtonId_Right, pad, kButton0 + RETRO_DEVICE_ID_JOYPAD_RIGHT);
+}
+
+// A RetroPad as a Wii U Pro Controller. One for one with the GamePad mapping in
+// libretro_poll_input, and for the same reason: the RetroPad is modelled on a
+// SNES pad, and the Pro Controller has that same face layout - A east, B south,
+// X north, Y west - so matching by name and matching by position agree.
+//
+// Home is left unmapped. The remote can afford to spend L on it; a Pro
+// Controller uses all four shoulders and both stick clicks, and there is no
+// button left that is bound by default in the frontend. Home only asks a title
+// to open its controller screen, so it is the one to go without.
+//
+// The sticks come through as axis mappings. libretro_get_joypad_analog has
+// already flipped Y, so on the way in positive is up, which is why Up takes the
+// P direction here and the SDL mappings in ProController.cpp take the N one.
+static void libretro_map_pro(const EmulatedControllerPtr& pro,
+	const std::shared_ptr<LibretroController>& pad)
+{
+	pro->set_mapping(ProController::kButtonId_A, pad, kButton0 + RETRO_DEVICE_ID_JOYPAD_A); // east
+	pro->set_mapping(ProController::kButtonId_B, pad, kButton0 + RETRO_DEVICE_ID_JOYPAD_B); // south
+	pro->set_mapping(ProController::kButtonId_X, pad, kButton0 + RETRO_DEVICE_ID_JOYPAD_X); // north
+	pro->set_mapping(ProController::kButtonId_Y, pad, kButton0 + RETRO_DEVICE_ID_JOYPAD_Y); // west
+
+	pro->set_mapping(ProController::kButtonId_L, pad, kButton0 + RETRO_DEVICE_ID_JOYPAD_L);
+	pro->set_mapping(ProController::kButtonId_R, pad, kButton0 + RETRO_DEVICE_ID_JOYPAD_R);
+	pro->set_mapping(ProController::kButtonId_ZL, pad, kButton0 + RETRO_DEVICE_ID_JOYPAD_L2);
+	pro->set_mapping(ProController::kButtonId_ZR, pad, kButton0 + RETRO_DEVICE_ID_JOYPAD_R2);
+
+	pro->set_mapping(ProController::kButtonId_Plus, pad, kButton0 + RETRO_DEVICE_ID_JOYPAD_START);
+	pro->set_mapping(ProController::kButtonId_Minus, pad, kButton0 + RETRO_DEVICE_ID_JOYPAD_SELECT);
+
+	pro->set_mapping(ProController::kButtonId_Up, pad, kButton0 + RETRO_DEVICE_ID_JOYPAD_UP);
+	pro->set_mapping(ProController::kButtonId_Down, pad, kButton0 + RETRO_DEVICE_ID_JOYPAD_DOWN);
+	pro->set_mapping(ProController::kButtonId_Left, pad, kButton0 + RETRO_DEVICE_ID_JOYPAD_LEFT);
+	pro->set_mapping(ProController::kButtonId_Right, pad, kButton0 + RETRO_DEVICE_ID_JOYPAD_RIGHT);
+
+	pro->set_mapping(ProController::kButtonId_StickL, pad, kButton0 + RETRO_DEVICE_ID_JOYPAD_L3);
+	pro->set_mapping(ProController::kButtonId_StickR, pad, kButton0 + RETRO_DEVICE_ID_JOYPAD_R3);
+
+	pro->set_mapping(ProController::kButtonId_StickL_Up, pad, kAxisYP);
+	pro->set_mapping(ProController::kButtonId_StickL_Down, pad, kAxisYN);
+	pro->set_mapping(ProController::kButtonId_StickL_Left, pad, kAxisXN);
+	pro->set_mapping(ProController::kButtonId_StickL_Right, pad, kAxisXP);
+
+	pro->set_mapping(ProController::kButtonId_StickR_Up, pad, kRotationYP);
+	pro->set_mapping(ProController::kButtonId_StickR_Down, pad, kRotationYN);
+	pro->set_mapping(ProController::kButtonId_StickR_Left, pad, kRotationXN);
+	pro->set_mapping(ProController::kButtonId_StickR_Right, pad, kRotationXP);
+}
+
+// A RetroPad as a Classic Controller. The same pad as the Pro one above, minus
+// the two stick clicks, which the Classic Controller does not have - so L3 and
+// R3 drive nothing here and Home takes L3, which is the one button the Pro
+// mapping could not spare.
+static void libretro_map_classic(const EmulatedControllerPtr& classic,
+	const std::shared_ptr<LibretroController>& pad)
+{
+	classic->set_mapping(ClassicController::kButtonId_A, pad, kButton0 + RETRO_DEVICE_ID_JOYPAD_A);
+	classic->set_mapping(ClassicController::kButtonId_B, pad, kButton0 + RETRO_DEVICE_ID_JOYPAD_B);
+	classic->set_mapping(ClassicController::kButtonId_X, pad, kButton0 + RETRO_DEVICE_ID_JOYPAD_X);
+	classic->set_mapping(ClassicController::kButtonId_Y, pad, kButton0 + RETRO_DEVICE_ID_JOYPAD_Y);
+
+	classic->set_mapping(ClassicController::kButtonId_L, pad, kButton0 + RETRO_DEVICE_ID_JOYPAD_L);
+	classic->set_mapping(ClassicController::kButtonId_R, pad, kButton0 + RETRO_DEVICE_ID_JOYPAD_R);
+	classic->set_mapping(ClassicController::kButtonId_ZL, pad, kButton0 + RETRO_DEVICE_ID_JOYPAD_L2);
+	classic->set_mapping(ClassicController::kButtonId_ZR, pad, kButton0 + RETRO_DEVICE_ID_JOYPAD_R2);
+
+	classic->set_mapping(ClassicController::kButtonId_Plus, pad, kButton0 + RETRO_DEVICE_ID_JOYPAD_START);
+	classic->set_mapping(ClassicController::kButtonId_Minus, pad, kButton0 + RETRO_DEVICE_ID_JOYPAD_SELECT);
+	classic->set_mapping(ClassicController::kButtonId_Home, pad, kButton0 + RETRO_DEVICE_ID_JOYPAD_L3);
+
+	classic->set_mapping(ClassicController::kButtonId_Up, pad, kButton0 + RETRO_DEVICE_ID_JOYPAD_UP);
+	classic->set_mapping(ClassicController::kButtonId_Down, pad, kButton0 + RETRO_DEVICE_ID_JOYPAD_DOWN);
+	classic->set_mapping(ClassicController::kButtonId_Left, pad, kButton0 + RETRO_DEVICE_ID_JOYPAD_LEFT);
+	classic->set_mapping(ClassicController::kButtonId_Right, pad, kButton0 + RETRO_DEVICE_ID_JOYPAD_RIGHT);
+
+	classic->set_mapping(ClassicController::kButtonId_StickL_Up, pad, kAxisYP);
+	classic->set_mapping(ClassicController::kButtonId_StickL_Down, pad, kAxisYN);
+	classic->set_mapping(ClassicController::kButtonId_StickL_Left, pad, kAxisXN);
+	classic->set_mapping(ClassicController::kButtonId_StickL_Right, pad, kAxisXP);
+
+	classic->set_mapping(ClassicController::kButtonId_StickR_Up, pad, kRotationYP);
+	classic->set_mapping(ClassicController::kButtonId_StickR_Down, pad, kRotationYN);
+	classic->set_mapping(ClassicController::kButtonId_StickR_Left, pad, kRotationXN);
+	classic->set_mapping(ClassicController::kButtonId_StickR_Right, pad, kRotationXP);
+}
+
+// What a port's device id asks for, once the GamePad has been accounted for.
+//
+// Anything not named here drives nothing, and that deliberately includes a
+// plain RETRO_DEVICE_JOYPAD on ports 2-4: a frontend sets every port to it
+// before the user has chosen anything, and the core has always started with no
+// WPAD controllers at all. Treating the default as "a pad is plugged in" would
+// connect three of them to every title that ever asks.
+static EmulatedController::Type libretro_wpad_type(unsigned device, bool* found)
+{
+	*found = true;
+	switch (device)
 	{
-		// Port 0 is the GamePad and nothing else is bound to anything, so port 0
-		// is the only one worth asking about: the other four were sixty frontend
-		// calls a frame that went nowhere. Ports are counted from zero here,
-		// which is why this is 1 and not 2 - the remotes are players 2 to 5.
-		s_polled_ports = 1;
-		if (log_cb)
-			log_cb(RETRO_LOG_INFO, "Cemu: Wii Remote input disabled\n");
-		return;
+	case RETRO_DEVICE_WIIMOTE: return EmulatedController::Type::Wiimote;
+	case RETRO_DEVICE_PRO: return EmulatedController::Type::Pro;
+	case RETRO_DEVICE_CLASSIC: return EmulatedController::Type::Classic;
+	default: break;
 	}
-	s_polled_ports = kLibretroMaxPorts;
+	*found = false;
+	return EmulatedController::Type::Wiimote;
+}
 
-	// port1_shared: port 1 drives the GamePad and the first remote at the same
-	// time, so a single pad also gets past screens that ask for a remote
-	// ("Press 2"). ports2_4: remotes start at port 2 and port 1 stays GamePad
-	// only, which is what a real multiplayer setup wants.
-	const uint32_t firstPort = (mode == "ports2_4") ? 1 : 0;
-
-	auto& inputManager = InputManager::instance();
-	size_t channel = 0;
-	for (uint32_t port = firstPort; port < kLibretroMaxPorts; ++port, ++channel)
+static const char* libretro_wpad_name(EmulatedController::Type type)
+{
+	switch (type)
 	{
-		auto pad = std::make_shared<LibretroController>(port);
-		auto remote = inputManager.set_controller(kWiimotePlayerIndexBase + channel,
-			EmulatedController::Type::Wiimote, pad);
-		if (!remote)
-			continue;
-
-		// RetroPad -> Wii Remote. B and A keep the meaning they already have on
-		// the GamePad (B confirms), 1 and 2 take the two remaining face buttons.
-		remote->set_mapping(WiimoteController::kButtonId_A, pad, kButton0 + RETRO_DEVICE_ID_JOYPAD_B);
-		remote->set_mapping(WiimoteController::kButtonId_B, pad, kButton0 + RETRO_DEVICE_ID_JOYPAD_A);
-		remote->set_mapping(WiimoteController::kButtonId_1, pad, kButton0 + RETRO_DEVICE_ID_JOYPAD_Y);
-		remote->set_mapping(WiimoteController::kButtonId_2, pad, kButton0 + RETRO_DEVICE_ID_JOYPAD_X);
-
-		remote->set_mapping(WiimoteController::kButtonId_Plus, pad, kButton0 + RETRO_DEVICE_ID_JOYPAD_START);
-		remote->set_mapping(WiimoteController::kButtonId_Minus, pad, kButton0 + RETRO_DEVICE_ID_JOYPAD_SELECT);
-		// Home on L, not on a stick click: pressing Home is how a game is asked
-		// to bring up its controller screen, and L is bound out of the box in
-		// RetroArch's default keyboard and pad layouts where L3 is not.
-		remote->set_mapping(WiimoteController::kButtonId_Home, pad, kButton0 + RETRO_DEVICE_ID_JOYPAD_L);
-
-		remote->set_mapping(WiimoteController::kButtonId_Up, pad, kButton0 + RETRO_DEVICE_ID_JOYPAD_UP);
-		remote->set_mapping(WiimoteController::kButtonId_Down, pad, kButton0 + RETRO_DEVICE_ID_JOYPAD_DOWN);
-		remote->set_mapping(WiimoteController::kButtonId_Left, pad, kButton0 + RETRO_DEVICE_ID_JOYPAD_LEFT);
-		remote->set_mapping(WiimoteController::kButtonId_Right, pad, kButton0 + RETRO_DEVICE_ID_JOYPAD_RIGHT);
-
-		if (log_cb)
-			log_cb(RETRO_LOG_INFO, "Cemu: Wii Remote %u on RetroPad port %u\n",
-				(unsigned)channel + 1, (unsigned)port + 1);
+	case EmulatedController::Type::Pro: return "Wii U Pro Controller";
+	case EmulatedController::Type::Classic: return "Classic Controller";
+	default: return "Wii Remote";
 	}
 }
+
+// Build the WPAD side of the input from s_port_device. Runs once per title
+// launch, and again whenever the frontend changes a port while one is running.
+static void libretro_setup_controllers()
+{
+	// Player index 0 is the GamePad; everything WPAD takes the ones after it,
+	// in the order the controllers are created - which is also the order
+	// InputManager fills its WPAD channels in, so port order is channel order.
+	constexpr size_t kWpadPlayerIndexBase = 1;
+
+	auto& inputManager = InputManager::instance();
+	for (size_t player = kWpadPlayerIndexBase; player < kWpadPlayerIndexBase + kLibretroMaxPorts; ++player)
+		inputManager.delete_controller(player);
+
+	// Port 1 drives the GamePad and, on this device type, the first Wii Remote
+	// as well, so a single pad also gets past screens that ask for a remote
+	// ("Press 2").
+	const bool sharedRemote = s_port_device[0] == RETRO_DEVICE_GAMEPAD_WIIMOTE;
+
+	// Port 1 is always polled - it is the GamePad. Above it, only the ports
+	// that drive something: each one costs twenty calls into the frontend per
+	// frame, and an unbound port spends them on answers nobody reads.
+	uint32_t polledPorts = 1;
+	size_t channel = 0;
+
+	for (uint32_t port = 0; port < kLibretroMaxPorts; ++port)
+	{
+		EmulatedController::Type type = EmulatedController::Type::Wiimote;
+		if (port == 0)
+		{
+			if (!sharedRemote)
+				continue;
+		}
+		else
+		{
+			bool found = false;
+			type = libretro_wpad_type(s_port_device[port], &found);
+			if (!found)
+				continue;
+			polledPorts = port + 1;
+		}
+
+		auto pad = std::make_shared<LibretroController>(port);
+		auto emulated = inputManager.set_controller(kWpadPlayerIndexBase + channel, type, pad);
+		if (!emulated)
+			continue;
+
+		switch (type)
+		{
+		case EmulatedController::Type::Pro: libretro_map_pro(emulated, pad); break;
+		case EmulatedController::Type::Classic: libretro_map_classic(emulated, pad); break;
+		default: libretro_map_wiimote(emulated, pad); break;
+		}
+
+		if (log_cb)
+			log_cb(RETRO_LOG_INFO, "Cemu: %s on RetroPad port %u (WPAD channel %u)\n",
+				libretro_wpad_name(type), (unsigned)port + 1, (unsigned)channel + 1);
+		++channel;
+	}
+
+	s_polled_ports = polledPorts;
+	if (channel == 0 && log_cb)
+		log_cb(RETRO_LOG_INFO, "Cemu: no Wii Remote or Pro/Classic Controller on any port\n");
+}
+
 static void libretro_set_convert_status(std::string text, int progress)
 {
 	std::lock_guard lock(s_convert_mutex);
@@ -3089,8 +3301,8 @@ static void libretro_launch_game()
 	s_audio_submission_allowed = true;
 	libretro_init_audio();
 
-	// Hand the Wii Remote channels a libretro pad each
-	libretro_setup_wiimotes();
+	// Hand each WPAD channel the libretro pad its port was set to
+	libretro_setup_controllers();
 
 	// Prepare the game
 	libretro_prepare_and_launch_title();
