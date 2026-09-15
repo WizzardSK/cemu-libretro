@@ -4096,12 +4096,14 @@ static void libretro_stop_system_services()
 
 RETRO_API void retro_unload_game()
 {
-	// Before anything else: stop handing the frontend audio. Cemu's AX thread
-	// is what submits it, and a thread that outlives the close keeps calling
-	// into an audio driver the frontend is taking apart - which is a crash
-	// inside the frontend's own audio stack, with nothing of ours on the
-	// stack to show for it. Nothing here can join that thread in time, so the
-	// callback is closed off instead and late submissions become no-ops.
+	// Before anything else: stop handing the frontend audio. This used to be
+	// the line that mattered, back when Cemu's AX thread called the frontend
+	// directly and could outlive the close. It no longer can: AX writes into
+	// the ring and nothing but FlushAudio takes it out, from retro_run, on the
+	// thread the frontend is standing on right now. So nothing can submit
+	// between here and the end of this function, and the flag is kept for the
+	// close the core asks for itself, where frames do still go out between the
+	// request and the unload - see the SHUTDOWN in retro_run.
 	s_audio_submission_allowed = false;
 
 	// A close during the shader cache load never reaches the line that turns
