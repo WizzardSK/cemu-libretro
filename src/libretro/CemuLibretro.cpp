@@ -4631,6 +4631,12 @@ RETRO_API void retro_run()
 	if (s_ppc_process_exited.exchange(false, std::memory_order_acq_rel) && environ_cb)
 	{
 		cemuLog_log(LogType::Force, "[Libretro] emulated process exited, asking the frontend to shut down");
+		// Nothing more into the frontend's audio driver from here on. This is
+		// the one close the core starts itself, so it is the one close where
+		// there is a "before" to stop in - a close the user asks for arrives as
+		// retro_unload_game with no warning ahead of it. The title has exited
+		// either way, so what is left in the ring is a title's worth of nothing.
+		s_audio_submission_allowed = false;
 		environ_cb(RETRO_ENVIRONMENT_SHUTDOWN, nullptr);
 	}
 
