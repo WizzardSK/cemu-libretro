@@ -671,13 +671,6 @@ int iosuAct_thread()
 	// it to be gone rather than for it to be merely unblocked.
 	IosuIoctlWorkerScope workerScope;
 	SetThreadName("iosuAct_thread");
-	// Started once for the life of the process and never restarted - the guard
-	// in iosuAct_init_depr sees to that - so a second title depends entirely on
-	// this thread still being here. If it is not, every act request a title
-	// makes is pushed into a queue nobody reads and the emulated thread that
-	// made it stays suspended. Both ends say so now rather than leaving it to
-	// be inferred.
-	cemuLog_log(LogType::Force, "[IOSU-act] worker started");
 	while (true)
 	{
 		uint32 ioctlReturnValue = 0;
@@ -687,7 +680,6 @@ int iosuAct_thread()
 			// "Initialized" has to mean "the worker is running", or the guard in
 			// iosuAct_init_depr refuses to start a replacement and every later
 			// request is pushed into a queue with no reader.
-			cemuLog_log(LogType::Force, "[IOSU-act] worker stopping");
 			iosuAct.isInitialized = false;
 			return 0; // shutting down
 		}
