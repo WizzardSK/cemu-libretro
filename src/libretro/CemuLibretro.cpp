@@ -503,38 +503,23 @@ static unsigned s_screen_layout_index = 0;
 enum class LibretroLayoutButton
 {
 	None,
-	Select,
-	L3,
-	R3,
-	L3R3,
+	// Select together with a stick click. A title can use either on its own, so
+	// neither is offered alone: a shortcut that fires on one button is a
+	// shortcut that fires while the title is being played.
 	SelectL3,
 	SelectR3,
 	// Every shoulder, trigger and stick click at once. Nothing asks for six of
 	// those together, which is the point: it can be the default without taking
 	// anything away from a title, and an overlay can carry it as one button.
 	AllShoulders,
+	// Tab on the keyboard, which is the same list because it is the same
+	// setting: one shortcut, on a pad or on a key, never both. A frontend
+	// overlay can send it without spending a RetroPad button on it, which is
+	// how the Nintendo DS cores let an overlay switch layouts.
+	KeyTab,
 };
 static LibretroLayoutButton s_next_layout_button = LibretroLayoutButton::None;
 static bool s_next_layout_button_held = false;
-
-// The same step, on a keyboard key. A frontend overlay can send one of these
-// without spending a RetroPad button on it, which is how the Nintendo DS cores
-// let an overlay switch layouts.
-struct LibretroLayoutKey
-{
-	const char* name;
-	unsigned key;
-};
-static const LibretroLayoutKey kLayoutKeys[] = {
-	{"F1", RETROK_F1}, {"F2", RETROK_F2}, {"F3", RETROK_F3}, {"F4", RETROK_F4},
-	{"F5", RETROK_F5}, {"F6", RETROK_F6}, {"F7", RETROK_F7}, {"F8", RETROK_F8},
-	{"F9", RETROK_F9}, {"F10", RETROK_F10}, {"F11", RETROK_F11}, {"F12", RETROK_F12},
-	{"Tab", RETROK_TAB}, {"Backspace", RETROK_BACKSPACE}, {"Insert", RETROK_INSERT},
-	{"Delete", RETROK_DELETE}, {"Home", RETROK_HOME}, {"End", RETROK_END},
-	{"Page Up", RETROK_PAGEUP}, {"Page Down", RETROK_PAGEDOWN},
-};
-static unsigned s_next_layout_key = RETROK_UNKNOWN;
-static bool s_next_layout_key_held = false;
 
 static retro_hw_render_callback s_hw_render{};
 
@@ -1515,13 +1500,10 @@ static LibretroLayoutButton libretro_parse_layout_button(const char* v)
 {
 	if (!v)
 		return LibretroLayoutButton::None;
-	if (libretro_drc_iequals(v, "Select")) return LibretroLayoutButton::Select;
-	if (libretro_drc_iequals(v, "L3")) return LibretroLayoutButton::L3;
-	if (libretro_drc_iequals(v, "R3")) return LibretroLayoutButton::R3;
-	if (libretro_drc_iequals(v, "L3 + R3")) return LibretroLayoutButton::L3R3;
 	if (libretro_drc_iequals(v, "Select + L3")) return LibretroLayoutButton::SelectL3;
 	if (libretro_drc_iequals(v, "Select + R3")) return LibretroLayoutButton::SelectR3;
 	if (libretro_drc_iequals(v, "L + R + L2 + R2 + L3 + R3")) return LibretroLayoutButton::AllShoulders;
+	if (libretro_drc_iequals(v, "Tab")) return LibretroLayoutButton::KeyTab;
 	return LibretroLayoutButton::None;
 }
 
@@ -1628,33 +1610,6 @@ static void libretro_read_screen_layout_options()
 	if (s_screen_layout_index >= s_screen_layout_count)
 		s_screen_layout_index = 0;
 
-	const unsigned previousKey = s_next_layout_key;
-	s_next_layout_key = RETROK_UNKNOWN;
-	if (const char* v = libretro_get_option_value("cemu_next_screen_layout_key"))
-	{
-		for (const LibretroLayoutKey& k : kLayoutKeys)
-		{
-			if (libretro_drc_iequals(v, k.name))
-			{
-				s_next_layout_key = k.key;
-				break;
-			}
-		}
-	}
-	if (s_next_layout_key != previousKey && log_cb)
-	{
-		const char* name = "nothing";
-		for (const LibretroLayoutKey& k : kLayoutKeys)
-		{
-			if (k.key == s_next_layout_key)
-			{
-				name = k.name;
-				break;
-			}
-		}
-		log_cb(RETRO_LOG_INFO, "Cemu: next screen layout is also on key %s\n", name);
-	}
-
 	const LibretroLayoutButton previousButton = s_next_layout_button;
 	s_next_layout_button = libretro_parse_layout_button(libretro_get_option_value("cemu_next_screen_layout_button"));
 	if (s_next_layout_button != previousButton && log_cb)
@@ -1665,13 +1620,10 @@ static void libretro_read_screen_layout_options()
 		switch (s_next_layout_button)
 		{
 		case LibretroLayoutButton::None: break;
-		case LibretroLayoutButton::Select: name = "Select"; break;
-		case LibretroLayoutButton::L3: name = "L3"; break;
-		case LibretroLayoutButton::R3: name = "R3"; break;
-		case LibretroLayoutButton::L3R3: name = "L3 + R3"; break;
 		case LibretroLayoutButton::SelectL3: name = "Select + L3"; break;
 		case LibretroLayoutButton::SelectR3: name = "Select + R3"; break;
 		case LibretroLayoutButton::AllShoulders: name = "L + R + L2 + R2 + L3 + R3"; break;
+		case LibretroLayoutButton::KeyTab: name = "the Tab key"; break;
 		}
 		log_cb(RETRO_LOG_INFO, "Cemu: next screen layout is on %s\n", name);
 	}
@@ -2121,7 +2073,6 @@ static const char* libretro_option_category(const char* key)
 		{"cemu_screen_layout4", "screen"},
 		{"cemu_screen_layout5", "screen"},
 		{"cemu_next_screen_layout_button", "screen"},
-		{"cemu_next_screen_layout_key", "screen"},
 		{"cemu_drc_position", "screen"},
 
 		{"cemu_gpu_api", "video"},
@@ -2534,8 +2485,7 @@ static void libretro_publish_core_options(retro_environment_t cb)
 		{"cemu_screen_layout3", "Layout 3; Default Screen|GamePad Screen|Side by Side|Top Bottom|Picture in Picture"},
 		{"cemu_screen_layout4", "Layout 4; Default Screen|GamePad Screen|Side by Side|Top Bottom|Picture in Picture"},
 		{"cemu_screen_layout5", "Layout 5; Default Screen|GamePad Screen|Side by Side|Top Bottom|Picture in Picture"},
-		{"cemu_next_screen_layout_button", "Next Screen Layout; Disabled|L + R + L2 + R2 + L3 + R3|Select|L3|R3|L3 + R3|Select + L3|Select + R3"},
-		{"cemu_next_screen_layout_key", "Next Screen Layout Key; Disabled|F1|F2|F3|F4|F5|F6|F7|F8|F9|F10|F11|F12|Tab|Backspace|Insert|Delete|Home|End|Page Up|Page Down"},
+		{"cemu_next_screen_layout_button", "Next Screen Layout; Disabled|L + R + L2 + R2 + L3 + R3|Select + L3|Select + R3|Tab"},
 		{"cemu_drc_position", "GamePad Position; normal|swapped"},
 		{"cemu_wiimote_input", "Wii Remote Input; port1_shared|ports2_4|disabled"},
 		{"cemu_log_filesystem", "Log File Access (debugging); disabled|enabled"},
@@ -4193,11 +4143,19 @@ static void libretro_poll_input()
 	state.right_x = pad0.right_x;
 	state.right_y = pad0.right_y;
 
-	// The layout button, on the press rather than while it is held. Skipped
-	// outright when nothing is bound to it, which is the default and so the
-	// common case - the switch below is cheap but it is not free, and neither
-	// is reading six buttons to decide that none of them counts.
-	if (s_next_layout_button != LibretroLayoutButton::None)
+	// The layout shortcut, on the press rather than while it is held. One
+	// setting, so at most one of these two is looked at in a frame: disabled
+	// reads neither, Tab reads the keyboard and never the pad, a pad
+	// combination reads the array that is already in hand and never asks the
+	// frontend for a key.
+	if (s_next_layout_button == LibretroLayoutButton::KeyTab)
+	{
+		const bool down = input_state_cb(0, RETRO_DEVICE_KEYBOARD, 0, RETROK_TAB) != 0;
+		if (down && !s_next_layout_button_held)
+			libretro_next_screen_layout();
+		s_next_layout_button_held = down;
+	}
+	else if (s_next_layout_button != LibretroLayoutButton::None)
 	{
 		const auto& pad = s_port_state[0];
 		const bool l3 = pad.buttons[RETRO_DEVICE_ID_JOYPAD_L3] != 0;
@@ -4206,11 +4164,9 @@ static void libretro_poll_input()
 		bool down = false;
 		switch (s_next_layout_button)
 		{
-		case LibretroLayoutButton::None: break; // unreachable, see the test above
-		case LibretroLayoutButton::Select: down = select; break;
-		case LibretroLayoutButton::L3: down = l3; break;
-		case LibretroLayoutButton::R3: down = r3; break;
-		case LibretroLayoutButton::L3R3: down = l3 && r3; break;
+		// Both handled above; named so the switch stays exhaustive.
+		case LibretroLayoutButton::None:
+		case LibretroLayoutButton::KeyTab: break;
 		case LibretroLayoutButton::SelectL3: down = select && l3; break;
 		case LibretroLayoutButton::SelectR3: down = select && r3; break;
 		case LibretroLayoutButton::AllShoulders:
@@ -4223,17 +4179,6 @@ static void libretro_poll_input()
 		if (down && !s_next_layout_button_held)
 			libretro_next_screen_layout();
 		s_next_layout_button_held = down;
-	}
-
-	// The same step from the keyboard, which is also what an overlay key ends
-	// up as once the frontend has bound one to it. Also skipped when unbound,
-	// so the default costs one comparison rather than a call into the frontend.
-	if (s_next_layout_key != RETROK_UNKNOWN)
-	{
-		const bool down = input_state_cb(0, RETRO_DEVICE_KEYBOARD, 0, s_next_layout_key) != 0;
-		if (down && !s_next_layout_key_held)
-			libretro_next_screen_layout();
-		s_next_layout_key_held = down;
 	}
 
 	// Touchscreen (mouse/pointer mapped to GamePad touchscreen)
