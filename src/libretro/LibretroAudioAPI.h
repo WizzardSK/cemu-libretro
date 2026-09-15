@@ -104,7 +104,14 @@ public:
 	using AudioCallback = size_t(*)(const int16_t* data, size_t frames);
 
 	LibretroAudioAPI(uint32 samplerate, uint32 channels, uint32 samples_per_block, uint32 bits_per_sample);
-	~LibretroAudioAPI() override = default;
+	// The ring and the flush buffer are statics that outlive any one instance,
+	// and until this they were only ever put back by the next run's
+	// constructor - so a closed title left its last few milliseconds of audio
+	// sitting there for the next one to start with. Emptied here instead,
+	// which is the end of the run that produced them: ShutdownTitle destroys
+	// this object through snd_core::reset, after the scheduler has stopped, so
+	// nothing is still feeding it.
+	~LibretroAudioAPI() override;
 
 	AudioAPI GetType() const override { return Cubeb; } // pretend to be Cubeb for config compatibility
 

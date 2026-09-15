@@ -11,6 +11,14 @@ LibretroAudioAPI::LibretroAudioAPI(uint32 samplerate, uint32 channels, uint32 sa
 	s_ring_buffer.Reset();
 }
 
+LibretroAudioAPI::~LibretroAudioAPI()
+{
+	m_playing = false;
+	s_ring_buffer.Reset();
+	s_flush_buffer.clear();
+	s_flush_buffer.shrink_to_fit();
+}
+
 bool LibretroAudioAPI::NeedAdditionalBlocks() const
 {
 	// Match upstream behavior: ask for more blocks while the ring has less
