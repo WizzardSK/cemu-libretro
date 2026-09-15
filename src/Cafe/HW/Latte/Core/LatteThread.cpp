@@ -145,9 +145,32 @@ bool Latte_IsGpuAtPauseGate()
 	return sGpuAtPauseGate.load(std::memory_order_acquire);
 }
 
+// Whether this thread may leave the gate and go back to work. Two reasons to
+// stay: somebody asked for the pause and has not released it, or the renderer
+// this thread works through is gone and the one replacing it is not here yet.
+//
+// The second is the one worth spelling out. The teardown below runs on this
+// thread, at this gate, because it is the only thread that may free what was
+// built on the graphics context - and it leaves g_renderer null. Everything
+// past this point, the command processor first of all, works through that
+// pointer. Letting the thread out with it null is how a close landing in this
+// moment turned into a read of address 0 inside the command processor's idle
+// path; guarding that one call would have fixed that one caller and left the
+// next ordering to find the next one. So the answer is here: the thread that
+// needs the renderer does not run without it, and the only ways out are a
+// renderer to work with or a stop to obey.
+static bool Latte_GpuMayLeaveGate()
+{
+	if (Latte_GetStopSignal())
+		return true;
+	if (sGpuPauseRequested.load(std::memory_order_acquire))
+		return false;
+	return !(sRendererRebuildPending.load(std::memory_order_acquire) && g_renderer == nullptr);
+}
+
 void Latte_GpuPauseGate()
 {
-	if (!sGpuPauseRequested.load(std::memory_order_acquire)) [[likely]]
+	if (Latte_GpuMayLeaveGate()) [[likely]]
 		return;
 	sGpuAtPauseGate.store(true, std::memory_order_release);
 	// Below the gate is a command boundary, which makes this the one point in
@@ -159,16 +182,28 @@ void Latte_GpuPauseGate()
 		Latte_TeardownGpuState("the graphics context is going away");
 		sTeardownForContextLossDone.store(true, std::memory_order_release);
 	}
+	while (true)
 	{
-		std::unique_lock<std::mutex> lock(sGpuPauseMutex);
-		sGpuParked.store(true, std::memory_order_release);
-		sGpuPauseCv.wait(lock, [] {
-			return !sGpuPauseRequested.load(std::memory_order_acquire) || Latte_GetStopSignal();
-		});
-		sGpuParked.store(false, std::memory_order_release);
+		{
+			std::unique_lock<std::mutex> lock(sGpuPauseMutex);
+			sGpuParked.store(true, std::memory_order_release);
+			sGpuPauseCv.wait(lock, [] {
+				return !sGpuPauseRequested.load(std::memory_order_acquire) || Latte_GetStopSignal();
+			});
+			sGpuParked.store(false, std::memory_order_release);
+		}
+		// The renderer comes back through here: context_reset builds one and
+		// releases the pause, and this is the call that puts the title's shaders
+		// and pipelines back on it.
+		Latte_RebuildRendererIfNeeded();
+		if (Latte_GpuMayLeaveGate())
+			break;
+		// No renderer yet and no stop: the frontend has taken its context away
+		// and has not given one back. Nothing this thread does next is possible
+		// without one, so it waits here rather than out there.
+		std::this_thread::sleep_for(std::chrono::milliseconds(1));
 	}
 	sGpuAtPauseGate.store(false, std::memory_order_release);
-	Latte_RebuildRendererIfNeeded();
 }
 #endif
 std::atomic_bool sLatteThreadFinishedInit = false;
