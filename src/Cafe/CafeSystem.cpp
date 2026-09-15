@@ -1147,6 +1147,8 @@ namespace CafeSystem
 		GX2::_GX2DriverReset();
 		phase("resetting save state");
 		nn::save::ResetToDefaultState();
+		phase("resetting the H264 decoder");
+		H264::ResetToDefaultState();
 		phase("deleting PPC threads");
 		coreinit::__OSDeleteAllActivePPCThreads();
 		phase("unloading modules");
