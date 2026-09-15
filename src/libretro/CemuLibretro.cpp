@@ -4375,8 +4375,8 @@ static void DumpEmulatedThreads()
 	// The three numbers that say whether the picture is the emulator's problem
 	// or the frontend's: where the GPU thread is, how many vsync events the
 	// title has been given, and how many frames have actually gone out.
-	cemuLog_log(LogType::Force, "  gpu: phase={} vsync={} vsyncChecks={} gx2Init={} framesFromGpu={} framesPresented={} retroRun={} gateGrants={}",
-		Latte_GetThreadPhase(), LatteTiming_GetVsyncCount(), LatteTiming_GetVsyncCheckCount(),
+	cemuLog_log(LogType::Force, "  gpu: phase={} vsync={} gx2Init={} framesFromGpu={} framesPresented={} retroRun={} gateGrants={}",
+		Latte_GetThreadPhase(), LatteTiming_GetVsyncCount(),
 		(uint32)LatteGPUState.gx2InitCalled,
 		s_frames_from_gpu.load(std::memory_order_relaxed),
 		s_frames_presented.load(std::memory_order_relaxed),
