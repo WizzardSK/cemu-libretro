@@ -77,45 +77,6 @@ namespace coreinit
 		}
 	}
 
-	// A title that is stuck polling shows up here: OSWaitEventWithTimeout with a
-	// zero timeout is a poll, and one that never comes back signalled names the
-	// object the title is waiting for. Counted per event so the libretro core's
-	// thread snapshot can print the busiest ones; free when nothing polls.
-	static std::unordered_map<MPTR, uint64> s_zeroTimeoutPolls;
-	// Signals for the same events, so a poll count can be read against them: an
-	// event polled thousands of times and signalled zero is one nobody is
-	// waking, which is a different bug from one that simply gets polled a lot.
-	static std::unordered_map<MPTR, uint64> s_eventSignals;
-	static std::mutex s_zeroTimeoutPollsMutex;
-	// Counting costs a lock on every signal, so it is opt-in: nothing pays for
-	// it while nobody is reading the numbers.
-	static std::atomic<bool> s_eventStatsEnabled{false};
-
-	void SetEventStatsEnabled(bool enabled)
-	{
-		if (!enabled)
-		{
-			std::lock_guard lock(s_zeroTimeoutPollsMutex);
-			s_zeroTimeoutPolls.clear();
-			s_eventSignals.clear();
-		}
-		s_eventStatsEnabled.store(enabled, std::memory_order_relaxed);
-	}
-
-	void GetZeroTimeoutPollCounts(std::vector<EventPollStats>& out)
-	{
-		std::lock_guard lock(s_zeroTimeoutPollsMutex);
-		out.clear();
-		out.reserve(s_zeroTimeoutPolls.size());
-		for (const auto& [address, polls] : s_zeroTimeoutPolls)
-		{
-			const auto signalled = s_eventSignals.find(address);
-			out.push_back({address, polls, (signalled != s_eventSignals.end()) ? signalled->second : 0});
-		}
-		s_zeroTimeoutPolls.clear();
-		s_eventSignals.clear();
-	}
-
 	bool OSWaitEventWithTimeout(OSEvent* event, uint64 timeout)
 	{
 		__OSLockScheduler();
@@ -129,13 +90,6 @@ namespace coreinit
 			if (timeout == 0)
 			{
 				// fail immediately
-				{
-					if (s_eventStatsEnabled.load(std::memory_order_relaxed))
-					{
-						std::lock_guard lock(s_zeroTimeoutPollsMutex);
-						s_zeroTimeoutPolls[memory_getVirtualOffsetFromPointer(event)]++;
-					}
-				}
 				__OSUnlockScheduler();
 				return false;
 			}
@@ -165,18 +119,6 @@ namespace coreinit
 
 	void OSSignalEventInternal(OSEvent* event)
 	{
-		// Counted here rather than in OSSignalEvent: OSSignalEventAll and the
-		// HLE modules that complete an operation reach an event through this
-		// function, and counting only the public entry point made events that
-		// are signalled constantly look like they were never signalled at all.
-		{
-			if (s_eventStatsEnabled.load(std::memory_order_relaxed))
-			{
-				std::lock_guard lock(s_zeroTimeoutPollsMutex);
-				s_eventSignals[memory_getVirtualOffsetFromPointer(event)]++;
-			}
-		}
-
 		cemu_assert_debug(__OSHasSchedulerLock());
 		if (event->state == OSEvent::EVENT_STATE::STATE_SIGNALED)
 		{
@@ -207,14 +149,6 @@ namespace coreinit
 
 	void OSSignalEventAllInternal(OSEvent* event)
 	{
-		{
-			if (s_eventStatsEnabled.load(std::memory_order_relaxed))
-			{
-				std::lock_guard lock(s_zeroTimeoutPollsMutex);
-				s_eventSignals[memory_getVirtualOffsetFromPointer(event)]++;
-			}
-		}
-
 		if (event->state == OSEvent::EVENT_STATE::STATE_SIGNALED)
 		{
 			return;

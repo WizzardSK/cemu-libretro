@@ -8,7 +8,6 @@ void LatteTiming_EnableHostDrivenVSync();
 
 #ifdef RETRO_CORE
 void LatteTiming_EnableLibretroVSync();
-uint64 LatteTiming_GetVsyncCount();
 void LatteTiming_TriggerVSync();
 bool LatteTiming_IsUsingLibretroVSync();
 #endif

@@ -371,23 +371,6 @@ static bool s_frame_permit = false;
 // cannot open the gate for each other.
 static unsigned s_gate_hold_open = 0;
 
-// How many frames have gone to the frontend. A second run that boots but shows
-// nothing is either producing frames the frontend is not drawing or producing
-// none at all, and those are different bugs in different places.
-static std::atomic<uint64> s_frames_presented{0};
-// New pictures the GPU thread has actually produced, which is a different
-// number from the one above and the one that matters when the screen is stuck.
-std::atomic<uint64> s_frames_from_gpu{0};
-// How many times the frontend has asked for a frame, and how many times the
-// gate let the GPU thread past. The emulated machine stops being given vsync
-// events at the exact moment it starts waiting for one, and vsync is only
-// serviced while the command processor is idling - which it cannot do while it
-// is held at the gate. These two say whether the frontend stopped asking or the
-// gate stopped opening.
-static std::atomic<uint64> s_runs_entered{0};
-static std::atomic<uint64> s_gate_grants{0};
-
-
 // GPU thread, at a swap.
 //
 // Not before a title is running: loading one blocks inside retro_load_game
@@ -442,7 +425,6 @@ static void libretro_frame_gate_grant()
 	std::lock_guard lock(s_gate_mutex);
 	s_gate_tokens = 1;
 	s_frame_permit = true;
-	s_gate_grants.fetch_add(1, std::memory_order_relaxed);
 	s_gate_cv.notify_all();
 }
 
@@ -473,8 +455,6 @@ static auto& s_framebuffer = s_libretro_framebuffer; // alias for existing OpenG
 static bool s_use_hw_render = false;
 static bool s_hw_render_initialized = false;
 static bool s_core_options_supported = false;
-// Periodic thread snapshots; see DumpEmulatedThreads().
-static bool s_log_thread_dump = false;
 
 enum class SelectedGraphicsAPI { OpenGL, Vulkan };
 static SelectedGraphicsAPI s_graphics_api = SelectedGraphicsAPI::OpenGL;
@@ -1866,20 +1846,6 @@ static void libretro_apply_core_options()
 				logFlags |= cemuLog_getFlag(LogType::TextureCache);
 		}
 		cemuLog_setActiveLoggingFlags(logFlags);
-
-		// Not a log flag: this one prints a table from retro_run rather than
-		// tracing calls, so it is its own switch.
-		s_log_thread_dump = false;
-		if (const char* v = libretro_get_option_value("cemu_log_thread_dump"))
-		{
-			bool b;
-			if (libretro_parse_enabled_disabled(v, b))
-				s_log_thread_dump = b;
-		}
-		// The per-event poll and signal counts the snapshot prints are gathered
-		// on the signal path, under a lock. Nobody pays for that while the
-		// snapshot is off.
-		coreinit::SetEventStatsEnabled(s_log_thread_dump);
 	}
 
 	// Cemu's own on-screen notifications - the shader compilation one above all,
@@ -2140,7 +2106,6 @@ static const char* libretro_option_category(const char* key)
 
 		{"cemu_log_filesystem", "logging"},
 		{"cemu_log_thread_sync", "logging"},
-		{"cemu_log_thread_dump", "logging"},
 		{"cemu_log_system_api", "logging"},
 		{"cemu_log_texture_memory", "logging"},
 		{"cemu_bc1_16bit", "video"},
@@ -2538,7 +2503,6 @@ static void libretro_publish_core_options(retro_environment_t cb)
 		{"cemu_drc_position", "GamePad Position; normal|swapped"},
 		{"cemu_log_filesystem", "Log File Access (debugging); disabled|enabled"},
 		{"cemu_log_thread_sync", "Log Thread Synchronisation (debugging); disabled|enabled"},
-		{"cemu_log_thread_dump", "Log Wii U Thread Snapshots (debugging); disabled|enabled"},
 		{"cemu_log_system_api", "Log System API Calls (debugging); disabled|enabled"},
 		{"cemu_log_texture_memory", "Log Texture Memory (debugging); disabled|enabled"},
 		{"cemu_bc1_16bit", "Reduce BC1 Texture Memory; disabled|enabled"},
@@ -4507,129 +4471,8 @@ static void libretro_load_blit_gl_funcs()
 extern GLuint libretro_getBackbufferRBO();
 #endif
 
-// A periodic snapshot of the emulated machine's threads: name, state, and the
-// address each one is sitting at, resolved to a module when the loader knows
-// one. A title that stops asking the emulator for anything - a save that never
-// starts, a load that never ends - shows up here either as a thread parked in
-// WAITING, which names the subsystem to look at, or as one spinning inside the
-// game's own code, which says the emulator is not the one that stopped.
-// The name of the HLE export a thread is sitting in, or empty if the address is
-// not one. Cemu compiles every export into a stub built from a single
-// instruction whose primary opcode is 1 and whose low 16 bits are the function's
-// index in the HLE table (PPCInterpreter_virtualHLE decodes the same thing), so
-// the name is one read away. It is the difference between "waiting somewhere in
-// coreinit" and "waiting in OSWaitEvent", which is the whole question when a
-// title stops asking the emulator for anything.
-static std::string_view ResolveHLEFunctionName(uint32 pc)
-{
-	if (!memory_getPointerFromVirtualOffsetAllowNull(pc))
-		return {};
-	const uint32 opcode = memory_readU32(pc);
-	if ((opcode >> 26) != 1)
-		return {};
-	return osLib_getFunctionNameByIndex((sint32)(opcode & 0xFFFF));
-}
-
-static void DumpEmulatedThreads()
-{
-	cemuLog_log(LogType::Force, "--- Wii U threads ---");
-	// The three numbers that say whether the picture is the emulator's problem
-	// or the frontend's: where the GPU thread is, how many vsync events the
-	// title has been given, and how many frames have actually gone out.
-	cemuLog_log(LogType::Force, "  gpu: phase={} vsync={} gx2Init={} framesFromGpu={} framesPresented={} retroRun={} gateGrants={}",
-		Latte_GetThreadPhase(), LatteTiming_GetVsyncCount(),
-		(uint32)LatteGPUState.gx2InitCalled,
-		s_frames_from_gpu.load(std::memory_order_relaxed),
-		s_frames_presented.load(std::memory_order_relaxed),
-		s_runs_entered.load(std::memory_order_relaxed),
-		s_gate_grants.load(std::memory_order_relaxed));
-
-	// What the title is polling, if anything. An event with a five-figure count
-	// between two snapshots is a spin loop waiting on something that never
-	// arrives - and its address is the object to look at.
-	std::vector<coreinit::EventPollStats> polls;
-	coreinit::GetZeroTimeoutPollCounts(polls);
-	std::sort(polls.begin(), polls.end(), [](const auto& a, const auto& b) { return a.polls > b.polls; });
-	for (size_t i = 0; i < polls.size() && i < 6; i++)
-	{
-		cemuLog_log(LogType::Force, "  event {:08x}: polled {} times, signalled {}", polls[i].address, polls[i].polls,
-			polls[i].signals);
-	}
-	for (sint32 i = 0; i < activeThreadCount; i++)
-	{
-		const MPTR threadMPTR = activeThread[i];
-		if (!threadMPTR)
-			continue;
-
-		OSThread_t* thread = (OSThread_t*)memory_getPointerFromVirtualOffsetAllowNull(threadMPTR);
-		if (!thread)
-			continue;
-
-		const char* name = thread->threadName.GetPtr() ? thread->threadName.GetPtr() : "<unnamed>";
-
-		const char* state = "?";
-		switch (thread->state.value())
-		{
-			case OSThread_t::THREAD_STATE::STATE_NONE: state = "none"; break;
-			case OSThread_t::THREAD_STATE::STATE_READY: state = "ready"; break;
-			case OSThread_t::THREAD_STATE::STATE_RUNNING: state = "running"; break;
-			case OSThread_t::THREAD_STATE::STATE_WAITING: state = "waiting"; break;
-			case OSThread_t::THREAD_STATE::STATE_MORIBUND: state = "moribund"; break;
-		}
-
-		const uint32 pc = thread->context.srr0;
-
-		// Where it is: the game's own code (module + offset), an HLE export by
-		// name, or a bare address when it is neither.
-		std::string where;
-		RPLModule* module = RPLLoader_FindModuleByCodeAddr(pc);
-		if (module)
-			where = fmt::format("pc={:08x} ({}+0x{:x})", pc, module->moduleName, pc - module->regionMappingBase_text.GetMPTR());
-		else if (std::string_view hleName = ResolveHLEFunctionName(pc); !hleName.empty())
-			where = fmt::format("pc={:08x} ({})", pc, hleName);
-		else
-			where = fmt::format("pc={:08x}", pc);
-
-		// And what it is waiting for. A mutex names the thread that holds it,
-		// which turns "everything is waiting" into a chain with one end; a wait
-		// queue is at least an address to match against the events above.
-		std::string blockedOn;
-		if (thread->state.value() == OSThread_t::THREAD_STATE::STATE_WAITING)
-		{
-			if (coreinit::OSMutex* mutex = thread->waitingForMutex.GetPtr())
-			{
-				OSThread_t* owner = mutex->owner.GetPtr();
-				const char* ownerName = (owner && owner->threadName.GetPtr()) ? owner->threadName.GetPtr() : "<unnamed>";
-				blockedOn = fmt::format(" mutex={:08x} held-by={:08x} {}", thread->waitingForMutex.GetMPTR(),
-					mutex->owner.GetMPTR(), owner ? ownerName : "<nobody>");
-			}
-			else if (thread->currentWaitQueue.GetMPTR())
-			{
-				blockedOn = fmt::format(" queue={:08x}", thread->currentWaitQueue.GetMPTR());
-			}
-		}
-
-		cemuLog_log(LogType::Force, "  {:08x} {:24} {:9} suspend={} {}{}", threadMPTR, name, state,
-			(sint32)thread->suspendCounter, where, blockedOn);
-	}
-}
-
 RETRO_API void retro_run()
 {
-	s_runs_entered.fetch_add(1, std::memory_order_relaxed);
-	// Off unless the option is on; every few seconds is enough to tell a parked
-	// thread from a busy one, and cheap next to a frame.
-	if (s_log_thread_dump)
-	{
-		static std::chrono::steady_clock::time_point s_last_dump;
-		const auto now = std::chrono::steady_clock::now();
-		if (now - s_last_dump >= std::chrono::seconds(3))
-		{
-			s_last_dump = now;
-			DumpEmulatedThreads();
-		}
-	}
-
 	if (s_ppc_process_exited.exchange(false, std::memory_order_acq_rel) && environ_cb)
 	{
 		cemuLog_log(LogType::Force, "[Libretro] emulated process exited, asking the frontend to shut down");
@@ -4832,7 +4675,6 @@ RETRO_API void retro_run()
 			}
 		}
 		video_cb(RETRO_HW_FRAME_BUFFER_VALID, SCREEN_WIDTH, SCREEN_HEIGHT, 0);
-		s_frames_presented++;
 		LibretroAudioAPI::FlushAudio();
 		return;
 	}
@@ -4921,7 +4763,6 @@ RETRO_API void retro_run()
 #endif // ENABLE_OPENGL
 
 	video_cb(RETRO_HW_FRAME_BUFFER_VALID, SCREEN_WIDTH, SCREEN_HEIGHT, 0);
-	s_frames_presented++;
 
 	// Flush audio
 	LibretroAudioAPI::FlushAudio();
