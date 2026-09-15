@@ -2830,8 +2830,10 @@ static void libretro_setup_wiimotes()
 
 	if (mode == "disabled")
 	{
-		// Nothing above port 1 is bound to anything, so nothing above port 1 is
-		// worth asking about: sixty frontend calls a frame that went nowhere.
+		// Port 0 is the GamePad and nothing else is bound to anything, so port 0
+		// is the only one worth asking about: the other four were sixty frontend
+		// calls a frame that went nowhere. Ports are counted from zero here,
+		// which is why this is 1 and not 2 - the remotes are players 2 to 5.
 		s_polled_ports = 1;
 		if (log_cb)
 			log_cb(RETRO_LOG_INFO, "Cemu: Wii Remote input disabled\n");
