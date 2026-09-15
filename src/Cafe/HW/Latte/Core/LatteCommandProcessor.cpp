@@ -174,6 +174,15 @@ uint32 LatteCP_readU32Deprc()
 		if ( TCL::TCLGPUReadRBWord(cmdWord) )
 			return cmdWord;
 
+#ifdef ENABLE_LIBRETRO
+		// There may be no renderer: the gate below hands the graphics context
+		// its contents back when the frontend takes it away, and that deletes
+		// the renderer. A close arriving in that moment left this thread going
+		// round here with g_renderer null - a read of address 0 in
+		// NotifyLatteCommandProcessorIdle, from LatteCP_ProcessRingbuffer, one
+		// line after the log says the renderer is gone.
+		if (g_renderer)
+#endif
 		g_renderer->NotifyLatteCommandProcessorIdle(); // let the renderer know in case it wants to flush any commands
 		performanceMonitor.gpuTime_idleTime.beginMeasuring();
 		// no command data available, spin in a busy loop for a bit then check again
@@ -187,6 +196,16 @@ uint32 LatteCP_readU32Deprc()
 			return cmdWord;
 		if (Latte_GetStopSignal())
 			LatteThread_Exit();
+#ifdef ENABLE_LIBRETRO
+		// A thread waiting here for a command that is not coming is the shape
+		// of "the GPU thread did not reach the pause gate (phase: command
+		// processor)": the gate at the top of the ring buffer loop is only
+		// reached once a command has been read, and with the emulated cores
+		// parked there is nothing to read. So the gate is asked here too,
+		// where the waiting actually happens. It costs an atomic load when
+		// nobody is asking for a pause.
+		Latte_GpuPauseGate();
+#endif
 
 		// still no command data available, do some other tasks
 		LatteTiming_HandleTimedVsync();
