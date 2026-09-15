@@ -300,6 +300,67 @@ static void libretro_set_log_to_file(bool toFile)
 	}
 }
 
+// ============================================================================
+// Ending the process on purpose
+// ============================================================================
+
+/*	Every place in this core that ends the process deliberately comes through
+	here, so the reasoning sits in one function instead of at four call sites -
+	and so the files outside src/libretro keep to a call and a declaration,
+	which is all an upstream merge then has to look at.
+
+	Where the calls come from, and what has already been waited for by then:
+
+	    retro_unload_game / retro_reset
+	      |
+	      +- ShutdownTitle, on its own thread, waited for up to 30 s
+	      |    |
+	      |    `- Latte_Stop asks the GPU thread to leave and waits 5 s
+	      |         `- it did not leave ................................ here
+	      |
+	      `- the deprecated IOSU workers are asked to stop, waited 5 s
+	           `- one is still running ................................. here
+
+	    context_destroy, which arrives before the close, while the frontend's
+	    graphics context still exists and can still be handed things back
+	      |
+	      +- the GPU thread has 0.5 s to reach the pause gate ........... here
+	      `- then 10 s to finish handing the context's contents back .... here
+
+	The GPU thread's 5 s sit inside ShutdownTitle's 30 s, which is why the
+	"did not shut down in time" branch in libretro_shutdown_title_for_exit is
+	only ever reached for other reasons: when the GPU thread is the one that is
+	wedged, the process is gone long before that timer expires.
+
+	What happens after abort(): SIGABRT lands in the handler this core installs
+	for the whole process (ExceptionHandler_Init, by way of CemuCommonInit),
+	which writes log.txt and then _Exit(1) unless crash dumps are enabled - so
+	there is a log ending in the line below, and usually no core dump.
+
+	RetroArch goes down with us, and that is the price being paid on purpose.
+	The alternative is a title reported as closed with a thread still drawing
+	through the frontend's device, and that took RetroArch down too - later,
+	somewhere unrelated, with nothing in the log tying it to the close.
+*/
+[[noreturn]] static void libretro_fail_fast(const char* tag, const std::string& what)
+{
+	// The log first and flushed, because the whole value of stopping here is
+	// the line that says why.
+	cemuLog_log(LogType::Force, "[{}] {}", tag, what);
+	cemuLog_waitForFlush();
+	std::abort();
+}
+
+// Declared in Latte.h and called from LatteThread.cpp, so that the GPU thread's
+// own file needs nothing but the call.
+[[noreturn]] void Latte_FailGpuThread(const char* what)
+{
+	libretro_fail_fast("LatteThread",
+		fmt::format("{} (phase: {}). The GPU thread has to stop when it is asked to; carrying on from here "
+					"would run the next title against state this one still holds.",
+			what, Latte_GetThreadPhase()));
+}
+
 static std::atomic_bool s_game_loaded{false};   // read by the GPU thread at the frame gate
 static bool s_initialized = false;
 static bool s_emu_initialized = false;
@@ -4102,10 +4163,10 @@ static void libretro_stop_system_services()
 	iosuIoctl_requestShutdown();
 	if (!iosuIoctl_waitForWorkersToStop(5000))
 	{
-		cemuLog_log(LogType::Force, "[IOSU] {} deprecated worker(s) did not stop when asked. They answer ioctls for a title that has ended, and the semaphores they are parked on are about to be destroyed.",
-			iosuIoctl_runningWorkerCount());
-		cemuLog_waitForFlush();
-		std::abort();
+		libretro_fail_fast("IOSU",
+			fmt::format("{} deprecated worker(s) did not stop when asked. They answer ioctls for a title that "
+						"has ended, and the semaphores they are parked on are about to be destroyed.",
+				iosuIoctl_runningWorkerCount()));
 	}
 	// They are gone, so the queues and their semaphores can go back to how init
 	// left them rather than being handed to the next run with a shutdown's

@@ -43,25 +43,6 @@ LatteGPUState_t LatteGPUState = {};
 std::atomic_bool sLatteThreadRunning = false;
 
 #ifdef ENABLE_LIBRETRO
-// The GPU thread not stopping when it is asked to is a bug, and carrying on
-// afterwards means carrying on with state nobody owns any more - which is the
-// bug that produced every crash report this file is written around. It used to
-// be survivable by design: the thread was detached, the run it belonged to was
-// stamped so it could be told to leave later, and whatever it still held was
-// forgotten rather than freed. All of that was scaffolding around a thread that
-// would not stop, and none of it made the stopping work.
-//
-// So it ends here instead, loudly and at the point where it is still obvious
-// what happened. The log is flushed first because the whole value of stopping
-// is the line that says why.
-[[noreturn]] static void Latte_FailStuckThread(const char* what)
-{
-	cemuLog_log(LogType::Force, "[LatteThread] {} (phase: {}). The GPU thread has to stop when it is asked to; carrying on from here would run the next title against state this one still holds.", what, Latte_GetThreadPhase());
-	cemuLog_waitForFlush();
-	std::abort();
-}
-#endif
-#ifdef ENABLE_LIBRETRO
 // Set by the GPU thread once it is past everything that touches the renderer,
 // so Latte_Stop can tell "still tearing down" from "safe to join".
 static std::atomic_bool sLatteThreadExited{false};
@@ -90,11 +71,6 @@ void Latte_RequestGpuTeardownForContextLoss()
 {
 	sTeardownForContextLossDone.store(false, std::memory_order_release);
 	sTeardownForContextLoss.store(true, std::memory_order_release);
-}
-
-[[noreturn]] void Latte_FailGpuThread(const char* what)
-{
-	Latte_FailStuckThread(what);
 }
 
 bool Latte_GpuTeardownForContextLossDone()
@@ -610,7 +586,7 @@ void Latte_Stop()
 		for (int i = 0; i < kExitTimeoutMs && !sLatteThreadExited.load(std::memory_order_acquire); i++)
 			std::this_thread::sleep_for(std::chrono::milliseconds(1));
 		if (!sLatteThreadExited.load(std::memory_order_acquire))
-			Latte_FailStuckThread("the GPU thread did not exit within five seconds of being asked to");
+			Latte_FailGpuThread("the GPU thread did not exit within five seconds of being asked to");
 		sLatteThread.join();
 	}
 #else
