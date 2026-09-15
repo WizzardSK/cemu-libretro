@@ -966,14 +966,6 @@ void LatteRenderTarget_copyToBackbuffer(LatteTextureView* textureView, bool isPa
 	cemu_assert(shader);
 	g_renderer->DrawBackbufferQuad(textureView, shader, filter==LatteTextureView::MagFilter::kLinear, imageX, imageY, imageWidth, imageHeight, isPadView, clearBackground);
 	g_renderer->HandleScreenshotRequest(textureView, isPadView);
-	// Ask first whether any of the three has something to draw. All of this
-	// runs on every presented frame, and an imgui frame is not free to set up -
-	// under Vulkan it is descriptor and command buffer work - while the usual
-	// answer is that the software keyboard is not up, no error dialog is
-	// showing, and both overlay positions are disabled. That was a render pass
-	// built every frame around three functions that return on their first line.
-	if (!swkbd_hasKeyboardInputHook() && !nn::erreula::hasVisibleDialog() && !LatteOverlay_wantsToDraw())
-		return;
 	if (!g_renderer->ImguiBegin(!isPadView))
 		return;
 	swkbd_render(!isPadView);

@@ -514,19 +514,11 @@ void LatteOverlay_translateScreenPosition(ScreenPosition pos, const Vector2f& wi
 	}
 }
 
-// The same test LatteOverlay_render opens with, asked from outside so the
-// present path can decide whether an imgui frame is worth setting up at all.
-bool LatteOverlay_wantsToDraw()
-{
-	const auto& config = GetConfig();
-	return config.overlay.position != ScreenPosition::kDisabled || config.notification.position != ScreenPosition::kDisabled;
-}
-
 void LatteOverlay_render(bool pad_view)
 {
-	if(!LatteOverlay_wantsToDraw())
-		return;
 	const auto& config = GetConfig();
+	if(config.overlay.position == ScreenPosition::kDisabled && config.notification.position == ScreenPosition::kDisabled)
+		return;
 
 	sint32 w = 0, h = 0;
 	if (pad_view && WindowSystem::IsPadWindowOpen())

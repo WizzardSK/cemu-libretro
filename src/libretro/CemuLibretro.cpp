@@ -1892,19 +1892,6 @@ static void libretro_apply_core_options()
 		coreinit::SetEventStatsEnabled(s_log_thread_dump);
 	}
 
-	// Cemu's own on-screen notifications - the shader compilation one above all,
-	// since that is the one that appears mid-game. A frontend has an on-screen
-	// display of its own, so this is the core drawing a second one over it, and
-	// the cost is not only the text: with a notification position set,
-	// LatteOverlay_render runs in full on every presented frame and the imgui
-	// frame around it is built whether or not anything is shown.
-	if (const char* v = libretro_get_option_value("cemu_onscreen_notifications"))
-	{
-		bool b;
-		if (libretro_parse_enabled_disabled(v, b))
-			cfg.notification.position = b ? ScreenPosition::kTopLeft : ScreenPosition::kDisabled;
-	}
-
 	// Async shader compilation
 	if (const char* v = libretro_get_option_value("cemu_async_shader_compile"))
 	{
@@ -2142,8 +2129,6 @@ static const char* libretro_option_category(const char* key)
 		{"cemu_convert_to_wua", "convert"},
 
 		{"cemu_wiimote_input", "input"},
-
-		{"cemu_onscreen_notifications", "video"},
 
 		{"cemu_emulate_skylander_portal", "addons"},
 		{"cemu_emulate_infinity_base", "addons"},
@@ -2541,7 +2526,6 @@ static void libretro_publish_core_options(retro_environment_t cb)
 		{"cemu_log_system_api", "Log System API Calls (debugging); disabled|enabled"},
 		{"cemu_log_texture_memory", "Log Texture Memory (debugging); disabled|enabled"},
 		{"cemu_bc1_16bit", "Reduce BC1 Texture Memory; disabled|enabled"},
-		{"cemu_onscreen_notifications", "On-Screen Notifications; enabled|disabled"},
 #if defined(ENABLE_VULKAN) && defined(ENABLE_OPENGL)
 		{"cemu_gpu_api", "Graphics API (restart); OpenGL|Vulkan"},
 #endif
