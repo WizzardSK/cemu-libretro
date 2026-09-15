@@ -462,6 +462,9 @@ static std::atomic_bool s_shutting_down{false};
 // Whether audio may still be handed to the frontend. Cleared as unload starts
 // and set again when a title is loaded.
 static std::atomic_bool s_audio_submission_allowed{true};
+// How many threads are inside the frontend's audio callback right now. The
+// flag above closes the door; this says whether anyone is still through it.
+static std::atomic<int> s_audio_submissions_in_flight{0};
 
 // Framebuffer for software readback
 static constexpr uint32_t SCREEN_WIDTH = 1280;
@@ -2518,9 +2521,15 @@ RETRO_API void retro_init()
 		return;
 
 	LibretroAudioAPI::SetAudioCallback([](const int16_t* data, size_t frames) -> size_t {
-		if (s_audio_submission_allowed && audio_batch_cb && data && frames > 0)
-			return audio_batch_cb(data, frames);
-		return 0;
+		// Counted before the flag is read, not after: a submission that passes
+		// the test and is only then counted can still be inside the frontend
+		// when the close believes nothing is, which is the race this exists for.
+		s_audio_submissions_in_flight.fetch_add(1, std::memory_order_acquire);
+		size_t submitted = 0;
+		if (s_audio_submission_allowed.load(std::memory_order_acquire) && audio_batch_cb && data && frames > 0)
+			submitted = audio_batch_cb(data, frames);
+		s_audio_submissions_in_flight.fetch_sub(1, std::memory_order_release);
+		return submitted;
 	});
 
 	libretro_init_paths();
@@ -3891,6 +3900,22 @@ RETRO_API void retro_unload_game()
 	// stack to show for it. Nothing here can join that thread in time, so the
 	// callback is closed off instead and late submissions become no-ops.
 	s_audio_submission_allowed = false;
+	// Closing the door is not enough by itself: a submission that was already
+	// through it is inside the frontend's audio driver, and the frontend takes
+	// that driver apart as soon as this returns. That is the crash on the
+	// AudioTrack thread - a mutex freed under its own callback, a poison value
+	// where the lock used to be, and nothing of ours on the stack. So wait for
+	// the ones already inside to come back out.
+	for (int i = 0; i < 2000 && s_audio_submissions_in_flight.load(std::memory_order_acquire) > 0; ++i)
+		std::this_thread::sleep_for(std::chrono::milliseconds(1));
+	if (const int stillInside = s_audio_submissions_in_flight.load(std::memory_order_acquire); stillInside > 0)
+	{
+		// Two seconds is far longer than a batch submission takes. One still in
+		// there is stuck rather than slow, and saying so is worth more than
+		// waiting longer.
+		cemuLog_log(LogType::Force, "[Audio] {} submission(s) still inside the frontend's audio callback after 2s", stillInside);
+		cemuLog_waitForFlush();
+	}
 
 	// A close during the shader cache load never reaches the line that turns
 	// this off - LatteShaderCache_ShowProgress leaves through LatteThread_Exit
