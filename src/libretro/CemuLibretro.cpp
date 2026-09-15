@@ -249,6 +249,57 @@ static retro_input_poll_t input_poll_cb = nullptr;
 static retro_input_state_t input_state_cb = nullptr;
 static retro_log_printf_t log_cb = nullptr;
 
+// Cemu's log, handed to the frontend instead of to a file. Installed only while
+// log.txt is switched off: with both on, every line would be written twice, and
+// with both off - the frontend's own log file is a setting too - a run touches
+// the disk for logging not at all.
+class LibretroLogSink : public LoggingCallbacks
+{
+public:
+	void Log(std::string_view filter, std::string_view message) override
+	{
+		if (!log_cb)
+			return;
+		if (filter.empty())
+			log_cb(RETRO_LOG_INFO, "CEMU %.*s\n", (int)message.size(), message.data());
+		else
+			log_cb(RETRO_LOG_INFO, "CEMU [%.*s] %.*s\n", (int)filter.size(), filter.data(),
+				(int)message.size(), message.data());
+	}
+
+	void Log(std::string_view filter, std::wstring_view message) override
+	{
+		// Every caller of the wide overload formats ASCII; anything else is
+		// written as a question mark rather than as broken bytes.
+		std::string narrow;
+		narrow.reserve(message.size());
+		for (wchar_t c : message)
+			narrow.push_back((c > 0 && c < 128) ? (char)c : '?');
+		Log(filter, narrow);
+	}
+};
+static LibretroLogSink s_log_sink;
+static bool s_log_sink_installed = false;
+
+// Both sides of the switch in one place, so the installed state and the file
+// cannot disagree.
+static void libretro_set_log_to_file(bool toFile)
+{
+	cemuLog_setFileLoggingEnabled(toFile);
+	if (toFile == !s_log_sink_installed)
+		return;
+	if (toFile)
+	{
+		cemuLog_clearCallbacks();
+		s_log_sink_installed = false;
+	}
+	else
+	{
+		cemuLog_setCallbacks(&s_log_sink);
+		s_log_sink_installed = true;
+	}
+}
+
 static std::atomic_bool s_game_loaded{false};   // read by the GPU thread at the frame gate
 static bool s_initialized = false;
 static bool s_emu_initialized = false;
@@ -1846,6 +1897,14 @@ static void libretro_apply_core_options()
 				logFlags |= cemuLog_getFlag(LogType::TextureCache);
 		}
 		cemuLog_setActiveLoggingFlags(logFlags);
+
+		// Where those lines end up. On is what it has always been - log.txt in
+		// the user data folder - and off hands them to the frontend, which has
+		// a log of its own and its own switch for writing that to disk.
+		bool toFile = true;
+		if (const char* v = libretro_get_option_value("cemu_log_to_file"))
+			libretro_parse_enabled_disabled(v, toFile);
+		libretro_set_log_to_file(toFile);
 	}
 
 	// Cemu's own on-screen notifications - the shader compilation one above all,
@@ -2104,6 +2163,7 @@ static const char* libretro_option_category(const char* key)
 
 		{"cemu_audio_latency", "audio"},
 
+		{"cemu_log_to_file", "logging"},
 		{"cemu_log_filesystem", "logging"},
 		{"cemu_log_thread_sync", "logging"},
 		{"cemu_log_system_api", "logging"},
@@ -2501,6 +2561,7 @@ static void libretro_publish_core_options(retro_environment_t cb)
 		{"cemu_screen_layout5", "Layout 5; Default Screen|GamePad Screen|Side by Side|Top Bottom|Picture in Picture"},
 		{"cemu_next_screen_layout_button", "Next Screen Layout; Disabled|L + R + L2 + R2 + L3 + R3|Select + L3|Select + R3|Tab"},
 		{"cemu_drc_position", "GamePad Position; normal|swapped"},
+		{"cemu_log_to_file", "Write Cemu Log to log.txt; enabled|disabled"},
 		{"cemu_log_filesystem", "Log File Access (debugging); disabled|enabled"},
 		{"cemu_log_thread_sync", "Log Thread Synchronisation (debugging); disabled|enabled"},
 		{"cemu_log_system_api", "Log System API Calls (debugging); disabled|enabled"},
