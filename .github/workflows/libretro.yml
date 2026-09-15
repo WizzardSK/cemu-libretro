@@ -33,7 +33,7 @@ jobs:
 
     steps:
       - name: "Checkout repo"
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           submodules: "recursive"
           fetch-depth: 0
@@ -70,7 +70,7 @@ jobs:
         run: cmake --build build --target cemu_libretro -- -j $(nproc)
 
       - name: "Upload artifact"
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: cemu_libretro-linux-${{ matrix.arch }}
           path: ./bin/cemu_libretro.so
@@ -91,7 +91,7 @@ jobs:
 
     steps:
       - name: "Checkout repo"
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           submodules: "recursive"
           fetch-depth: 0
@@ -135,7 +135,7 @@ jobs:
         run: cmake --build build --target cemu_libretro -- -j $(sysctl -n hw.ncpu)
 
       - name: "Upload artifact"
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: cemu_libretro-macos-${{ matrix.arch }}
           path: ./bin/cemu_libretro.dylib
@@ -150,7 +150,7 @@ jobs:
 
     steps:
       - name: "Checkout repo"
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           submodules: "recursive"
           fetch-depth: 0
@@ -174,7 +174,7 @@ jobs:
         run: cmake --build build --target cemu_libretro --config RelWithDebInfo
 
       - name: "Upload artifact"
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: cemu_libretro-windows-x64
           path: |
@@ -199,7 +199,7 @@ jobs:
 
     steps:
       - name: "Checkout repo"
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           submodules: "recursive"
           fetch-depth: 0
@@ -240,7 +240,7 @@ jobs:
         run: mv bin/cemu_libretro.so cemu_libretro_android.so
 
       - name: "Upload artifact"
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: cemu_libretro-android-${{ matrix.abi }}
           path: ./cemu_libretro_android.so
