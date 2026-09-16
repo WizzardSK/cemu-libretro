@@ -1862,12 +1862,16 @@ static void libretro_apply_core_options()
 		// because it is the only way to answer that on a phone - the numbers
 		// are meaningless from a desktop, where the fallback never runs. See
 		// issue #22.
+#ifdef ENABLE_VULKAN
+		// The flag lives in the Vulkan renderer, which is where the narrow BC1
+		// fallback is; a build without it has nothing to set.
 		if (const char* v = libretro_get_option_value("cemu_bc1_16bit"))
 		{
 			bool b;
 			if (libretro_parse_enabled_disabled(v, b))
 				g_libretroNarrowBC1 = b;
 		}
+#endif
 		if (const char* v = libretro_get_option_value("cemu_log_texture_memory"))
 		{
 			bool b;
