@@ -351,9 +351,9 @@ static void libretro_set_log_to_file(bool toFile)
 	std::abort();
 }
 
-// Declared in Latte.h and called from LatteThread.cpp, so that the GPU thread's
-// own file needs nothing but the call.
-[[noreturn]] void Latte_FailGpuThread(const char* what)
+// Runs on: the frontend's thread, in context_destroy, and nowhere else - the
+// GPU thread itself is stopped the way upstream stops it, with a join.
+[[noreturn]] static void Latte_FailGpuThread(const char* what)
 {
 	libretro_fail_fast("LatteThread",
 		fmt::format("{} (phase: {}). The GPU thread has to stop when it is asked to; carrying on from here "
@@ -406,6 +406,8 @@ static std::string s_load_progress_text;
 static int s_load_progress_percent = -1;
 static std::atomic_bool s_load_progress_active{false};
 
+// Runs on: the GPU thread (the shader cache loader calls it) and retro_run's
+// thread, which is the one that hands the text to the frontend.
 void libretro_set_load_progress(const char* text, int percent)
 {
 	{
@@ -503,9 +505,9 @@ void libretro_frame_gate_wait()
 		s_gate_tokens--;
 }
 
-// Everything that is not the frame-pacing GPU swap itself: the emulated CPU
-// cores from the scheduler's idle loop, and the GPU command processor at a
-// command boundary. Neither may consume tokens - they come round many times
+// Runs on: the emulated CPU threads and the GPU thread - everything that is
+// not the frame-pacing GPU swap itself: the emulated cores from the scheduler's
+// idle loop, and the GPU command processor at a command boundary. Neither may consume tokens - they come round many times
 // per frame - but neither may run outside the window either. The command
 // processor has to be in here too: parked cores submit nothing, so a command
 // loop left running would spin on an empty ring instead of standing still.
@@ -520,6 +522,8 @@ void libretro_frame_window_wait()
 // Lets the emulator run outside a frame for as long as the hold is held. For
 // handshakes that need a parked thread to reach a particular point in its own
 // loop - which it cannot do while the gate is holding it there.
+//
+// Runs on: the frontend's thread, from the libretro callbacks.
 void libretro_frame_gate_hold_open(bool hold)
 {
 	std::lock_guard lock(s_gate_mutex);
@@ -2880,26 +2884,23 @@ RETRO_API void retro_reset()
 	}
 
 #ifdef ENABLE_VULKAN
-	// Both compile pools have to be down before a new device is built. They are
-	// normally stopped by VulkanRenderer::Shutdown, but that does not run when
-	// the GPU thread takes the "graphics context already gone" way out, and
-	// then a shader still being compiled against the old device faults the
-	// moment the new one appears - RendererShaderVk::CompileInternal on
+	// Every pool has to be down before a new device is built. They normally go
+	// down with the renderer, in the GPU thread's teardown, but that does not
+	// run when the thread takes the "graphics context already gone" way out -
+	// and then a shader still being compiled against the old device faults the
+	// moment the new one appears: RendererShaderVk::CompileInternal on
 	// vkShaderComp, 0.1 seconds before "renderer created", which is exactly
 	// what a reset of Deus Ex produced here.
 	if (s_graphics_api == SelectedGraphicsAPI::Vulkan)
 	{
+		// The same three stops the GPU thread's teardown makes, in the same
+		// order, through the same upstream functions - see
+		// Latte_TeardownGpuState. This is only the run where that teardown
+		// never happened, which means no title ever started: the renderer was
+		// built, its thread pools with it, and nothing was ever compiled on
+		// them. They are asleep on their queues and leave as soon as they are
+		// woken, so joining them here costs nothing and leaves nothing behind.
 		RendererShaderVk::Shutdown();
-		// All of this stops threads without touching the device, which is why
-		// it can run even once the context has gone. Until it was added, a
-		// closed title left seven compilePl threads, the driver cache thread
-		// and the cache writer behind, still alive while the next title built
-		// a device of its own - which shows up as a title hanging on boot
-		// after a run that had not closed RetroArch as well.
-		// Close() rather than just stopping the threads: it also drops the set
-		// of pipelines the cache believes it has and closes the cache file,
-		// both of which belong to the title that is ending. BeginLoading for
-		// the next one asserts if the file is still open.
 		VulkanPipelineStableCache::GetInstance().Close();
 		PipelineCompiler::CompileThreadPool_Stop();
 	}
@@ -3605,6 +3606,9 @@ static void libretro_create_shared_gl_context()
 // touch the GPU during teardown asks here first.
 static std::atomic_bool s_frontend_context_gone{false};
 
+// Runs on: anything. Set from the frontend's thread in context_destroy and
+// read by the GPU thread and the shader cache loader, which is why it is an
+// atomic and not a bool.
 bool libretro_gpu_context_gone()
 {
 	return s_frontend_context_gone.load(std::memory_order_acquire);
@@ -3670,6 +3674,9 @@ static void libretro_create_renderer()
 	}
 }
 
+// Runs on: the frontend's thread, inside retro_run or the load that precedes
+// it - never the GPU thread, which is why everything it does to that thread is
+// done by asking rather than by calling.
 static void libretro_context_reset()
 {
 	s_hw_render_initialized = true;
@@ -3799,6 +3806,7 @@ static void libretro_context_reset()
 	}
 }
 
+// Runs on: the frontend's thread, the same one as context_reset.
 static void libretro_context_destroy()
 {
 	// The frontend is about to take its graphics context apart while the title
@@ -4261,30 +4269,20 @@ RETRO_API void retro_unload_game()
 	InputManager::instance().Shutdown();
 
 #ifdef ENABLE_VULKAN
-	// Before the renderer goes, not after: the pipeline stable cache's compiler
-	// threads are detached and run until told to stop, and each pipeline they
-	// finish is unregistered from the renderer when it is destroyed.
-	//
-	// LatteShaderCache_Close stops them on the GPU thread's way out, and since
-	// the teardown moved to context_destroy that is where it happens on a close
-	// as well as on a reset - so this is a fallback rather than the usual path.
-	// What is left for it is the run where the GPU thread would not park and
-	// its teardown was withdrawn: the threads are still there and nothing else
-	// will stop them. A title closed a second after it started is exactly when
-	// one is still in flight.
+	// Before the renderer goes, not after: every one of these threads works
+	// through it. The GPU thread's teardown does this for any run that had a
+	// title in it, at context_destroy, with the device still alive - so what is
+	// left for this is a load that built a renderer and never started one.
 	if (s_graphics_api == SelectedGraphicsAPI::Vulkan)
 	{
+		// The same three stops the GPU thread's teardown makes, in the same
+		// order, through the same upstream functions - see
+		// Latte_TeardownGpuState. This is only the run where that teardown
+		// never happened, which means no title ever started: the renderer was
+		// built, its thread pools with it, and nothing was ever compiled on
+		// them. They are asleep on their queues and leave as soon as they are
+		// woken, so joining them here costs nothing and leaves nothing behind.
 		RendererShaderVk::Shutdown();
-		// All of this stops threads without touching the device, which is why
-		// it can run even once the context has gone. Until it was added, a
-		// closed title left seven compilePl threads, the driver cache thread
-		// and the cache writer behind, still alive while the next title built
-		// a device of its own - which shows up as a title hanging on boot
-		// after a run that had not closed RetroArch as well.
-		// Close() rather than just stopping the threads: it also drops the set
-		// of pipelines the cache believes it has and closes the cache file,
-		// both of which belong to the title that is ending. BeginLoading for
-		// the next one asserts if the file is still open.
 		VulkanPipelineStableCache::GetInstance().Close();
 		PipelineCompiler::CompileThreadPool_Stop();
 	}
