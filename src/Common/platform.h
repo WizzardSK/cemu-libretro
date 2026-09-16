@@ -18,7 +18,13 @@
 #include <X11/Xutil.h>
 #endif
 #include "Common/unix/platform.h"
-#elif BOOST_OS_MACOS
+#elif defined(__APPLE__)
+// Every Apple platform, not only the desktop one. BOOST_OS_MACOS is macOS
+// alone, and BOOST_OS_IOS does not answer for tvOS either (boost.predef keys it
+// off __ENVIRONMENT_IPHONE_OS_VERSION_MIN_REQUIRED__, which a tvOS build does
+// not define), so an iOS or tvOS build fell through every branch here and got
+// no platform header at all - which surfaces a few hundred includes later as
+// "unknown type name 'SlimRWLock'".
 #include <libkern/OSByteOrder.h>
 #include "Common/unix/platform.h"
 #endif

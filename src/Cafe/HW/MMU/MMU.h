@@ -181,7 +181,10 @@ bool memory_isAddressRangeAccessible(MPTR virtualAddress, uint32 size);
 #define CPU_swapEndianU64(_v) bswap_64((uint64)(_v))
 #define CPU_swapEndianU32(_v) bswap_32((uint32)(_v))
 #define CPU_swapEndianU16(_v) bswap_16((uint16)(_v))
-#elif BOOST_OS_MACOS
+// Every Apple platform, not only the desktop one: boost.predef hands iOS
+// BOOST_OS_IOS and leaves BOOST_OS_MACOS at zero, so an iOS build had no
+// byteswap at all here. OSSwapInt* is in libkern/OSByteOrder.h on all of them.
+#elif defined(__APPLE__)
 #define CPU_swapEndianU64(_v) OSSwapInt64((uint64)(_v))
 #define CPU_swapEndianU32(_v) OSSwapInt32((uint32)(_v))
 #define CPU_swapEndianU16(_v) OSSwapInt16((uint16)(_v))
