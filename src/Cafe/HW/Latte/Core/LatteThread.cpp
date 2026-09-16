@@ -213,6 +213,21 @@ void Latte_GpuPauseGate()
 		std::this_thread::sleep_for(std::chrono::milliseconds(1));
 	}
 	sGpuAtPauseGate.store(false, std::memory_order_release);
+
+	// Two ways out of the loop above, and only one of them is a renderer. The
+	// other is a stop, and a stop with no renderer means the run is over and
+	// this thread already handed the context its contents back - while every
+	// caller carries on afterwards through g_renderer. The command processor's
+	// idle path is the one that found that out: back from the gate, into
+	// LatteTiming_HandleTimedVsync, into LatteQuery_UpdateFinishedQueries, and
+	// a fault at 0 on a thread whose renderer had been deleted a millisecond
+	// earlier. Its own stop check sits before the gate, not after it.
+	//
+	// So the thread ends here rather than returning. Not a check the callers
+	// have to remember: the gate is where "there is nothing to draw with any
+	// more" becomes true, so it is where the thread stops existing.
+	if (!g_renderer && Latte_GetStopSignal())
+		LatteThread_Exit();
 }
 #endif
 std::atomic_bool sLatteThreadFinishedInit = false;
