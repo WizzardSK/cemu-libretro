@@ -143,7 +143,11 @@ void SetThreadName(const char* name)
 	}
 #pragma warning(pop)
 #endif
-#elif BOOST_OS_MACOS
+#elif defined(__APPLE__)
+	// Every Apple platform takes the one-argument form, which names the calling
+	// thread; the two-argument one below is the Linux signature. BOOST_OS_MACOS
+	// is not the test for that - it is zero on iOS - so an iOS build was
+	// reaching for the Linux one.
 	pthread_setname_np(name);
 #else
 	if(std::strlen(name) > 15)
