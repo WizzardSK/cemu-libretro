@@ -1,0 +1,109 @@
+name: Preflight Apple embedded
+
+# Not for upstream, and not a build anyone should download yet: this is the
+# first attempt at the core for iOS and tvOS, and it exists to find out what
+# stops it. vcpkg has arm64-ios and arm64-tvos triplets of its own, so the
+# dependency set is at least addressable; what is unknown is which of the
+# twenty-odd ports the manifest asks for actually build against those SDKs, and
+# what the emulator itself reaches for that is macOS rather than Apple.
+#
+# Vulkan is off - MoltenVK ships as a dylib and a loose dylib beside a core is
+# not something these systems load - so the GS is Metal here, with the software
+# readback present path the core already has for frontends that hand out no
+# hardware context.
+
+on:
+  push:
+    branches:
+      - libretro-apple-embedded
+  workflow_dispatch:
+
+jobs:
+  preflight:
+    name: ${{ matrix.platform }}
+    runs-on: macos-15
+    timeout-minutes: 360
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: ios
+            system_name: iOS
+            sysroot: iphoneos
+            triplet: arm64-ios
+          - platform: tvos
+            system_name: tvOS
+            sysroot: appletvos
+            triplet: arm64-tvos
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Which SDKs this runner has
+        run: |
+          xcodebuild -version
+          xcodebuild -showsdks
+
+      - name: Install the tools the ports need
+        run: |
+          brew list nasm >/dev/null 2>&1 || brew install nasm
+          brew list automake >/dev/null 2>&1 || brew install automake
+          brew list libtool >/dev/null 2>&1 || brew install libtool
+
+      - name: Cache vcpkg binaries
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/vcpkg/archives
+          key: vcpkg-${{ matrix.triplet }}-${{ hashFiles('vcpkg.json') }}
+          restore-keys: vcpkg-${{ matrix.triplet }}-
+
+      - name: Configure
+        run: |
+          # The libretro core's own options, plus what the platform decides:
+          # no OpenGL (these have GLES through EAGL and nothing the emulator's
+          # GL backend could use), no Vulkan (see the note at the top), Metal.
+          cmake -S . -B build/${{ matrix.platform }} \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_SYSTEM_NAME=${{ matrix.system_name }} \
+            -DCMAKE_OSX_SYSROOT=${{ matrix.sysroot }} \
+            -DCMAKE_OSX_ARCHITECTURES=arm64 \
+            -DCMAKE_SYSTEM_PROCESSOR=arm64 \
+            -DVCPKG_TARGET_TRIPLET=${{ matrix.triplet }} \
+            -DENABLE_LIBRETRO=ON \
+            -DENABLE_OPENGL=OFF \
+            -DENABLE_VULKAN=OFF \
+            -DENABLE_METAL=ON \
+            -DENABLE_DISCORD_RPC=OFF \
+            -DENABLE_BLUEZ=OFF \
+            -DENABLE_FERAL_GAMEMODE=OFF \
+            -DENABLE_WXWIDGETS=OFF \
+            2>&1 | tail -80
+
+      - name: Build the core
+        run: |
+          cmake --build build/${{ matrix.platform }} --target cemu_libretro --config Release -- -j $(sysctl -n hw.ncpu)
+
+      - name: What came out
+        run: |
+          find build/${{ matrix.platform }} bin -name 'cemu_libretro*' -print -exec ls -l {} \; 2>/dev/null || true
+          CORE=$(find . -name 'cemu_libretro.dylib' | head -1)
+          test -n "$CORE" || { echo "no core was produced"; exit 1; }
+          vtool -show "$CORE" || true
+          otool -L "$CORE" || true
+
+      - name: The vcpkg logs, when a port is what stopped it
+        if: failure()
+        run: |
+          find build/${{ matrix.platform }}/vcpkg-manifest-install.log -type f -exec tail -60 {} \; 2>/dev/null || true
+          for f in $(find build/${{ matrix.platform }}/vcpkg_installed -name 'config-*-out.log' 2>/dev/null | head -5); do
+            echo "=== $f"; tail -40 "$f"
+          done
+
+      - uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: cemu_libretro_${{ matrix.platform }}
+          path: bin/cemu_libretro*
