@@ -15,6 +15,12 @@
 #include "config/ActiveSettings.h"
 #include "Cafe/GameProfile/GameProfile.h"
 #include "util/containers/flat_hash_map.hpp"
+// The shader state cache below is a robin_hood::unordered_flat_map, and this is
+// where that comes from. It used to arrive by accident, through
+// VulkanRenderer.h - which is included above only when Vulkan is built, so a
+// build without it (an iOS or tvOS core, or anyone passing USE_VULKAN=OFF)
+// stopped here on an undeclared robin_hood.
+#include "util/containers/robin_hood.h"
 #include "util/helpers/StateHasher.h"
 #ifdef ENABLE_METAL
 #include "Cafe/HW/Latte/Renderer/Metal/LatteToMtl.h"
