@@ -39,6 +39,11 @@ include:
     file: '/osx-cmake-x86.yml'
   - project: 'libretro-infrastructure/ci-templates'
     file: '/osx-cmake-arm64.yml'
+  # Apple embedded (iOS and tvOS, both arm64)
+  - project: 'libretro-infrastructure/ci-templates'
+    file: '/ios-cmake.yml'
+  - project: 'libretro-infrastructure/ci-templates'
+    file: '/tvos-cmake.yml'
   ################################## CELLULAR ################################
   # Android
   - project: 'libretro-infrastructure/ci-templates'
@@ -331,6 +336,63 @@ libretro-build-windows-x64:
       - ci-macos-debug.log
       - $LIBNAME
 
+# iOS and tvOS. Same core, and the platform decides three things for it: no
+# OpenGL (the emulator's GL backend has nothing to run on where GL is EAGL and
+# GLES), no Vulkan (MoltenVK is a dylib and these systems do not load a loose
+# one), so the GS is Metal - with the readback present path the core already has
+# for frontends that hand out no hardware context.
+#
+# JIT is the honest caveat: mapping executable pages needs an entitlement a
+# stock install does not grant, which is the same bargain every JIT core on
+# these platforms makes, and not something this build can fix.
+#
+# allow_failure while they settle, like the macOS jobs: nothing here has been
+# run on a device yet, only built.
+.core-defs-apple-embedded:
+  extends: .core-defs
+  allow_failure: true
+  # vcpkg builds every dependency from source, as on the other platforms.
+  timeout: 3h
+  variables:
+    # 13.4 is what CMakeLists asks for on Apple; the templates default to 8.0
+    # (iOS) and 12.0 (tvOS), which is older than the C++20 library the emulator
+    # needs. ios-cmake.yml reads IOS_MINVER, tvos-cmake.yml reads MINVER.
+    IOS_MINVER: "13.4"
+    MINVER: "13.4"
+    CORE_ARGS: >-
+      -DENABLE_LIBRETRO=ON
+      -DENABLE_BLUEZ=OFF
+      -DENABLE_FERAL_GAMEMODE=OFF
+      -DENABLE_OPENGL=OFF
+      -DENABLE_VULKAN=OFF
+      -DENABLE_METAL=ON
+      -DENABLE_DISCORD_RPC=OFF
+      -DENABLE_WXWIDGETS=OFF
+      -DCMAKE_MACOSX_BUNDLE=OFF
+  before_script:
+    # Replaces the template's before_script, which is where NUMPROC is normally
+    # set for its `-j $NUMPROC` build line. sysctl, not nproc: a stock macOS
+    # runner has no coreutils.
+    - export NUMPROC=$(($(sysctl -n hw.ncpu)/5))
+    # Same two as the macOS jobs: vcpkg must bring its own binaries, and the
+    # gcc-12 the Linux jobs ask for does not exist here.
+    - unset VCPKG_FORCE_SYSTEM_BINARIES
+    - unset CC CXX
+    - |
+      if command -v brew >/dev/null 2>&1; then
+        for pkg in nasm automake libtool; do brew list $pkg >/dev/null 2>&1 || brew install $pkg || echo "brew install $pkg FAILED"; done
+      fi
+    - bash ./dependencies/vcpkg/bootstrap-vcpkg.sh 2>&1 | tail -20
+  after_script:
+    # vcpkg reports failures by pointing at logs the trace does not show.
+    - |
+      for f in "$BUILD_DIR/vcpkg-manifest-install.log" \
+               $(ls -t dependencies/vcpkg/buildtrees/*/*-err.log 2>/dev/null | head -2); do
+        [ -f "$f" ] || continue
+        echo "===== $f (tail)"
+        tail -60 "$f"
+      done
+
 libretro-build-osx-x64:
   extends:
     # -x86_64, not -x86: the latter is the 32-bit profile and sets ARCH=x86.
@@ -371,3 +433,42 @@ android-x86_64:
     - .core-defs-android
   variables:
     VCPKG_TRIPLET: x64-android
+
+##################################### APPLE ##################################
+# iOS (arm64).
+libretro-build-ios-arm64:
+  extends:
+    - .libretro-ios-cmake-arm64
+    - .core-defs-apple-embedded
+  variables:
+    VCPKG_DEFAULT_TRIPLET: arm64-ios
+    CORE_ARGS: >-
+      -DENABLE_LIBRETRO=ON
+      -DENABLE_BLUEZ=OFF
+      -DENABLE_FERAL_GAMEMODE=OFF
+      -DENABLE_OPENGL=OFF
+      -DENABLE_VULKAN=OFF
+      -DENABLE_METAL=ON
+      -DENABLE_DISCORD_RPC=OFF
+      -DENABLE_WXWIDGETS=OFF
+      -DCMAKE_MACOSX_BUNDLE=OFF
+      -DVCPKG_TARGET_TRIPLET=arm64-ios
+
+# tvOS (arm64).
+libretro-build-tvos-arm64:
+  extends:
+    - .libretro-tvos-cmake-arm64
+    - .core-defs-apple-embedded
+  variables:
+    VCPKG_DEFAULT_TRIPLET: arm64-tvos
+    CORE_ARGS: >-
+      -DENABLE_LIBRETRO=ON
+      -DENABLE_BLUEZ=OFF
+      -DENABLE_FERAL_GAMEMODE=OFF
+      -DENABLE_OPENGL=OFF
+      -DENABLE_VULKAN=OFF
+      -DENABLE_METAL=ON
+      -DENABLE_DISCORD_RPC=OFF
+      -DENABLE_WXWIDGETS=OFF
+      -DCMAKE_MACOSX_BUNDLE=OFF
+      -DVCPKG_TARGET_TRIPLET=arm64-tvos
