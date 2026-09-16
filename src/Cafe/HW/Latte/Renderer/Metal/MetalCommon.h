@@ -104,6 +104,25 @@ inline bool FormatIsRenderable(Latte::E_GX2SURFFMT format)
     return !Latte::IsCompressedFormat(format);
 }
 
+// Shelling out is a desktop idea, and system() is not merely absent on iOS and
+// tvOS but marked unavailable - the SDK refuses at compile time. The only
+// caller is the AIR shader cache, which runs diskutil and xcrun; neither exists
+// there either, so the honest answer on those platforms is that the command did
+// not run. The cache then falls back to compiling shaders at runtime, which is
+// what every platform without this path already does.
+#include <TargetConditionals.h>
+
+#if !TARGET_OS_OSX
+
+template <typename... T>
+inline bool executeCommand(fmt::format_string<T...> fmt, T&&... args) {
+    cemuLog_log(LogType::Force, "no shell on this platform, not running: {}",
+        fmt::format(fmt, std::forward<T>(args)...));
+    return false;
+}
+
+#else
+
 template <typename... T>
 inline bool executeCommand(fmt::format_string<T...> fmt, T&&... args) {
     std::string command = fmt::format(fmt, std::forward<T>(args)...);
@@ -116,6 +135,8 @@ inline bool executeCommand(fmt::format_string<T...> fmt, T&&... args) {
 
     return true;
 }
+
+#endif // !TARGET_OS_OSX
 
 /*
 class MemoryMappedFile
