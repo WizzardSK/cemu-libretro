@@ -53,23 +53,33 @@ uint32 VulkanPipelineStableCache::BeginLoading(uint64 cacheTitleId)
 
 	for (uint32 i = 0; i < m_numCompilationThreads; i++)
 	{
+#ifdef ENABLE_LIBRETRO
+		// Kept rather than detached, so Close() can join them. See the note on
+		// m_compilerThreads. The previous title's threads were joined there, so
+		// the vector is empty by the time a new run gets here.
+		m_compilerThreads.emplace_back(&VulkanPipelineStableCache::CompilerThread, this);
+#else
 		std::thread compileThread(&VulkanPipelineStableCache::CompilerThread, this);
 		compileThread.detach();
+#endif
 	}
 
-	// open cache file or create it.
-	//
+	// open cache file or create it
+#ifdef ENABLE_LIBRETRO
 	// Close() leaves the previous title's cache behind rather than deleting it,
-	// so this is where it goes. The reason is ownership: Close() runs on the
-	// unload path while the GPU thread may still be part-way through
-	// UpdateLoading, and freeing it there is a use-after-free on that thread -
-	// closing content a second after opening it did exactly that. Here there
-	// is no loading in flight, because this is what starts one.
+	// so this is where it goes. The reason is ownership: Close() runs while the
+	// GPU thread may still be part-way through UpdateLoading, and freeing it
+	// there is a use-after-free on that thread - closing content a second after
+	// opening it did exactly that. Here there is no loading in flight, because
+	// this is what starts one.
 	if (s_cache)
 	{
 		delete s_cache;
 		s_cache = nullptr;
 	}
+#else
+	cemu_assert_debug(s_cache == nullptr);
+#endif
 	s_cache = FileCache::Open(pathCacheFile, true, LatteShaderCache_getPipelineCacheExtraVersion(cacheTitleId));
 	if (!s_cache)
 	{
@@ -88,12 +98,14 @@ bool VulkanPipelineStableCache::UpdateLoading(uint32& pipelinesLoadedTotal, uint
 {
 	pipelinesLoadedTotal = g_vkCacheState.pipelinesLoaded;
 	pipelinesMissingShaders = 0;
-	// This runs on the GPU thread while the title starts, and Close() can take
-	// the cache file out from under it - closing content a second after
-	// opening it does exactly that. Report the loading as finished rather than
-	// reading through a pointer that is no longer there.
+#ifdef ENABLE_LIBRETRO
+	// Runs on: the GPU thread, while the title starts. Close() can take the
+	// cache file out from under it - closing content a second after opening it
+	// does exactly that. Report the loading as finished rather than reading
+	// through a pointer that is no longer there.
 	if (!s_cache)
 		return false;
+#endif
 	while (g_vkCacheState.pipelineLoadIndex <= g_vkCacheState.pipelineMaxFileIndex)
 	{
 		if (m_compilationQueue.size() >= 50)
@@ -134,20 +146,55 @@ void VulkanPipelineStableCache::EndLoading()
 	// keep cache file open for writing of new pipelines
 }
 
+#ifdef ENABLE_LIBRETRO
+// Defined below, with the writer thread that reads it.
+struct CachedPipeline;
+extern ConcurrentQueue<CachedPipeline*> g_pipelineCachingQueue;
+#endif
+
 void VulkanPipelineStableCache::Close()
 {
-	StopCompilerThreads();
-	StopCacheStoreThread();
+#ifdef ENABLE_LIBRETRO
+	// Runs on: the GPU thread, through LatteShaderCache_Close, and while the
+	// renderer is still there - Latte_TeardownGpuState calls that before it
+	// deletes it, which is the whole point of doing this here.
+	//
+	// EndLoading is upstream's own way of telling the compiler threads to
+	// stop, and it is enough on its own: it clears the count their loop tests
+	// and wakes each one with an empty workload. What it does not do is wait,
+	// because upstream has nothing left to protect by then. Here the wait is
+	// the point, so the threads are joined - every pipeline they are still
+	// building is registered with the renderer that is about to go.
+	EndLoading();
+	for (auto& thread : m_compilerThreads)
+		thread.join();
+	m_compilerThreads.clear();
+	// The writer only touches the cache file, but Close is also where a title
+	// hands that file back, so it goes the same way: wake it, let it see the
+	// flag, join it.
+	if (m_pipelineCacheStoreThread)
 	{
-		// Every hash in here names a pipeline built against the device that is
-		// going away. Kept across titles, the next one believes its pipelines
-		// are already accounted for and never writes them again.
-		m_pipelineIsCachedLock.lock();
-		m_pipelineIsCached.clear();
-		m_pipelineIsCachedLock.unlock();
+		m_stopCacheStoreThread = true;
+		g_pipelineCachingQueue.push(nullptr);
+		m_pipelineCacheStoreThread->join();
+		delete m_pipelineCacheStoreThread;
+		m_pipelineCacheStoreThread = nullptr;
 	}
+	// Every hash in here names a pipeline built against the device that is
+	// going away. Kept across titles, the next one believes its pipelines are
+	// already accounted for and never writes them again.
+	m_pipelineIsCachedLock.lock();
+	m_pipelineIsCached.clear();
+	m_pipelineIsCachedLock.unlock();
 	// The cache file is deliberately not freed here; BeginLoading does it for
 	// the next title. See the note there.
+#else
+    if(s_cache)
+    {
+        delete s_cache;
+        s_cache = nullptr;
+    }
+#endif
 }
 
 
@@ -336,32 +383,20 @@ bool VulkanPipelineStableCache::HasPipelineCached(uint64 baseHash, uint64 pipeli
 }
 
 ConcurrentQueue<CachedPipeline*> g_pipelineCachingQueue;
-// The writer thread is detached, so there is nothing to join - wake it, give it
-// a moment to leave its loop, and note it if it does not. It only writes files,
-// so it is not the one that will be holding the device, but it does hold
-// s_cache, and Close deletes that right after this returns.
-void VulkanPipelineStableCache::StopCacheStoreThread()
-{
-	if (!m_pipelineCacheStoreThread)
-		return;
-	m_stopCacheStoreThread = true;
-	g_pipelineCachingQueue.push(nullptr); // wake it so it sees the flag
-	for (uint32 i = 0; i < 2000 && m_cacheStoreThreadLive.load(); i++)
-		std::this_thread::sleep_for(std::chrono::milliseconds(1));
-	if (m_cacheStoreThreadLive.load())
-		cemuLog_log(LogType::Force, "[VulkanPipelineStableCache] the cache writer thread did not stop in time");
-	delete m_pipelineCacheStoreThread;
-	m_pipelineCacheStoreThread = nullptr;
-}
 
 void VulkanPipelineStableCache::AddCurrentStateToCache(uint64 baseHash, uint64 pipelineStateHash)
 {
 	m_pipelineIsCached.emplace(baseHash, pipelineStateHash);
 	if (!m_pipelineCacheStoreThread)
 	{
+#ifdef ENABLE_LIBRETRO
+		// Not detached, for the reason in the header: Close() joins it.
 		m_stopCacheStoreThread = false;
 		m_pipelineCacheStoreThread = new std::thread(&VulkanPipelineStableCache::WorkerThread, this);
+#else
+		m_pipelineCacheStoreThread = new std::thread(&VulkanPipelineStableCache::WorkerThread, this);
 		m_pipelineCacheStoreThread->detach();
+#endif
 	}
 	// fill job structure with cached GPU state
 	// for each cached pipeline we store:
@@ -452,7 +487,6 @@ bool VulkanPipelineStableCache::DeserializePipeline(MemStreamReader& memReader, 
 int VulkanPipelineStableCache::CompilerThread()
 {
 	SetThreadName("plCacheCompiler");
-	++m_compilerThreadsLive;
 	while (m_numCompilationThreads != 0)
 	{
 		std::vector<uint8> pipelineData = m_compilationQueue.pop();
@@ -461,46 +495,26 @@ int VulkanPipelineStableCache::CompilerThread()
 		LoadPipelineFromCache(pipelineData);
 		++g_vkCacheState.pipelinesLoaded;
 	}
-	--m_compilerThreadsLive;
 	return 0;
-}
-
-// These threads are detached and outlive everything unless told otherwise:
-// their loop blocks in the queue, so clearing the count alone leaves them
-// asleep. Every pipeline they build is registered with the renderer and
-// unregistered when it is destroyed, so one still running while the renderer
-// is taken apart faults in ~PipelineInfo - which is a title closed a second
-// after it started, with pipelines still in flight.
-void VulkanPipelineStableCache::StopCompilerThreads()
-{
-	const uint32 threadCount = m_numCompilationThreads.exchange(0);
-	if (threadCount == 0 && m_compilerThreadsLive.load() == 0)
-		return;
-	// One empty entry each: the loop skips empties, and re-tests the count.
-	for (uint32 i = 0; i < threadCount + 1; i++)
-		m_compilationQueue.push(std::vector<uint8>());
-	// Bounded, because a hung compile must not become a hung exit.
-	for (uint32 i = 0; i < 2000 && m_compilerThreadsLive.load() != 0; i++)
-		std::this_thread::sleep_for(std::chrono::milliseconds(1));
-	if (m_compilerThreadsLive.load() != 0)
-		cemuLog_log(LogType::Force, "[VulkanPipelineStableCache] {} compiler thread(s) did not stop in time",
-			m_compilerThreadsLive.load());
 }
 
 void VulkanPipelineStableCache::WorkerThread()
 {
 	SetThreadName("plCacheWriter");
-	m_cacheStoreThreadLive = true;
-	struct LiveFlag { std::atomic_bool& f; ~LiveFlag() { f = false; } } liveFlag{ m_cacheStoreThreadLive };
 	while (true)
 	{
 		CachedPipeline* job;
 		g_pipelineCachingQueue.pop(job);
+#ifdef ENABLE_LIBRETRO
+		// Upstream's loop has no way out: the thread is detached and the
+		// process ends under it. Close() pushes an empty job with this set, and
+		// this is where the thread leaves so it can be joined.
 		if (m_stopCacheStoreThread)
 		{
 			delete job;
 			return;
 		}
+#endif
 		if (!s_cache)
 		{
 			delete job;
