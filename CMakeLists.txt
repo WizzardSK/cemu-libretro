@@ -77,6 +77,18 @@ if (ENABLE_VCPKG)
 	if (NOT ENABLE_LIBRETRO)
 		list(APPEND VCPKG_MANIFEST_FEATURES "gui")
 	endif()
+	# libusb is a feature rather than a plain dependency because iOS and tvOS
+	# have no USB API to build it against: its Darwin backend is IOKit's USB
+	# family, and the SDK there does not even carry IOKit/IOCFBundle.h, so the
+	# port stops on a missing header before anything of ours is compiled.
+	# Nothing is lost - a phone or a TV box has no Wii U GamePad adapter to
+	# plug in - and ENABLE_LIBUSB below follows the same condition.
+	#
+	# This runs before project(), so APPLE is not set yet and the system name
+	# is what tells the platforms apart.
+	if (NOT CMAKE_SYSTEM_NAME STREQUAL "iOS" AND NOT CMAKE_SYSTEM_NAME STREQUAL "tvOS")
+		list(APPEND VCPKG_MANIFEST_FEATURES "usb")
+	endif()
 	set(CMAKE_TOOLCHAIN_FILE "${CMAKE_CURRENT_SOURCE_DIR}/dependencies/vcpkg/scripts/buildsystems/vcpkg.cmake"
 		CACHE STRING "Vcpkg toolchain file")
 	# Set this so that all the various find_package() calls don't need an explicit
@@ -185,7 +197,14 @@ endif()
 
 option(ENABLE_HIDAPI "Build with HIDAPI" ON)
 option(ENABLE_SDL "Enables the SDLController backend" ON)
-option(ENABLE_LIBUSB "Build with libusb support" ON)
+# Off on the Apple embedded platforms, where there is no USB API to talk to and
+# the dependency is not built either (see the manifest features above).
+if (CMAKE_SYSTEM_NAME STREQUAL "iOS" OR CMAKE_SYSTEM_NAME STREQUAL "tvOS")
+	set(ENABLE_LIBUSB_DEFAULT OFF)
+else()
+	set(ENABLE_LIBUSB_DEFAULT ON)
+endif()
+option(ENABLE_LIBUSB "Build with libusb support" ${ENABLE_LIBUSB_DEFAULT})
 
 if (ENABLE_LIBUSB)
 	add_compile_definitions(HAS_LIBUSB)

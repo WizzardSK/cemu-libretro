@@ -79,8 +79,7 @@ jobs:
             -DENABLE_DISCORD_RPC=OFF \
             -DENABLE_BLUEZ=OFF \
             -DENABLE_FERAL_GAMEMODE=OFF \
-            -DENABLE_WXWIDGETS=OFF \
-            2>&1 | tail -80
+            -DENABLE_WXWIDGETS=OFF
 
       - name: Build the core
         run: |
@@ -97,8 +96,17 @@ jobs:
       - name: The vcpkg logs, when a port is what stopped it
         if: failure()
         run: |
-          find build/${{ matrix.platform }}/vcpkg-manifest-install.log -type f -exec tail -60 {} \; 2>/dev/null || true
-          for f in $(find build/${{ matrix.platform }}/vcpkg_installed -name 'config-*-out.log' 2>/dev/null | head -5); do
+          # vcpkg writes the failing port and its logs here; the manifest log is
+          # mostly the manifest itself, so the error is what to grep for.
+          LOG=build/${{ matrix.platform }}/vcpkg-manifest-install.log
+          if [ -f "$LOG" ]; then
+            echo "=== the part of $LOG that is not the manifest"
+            grep -vE '^\s*[]["{},]' "$LOG" | tail -100
+          fi
+          for f in $(find build/${{ matrix.platform }} -name 'issue_body.md' 2>/dev/null | head -2); do
+            echo "=== $f"; head -120 "$f"
+          done
+          for f in $(find build/${{ matrix.platform }} -path '*buildtrees*' -name '*-out.log' 2>/dev/null | head -6); do
             echo "=== $f"; tail -40 "$f"
           done
 
