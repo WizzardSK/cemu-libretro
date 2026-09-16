@@ -27,6 +27,10 @@
 
 #include "Cafe/CafeSystem.h"
 
+#ifdef ENABLE_LIBRETRO
+// Whether the noisy lines below are written at all. Runs on: whichever thread
+// is doing the logging - the GPU thread for most of them, the frontend's thread
+// for Latte_Start and Latte_Stop.
 static bool LatteThread_libretro_debug_enabled()
 {
 	static int s_cached = -1;
@@ -37,15 +41,21 @@ static bool LatteThread_libretro_debug_enabled()
 	}
 	return s_cached != 0;
 }
+#else
+static bool LatteThread_libretro_debug_enabled() { return false; }
+#endif
 
 LatteGPUState_t LatteGPUState = {};
+
+// Everything the renderer needs before the first command is read. Lifted out of
+// Latte_ThreadEntry unchanged, because the libretro build needs the same lines
+// a second time when a lost graphics context comes back. Runs on: the GPU
+// thread.
+void Latte_InitRendererState();
 
 std::atomic_bool sLatteThreadRunning = false;
 
 #ifdef ENABLE_LIBRETRO
-// Set by the GPU thread once it is past everything that touches the renderer,
-// so Latte_Stop can tell "still tearing down" from "safe to join".
-static std::atomic_bool sLatteThreadExited{false};
 // Set by the GPU thread as its first act, so a caller can tell "created but not
 // running yet" from "running".
 static std::atomic_bool sLatteThreadEntered{false};
@@ -66,9 +76,8 @@ static std::atomic_bool sTeardownForContextLossDone{false};
 // back and the thread has to still be there when it does.
 static std::atomic_bool sRendererRebuildPending{false};
 
-void Latte_TeardownGpuState(const char* reason);
-void Latte_RebuildRendererIfNeeded();
-void Latte_InitRendererState();
+void Latte_TeardownGpuState(const char* reason); // GPU thread only
+void Latte_RebuildRendererIfNeeded(); // GPU thread only, at the pause gate
 
 void Latte_RequestGpuTeardownForContextLoss()
 {
@@ -422,12 +431,14 @@ int Latte_ThreadEntry()
 	Latte_LoadInitialRegisters();
 	// let CPU thread know the GPU is done initializing
 	g_isGPUInitFinished = true;
-	cemuLog_log(LogType::Force, "LatteThread: GPU init finished, waiting for GX2Init...");
 	// wait until CPU has called GX2Init()
-	{
 #ifdef ENABLE_LIBRETRO
+	// Same loop as upstream's, with the waiting said out loud: a title that
+	// never calls GX2Init looks exactly like a hung core from the outside, and
+	// this is the line that tells the two apart in a user's log.
+	cemuLog_log(LogType::Force, "LatteThread: GPU init finished, waiting for GX2Init...");
+	{
 		LatteThread_SetPhase("waiting for GX2Init");
-#endif
 		int waitCount = 0;
 		while (LatteGPUState.gx2InitCalled == 0)
 		{
@@ -444,21 +455,43 @@ int Latte_ThreadEntry()
 		}
 	}
 	cemuLog_log(LogType::Force, "LatteThread: GX2Init called, entering command processor");
-#ifdef ENABLE_LIBRETRO
 	LatteThread_SetPhase("command processor");
+#else
+	while (LatteGPUState.gx2InitCalled == 0)
+	{
+		std::this_thread::yield();
+		std::this_thread::sleep_for(std::chrono::milliseconds(1));
+		LatteThread_HandleOSScreen();
+		if (Latte_GetStopSignal())
+			LatteThread_Exit();
+	}
 #endif
 	LatteCP_ProcessRingbuffer();
 	cemu_assert_debug(false); // should never reach
 	return 0;
 }
 
-// Hands back everything this core built on the graphics context, in the order
-// that keeps each step's dependencies alive: the renderer's own shutdown, then
-// the caches that free their objects through it, then the renderer itself.
+#ifdef ENABLE_LIBRETRO
+// Hands back everything this core built on the graphics context. Upstream does
+// the same work at the end of LatteThread_Exit; what this adds is an order,
+// because a core has to survive the run afterwards.
 //
-// Only ever called on the GPU thread. Under OpenGL these objects belong to that
-// thread's context and no other thread could free them; under Vulkan it is
+// Runs on: the GPU thread, and only ever that one. Under OpenGL these objects
+// belong to its context and no other thread may free them; under Vulkan it is
 // still the thread that would otherwise be using them.
+//
+// The order is "every thread that works through the renderer is gone before the
+// renderer is":
+//   1. LatteShaderCache_Close - upstream's own close, which is what stops this
+//      title's plCacheCompiler and plCacheWriter threads. First, because a
+//      pipeline they are still building is registered with the renderer.
+//   2. g_renderer->Shutdown - upstream's, and it stops the renderer's own
+//      vkShaderComp and compilePl threads and then waits for the device.
+//   3. the caches, which free their objects through the renderer.
+//   4. the renderer itself, with nothing left running against it.
+// The index cache is on that list for the reason the commit that added it
+// gives: its entries are reservations belonging to this renderer's allocator,
+// and an entry that outlives it is handed to the next one's.
 void Latte_TeardownGpuState(const char* reason)
 {
 	cemuLog_log(LogType::Force, "[LatteThread] giving the graphics context its contents back - {}", reason);
@@ -467,16 +500,12 @@ void Latte_TeardownGpuState(const char* reason)
 		cemuLog_log(LogType::Force, "[LatteThread] there was no renderer to give anything back to");
 		return;
 	}
+	LatteShaderCache_Close();
 	g_renderer->Shutdown();
-	// Before the renderer goes, because every one of these frees through it.
-	// The index cache is on this list for the reason the last commit gives: its
-	// entries are reservations belonging to this renderer's allocator, and an
-	// entry that outlives it is handed to the next one's.
 	LatteIndices_invalidateAll();
 	LatteBufferCache_UnloadAll();
 	LatteTC_UnloadAllTextures();
 	LatteSHRC_UnloadAll();
-	LatteShaderCache_Close();
 	RendererOutputShader::ShutdownStatic();
 	Renderer* renderer = g_renderer.get();
 	delete renderer;
@@ -488,6 +517,8 @@ void Latte_TeardownGpuState(const char* reason)
 // built a renderer on it, and everything the last one held has to exist again.
 // The title itself never stopped, so its registers and its memory are still
 // good - what has to be rebuilt is only what lived on the device.
+//
+// Runs on: the GPU thread, at the pause gate and nowhere else.
 void Latte_RebuildRendererIfNeeded()
 {
 	if (!sRendererRebuildPending.load(std::memory_order_acquire))
@@ -507,6 +538,7 @@ void Latte_RebuildRendererIfNeeded()
 	LatteThread_SetPhase("command processor");
 	cemuLog_log(LogType::Force, "[LatteThread] back in the command processor on the new context");
 }
+#endif
 
 // Everything the renderer has to have before a single command is read, in one
 // place because it is needed twice: once when the GPU thread starts, and once
@@ -563,9 +595,6 @@ void Latte_Start()
 	std::unique_lock _lock(sLatteThreadStateMutex);
 	cemu_assert_debug(!sLatteThreadRunning);
 #ifdef ENABLE_LIBRETRO
-	sLatteThreadExited.store(false, std::memory_order_release);
-#endif
-#ifdef ENABLE_LIBRETRO
 	// The first thing the GPU thread does is call g_renderer->Initialize(), so
 	// starting it without a renderer is a null dereference several seconds
 	// later, on another thread, with nothing in the log to say why - which is
@@ -579,7 +608,6 @@ void Latte_Start()
 			"Something released it between the frontend creating one and the title starting.");
 		sLatteThreadRunning = false;
 		sLatteThreadFinishedInit = true;
-		sLatteThreadExited.store(true, std::memory_order_release);
 		return;
 	}
 #endif
@@ -605,44 +633,34 @@ void Latte_Stop()
 	std::unique_lock _lock(sLatteThreadStateMutex);
 	if (!sLatteThreadRunning)
 	{
+#ifdef ENABLE_LIBRETRO
 		// Nothing to stop, as far as this flag knows - but if a thread is still
 		// alive out there, this is the line that says nobody ever waited for it.
 		cemuLog_log(LogType::Force, "[LatteThread] Latte_Stop: the GPU thread was already marked stopped, not waiting for one");
+#endif
 		return;
 	}
 	sLatteThreadRunning = false;
 	_lock.unlock();
 #ifdef ENABLE_LIBRETRO
-	// A thread parked at the pause gate is asleep on a condition variable whose
-	// predicate does check the stop signal - but only when something wakes it,
-	// and nothing did. A frontend destroys the graphics context before it
-	// unloads, which is exactly when the gate is holding the GPU thread, so the
-	// stop that followed was never seen and Latte_Stop timed out on a thread
-	// that was one notify away from leaving.
+	// The one thing upstream's stop does not cover. A thread parked at the
+	// pause gate is asleep on a condition variable whose predicate does check
+	// the stop signal - but only when something wakes it, and nothing did. A
+	// frontend destroys the graphics context before it unloads, which is
+	// exactly when the gate is holding the GPU thread, so the stop that
+	// followed was never seen. Wake it, and the wait below is upstream's own.
 	{
 		std::lock_guard<std::mutex> lock(sGpuPauseMutex);
 	}
 	sGpuPauseCv.notify_all();
-
-	// Wait for the thread to finish its own teardown, then join it. The wait is
-	// bounded, and running out of it is not something to carry on from: a
-	// "stopped" title with a live GPU thread runs on through its own teardown
-	// while the frontend unloads the core, and the two race over the renderer -
-	// a crash at exit in LatteShaderCache_Load or CreateVkShaderModule against
-	// a null device. Detaching it here was how that used to be survived, and
-	// surviving it is what made the next title's failure impossible to read.
-	if (sLatteThread.joinable())
-	{
-		constexpr int kExitTimeoutMs = 5000;
-		for (int i = 0; i < kExitTimeoutMs && !sLatteThreadExited.load(std::memory_order_acquire); i++)
-			std::this_thread::sleep_for(std::chrono::milliseconds(1));
-		if (!sLatteThreadExited.load(std::memory_order_acquire))
-			Latte_FailGpuThread("the GPU thread did not exit within five seconds of being asked to");
-		sLatteThread.join();
-	}
-#else
-	sLatteThread.join();
 #endif
+	// Nothing else: this is a wait for a thread to end, and join is how that is
+	// spelled. A bounded version of it lived here for a while, with the process
+	// ended on the timeout; what it was really guarding against was the thread
+	// being wedged on the renderer during a close, and that is fixed where it
+	// happens - the gate holds the thread while there is no renderer, and every
+	// thread that works through one is stopped before it is deleted.
+	sLatteThread.join();
 }
 
 bool Latte_GetStopSignal()
@@ -686,20 +704,38 @@ void LatteThread_Exit()
 #endif
 	if (LatteThread_libretro_debug_enabled())
 		cemuLog_log(LogType::Force, "[LatteThread] LatteThread_Exit begin renderer={}", g_renderer ? 1 : 0);
+#ifdef ENABLE_LIBRETRO
 	// The same teardown a lost context gets, and the only one there is. On a
 	// close the context took its contents back at the pause gate already and
 	// this finds nothing left to give; on a reset the context never went away
 	// and this is where it all happens.
 	Latte_TeardownGpuState("the title is stopping");
+#else
+	if (g_renderer)
+		g_renderer->Shutdown();
+	// clean up vertex/uniform cache
+	LatteBufferCache_UnloadAll();
+	// clean up texture cache
+	LatteTC_UnloadAllTextures();
+	// clean up runtime shader cache
+	LatteSHRC_UnloadAll();
+	// close disk cache
+	LatteShaderCache_Close();
+	RendererOutputShader::ShutdownStatic();
+	// destroy renderer but make sure that g_renderer remains valid until the destructor has finished
+	if (g_renderer)
+	{
+		Renderer* renderer = g_renderer.get();
+		delete renderer;
+		g_renderer.release();
+	}
+#endif
 	if (LatteThread_libretro_debug_enabled())
 		cemuLog_log(LogType::Force, "[LatteThread] LatteThread_Exit after the GPU teardown");
 	// reset GPU7 state
 	std::memset(&LatteGPUState, 0, sizeof(LatteGPUState));
 	if (LatteThread_libretro_debug_enabled())
 		cemuLog_log(LogType::Force, "[LatteThread] LatteThread_Exit end (ExitThread)\n");
-#ifdef ENABLE_LIBRETRO
-	sLatteThreadExited.store(true, std::memory_order_release);
-#endif
 	#if BOOST_OS_WINDOWS
 	ExitThread(0);
 	#else

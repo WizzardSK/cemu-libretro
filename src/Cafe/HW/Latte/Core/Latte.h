@@ -191,6 +191,12 @@ bool Latte_GetStopSignal(); // returns true if stop was requested or if in stopp
 // fullscreen toggle does). Nothing may touch its Vulkan objects while that
 // happens, so the GPU thread parks itself at a command boundary until the
 // context is back.
+//
+// Everything below except Latte_GpuPauseGate is asked from the frontend's
+// thread, inside the libretro callbacks (context_destroy, context_reset,
+// unload) - they are questions about the GPU thread, asked by the thread
+// waiting on it. Latte_GpuPauseGate is the other side and runs on the GPU
+// thread alone.
 void Latte_RequestGpuPause();
 void Latte_ReleaseGpuPause();
 bool Latte_IsGpuParked();
@@ -199,14 +205,8 @@ bool Latte_IsGpuAtPauseGate(); // reached the gate; parked is only true once it 
 // which it does at the pause gate. Request it before asking for the pause.
 void Latte_RequestGpuTeardownForContextLoss();
 bool Latte_GpuTeardownForContextLossDone();
-// Ends the process, with the log flushed and a line saying why. Only the GPU
-// thread can hand the graphics context its contents back, and context_destroy
-// is the last moment it can - a context that goes away with the core's objects
-// still on it leaves them for the next run, which is the failure this whole
-// path exists to end.
-[[noreturn]] void Latte_FailGpuThread(const char* what);
 bool Latte_IsRendererRebuildPending();
-void Latte_GpuPauseGate(); // called by the command processor
+void Latte_GpuPauseGate(); // GPU thread only - called by the command processor
 bool Latte_HasFinishedRendererInit(); // false while the GPU thread is still bringing the renderer up
 bool Latte_HasGpuThreadEntered(); // false between the thread being created and its first line running
 const char* Latte_GetThreadPhase(); // where that thread was when it was asked to stop
