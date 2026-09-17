@@ -168,6 +168,11 @@ static std::atomic_bool sGpuAtPauseGate{false};
 // what was built on that context, and everything it frees belongs to a device
 // that is destroyed the moment context_destroy returns.
 static std::atomic_bool sGpuHandingContextBack{false};
+// Whether Latte_InitRendererState has run against the renderer this thread
+// holds. A renderer that was constructed but never initialised has no ImGui
+// context, no caches and no thread pools, and the teardown below must not
+// treat it as if it had.
+static std::atomic_bool sRendererStateInitialized{false};
 static std::mutex sGpuPauseMutex;
 static std::condition_variable sGpuPauseCv;
 
@@ -571,6 +576,20 @@ void Latte_TeardownGpuState(const char* reason)
 		sGpuHandingContextBack.store(false, std::memory_order_release);
 		return;
 	}
+	// A renderer that never came up has nothing on the context to give back,
+	// and everything below assumes it did: Shutdown goes straight into
+	// Renderer::Shutdown and ImGui::Shutdown, which on a renderer whose
+	// Initialize never ran is a read through a null ImGui context - a SIGSEGV
+	// at 0x58 on the GPU thread, which is what closing content in the second
+	// before the renderer came up produced. The object itself is left for the
+	// unload, on the frontend's own thread, where the context it belongs to
+	// lives.
+	if (!sRendererStateInitialized.load(std::memory_order_acquire))
+	{
+		cemuLog_log(LogType::Force, "[LatteThread] the renderer never came up, so there is nothing built on the context; leaving it to the unload");
+		sGpuHandingContextBack.store(false, std::memory_order_release);
+		return;
+	}
 	LatteShaderCache_Close();
 	g_renderer->Shutdown();
 	LatteIndices_invalidateAll();
@@ -581,6 +600,7 @@ void Latte_TeardownGpuState(const char* reason)
 	Renderer* renderer = g_renderer.get();
 	delete renderer;
 	g_renderer.release();
+	sRendererStateInitialized.store(false, std::memory_order_release);
 	cemuLog_log(LogType::Force, "[LatteThread] the graphics context has everything back and the renderer is gone");
 	sGpuHandingContextBack.store(false, std::memory_order_release);
 }
@@ -632,6 +652,9 @@ void Latte_InitRendererState()
 	LatteStreamout_InitCache();
 
 	g_renderer->renderTarget_setViewport(0, 0, w, h, 0.0f, 1.0f);
+#ifdef ENABLE_LIBRETRO
+	sRendererStateInitialized.store(true, std::memory_order_release);
+#endif
 	
 	// enable GLSL gl_PointSize support
 	// glEnable(GL_PROGRAM_POINT_SIZE); // breaks shader caching on AMD (as of 2018)
