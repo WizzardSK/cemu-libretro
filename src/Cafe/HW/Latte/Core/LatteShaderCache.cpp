@@ -607,6 +607,18 @@ void LatteShaderCache_ShowProgress(const std::function <bool(void)>& loadUpdateF
 		Renderer* renderer = g_renderer.get();
 		if (!renderer || ::libretro_gpu_context_gone())
 			break;
+#ifdef ENABLE_LIBRETRO
+		// The frontend is taking its graphics context apart and is waiting for
+		// this thread at the pause gate. There is no command boundary inside a
+		// cache load, so without this the wait is spent on a thread that cannot
+		// answer until the load ends - which on a first pipeline cache is
+		// minutes, and what it ends with is the context being destroyed under
+		// the teardown instead of before it. The load is resumable: what is
+		// left of it is loaded again when the context comes back, and on a
+		// close there is nothing left to load it for.
+		if (Latte_IsGpuPauseRequested())
+			break;
+#endif
 		bool r = loadUpdateFunc();
 		if (!r)
 			break;

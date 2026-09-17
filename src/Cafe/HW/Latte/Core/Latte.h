@@ -201,6 +201,8 @@ void Latte_RequestGpuPause();
 void Latte_ReleaseGpuPause();
 bool Latte_IsGpuParked();
 bool Latte_IsGpuAtPauseGate(); // reached the gate; parked is only true once it has finished there
+bool Latte_IsGpuHandingContextBack(); // a teardown is running right now, at the gate or on the way out
+bool Latte_IsGpuPauseRequested(); // GPU thread side: long-running work asks this and stops
 // Asks the GPU thread to hand back everything it built on the graphics context,
 // which it does at the pause gate. Request it before asking for the pause.
 void Latte_RequestGpuTeardownForContextLoss();

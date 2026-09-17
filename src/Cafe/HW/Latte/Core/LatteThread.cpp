@@ -149,6 +149,12 @@ static std::atomic_bool sGpuParked{false};
 // that arrived and is still working - and those are different failures with
 // very different budgets.
 static std::atomic_bool sGpuAtPauseGate{false};
+// True for as long as Latte_TeardownGpuState is running, whichever of its two
+// callers started it. A frontend taking its context apart has to wait for this
+// whether the thread parked or left: the teardown is the only thing that frees
+// what was built on that context, and everything it frees belongs to a device
+// that is destroyed the moment context_destroy returns.
+static std::atomic_bool sGpuHandingContextBack{false};
 static std::mutex sGpuPauseMutex;
 static std::condition_variable sGpuPauseCv;
 
@@ -174,6 +180,19 @@ bool Latte_IsGpuParked()
 bool Latte_IsGpuAtPauseGate()
 {
 	return sGpuAtPauseGate.load(std::memory_order_acquire);
+}
+
+bool Latte_IsGpuHandingContextBack()
+{
+	return sGpuHandingContextBack.load(std::memory_order_acquire);
+}
+
+// Asked by work that runs on the GPU thread for long enough to matter - the
+// shader cache load is minutes of it - so that it can stop and let the thread
+// reach the gate. Nothing that only lasts a command needs to ask.
+bool Latte_IsGpuPauseRequested()
+{
+	return sGpuPauseRequested.load(std::memory_order_acquire);
 }
 
 // Whether this thread may leave the gate and go back to work. Two reasons to
@@ -531,10 +550,12 @@ int Latte_ThreadEntry()
 // and an entry that outlives it is handed to the next one's.
 void Latte_TeardownGpuState(const char* reason)
 {
+	sGpuHandingContextBack.store(true, std::memory_order_release);
 	cemuLog_log(LogType::Force, "[LatteThread] giving the graphics context its contents back - {}", reason);
 	if (!g_renderer)
 	{
 		cemuLog_log(LogType::Force, "[LatteThread] there was no renderer to give anything back to");
+		sGpuHandingContextBack.store(false, std::memory_order_release);
 		return;
 	}
 	LatteShaderCache_Close();
@@ -548,6 +569,7 @@ void Latte_TeardownGpuState(const char* reason)
 	delete renderer;
 	g_renderer.release();
 	cemuLog_log(LogType::Force, "[LatteThread] the graphics context has everything back and the renderer is gone");
+	sGpuHandingContextBack.store(false, std::memory_order_release);
 }
 
 // The other half: a context that went away has come back, the frontend has
@@ -739,6 +761,12 @@ void LatteThread_Exit()
 {
 #ifdef ENABLE_LIBRETRO
 	LatteThread_SetPhase("exiting");
+	// In this order, and not the other way around: a frontend that finds no
+	// thread to wait for at the gate asks next whether one is handing the
+	// context back, and between those two answers there must be no moment
+	// where both are false with the teardown still to come. Leaving through
+	// here is one of the two ways it runs.
+	sGpuHandingContextBack.store(true, std::memory_order_release);
 	// Before the teardown rather than after it: from here on there is no thread
 	// for a frontend to wait at the gate for, and a close that arrives while
 	// this runs should not spend its budget on one.

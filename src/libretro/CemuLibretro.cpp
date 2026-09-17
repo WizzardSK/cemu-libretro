@@ -353,6 +353,32 @@ static void libretro_set_log_to_file(bool toFile)
 // below, and the frontend is told the context is gone, so everything that would
 // have drawn on it stops. Ending RetroArch over a thread that answered late is
 // the worse of the two.
+// Runs on: the frontend's thread, in context_destroy. The GPU thread is not at
+// the gate because it is leaving instead - a close sets the stop signal, and a
+// thread that reads it takes its own way out, which ends in the same teardown
+// this was waiting for. So wait for that one: everything it frees belongs to
+// the device the frontend destroys the moment this callback returns, and the
+// price of returning early is a renderer destroyed afterwards - vkDestroy on a
+// dead device, which on Mali is an abort inside the driver, with the close
+// hanging half a minute first while the same driver's threads are asked to
+// finish work for a device that has gone.
+//
+// The budget is the teardown's own: ten seconds, the same as for a parked
+// thread, because it is the same work.
+static bool libretro_wait_for_gpu_handover(const char* what)
+{
+	if (!Latte_IsGpuHandingContextBack())
+		return false;
+	cemuLog_log(LogType::Force, "[LatteThread] {}, and it is handing the graphics context back on its way out - waiting for that", what);
+	for (int i = 0; i < 10000 && Latte_IsGpuHandingContextBack(); i++)
+		std::this_thread::sleep_for(std::chrono::milliseconds(1));
+	if (Latte_IsGpuHandingContextBack())
+		cemuLog_log(LogType::Force, "[LatteThread] ten seconds in and the handover is still going; the context goes anyway");
+	else
+		cemuLog_log(LogType::Force, "[LatteThread] the handover finished before the context went");
+	return true;
+}
+
 static void libretro_gpu_thread_late(const char* what)
 {
 	cemuLog_log(LogType::Force, "[LatteThread] {} (phase: {}). Carrying on without the handover; the renderer "
@@ -3840,7 +3866,8 @@ static void libretro_context_destroy()
 		Latte_CancelGpuTeardownForContextLoss();
 		Latte_ReleaseGpuPause();
 		libretro_frame_gate_hold_open(false);
-		cemuLog_log(LogType::Force, "[LatteThread] the GPU thread was already gone when the context went away");
+		if (!libretro_wait_for_gpu_handover("the GPU thread was already gone when the context went away"))
+			cemuLog_log(LogType::Force, "[LatteThread] the GPU thread was already gone when the context went away");
 		s_hw_render_initialized = false;
 		s_frontend_read_fbo = 0;
 		s_frontend_read_rbo_attached = 0;
@@ -3889,7 +3916,12 @@ static void libretro_context_destroy()
 	// liveness. Reaching the gate is the thread answering at all - it happens
 	// at a command boundary, so half a second is generous and a thread that
 	// misses it is stuck inside a command handler.
-	for (int i = 0; i < 500 && !Latte_IsGpuAtPauseGate(); i++)
+	// A thread on its way out is the second way this ends, and not a failure:
+	// a close sets the stop signal first, so the thread that reads it leaves
+	// through LatteThread_Exit and runs the same teardown there. Waiting for a
+	// gate it will never reach is how that turned into the whole budget spent
+	// and then the teardown racing the device's destruction.
+	for (int i = 0; i < 500 && !Latte_IsGpuAtPauseGate() && Latte_IsGpuThreadAlive(); i++)
 		std::this_thread::sleep_for(std::chrono::milliseconds(1));
 	if (!Latte_IsGpuAtPauseGate())
 	{
@@ -3900,7 +3932,8 @@ static void libretro_context_destroy()
 		Latte_CancelGpuTeardownForContextLoss();
 		Latte_ReleaseGpuPause();
 		libretro_frame_gate_hold_open(false);
-		libretro_gpu_thread_late("the GPU thread did not reach the pause gate before the graphics context went away");
+		if (!libretro_wait_for_gpu_handover("the GPU thread left instead of reaching the pause gate"))
+			libretro_gpu_thread_late("the GPU thread did not reach the pause gate before the graphics context went away");
 		s_hw_render_initialized = false;
 		s_frontend_read_fbo = 0;
 		s_frontend_read_rbo_attached = 0;
