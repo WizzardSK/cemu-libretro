@@ -409,35 +409,6 @@ static std::string s_convert_status;
 static int s_convert_progress = -1;
 static std::unique_ptr<GameInfo2> s_convert_game_info;
 
-// What the GPU thread is loading and how far in, for the frontend to draw. The
-// core's own loading screen was removed because nothing it drew could reach the
-// screen - the renderer has no swapchain here - which left the longest wait in
-// a session with no feedback at all: a first pipeline cache load on a slow
-// device runs for minutes and looks exactly like a hang. The frontend is the
-// one with a screen, so it gets told instead.
-//
-// Set from the GPU thread and read from retro_run rather than calling the
-// environment callback from there directly: the frontend's message queue
-// belongs to its own thread, and nothing here needs it sooner than the next
-// frame.
-static std::mutex s_load_progress_mutex;
-static std::string s_load_progress_text;
-static int s_load_progress_percent = -1;
-static std::atomic_bool s_load_progress_active{false};
-
-// Runs on: the GPU thread (the shader cache loader calls it) and retro_run's
-// thread, which is the one that hands the text to the frontend.
-void libretro_set_load_progress(const char* text, int percent)
-{
-	{
-		std::lock_guard lock(s_load_progress_mutex);
-		if (text)
-			s_load_progress_text = text;
-		s_load_progress_percent = percent;
-	}
-	s_load_progress_active.store(text != nullptr, std::memory_order_release);
-}
-
 // Where a conversion is allowed to write. The frontend decides that - on
 // Android it is a set of SAF trees rather than anything open() would take - so
 // the destinations are collected from it once the content is known, and only
@@ -581,6 +552,9 @@ static std::atomic_bool s_shutting_down{false};
 // Set by the first retro_run that runs the startup handshake. A launch that
 // fails is not tried again - see the handshake for why.
 static bool s_launch_attempted = false;
+// Set by retro_reset once the title is down: the start that follows belongs to
+// the next retro_run, where every other start happens.
+static bool s_relaunch_pending = false;
 // Whether audio may still be handed to the frontend. Cleared as unload starts
 // and set again when a title is loaded.
 static std::atomic_bool s_audio_submission_allowed{true};
@@ -2968,16 +2942,19 @@ RETRO_API void retro_reset()
 	// and then skips every frame of the run that follows.
 	s_shutting_down = false;
 
-	// The renderer went down with the title: LatteThread_Exit deletes it and
-	// releases g_renderer, and the Latte thread the relaunch starts dereferences
-	// that pointer before anything else it does.
-	libretro_create_renderer();
-
-	// CemuCommonInit is deliberately not repeated: it sets up the emulated
-	// machine, not the title, and it has already run. s_emu_initialized stays
-	// set throughout - a deinit landing in the middle of this still has a GPU
-	// device to be careful about, and that flag is how it knows.
-	libretro_prepare_and_launch_title();
+	// And the start itself is not done here. A title starts in exactly one
+	// place in this core - the handshake at the top of retro_run - and a reset
+	// is a stop followed by a start like any other. Doing it here instead meant
+	// two starts that could overlap: a frontend that sends a second reset while
+	// the first relaunch is still running had the previous run's scheduler
+	// fibers alive underneath the next one, which is a fault in
+	// PPCRecompiler_attemptEnter on a stack that has been freed.
+	//
+	// Nothing overlaps now, because retro_run is one thread and it is the same
+	// thread this runs on: the next call does the start, and a reset that
+	// arrives before it simply stops a title that is already stopped.
+	s_relaunch_pending = true;
+	s_game_loaded = false;
 }
 
 
@@ -4311,12 +4288,6 @@ RETRO_API void retro_unload_game()
 	// request and the unload - see the SHUTDOWN in retro_run.
 	s_audio_submission_allowed = false;
 
-	// A close during the shader cache load never reaches the line that turns
-	// this off - LatteShaderCache_ShowProgress leaves through LatteThread_Exit
-	// - and it is a static that outlives the title, so the next one would start
-	// with a progress bar it never asked for and an environment call behind it.
-	libretro_set_load_progress(nullptr, -1);
-
 	// The title now starts inside retro_run, so a close cannot arrive while it
 	// is starting - the frontend is in this core either way, and it is
 	// in only one place at a time. What this flag still does is stop the frame
@@ -4451,6 +4422,7 @@ RETRO_API void retro_unload_game()
 	s_gpu_context_made_current = false;
 	s_emu_initialized = false;
 	s_launch_attempted = false;
+	s_relaunch_pending = false;
 	s_shutting_down = false;
 	s_frame_ready = false;
 	{
@@ -4748,51 +4720,6 @@ RETRO_API void retro_run()
 		environ_cb(RETRO_ENVIRONMENT_SHUTDOWN, nullptr);
 	}
 
-	if (s_load_progress_active.load(std::memory_order_acquire) && environ_cb)
-	{
-		// Only when the figure or the words have actually moved, not every
-		// frame. The frontend keeps a progress message up for its duration and
-		// updates the one already on screen, so re-sending an unchanged one
-		// buys nothing and puts an environment call and a queue push in the
-		// middle of every frame - which is exactly the sort of thing that gets
-		// reported as stutter and is hard to argue with afterwards. The GPU
-		// thread only moves this four times a second.
-		static std::string s_shown_load;
-		static int s_shown_load_percent = -2;
-		std::string text;
-		int percent;
-		{
-			std::lock_guard lock(s_load_progress_mutex);
-			text = s_load_progress_text;
-			percent = s_load_progress_percent;
-		}
-		if (percent != s_shown_load_percent || text != s_shown_load)
-		{
-			s_shown_load = text;
-			s_shown_load_percent = percent;
-			unsigned version = 0;
-			if (environ_cb(RETRO_ENVIRONMENT_GET_MESSAGE_INTERFACE_VERSION, &version) && version >= 1)
-			{
-				struct retro_message_ext message = {};
-				message.msg = s_shown_load.c_str();
-				message.duration = 4000;
-				message.priority = 3;
-				message.level = RETRO_LOG_INFO;
-				message.target = RETRO_MESSAGE_TARGET_OSD;
-				message.type = RETRO_MESSAGE_TYPE_PROGRESS;
-				message.progress = (int8_t)((percent < 0) ? -1 : (percent > 100 ? 100 : percent));
-				environ_cb(RETRO_ENVIRONMENT_SET_MESSAGE_EXT, &message);
-			}
-			else
-			{
-				// The old call takes a frame count rather than a bar, so it
-				// only goes out when the words change, not on every percent.
-				struct retro_message message{s_shown_load.c_str(), 240};
-				environ_cb(RETRO_ENVIRONMENT_SET_MESSAGE, &message);
-			}
-		}
-	}
-
 	if (s_convert_mode.load())
 	{
 		// The conversion runs on its own thread; this is the only place the
@@ -4879,6 +4806,21 @@ RETRO_API void retro_run()
 	//
 	// The cost is the frontend's menu waiting for the load, which is what it is
 	// waiting for anyway.
+	if (s_relaunch_pending)
+	{
+		// A reset stopped the title and left the start to here. CemuCommonInit
+		// is deliberately not repeated - it sets up the emulated machine, not
+		// the title, and it has already run - so this is the title half of the
+		// launch only. The renderer went down with the title: LatteThread_Exit
+		// deletes it and releases g_renderer, and the Latte thread this starts
+		// dereferences that pointer before anything else it does.
+		s_relaunch_pending = false;
+		libretro_create_renderer();
+		libretro_prepare_and_launch_title();
+		video_cb(NULL, SCREEN_WIDTH, SCREEN_HEIGHT, 0);
+		return;
+	}
+
 	if (!s_game_loaded && !s_launch_attempted && !s_game_path.empty() &&
 		(!s_use_hw_render || s_hw_render_initialized))
 	{

@@ -1133,7 +1133,14 @@ namespace CafeSystem
 			cemuLog_log(LogType::Force, "ShutdownTitle: no title was running, nothing to stop");
 			return;
 		}
-		auto phase = [](const char* name) { s_shutdownPhase.store(name, std::memory_order_release); };
+		// Logged as well as stored. The store is for anyone who asks afterwards;
+		// the line is for a shutdown that never finishes, where the last one
+		// written is the step it is still in. Nothing bounds this any more, so
+		// this log is the only thing that can name a wedge.
+		auto phase = [](const char* name) {
+			s_shutdownPhase.store(name, std::memory_order_release);
+			cemuLog_log(LogType::Force, "ShutdownTitle: {}", name);
+		};
 		phase("stopping the scheduler");
 		coreinit::OSSchedulerEnd();
 		phase("stopping the GPU thread");

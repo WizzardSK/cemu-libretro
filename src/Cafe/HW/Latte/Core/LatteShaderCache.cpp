@@ -43,8 +43,6 @@
 #ifdef ENABLE_LIBRETRO
 // Defined at global scope by the libretro glue (src/libretro/CemuLibretro.cpp).
 bool libretro_gpu_context_gone();
-// Hands the frontend something to draw while this runs. A null text ends it.
-void libretro_set_load_progress(const char* text, int percent);
 #else
 static bool libretro_gpu_context_gone() { return false; }
 #endif
@@ -536,7 +534,6 @@ void LatteShaderCache_Load()
 	if (!renderer || ::libretro_gpu_context_gone())
 	{
 #ifdef ENABLE_LIBRETRO
-		libretro_set_load_progress(nullptr, -1);
 #endif
 		return;
 	}
@@ -580,8 +577,6 @@ void LatteShaderCache_Load()
 	g_bootSndPlayer.FadeOutSound();
 
 #ifdef ENABLE_LIBRETRO
-	// Loaded. Take the bar down before the title's first frame arrives behind it.
-	libretro_set_load_progress(nullptr, -1);
 #endif
 
 	if(Latte_GetStopSignal())
@@ -633,21 +628,11 @@ void LatteShaderCache_ShowProgress(const std::function <bool(void)>& loadUpdateF
 		// SwapBuffers, and those renderer calls are the only thing on this path
 		// that can fault when the content is closed underneath it.
 		//
-		// So the drawing goes and the progress stays, handed to the frontend,
-		// which is the only one here with a screen. This is the longest wait in
-		// a session - a first pipeline cache load on a slow device runs for
-		// minutes - and with nothing on screen it is indistinguishable from a
-		// hang. Four times a second is enough for a bar to look alive.
-		if ((tick_cached() - lastFrameUpdate) >= std::chrono::milliseconds(250))
-		{
-			lastFrameUpdate = tick_cached();
-			const sint32 total = isPipelines ? g_shaderCacheLoaderState.pipelineFileCount
-				: g_shaderCacheLoaderState.shaderFileCount;
-			const sint32 done = isPipelines ? (sint32)g_shaderCacheLoaderState.loadedPipelines
-				: g_shaderCacheLoaderState.loadedShaderFiles;
-			libretro_set_load_progress(isPipelines ? "Loading cached pipelines" : "Loading cached shaders",
-				total > 0 ? (int)((sint64)done * 100 / total) : -1);
-		}
+		// The progress used to be handed to the frontend instead, and that had
+		// a reader for as long as the title started on a thread of its own. It
+		// does not now: the load runs inside the first retro_run, so the call
+		// that would pass the numbers on is the call that is blocked here. What
+		// reaches the user is the log.
 		continue;
 #endif
 
