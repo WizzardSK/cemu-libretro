@@ -1630,9 +1630,26 @@ namespace coreinit
 		for (size_t i = 0; i < Espresso::CORE_COUNT; i++)
 			g_coreRunQueueThreadCount[i].increment(); // make sure to wake up cores if they are paused and waiting for runnable threads
 		// wait for threads to stop execution
+		//
+		// One line per core, before and after. This join is where a close can
+		// stop for good - a core that is inside a guest thread only notices the
+		// stop when that thread reaches the scheduler again - and the pair of
+		// lines says which core it was and what it was doing: whether it is
+		// still marked alive, how many times it went round the idle loop, how
+		// many timeslices it took, and whether it is parked on its run queue.
 		for (size_t idx = 0; idx < sSchedulerThreads.size(); idx++)
 		{
+			cemuLog_log(LogType::Force,
+				"OSSchedulerEnd: joining core {} (alive={} idleLoops={} timeslices={} idleWait enter/wake={}/{} sysEventStage={})",
+				idx,
+				idx < 3 ? sSchedulerHostAlive[idx].load(std::memory_order_relaxed) : 0,
+				idx < 3 ? sSchedulerIdleLoopCount[idx].load(std::memory_order_relaxed) : 0,
+				idx < 3 ? sSchedulerTimeslice[idx].load(std::memory_order_relaxed) : 0,
+				idx < 3 ? sSchedulerIdleWaitEnterCount[idx].load(std::memory_order_relaxed) : 0,
+				idx < 3 ? sSchedulerIdleWaitWakeCount[idx].load(std::memory_order_relaxed) : 0,
+				sSchedulerSystemEventStage.load(std::memory_order_relaxed));
 			sSchedulerThreads[idx].join();
+			cemuLog_log(LogType::Force, "OSSchedulerEnd: core {} joined", idx);
 		}
 		sSchedulerThreads.clear();
 		g_schedulerThreadHandles.clear();
