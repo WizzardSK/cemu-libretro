@@ -1878,6 +1878,18 @@ static void libretro_apply_core_options()
 			if (libretro_parse_enabled_disabled(v, b) && b)
 				logFlags |= cemuLog_getFlag(LogType::TextureCache);
 		}
+		// What a title asks padscore and vpad for, and what it is told. A
+		// switch of its own rather than part of the system API one because
+		// WPADRead and KPADRead are logged per call, so this is a line per
+		// channel per frame - fine for the few seconds it takes to see whether
+		// a title probed for a Wii Remote and what it found, which is the one
+		// question a controller report cannot answer without it. See issue #24.
+		if (const char* v = libretro_get_option_value("cemu_log_input_api"))
+		{
+			bool b;
+			if (libretro_parse_enabled_disabled(v, b) && b)
+				logFlags |= cemuLog_getFlag(LogType::InputAPI);
+		}
 		cemuLog_setActiveLoggingFlags(logFlags);
 
 		// Not a log flag: this one prints a table from retro_run rather than
@@ -2156,6 +2168,7 @@ static const char* libretro_option_category(const char* key)
 		{"cemu_log_thread_dump", "logging"},
 		{"cemu_log_system_api", "logging"},
 		{"cemu_log_texture_memory", "logging"},
+		{"cemu_log_input_api", "logging"},
 		{"cemu_bc1_16bit", "video"},
 	};
 	for (const Entry& entry : entries)
@@ -2355,6 +2368,10 @@ static bool libretro_set_core_options_v2(retro_environment_t cb, const struct re
 			if (strcmp(var->key, "cemu_log_texture_memory") == 0)
 				def.info = keep(std::string("Reports how much of the texture memory is BC "
 					"that had to be decompressed because this GPU cannot sample it."));
+
+			if (strcmp(var->key, "cemu_log_input_api") == 0)
+				def.info = keep(std::string("Logs every controller call a title makes - which "
+					"pads it probed for and what it was told. Noisy; for a few seconds at a time."));
 
 			// The output directory is whatever the frontend turned out to
 			// allow, so its values are built here rather than written above.
@@ -2556,6 +2573,7 @@ static void libretro_publish_core_options(retro_environment_t cb)
 		{"cemu_log_thread_dump", "Log Wii U Thread Snapshots (debugging); disabled|enabled"},
 		{"cemu_log_system_api", "Log System API Calls (debugging); disabled|enabled"},
 		{"cemu_log_texture_memory", "Log Texture Memory (debugging); disabled|enabled"},
+		{"cemu_log_input_api", "Log Controller API Calls (debugging); disabled|enabled"},
 		{"cemu_bc1_16bit", "Reduce BC1 Texture Memory; disabled|enabled"},
 		{"cemu_onscreen_notifications", "On-Screen Notifications; enabled|disabled"},
 #if defined(ENABLE_VULKAN) && defined(ENABLE_OPENGL)
