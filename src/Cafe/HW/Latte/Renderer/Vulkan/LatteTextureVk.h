@@ -9,6 +9,12 @@
 class LatteTextureVk : public LatteTexture
 {
 public:
+	// For the memory report: what this texture costs and whether it is a BC
+	// texture the device could not sample. Both are zero unless the accounting
+	// was on when it was created.
+	uint64 GetResidentBytes() const { return m_residentBytes; }
+	bool IsDecompressedBc() const { return m_bcBytesIfKept != 0; }
+
 	LatteTextureVk(class VulkanRenderer* vkRenderer, Latte::E_DIM dim, MPTR physAddress, MPTR physMipAddress, Latte::E_GX2SURFFMT format, uint32 width, uint32 height, uint32 depth, uint32 pitch, uint32 mipLevels,
 		uint32 swizzle, Latte::E_HWTILEMODE tileMode, bool isDepth);
 

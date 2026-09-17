@@ -16,6 +16,7 @@
 // for. See issue #22.
 namespace
 {
+	uint32 s_lastAgeReportTick = 0;       // the age walk is not run per texture
 	uint64 s_residentTextureBytes = 0;    // every texture, whatever the format
 	uint64 s_residentDecodedBcBytes = 0;  // of those, the ones BC was decoded into
 	uint64 s_bcBytesIfKept = 0;           // what those would have taken as BC
@@ -89,6 +90,57 @@ namespace
 			total += (uint64)((w + 3) / 4) * ((h + 3) / 4) * blockBytes;
 		}
 		return total * std::max(layers, 1u);
+	}
+
+	// Where the resident bytes sit by how long ago each texture was last used.
+	//
+	// The collector keeps a RAM-restorable texture for two minutes *and* two
+	// thousand frames, scans twenty-five textures per frame and deletes at most
+	// ten of them - and it never looks at how much memory is in use. So the
+	// question that decides whether a memory budget would free anything is not
+	// how much is resident but how much of it nothing has touched in a while.
+	// Everything below two minutes is memory the collector will not take today
+	// however tight the device is.
+	void ReportTextureAges(uint32 currentTick)
+	{
+		if (!cemuLog_isLoggingEnabled(LogType::TextureCache))
+			return;
+		// A walk over every texture, so not on every texture that is created.
+		if (s_lastAgeReportTick != 0 && (currentTick - s_lastAgeReportTick) < 2000)
+			return;
+		s_lastAgeReportTick = currentTick;
+
+		static constexpr uint32 kBucketMs[] = {1000, 5000, 30000, 120000};
+		static constexpr const char* kBucketName[] = {"<1s", "<5s", "<30s", "<2min", "older"};
+		uint64 bytes[5] = {};
+		uint64 bcBytes[5] = {};
+		for (LatteTexture* tex : LatteTexture::GetAllTextures())
+		{
+			if (!tex)
+				continue;
+			const LatteTextureVk* vkTex = static_cast<const LatteTextureVk*>(tex);
+			const uint64 resident = vkTex->GetResidentBytes();
+			if (resident == 0)
+				continue;
+			const uint32 idle = currentTick - tex->lastAccessTick;
+			int bucket = 4;
+			for (int i = 0; i < 4; i++)
+			{
+				if (idle < kBucketMs[i])
+				{
+					bucket = i;
+					break;
+				}
+			}
+			bytes[bucket] += resident;
+			if (vkTex->IsDecompressedBc())
+				bcBytes[bucket] += resident;
+		}
+		std::string line;
+		for (int i = 0; i < 5; i++)
+			line += fmt::format("{}{} {} MiB ({} MiB BC)", i ? ", " : "", kBucketName[i],
+				bytes[i] / 1024 / 1024, bcBytes[i] / 1024 / 1024);
+		cemuLog_log(LogType::TextureCache, "texture age, by when it was last used: {}", line);
 	}
 
 	void ReportTextureMemory()
@@ -264,6 +316,7 @@ LatteTextureVk::LatteTextureVk(class VulkanRenderer* vkRenderer, Latte::E_DIM di
 			}
 		}
 		ReportTextureMemory();
+		ReportTextureAges(GetTickCount());
 	}
 
 	// init layout array
