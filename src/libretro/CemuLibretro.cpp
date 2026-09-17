@@ -4384,6 +4384,24 @@ RETRO_API void retro_unload_game()
 	// it now lets it see there is nothing to render on and leave while this is
 	// still its own close.
 	Latte_ReleaseGpuPause();
+	// And then wait for it to actually go. Waking it is not the same as it
+	// being gone: what it does next is LatteThread_Exit, and the teardown there
+	// deletes whatever g_renderer points at. If this returns first, the
+	// frontend is free to load the next title, whose context_reset builds a
+	// renderer - and the straggler from the last run deletes that one, leaving
+	// the new title with nothing to render on. What that looks like is a black
+	// screen with no shader cache progress at all, and one line in the log:
+	// the GPU thread refusing to start because something released the renderer
+	// between the frontend creating it and the title starting.
+	//
+	// Five seconds because there is nothing left for it to do but leave - it
+	// has no renderer, so its own stop check takes it out at the next command
+	// boundary - and because a close that waits is still better than the next
+	// run losing its renderer.
+	for (int i = 0; i < 5000 && (Latte_IsGpuThreadAlive() || Latte_IsGpuHandingContextBack()); i++)
+		std::this_thread::sleep_for(std::chrono::milliseconds(1));
+	if (Latte_IsGpuThreadAlive() || Latte_IsGpuHandingContextBack())
+		cemuLog_log(LogType::Force, "[LatteThread] the GPU thread from this run is still going five seconds after the unload woke it");
 
 #ifdef ENABLE_OPENGL
 	s_gl_callbacks.reset();

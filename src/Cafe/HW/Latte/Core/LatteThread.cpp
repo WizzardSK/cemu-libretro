@@ -663,6 +663,18 @@ void Latte_Start()
 	// and gone.
 	if (!g_renderer)
 	{
+		// Wait for one before giving up on the run. This runs on the launch
+		// thread, not the frontend's, so waiting here holds nothing up - and
+		// the renderer is built on the frontend's thread, in context_reset,
+		// which is the thread this is racing. A refusal is a title that boots
+		// to a black screen with no GPU thread behind it and no way back, so
+		// two seconds spent finding out is the cheaper of the two.
+		cemuLog_log(LogType::Force, "[LatteThread] no renderer at the title start - waiting for the frontend to build one");
+		for (int i = 0; i < 2000 && !g_renderer; i++)
+			std::this_thread::sleep_for(std::chrono::milliseconds(1));
+	}
+	if (!g_renderer)
+	{
 		cemuLog_log(LogType::Force, "[LatteThread] refusing to start: there is no renderer to run on. "
 			"Something released it between the frontend creating one and the title starting.");
 		sLatteThreadRunning = false;
