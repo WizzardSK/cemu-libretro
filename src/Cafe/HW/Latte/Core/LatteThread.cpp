@@ -149,11 +149,6 @@ const char* Latte_GetThreadPhase()
 #endif
 
 #ifdef ENABLE_LIBRETRO
-// Defined at global scope by the libretro glue (src/libretro/CemuLibretro.cpp).
-bool libretro_gpu_context_gone();
-#endif
-
-#ifdef ENABLE_LIBRETRO
 static std::atomic_bool sGpuPauseRequested{false};
 static std::atomic_bool sGpuParked{false};
 // Set when the GPU thread has reached the gate, which is before it starts
@@ -416,21 +411,6 @@ int Latte_ThreadEntry()
 	// renderer
 #ifdef ENABLE_LIBRETRO
 	LatteThread_SetPhase("renderer init");
-	// Everything from here to sLatteThreadFinishedInit goes into the graphics
-	// driver. If the frontend has already taken its context apart - a title
-	// closed a second after it started gets here - then the device behind
-	// those calls is gone, and on a Mali device that is a jump through a null
-	// entry in the driver's own dispatch table: pc=0, with the return address
-	// inside libGLES_mali.so and nothing of ours on the stack. Leave before
-	// making the first of them. Init is reported as finished either way, or
-	// Latte_Start waits for a thread that is already on its way out.
-	if (::libretro_gpu_context_gone() || !g_renderer)
-	{
-		cemuLog_log(LogType::Force, "[LatteThread] the graphics context went away before the renderer came up - stopping without touching it");
-		sLatteThreadFinishedInit = true;
-		LatteThread_Exit();
-		return 0;
-	}
 #endif
 	Latte_InitRendererState();
 
@@ -449,15 +429,6 @@ int Latte_ThreadEntry()
 		if( CafeSystem::IsTitleRunning() )
 			break;
 
-#ifdef ENABLE_LIBRETRO
-		// A stop that arrives before the title ever starts has to be seen here
-		// too. Closing content while it is still being prepared used to leave
-		// this loop spinning: Latte_Stop timed out, detached the thread, and the
-		// frontend then unloaded the library out from under a thread that was
-		// still running in it.
-		if (Latte_GetStopSignal())
-			LatteThread_Exit();
-#endif
 		g_renderer->DrawEmptyFrame(true);
 		g_renderer->DrawEmptyFrame(false);
 		g_renderer->CancelScreenshotRequest(); // keep the screenshot request queue empty
@@ -689,30 +660,6 @@ void Latte_Start()
 		cemuLog_log(LogType::Force, "[LatteThread] Latte_Start begin running={} finishedInit={}", sLatteThreadRunning.load() ? 1 : 0, sLatteThreadFinishedInit.load() ? 1 : 0);
 	std::unique_lock _lock(sLatteThreadStateMutex);
 	cemu_assert_debug(!sLatteThreadRunning);
-#ifdef ENABLE_LIBRETRO
-	// The first thing the GPU thread does is call g_renderer->Initialize(), so
-	// starting it without a renderer is a null dereference several seconds
-	// later, on another thread, with nothing in the log to say why - which is
-	// exactly the crash report that arrived from a Mali device. Refuse here
-	// instead, and say so. The caller must not be left waiting on an init that
-	// is never going to happen, so the flags are set as if the thread had come
-	// and gone.
-	if (!g_renderer)
-	{
-		cemuLog_log(LogType::Force, "[LatteThread] refusing to start: there is no renderer to run on. "
-			"Something released it between the frontend creating one and the title starting.");
-		sLatteThreadRunning = false;
-		sLatteThreadFinishedInit = true;
-		// LaunchForegroundTitle waits for this one line below its own call to
-		// this function, and only the GPU thread ever sets it - so a refusal
-		// leaves that wait running for a thread that is never going to start.
-		// The launch thread then never ends, which is worse than the failed
-		// run it belongs to: it is still there for the next one. Init is over
-		// either way; what this says is that there is nothing behind it.
-		g_isGPUInitFinished = true;
-		return;
-	}
-#endif
 	sLatteThreadRunning = true;
 	sLatteThreadFinishedInit = false;
 #ifdef ENABLE_LIBRETRO

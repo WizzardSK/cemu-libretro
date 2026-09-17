@@ -585,6 +585,9 @@ static std::mutex s_frame_mutex;
 static std::condition_variable s_frame_cv;
 std::atomic_bool s_frame_ready{false};
 static std::atomic_bool s_shutting_down{false};
+// Set by the first retro_run that runs the startup handshake. A launch that
+// fails is not tried again - see the handshake for why.
+static bool s_launch_attempted = false;
 // Whether audio may still be handed to the frontend. Cleared as unload starts
 // and set again when a title is loaded.
 static std::atomic_bool s_audio_submission_allowed{true};
@@ -2976,13 +2979,10 @@ RETRO_API void retro_reset()
 	}
 #endif
 
-	// The stop is over, and what follows is a start. The shutdown above sets
-	// the shutting-down flag for the benefit of everything that has to wind up
-	// - including the launch, which reads it at its own checkpoints and stops
-	// there. Leaving it set through the relaunch is a reset that shuts the
-	// title down and then refuses to start it again: "the content was closed
-	// during the title scan - not launching", a black screen, and no cache
-	// progress because nothing is loading.
+	// The stop is over, and what follows is a start. The shutdown above sets the
+	// shutting-down flag for the benefit of everything that has to wind up, and
+	// leaving it set through the relaunch is a reset that shuts the title down
+	// and then skips every frame of the run that follows.
 	s_shutting_down = false;
 
 	// The renderer went down with the title: LatteThread_Exit deletes it and
@@ -3391,14 +3391,6 @@ static void libretro_prepare_and_launch_title()
 		if (log_cb)
 			log_cb(RETRO_LOG_INFO, "Cemu: waiting for the mandatory title scan\n");
 		CafeTitleList::WaitForMandatoryScan();
-		// The scan is the first thing here long enough for a close to arrive
-		// during it. Everything after this point builds on the graphics
-		// context, and a close has taken it apart by then.
-		if (s_shutting_down)
-		{
-			cemuLog_log(LogType::Force, "[libretro] the content was closed during the title scan - not launching");
-			return;
-		}
 
 		TitleId baseTitleId;
 		if (!CafeTitleList::FindBaseTitleId(launchTitle.GetAppTitleId(), baseTitleId))
@@ -3434,15 +3426,6 @@ static void libretro_prepare_and_launch_title()
 	{
 		if (log_cb)
 			log_cb(RETRO_LOG_ERROR, "Cemu: Failed to prepare game (status %d)\n", (int)status);
-		return;
-	}
-
-	// The last point where this can still be called off. Past it the title is
-	// running and the close has a title to shut down instead of a launch to
-	// stop - which is the supported way round.
-	if (s_shutting_down)
-	{
-		cemuLog_log(LogType::Force, "[libretro] the content was closed while the title was being prepared - not launching");
 		return;
 	}
 
@@ -3529,7 +3512,6 @@ static void libretro_launch_game()
 	libretro_prepare_and_launch_title();
 }
 
-static std::atomic_bool s_launch_thread_running{false};
 
 // Wayland / EGL frontends: build the shared GPU-thread context via EGL instead of GLX.
 #ifdef ENABLE_OPENGL
@@ -3909,44 +3891,9 @@ static void libretro_context_reset()
 	windowInfo.dpi_scale = 1.0;
 	windowInfo.app_active = true;
 
-	// Launch game in a separate thread so we don't block the frontend render loop
-	// (loading from rclone/network can take a long time)
-	if (!s_launch_thread_running && !s_emu_initialized)
-	{
-		s_launch_thread_running = true;
-		std::thread([]() {
-			// An exception leaving a thread function is std::terminate, which
-			// is an abort with the whole process behind it - and closing the
-			// content while this is still preparing the title is enough to
-			// produce one. A cancelled launch is not a reason to take
-			// RetroArch down, so say what happened and let the thread end.
-			//
-			// The flag is cleared by the guard rather than at the end, so it
-			// is cleared on the way out of an exception too; leaving it set
-			// would make every later load believe a launch was still running.
-			struct ClearRunningFlag
-			{
-				~ClearRunningFlag() { s_launch_thread_running = false; }
-			} clearRunningFlag;
-
-			try
-			{
-				libretro_launch_game();
-			}
-			catch (const std::exception& ex)
-			{
-				cemuLog_log(LogType::Force, "[libretro] the launch thread ended with an exception: {}", ex.what());
-				if (log_cb)
-					log_cb(RETRO_LOG_ERROR, "Cemu: could not launch the title: %s\n", ex.what());
-			}
-			catch (...)
-			{
-				cemuLog_log(LogType::Force, "[libretro] the launch thread ended with an exception of unknown type");
-				if (log_cb)
-					log_cb(RETRO_LOG_ERROR, "Cemu: could not launch the title\n");
-			}
-		}).detach();
-	}
+	// The title is not started here. It starts on the frontend's own thread,
+	// inside the first retro_run, and that call does not return until it is
+	// running - see the handshake there for why.
 }
 
 // Runs on: the frontend's thread, the same one as context_reset.
@@ -4416,25 +4363,11 @@ RETRO_API void retro_unload_game()
 	// with a progress bar it never asked for and an environment call behind it.
 	libretro_set_load_progress(nullptr, -1);
 
-	// Before anything is taken apart: a close can land in the middle of the
-	// launch. Preparing a title runs on its own thread and s_game_loaded is
-	// only set at the end of it, so a close arriving before that finds nothing
-	// to shut down, deletes the renderer, and leaves the launch to carry on -
-	// into Latte_Start, which then has no renderer to start a GPU thread on.
-	// That is the black screen with "refusing to start" in the log, and the
-	// title it belongs to is still there afterwards. The launch reads this
-	// flag at its own checkpoints, so this is a wait of milliseconds unless
-	// the title is already running, in which case what follows shuts it down.
+	// The title now starts inside retro_run, so a close cannot arrive while it
+	// is starting - the frontend is in this core either way, and it is
+	// in only one place at a time. What this flag still does is stop the frame
+	// path once the close is under way.
 	s_shutting_down = true;
-	if (s_launch_thread_running)
-	{
-		cemuLog_log(LogType::Force, "[libretro] content closed while the launch was still in flight - waiting for it to stop");
-		for (int i = 0; i < 30000 && s_launch_thread_running; i++)
-			std::this_thread::sleep_for(std::chrono::milliseconds(1));
-		cemuLog_log(LogType::Force, s_launch_thread_running
-			? "[libretro] the launch is still going thirty seconds later; closing without it"
-			: "[libretro] the launch stopped, carrying on with the close");
-	}
 
 	// A GPU device/renderer may have been created even if the title failed to finish
 	// loading (s_game_loaded false), and that renderer still has to go.
@@ -4562,6 +4495,7 @@ RETRO_API void retro_unload_game()
 	s_hw_render_initialized = false;
 	s_gpu_context_made_current = false;
 	s_emu_initialized = false;
+	s_launch_attempted = false;
 	s_shutting_down = false;
 	s_frame_ready = false;
 	{
@@ -4978,6 +4912,63 @@ RETRO_API void retro_run()
 			s_convert_finished = false;
 			libretro_update_convert_visibility();
 		}
+	}
+
+	// The startup handshake, and the reason most of the startup machinery that
+	// used to be here is gone. The title starts on this thread, in this call,
+	// and this call does not return until it is running or has failed. While
+	// the core is inside retro_run the frontend cannot close the content, so
+	// the window a launch on its own thread had to be guarded against - a close
+	// arriving mid-launch, a renderer released from under Latte_Start, a GPU
+	// thread entering on a context that is already gone - does not exist.
+	//
+	// The cost is the frontend's menu waiting for the load, which is what it is
+	// waiting for anyway.
+	if (!s_game_loaded && !s_launch_attempted && !s_game_path.empty() &&
+		(!s_use_hw_render || s_hw_render_initialized))
+	{
+		s_launch_attempted = true;
+		if (s_use_hw_render && !g_renderer)
+		{
+			// context_reset ran and left no renderer behind. There is nothing to
+			// start a GPU thread on, and every later symptom of carrying on -
+			// the null dereference inside the driver, the black screen - is
+			// worse than saying so here.
+			cemuLog_log(LogType::Force, "[libretro] the frontend's context produced no renderer - not launching");
+			if (log_cb)
+				log_cb(RETRO_LOG_ERROR, "Cemu: could not create a renderer on the frontend's graphics context\n");
+			if (environ_cb)
+				environ_cb(RETRO_ENVIRONMENT_SHUTDOWN, nullptr);
+			video_cb(NULL, SCREEN_WIDTH, SCREEN_HEIGHT, 0);
+			return;
+		}
+		try
+		{
+			libretro_launch_game();
+		}
+		catch (const std::exception& ex)
+		{
+			cemuLog_log(LogType::Force, "[libretro] the launch ended with an exception: {}", ex.what());
+			if (log_cb)
+				log_cb(RETRO_LOG_ERROR, "Cemu: could not launch the title: %s\n", ex.what());
+		}
+		catch (...)
+		{
+			cemuLog_log(LogType::Force, "[libretro] the launch ended with an exception of unknown type");
+			if (log_cb)
+				log_cb(RETRO_LOG_ERROR, "Cemu: could not launch the title\n");
+		}
+		if (!s_game_loaded)
+		{
+			// The launch is not retried: whatever stopped it - a missing key, a
+			// title that would not prepare - is still true next frame, and a
+			// core that keeps trying says nothing about why.
+			if (environ_cb)
+				environ_cb(RETRO_ENVIRONMENT_SHUTDOWN, nullptr);
+		}
+		// The first frame belongs to the title, not to the load that just ran.
+		video_cb(NULL, SCREEN_WIDTH, SCREEN_HEIGHT, 0);
+		return;
 	}
 
 	if (!s_game_loaded)
