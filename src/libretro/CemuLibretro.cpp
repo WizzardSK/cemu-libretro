@@ -304,43 +304,37 @@ static void libretro_set_log_to_file(bool toFile)
 // Ending the process on purpose
 // ============================================================================
 
-/*	Every place in this core that ends the process deliberately comes through
-	here, so the reasoning sits in one function instead of at four call sites -
-	and so the files outside src/libretro keep to a call and a declaration,
-	which is all an upstream merge then has to look at.
+/*	The one place left in this core that ends the process deliberately, and the
+	reasoning for it in one function rather than at the call site - which also
+	keeps the files outside src/libretro to a call and a declaration, all an
+	upstream merge has to look at.
 
-	Where the calls come from, and what has already been waited for by then:
+	It used to have four callers. Three are gone, and it is worth saying what
+	replaced them, because "end the process" is the answer of last resort and
+	each of those turned out to have a better one:
 
-	    retro_unload_game / retro_reset
-	      |
-	      +- ShutdownTitle, on its own thread, waited for up to 30 s
-	      |    |
-	      |    `- Latte_Stop asks the GPU thread to leave and waits 5 s
-	      |         `- it did not leave ................................ here
-	      |
-	      `- the deprecated IOSU workers are asked to stop, waited 5 s
-	           `- one is still running ................................. here
+	    Latte_Stop waiting five seconds for the GPU thread, then aborting.
+	    It is a plain join now (the way upstream stops that thread). What the
+	    timeout was really guarding against - a thread wedged on a renderer
+	    during a close - is fixed where it happens: the pause gate holds the
+	    thread while there is no renderer, and every thread that works through
+	    one is stopped before it is deleted.
 
-	    context_destroy, which arrives before the close, while the frontend's
-	    graphics context still exists and can still be handed things back
-	      |
-	      +- the GPU thread has 0.5 s to reach the pause gate ........... here
-	      `- then 10 s to finish handing the context's contents back .... here
+	    context_destroy, twice: half a second for the GPU thread to reach the
+	    pause gate, then ten seconds to finish handing the context back. Both
+	    say so in the log and let the close carry on. The renderer goes with
+	    the GPU thread's own exit or with the unload either way, so the state
+	    the abort was protecting is clean without it - and a close that ends
+	    RetroArch is worse than a late handover.
 
-	The GPU thread's 5 s sit inside ShutdownTitle's 30 s, which is why the
-	"did not shut down in time" branch in libretro_shutdown_title_for_exit is
-	only ever reached for other reasons: when the GPU thread is the one that is
-	wedged, the process is gone long before that timer expires.
+	What is left is the IOSU one, where a deprecated worker did not stop: those
+	threads are detached and hold a queue the next title would push into, and
+	there is nothing to join or wake. That one still ends the process.
 
 	What happens after abort(): SIGABRT lands in the handler this core installs
 	for the whole process (ExceptionHandler_Init, by way of CemuCommonInit),
 	which writes log.txt and then _Exit(1) unless crash dumps are enabled - so
 	there is a log ending in the line below, and usually no core dump.
-
-	RetroArch goes down with us, and that is the price being paid on purpose.
-	The alternative is a title reported as closed with a thread still drawing
-	through the frontend's device, and that took RetroArch down too - later,
-	somewhere unrelated, with nothing in the log tying it to the close.
 */
 [[noreturn]] static void libretro_fail_fast(const char* tag, const std::string& what)
 {
@@ -2848,11 +2842,9 @@ static bool libretro_shutdown_title_for_exit()
 	for (int i = 0; i < kShutdownTimeoutMs && !*finished; i++)
 		std::this_thread::sleep_for(std::chrono::milliseconds(1));
 
-	// A GPU thread that would not stop no longer gets here at all: Latte_Stop
-	// says so and ends the process, because the alternative was a half-stopped
-	// title - save data on disk, a live thread still rendering through the
-	// frontend's device - and every crash that came of it arrived somewhere
-	// else entirely.
+	// A GPU thread that will not stop shows up here as a timeout rather than as
+	// anything louder: Latte_Stop joins it, so this wait is the one that ends,
+	// and the phase it reports is what says where it stopped.
 	if (log_cb)
 	{
 		if (*finished)
