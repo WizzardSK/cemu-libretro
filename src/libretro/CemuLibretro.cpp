@@ -2942,6 +2942,15 @@ RETRO_API void retro_reset()
 	}
 #endif
 
+	// The stop is over, and what follows is a start. The shutdown above sets
+	// the shutting-down flag for the benefit of everything that has to wind up
+	// - including the launch, which reads it at its own checkpoints and stops
+	// there. Leaving it set through the relaunch is a reset that shuts the
+	// title down and then refuses to start it again: "the content was closed
+	// during the title scan - not launching", a black screen, and no cache
+	// progress because nothing is loading.
+	s_shutting_down = false;
+
 	// The renderer went down with the title: LatteThread_Exit deletes it and
 	// releases g_renderer, and the Latte thread the relaunch starts dereferences
 	// that pointer before anything else it does.
