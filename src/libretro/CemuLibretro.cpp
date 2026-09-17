@@ -3301,6 +3301,14 @@ static void libretro_prepare_and_launch_title()
 		if (log_cb)
 			log_cb(RETRO_LOG_INFO, "Cemu: waiting for the mandatory title scan\n");
 		CafeTitleList::WaitForMandatoryScan();
+		// The scan is the first thing here long enough for a close to arrive
+		// during it. Everything after this point builds on the graphics
+		// context, and a close has taken it apart by then.
+		if (s_shutting_down)
+		{
+			cemuLog_log(LogType::Force, "[libretro] the content was closed during the title scan - not launching");
+			return;
+		}
 
 		TitleId baseTitleId;
 		if (!CafeTitleList::FindBaseTitleId(launchTitle.GetAppTitleId(), baseTitleId))
@@ -3336,6 +3344,15 @@ static void libretro_prepare_and_launch_title()
 	{
 		if (log_cb)
 			log_cb(RETRO_LOG_ERROR, "Cemu: Failed to prepare game (status %d)\n", (int)status);
+		return;
+	}
+
+	// The last point where this can still be called off. Past it the title is
+	// running and the close has a title to shut down instead of a launch to
+	// stop - which is the supported way round.
+	if (s_shutting_down)
+	{
+		cemuLog_log(LogType::Force, "[libretro] the content was closed while the title was being prepared - not launching");
 		return;
 	}
 
@@ -4309,10 +4326,36 @@ RETRO_API void retro_unload_game()
 	// with a progress bar it never asked for and an environment call behind it.
 	libretro_set_load_progress(nullptr, -1);
 
+	// Before anything is taken apart: a close can land in the middle of the
+	// launch. Preparing a title runs on its own thread and s_game_loaded is
+	// only set at the end of it, so a close arriving before that finds nothing
+	// to shut down, deletes the renderer, and leaves the launch to carry on -
+	// into Latte_Start, which then has no renderer to start a GPU thread on.
+	// That is the black screen with "refusing to start" in the log, and the
+	// title it belongs to is still there afterwards. The launch reads this
+	// flag at its own checkpoints, so this is a wait of milliseconds unless
+	// the title is already running, in which case what follows shuts it down.
+	s_shutting_down = true;
+	if (s_launch_thread_running)
+	{
+		cemuLog_log(LogType::Force, "[libretro] content closed while the launch was still in flight - waiting for it to stop");
+		for (int i = 0; i < 30000 && s_launch_thread_running; i++)
+			std::this_thread::sleep_for(std::chrono::milliseconds(1));
+		cemuLog_log(LogType::Force, s_launch_thread_running
+			? "[libretro] the launch is still going thirty seconds later; closing without it"
+			: "[libretro] the launch stopped, carrying on with the close");
+	}
+
 	// A GPU device/renderer may have been created even if the title failed to finish
 	// loading (s_game_loaded false), and that renderer still has to go.
 	if (!s_game_loaded && !s_gpu_context_created)
+	{
+		// Nothing was torn down, so nothing is shutting down either: the flag
+		// above belongs to this close and the next load has to start with it
+		// clear, or retro_run skips every frame of a run that is fine.
+		s_shutting_down = false;
 		return;
+	}
 
 	const bool stopped = libretro_shutdown_title_for_exit();
 

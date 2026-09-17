@@ -680,6 +680,13 @@ void Latte_Start()
 			"Something released it between the frontend creating one and the title starting.");
 		sLatteThreadRunning = false;
 		sLatteThreadFinishedInit = true;
+		// LaunchForegroundTitle waits for this one line below its own call to
+		// this function, and only the GPU thread ever sets it - so a refusal
+		// leaves that wait running for a thread that is never going to start.
+		// The launch thread then never ends, which is worse than the failed
+		// run it belongs to: it is still there for the next one. Init is over
+		// either way; what this says is that there is nothing behind it.
+		g_isGPUInitFinished = true;
 		return;
 	}
 #endif
