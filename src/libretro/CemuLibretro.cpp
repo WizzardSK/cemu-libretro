@@ -2854,6 +2854,18 @@ static bool libretro_shutdown_title_for_exit()
 	// frame gate is a thread that never gets there.
 	libretro_frame_gate_release();
 
+	// And the same for the pause gate, which is the other place it waits. A
+	// close that arrives after context_destroy finds the GPU thread parked with
+	// its renderer already handed back, waiting for the context to come back -
+	// which for a close it never does. ShutdownTitle joins that thread, so what
+	// the wait below then measures is a deadlock: thirty seconds, then a close
+	// that carries on with the thread still parked and alive into the next run.
+	// Telling it the context is gone for good turns the null renderer it is
+	// looking at into the stop signal it already knows how to read, and it
+	// leaves through its own exit.
+	Latte_AbandonRendererRebuild();
+	Latte_ReleaseGpuPause();
+
 	auto finished = std::make_shared<std::atomic_bool>(false);
 	std::thread([finished]() {
 		CafeSystem::ShutdownTitle();

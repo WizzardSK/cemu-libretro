@@ -117,6 +117,19 @@ bool Latte_IsRendererRebuildPending()
 	return sRendererRebuildPending.load(std::memory_order_acquire);
 }
 
+// The context that went away is not coming back: the title is stopping, not
+// toggling fullscreen. Without this the gate holds a thread that has already
+// handed its renderer back and is waiting for the next one - and holding it is
+// what stops the close, because ShutdownTitle joins that thread. Clearing the
+// flag turns the same null renderer from "wait for the new one" into "this run
+// is over", which is what the stop signal reads it as.
+//
+// Runs on: the frontend's thread, in the close. Release the pause after it.
+void Latte_AbandonRendererRebuild()
+{
+	sRendererRebuildPending.store(false, std::memory_order_release);
+}
+
 // Where the GPU thread is. Only ever set by that thread, and only to string
 // literals, so reading it from another thread during a shutdown is safe. It
 // exists because "the GPU thread would not stop" on its own says nothing about

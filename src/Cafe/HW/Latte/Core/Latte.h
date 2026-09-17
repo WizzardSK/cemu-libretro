@@ -210,6 +210,7 @@ void Latte_CancelGpuTeardownForContextLoss();
 bool Latte_GpuTeardownForContextLossDone();
 bool Latte_IsGpuThreadAlive(); // false once the thread has left, whatever took it out
 bool Latte_IsRendererRebuildPending();
+void Latte_AbandonRendererRebuild(); // the context is not coming back; let a parked thread go
 void Latte_GpuPauseGate(); // GPU thread only - called by the command processor
 bool Latte_HasFinishedRendererInit(); // false while the GPU thread is still bringing the renderer up
 bool Latte_HasGpuThreadEntered(); // false between the thread being created and its first line running
