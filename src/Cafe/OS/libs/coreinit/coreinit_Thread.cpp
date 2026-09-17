@@ -21,17 +21,6 @@
 void libretro_frame_window_wait();
 #endif
 
-static bool coreinit_libretro_debug_enabled()
-{
-	static int s_cached = -1;
-	if (s_cached == -1)
-	{
-		const char* env = std::getenv("CEMU_LIBRETRO_DEBUG");
-		s_cached = (env && env[0] != '\0' && env[0] != '0') ? 1 : 0;
-	}
-	return s_cached != 0;
-}
-
 #ifdef __arm64__
 #if defined(__clang__)
 #include <arm_acle.h>
@@ -1367,8 +1356,6 @@ namespace coreinit
 				// stopped.
 				if (!sSchedulerActive.load(std::memory_order::relaxed))
 				{
-					if (coreinit_libretro_debug_enabled())
-						cemuLog_log(LogType::Force, "[OSScheduler] Core {} idle loop detected shutdown, switching to scheduler fiber", t_assignedCoreIndex);
 					Fiber::Switch(*t_schedulerFiber); // switch back to original thread to exit
 				}
 				__OSCheckSystemEvents();
@@ -1383,8 +1370,6 @@ namespace coreinit
 				sSchedulerIdleWaitWakeCount[t_assignedCoreIndex].fetch_add(1, std::memory_order_relaxed);
 				if (!sSchedulerActive.load(std::memory_order::relaxed))
 				{
-					if (coreinit_libretro_debug_enabled())
-						cemuLog_log(LogType::Force, "[OSScheduler] Core {} idle loop detected shutdown, switching to scheduler fiber", t_assignedCoreIndex);
 					Fiber::Switch(*t_schedulerFiber); // switch back to original thread to exit
 				}
 			}
@@ -1408,8 +1393,6 @@ namespace coreinit
 
 		if (!sSchedulerActive.load(std::memory_order::relaxed))
 		{
-			if (coreinit_libretro_debug_enabled())
-				cemuLog_log(LogType::Force, "[OSScheduler] Core {} __OSThreadSwitchToNext detected shutdown, switching to scheduler fiber", t_assignedCoreIndex);
 			__OSUnlockScheduler();
 			Fiber::Switch(*t_schedulerFiber); // switch back to original thread entry for it to exit
 		}
@@ -1574,12 +1557,8 @@ namespace coreinit
 		g_idleLoopFiber[t_assignedCoreIndex]->SetDebugName(fmt::format("cemu idle core {}", t_assignedCoreIndex).c_str());
 		cemu_assert_debug(PPCInterpreter_getCurrentInstance() == nullptr);
 		__OSLockScheduler();
-		if (coreinit_libretro_debug_enabled())
-			cemuLog_log(LogType::Force, "[OSScheduler] Core {} entering idle loop", t_assignedCoreIndex);
 		Fiber::Switch(*g_idleLoopFiber[t_assignedCoreIndex]);
 		// returned from scheduler loop, exit thread
-		if (coreinit_libretro_debug_enabled())
-			cemuLog_log(LogType::Force, "[OSScheduler] Core {} exited idle loop, thread exiting", t_assignedCoreIndex);
 		cemu_assert_debug(!__OSHasSchedulerLock());
 		if (t_assignedCoreIndex >= 0 && t_assignedCoreIndex < 3)
 			sSchedulerHostAlive[t_assignedCoreIndex].store(0, std::memory_order_relaxed);
@@ -1646,27 +1625,15 @@ namespace coreinit
     // shuts down all scheduler host threads and deletes all fibers and ppc threads
 	void OSSchedulerEnd()
 	{
-		if (coreinit_libretro_debug_enabled())
-			cemuLog_log(LogType::Force, "[OSScheduler] OSSchedulerEnd begin threadCount={}", sSchedulerThreads.size());
 		std::unique_lock _lock(sSchedulerStateMtx);
-		if (coreinit_libretro_debug_enabled())
-			cemuLog_log(LogType::Force, "[OSScheduler] OSSchedulerEnd locked, setting sSchedulerActive=false");
 		sSchedulerActive.store(false);
 		for (size_t i = 0; i < Espresso::CORE_COUNT; i++)
 			g_coreRunQueueThreadCount[i].increment(); // make sure to wake up cores if they are paused and waiting for runnable threads
-		if (coreinit_libretro_debug_enabled())
-			cemuLog_log(LogType::Force, "[OSScheduler] OSSchedulerEnd woke cores, joining threads...");
 		// wait for threads to stop execution
 		for (size_t idx = 0; idx < sSchedulerThreads.size(); idx++)
 		{
-			if (coreinit_libretro_debug_enabled())
-				cemuLog_log(LogType::Force, "[OSScheduler] OSSchedulerEnd joining thread {}", idx);
 			sSchedulerThreads[idx].join();
-			if (coreinit_libretro_debug_enabled())
-				cemuLog_log(LogType::Force, "[OSScheduler] OSSchedulerEnd thread {} joined", idx);
 		}
-		if (coreinit_libretro_debug_enabled())
-			cemuLog_log(LogType::Force, "[OSScheduler] OSSchedulerEnd all threads joined");
 		sSchedulerThreads.clear();
 		g_schedulerThreadHandles.clear();
 #if BOOST_OS_LINUX
@@ -1709,16 +1676,12 @@ namespace coreinit
 			c.store(0, std::memory_order_relaxed);
 		for (auto& c : sSchedulerPpcFiberInstructionHeartbeatCount)
 			c.store(0, std::memory_order_relaxed);
-		if (coreinit_libretro_debug_enabled())
-			cemuLog_log(LogType::Force, "[OSScheduler] OSSchedulerEnd deleting fibers, count={}", s_threadToFiber.size());
 		for (auto& it : s_threadToFiber)
 		{
 			OSHostThread* hostThread = it.second;
 			delete hostThread;
 		}
 		s_threadToFiber.clear();
-		if (coreinit_libretro_debug_enabled())
-			cemuLog_log(LogType::Force, "[OSScheduler] OSSchedulerEnd done");
 	}
 
 	bool OSSchedulerIsActive()

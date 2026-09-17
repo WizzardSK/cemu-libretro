@@ -82,6 +82,11 @@ uint32 iosuIoctl_runningWorkerCount()
 	return sIoctlWorkersRunning.load(std::memory_order_acquire);
 }
 
+// The one wait in this core that still has a deadline, and it is the one whose
+// threads cannot be joined: upstream detaches these and keeps no handle, which
+// is a decision to leak them rather than to let them hold a shutdown up. So
+// this cannot be a join, and an unbounded version of it would hand the frontend
+// a hang in exchange for a worker that was never going to come back anyway.
 bool iosuIoctl_waitForWorkersToStop(int timeoutMs)
 {
 	for (int i = 0; i < timeoutMs && sIoctlWorkersRunning.load(std::memory_order_acquire) != 0; i++)

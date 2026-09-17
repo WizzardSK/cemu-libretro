@@ -1075,18 +1075,11 @@ bool PipelineCompiler::CalcRobustBufferAccessRequirement(LatteDecompilerShader* 
 
 static std::vector<std::thread> s_compileThreads;
 static std::atomic_bool s_compileThreadsShutdownSignal{};
-// How many are still inside the loop below. Join needs to be given up on
-// rather than waited out: a thread in the middle of a driver call against a
-// device that has already gone does not necessarily come back, and a leaked
-// thread is a smaller problem than an emulator that will not close.
-static std::atomic_uint32_t s_compileThreadsLive{};
 static ConcurrentQueue<PipelineCompiler*> s_pipelineCompileRequests;
 
 static void compilePipeline_thread(sint32 threadIndex)
 {
 	SetThreadName("compilePl");
-	s_compileThreadsLive++;
-	struct LiveCount { ~LiveCount() { s_compileThreadsLive--; } } liveCount;
 #ifdef _WIN32
 	// to avoid starving the main cpu and render threads the pipeline compile threads run at lower priority
 	// except for one thread which we always run at normal priority to prevent the opposite scenario where all compile threads are starved
@@ -1125,8 +1118,6 @@ void PipelineCompiler::CompileThreadPool_Start()
 
 void PipelineCompiler::CompileThreadPool_Stop()
 {
-	if (s_compileThreads.empty())
-		return;
 	s_compileThreadsShutdownSignal = true;
 	{
 		// push one empty workload for each thread
@@ -1134,24 +1125,8 @@ void PipelineCompiler::CompileThreadPool_Stop()
 		for (auto& thread : s_compileThreads)
 			s_pipelineCompileRequests.push(nullptr);
 	}
-	// Bounded. These used to be joined outright, which is right when the pool
-	// is stopped from VulkanRenderer::Shutdown with the device still alive.
-	// It is not right on the libretro unload path, which also reaches here
-	// after the frontend has taken the graphics context away: a thread that is
-	// inside the driver compiling against a dead device may never return, and
-	// waiting on it forever turns a leak into a hang on close.
-	for (uint32 i = 0; i < 2000 && s_compileThreadsLive.load() != 0; i++)
-		std::this_thread::sleep_for(std::chrono::milliseconds(1));
-	const uint32 stragglers = s_compileThreadsLive.load();
 	for (auto& thread : s_compileThreads)
-	{
-		if (stragglers == 0)
-			thread.join();
-		else
-			thread.detach();
-	}
-	if (stragglers != 0)
-		cemuLog_log(LogType::Force, "[PipelineCompiler] {} compile thread(s) did not stop in time, leaving them", stragglers);
+		thread.join();
 	while (!s_pipelineCompileRequests.empty())
 	{
 		PipelineCompiler* pipelineCompiler = s_pipelineCompileRequests.pop();

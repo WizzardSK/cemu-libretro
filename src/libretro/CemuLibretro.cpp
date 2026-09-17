@@ -249,6 +249,137 @@ static retro_input_poll_t input_poll_cb = nullptr;
 static retro_input_state_t input_state_cb = nullptr;
 static retro_log_printf_t log_cb = nullptr;
 
+// Cemu's log, handed to the frontend instead of to a file. Installed only while
+// log.txt is switched off: with both on, every line would be written twice, and
+// with both off - the frontend's own log file is a setting too - a run touches
+// the disk for logging not at all.
+class LibretroLogSink : public LoggingCallbacks
+{
+public:
+	void Log(std::string_view filter, std::string_view message) override
+	{
+		if (!log_cb)
+			return;
+		if (filter.empty())
+			log_cb(RETRO_LOG_INFO, "CEMU %.*s\n", (int)message.size(), message.data());
+		else
+			log_cb(RETRO_LOG_INFO, "CEMU [%.*s] %.*s\n", (int)filter.size(), filter.data(),
+				(int)message.size(), message.data());
+	}
+
+	void Log(std::string_view filter, std::wstring_view message) override
+	{
+		// Every caller of the wide overload formats ASCII; anything else is
+		// written as a question mark rather than as broken bytes.
+		std::string narrow;
+		narrow.reserve(message.size());
+		for (wchar_t c : message)
+			narrow.push_back((c > 0 && c < 128) ? (char)c : '?');
+		Log(filter, narrow);
+	}
+};
+static LibretroLogSink s_log_sink;
+static bool s_log_sink_installed = false;
+
+// Both sides of the switch in one place, so the installed state and the file
+// cannot disagree.
+static void libretro_set_log_to_file(bool toFile)
+{
+	cemuLog_setFileLoggingEnabled(toFile);
+	if (toFile == !s_log_sink_installed)
+		return;
+	if (toFile)
+	{
+		cemuLog_clearCallbacks();
+		s_log_sink_installed = false;
+	}
+	else
+	{
+		cemuLog_setCallbacks(&s_log_sink);
+		s_log_sink_installed = true;
+	}
+}
+
+// ============================================================================
+// Ending the process on purpose
+// ============================================================================
+
+/*	One caller, and the reasoning here rather than at it.
+
+	Everything else that ends a run now waits by joining, the way the emulator
+	does: the scheduler's threads, the GPU thread, each IOSU service. A thread
+	that is told to stop is expected to stop, and a deadline on that only
+	invents a failure mode - so the three that used to end the process here are
+	gone, and so are their timeouts.
+
+	The deprecated IOSU ioctl workers are the exception, and it is upstream that
+	makes them one: they are detached and no handle is kept, which is a decision
+	to leak them rather than let them hold a shutdown up. A detached thread
+	cannot be joined, so there is no unbounded wait to convert this into - only
+	a flag, and a flag that never clears is a frontend that never comes back.
+
+	What makes the timeout the better answer here rather than leaking them: they
+	are still answering ioctls for a title that has ended, one of which is the
+	save-data path, and the next run reads the same files. An orphan writing a
+	save while a new title reads it is worse than a process that stops and says
+	which worker would not leave.
+
+	What happens after abort(): SIGABRT lands in the handler this core installs
+	for the whole process (ExceptionHandler_Init, by way of CemuCommonInit),
+	which writes log.txt and then _Exit(1) unless crash dumps are enabled - so
+	there is a log ending in the line below, and usually no core dump.
+*/
+[[noreturn]] static void libretro_fail_fast(const char* tag, const std::string& what)
+{
+	// The log first and flushed, because the whole value of stopping here is
+	// the line that says why.
+	cemuLog_log(LogType::Force, "[{}] {}", tag, what);
+	cemuLog_waitForFlush();
+	std::abort();
+}
+
+// Runs on: the frontend's thread, in context_destroy. Says what went wrong and
+// lets the close carry on. This used to end the process, on the grounds that a
+// context going away with the core's objects still on it leaves them for the
+// next run - but the next run does not inherit them any more: the renderer is
+// deleted on the way out either by the GPU thread's own exit or by the unload
+// below, and the frontend is told the context is gone, so everything that would
+// have drawn on it stops. Ending RetroArch over a thread that answered late is
+// the worse of the two.
+// Runs on: the frontend's thread, in context_destroy. The GPU thread is not at
+// the gate because it is leaving instead - a close sets the stop signal, and a
+// thread that reads it takes its own way out, which ends in the same teardown
+// this was waiting for. So wait for that one: everything it frees belongs to
+// the device the frontend destroys the moment this callback returns, and the
+// price of returning early is a renderer destroyed afterwards - vkDestroy on a
+// dead device, which on Mali is an abort inside the driver, with the close
+// hanging half a minute first while the same driver's threads are asked to
+// finish work for a device that has gone.
+//
+// The budget is the teardown's own: ten seconds, the same as for a parked
+// thread, because it is the same work.
+static bool libretro_wait_for_gpu_handover(const char* what)
+{
+	if (!Latte_IsGpuHandingContextBack())
+		return false;
+	cemuLog_log(LogType::Force, "[LatteThread] {}, and it is handing the graphics context back on its way out - waiting for that", what);
+	for (int i = 0; i < 10000 && Latte_IsGpuHandingContextBack(); i++)
+		std::this_thread::sleep_for(std::chrono::milliseconds(1));
+	if (Latte_IsGpuHandingContextBack())
+		cemuLog_log(LogType::Force, "[LatteThread] ten seconds in and the handover is still going; the context goes anyway");
+	else
+		cemuLog_log(LogType::Force, "[LatteThread] the handover finished before the context went");
+	return true;
+}
+
+static void libretro_gpu_thread_late(const char* what)
+{
+	cemuLog_log(LogType::Force, "[LatteThread] {} (phase: {}). Carrying on without the handover; the renderer "
+		"goes with the unload instead.", what, Latte_GetThreadPhase());
+	if (log_cb)
+		log_cb(RETRO_LOG_WARN, "Cemu: %s\n", what);
+}
+
 static std::atomic_bool s_game_loaded{false};   // read by the GPU thread at the frame gate
 static bool s_initialized = false;
 static bool s_emu_initialized = false;
@@ -294,6 +425,8 @@ static std::string s_load_progress_text;
 static int s_load_progress_percent = -1;
 static std::atomic_bool s_load_progress_active{false};
 
+// Runs on: the GPU thread (the shader cache loader calls it) and retro_run's
+// thread, which is the one that hands the text to the frontend.
 void libretro_set_load_progress(const char* text, int percent)
 {
 	{
@@ -371,23 +504,6 @@ static bool s_frame_permit = false;
 // cannot open the gate for each other.
 static unsigned s_gate_hold_open = 0;
 
-// How many frames have gone to the frontend. A second run that boots but shows
-// nothing is either producing frames the frontend is not drawing or producing
-// none at all, and those are different bugs in different places.
-static std::atomic<uint64> s_frames_presented{0};
-// New pictures the GPU thread has actually produced, which is a different
-// number from the one above and the one that matters when the screen is stuck.
-std::atomic<uint64> s_frames_from_gpu{0};
-// How many times the frontend has asked for a frame, and how many times the
-// gate let the GPU thread past. The emulated machine stops being given vsync
-// events at the exact moment it starts waiting for one, and vsync is only
-// serviced while the command processor is idling - which it cannot do while it
-// is held at the gate. These two say whether the frontend stopped asking or the
-// gate stopped opening.
-static std::atomic<uint64> s_runs_entered{0};
-static std::atomic<uint64> s_gate_grants{0};
-
-
 // GPU thread, at a swap.
 //
 // Not before a title is running: loading one blocks inside retro_load_game
@@ -408,9 +524,9 @@ void libretro_frame_gate_wait()
 		s_gate_tokens--;
 }
 
-// Everything that is not the frame-pacing GPU swap itself: the emulated CPU
-// cores from the scheduler's idle loop, and the GPU command processor at a
-// command boundary. Neither may consume tokens - they come round many times
+// Runs on: the emulated CPU threads and the GPU thread - everything that is
+// not the frame-pacing GPU swap itself: the emulated cores from the scheduler's
+// idle loop, and the GPU command processor at a command boundary. Neither may consume tokens - they come round many times
 // per frame - but neither may run outside the window either. The command
 // processor has to be in here too: parked cores submit nothing, so a command
 // loop left running would spin on an empty ring instead of standing still.
@@ -425,6 +541,8 @@ void libretro_frame_window_wait()
 // Lets the emulator run outside a frame for as long as the hold is held. For
 // handshakes that need a parked thread to reach a particular point in its own
 // loop - which it cannot do while the gate is holding it there.
+//
+// Runs on: the frontend's thread, from the libretro callbacks.
 void libretro_frame_gate_hold_open(bool hold)
 {
 	std::lock_guard lock(s_gate_mutex);
@@ -442,7 +560,6 @@ static void libretro_frame_gate_grant()
 	std::lock_guard lock(s_gate_mutex);
 	s_gate_tokens = 1;
 	s_frame_permit = true;
-	s_gate_grants.fetch_add(1, std::memory_order_relaxed);
 	s_gate_cv.notify_all();
 }
 
@@ -461,6 +578,9 @@ static std::mutex s_frame_mutex;
 static std::condition_variable s_frame_cv;
 std::atomic_bool s_frame_ready{false};
 static std::atomic_bool s_shutting_down{false};
+// Set by the first retro_run that runs the startup handshake. A launch that
+// fails is not tried again - see the handshake for why.
+static bool s_launch_attempted = false;
 // Whether audio may still be handed to the frontend. Cleared as unload starts
 // and set again when a title is loaded.
 static std::atomic_bool s_audio_submission_allowed{true};
@@ -473,8 +593,6 @@ static auto& s_framebuffer = s_libretro_framebuffer; // alias for existing OpenG
 static bool s_use_hw_render = false;
 static bool s_hw_render_initialized = false;
 static bool s_core_options_supported = false;
-// Periodic thread snapshots; see DumpEmulatedThreads().
-static bool s_log_thread_dump = false;
 
 enum class SelectedGraphicsAPI { OpenGL, Vulkan };
 static SelectedGraphicsAPI s_graphics_api = SelectedGraphicsAPI::OpenGL;
@@ -1892,19 +2010,13 @@ static void libretro_apply_core_options()
 		}
 		cemuLog_setActiveLoggingFlags(logFlags);
 
-		// Not a log flag: this one prints a table from retro_run rather than
-		// tracing calls, so it is its own switch.
-		s_log_thread_dump = false;
-		if (const char* v = libretro_get_option_value("cemu_log_thread_dump"))
-		{
-			bool b;
-			if (libretro_parse_enabled_disabled(v, b))
-				s_log_thread_dump = b;
-		}
-		// The per-event poll and signal counts the snapshot prints are gathered
-		// on the signal path, under a lock. Nobody pays for that while the
-		// snapshot is off.
-		coreinit::SetEventStatsEnabled(s_log_thread_dump);
+		// Where those lines end up. On is what it has always been - log.txt in
+		// the user data folder - and off hands them to the frontend, which has
+		// a log of its own and its own switch for writing that to disk.
+		bool toFile = true;
+		if (const char* v = libretro_get_option_value("cemu_log_to_file"))
+			libretro_parse_enabled_disabled(v, toFile);
+		libretro_set_log_to_file(toFile);
 	}
 
 	// Cemu's own on-screen notifications - the shader compilation one above all,
@@ -2163,9 +2275,9 @@ static const char* libretro_option_category(const char* key)
 
 		{"cemu_audio_latency", "audio"},
 
+		{"cemu_log_to_file", "logging"},
 		{"cemu_log_filesystem", "logging"},
 		{"cemu_log_thread_sync", "logging"},
-		{"cemu_log_thread_dump", "logging"},
 		{"cemu_log_system_api", "logging"},
 		{"cemu_log_texture_memory", "logging"},
 		{"cemu_log_input_api", "logging"},
@@ -2568,9 +2680,9 @@ static void libretro_publish_core_options(retro_environment_t cb)
 		{"cemu_screen_layout5", "Layout 5; Default Screen|GamePad Screen|Side by Side|Top Bottom|Picture in Picture"},
 		{"cemu_next_screen_layout_button", "Next Screen Layout; Disabled|L + R + L2 + R2 + L3 + R3|Select + L3|Select + R3|Tab"},
 		{"cemu_drc_position", "GamePad Position; normal|swapped"},
+		{"cemu_log_to_file", "Write Cemu Log to log.txt; enabled|disabled"},
 		{"cemu_log_filesystem", "Log File Access (debugging); disabled|enabled"},
 		{"cemu_log_thread_sync", "Log Thread Synchronisation (debugging); disabled|enabled"},
-		{"cemu_log_thread_dump", "Log Wii U Thread Snapshots (debugging); disabled|enabled"},
 		{"cemu_log_system_api", "Log System API Calls (debugging); disabled|enabled"},
 		{"cemu_log_texture_memory", "Log Texture Memory (debugging); disabled|enabled"},
 		{"cemu_log_input_api", "Log Controller API Calls (debugging); disabled|enabled"},
@@ -2731,10 +2843,10 @@ RETRO_API void retro_set_controller_port_device(unsigned port, unsigned device)
 // file the title still had open. It does not touch the renderer, so the shared
 // Vulkan device is left alone.
 //
-// Bounded: a title that refuses to stop must not hang the frontend, so the
-// shutdown runs on its own thread and we give up on it after a few seconds.
+// Unbounded, and on the calling thread: every wait inside it is a join, which
+// is how the emulator itself ends a title.
 //
-// Returns whether it got there. A title that stopped is one whose GPU thread is
+// Returns true. A title that stopped is one whose GPU thread is
 // stopped too, which is what makes tearing the renderer down safe (see
 // retro_unload_game). One that did not stop still has threads drawing through
 // the frontend's Vulkan device; the teardown happens regardless, and the return
@@ -2772,35 +2884,35 @@ static bool libretro_shutdown_title_for_exit()
 	// frame gate is a thread that never gets there.
 	libretro_frame_gate_release();
 
-	auto finished = std::make_shared<std::atomic_bool>(false);
-	std::thread([finished]() {
-		CafeSystem::ShutdownTitle();
-		*finished = true;
-	}).detach();
+	// And the same for the pause gate, which is the other place it waits. A
+	// close that arrives after context_destroy finds the GPU thread parked with
+	// its renderer already handed back, waiting for the context to come back -
+	// which for a close it never does. ShutdownTitle joins that thread, so
+	// without this the close would sit in that join for good.
+	// Telling it the context is gone for good turns the null renderer it is
+	// looking at into the stop signal it already knows how to read, and it
+	// leaves through its own exit.
+	Latte_AbandonRendererRebuild();
+	Latte_ReleaseGpuPause();
 
-	// Generous, because the alternative to waiting is destroying a device that
-	// threads are still submitting to: every second spent here is a second that
-	// does not have to end in a fault.
-	// ShutdownTitle traces its own phases, so a timeout says where it stopped.
-	constexpr int kShutdownTimeoutMs = 30000;
-	for (int i = 0; i < kShutdownTimeoutMs && !*finished; i++)
-		std::this_thread::sleep_for(std::chrono::milliseconds(1));
+	// On this thread, and with no budget on it. Everything it waits for, it
+	// waits for by joining: OSSchedulerEnd joins the three scheduler threads,
+	// Latte_Stop joins the GPU thread, each IOSU service joins its own. That is
+	// how upstream ends a title, and upstream puts no deadline on any of it -
+	// so a deadline here would only be this core inventing a failure mode the
+	// emulator does not have, and then acting on it by tearing the renderer
+	// down under threads that are still running.
+	//
+	// The line before it is what makes a real hang findable: a log that stops
+	// here names the phase it stopped in, and ShutdownTitle traces its own
+	// phases underneath.
+	cemuLog_log(LogType::Force, "[libretro] shutting the title down: scheduler, GPU thread, IOSU, then the save flush");
+	CafeSystem::ShutdownTitle();
 
-	// A GPU thread that would not stop no longer gets here at all: Latte_Stop
-	// says so and ends the process, because the alternative was a half-stopped
-	// title - save data on disk, a live thread still rendering through the
-	// frontend's device - and every crash that came of it arrived somewhere
-	// else entirely.
 	if (log_cb)
-	{
-		if (*finished)
-			log_cb(RETRO_LOG_INFO, "Cemu: title shut down, save data flushed\n");
-		else
-			log_cb(RETRO_LOG_WARN, "Cemu: title did not shut down in time (it was %s), save data may be incomplete\n",
-				CafeSystem::GetShutdownPhase());
-	}
+		log_cb(RETRO_LOG_INFO, "Cemu: title shut down, save data flushed\n");
 
-	return *finished;
+	return true;
 }
 
 RETRO_API void retro_reset()
@@ -2828,30 +2940,33 @@ RETRO_API void retro_reset()
 	}
 
 #ifdef ENABLE_VULKAN
-	// Both compile pools have to be down before a new device is built. They are
-	// normally stopped by VulkanRenderer::Shutdown, but that does not run when
-	// the GPU thread takes the "graphics context already gone" way out, and
-	// then a shader still being compiled against the old device faults the
-	// moment the new one appears - RendererShaderVk::CompileInternal on
+	// Every pool has to be down before a new device is built. They normally go
+	// down with the renderer, in the GPU thread's teardown, but that does not
+	// run when the thread takes the "graphics context already gone" way out -
+	// and then a shader still being compiled against the old device faults the
+	// moment the new one appears: RendererShaderVk::CompileInternal on
 	// vkShaderComp, 0.1 seconds before "renderer created", which is exactly
 	// what a reset of Deus Ex produced here.
 	if (s_graphics_api == SelectedGraphicsAPI::Vulkan)
 	{
+		// The same three stops the GPU thread's teardown makes, in the same
+		// order, through the same upstream functions - see
+		// Latte_TeardownGpuState. This is only the run where that teardown
+		// never happened, which means no title ever started: the renderer was
+		// built, its thread pools with it, and nothing was ever compiled on
+		// them. They are asleep on their queues and leave as soon as they are
+		// woken, so joining them here costs nothing and leaves nothing behind.
 		RendererShaderVk::Shutdown();
-		// All of this stops threads without touching the device, which is why
-		// it can run even once the context has gone. Until it was added, a
-		// closed title left seven compilePl threads, the driver cache thread
-		// and the cache writer behind, still alive while the next title built
-		// a device of its own - which shows up as a title hanging on boot
-		// after a run that had not closed RetroArch as well.
-		// Close() rather than just stopping the threads: it also drops the set
-		// of pipelines the cache believes it has and closes the cache file,
-		// both of which belong to the title that is ending. BeginLoading for
-		// the next one asserts if the file is still open.
 		VulkanPipelineStableCache::GetInstance().Close();
 		PipelineCompiler::CompileThreadPool_Stop();
 	}
 #endif
+
+	// The stop is over, and what follows is a start. The shutdown above sets the
+	// shutting-down flag for the benefit of everything that has to wind up, and
+	// leaving it set through the relaunch is a reset that shuts the title down
+	// and then skips every frame of the run that follows.
+	s_shutting_down = false;
 
 	// The renderer went down with the title: LatteThread_Exit deletes it and
 	// releases g_renderer, and the Latte thread the relaunch starts dereferences
@@ -3380,7 +3495,6 @@ static void libretro_launch_game()
 	libretro_prepare_and_launch_title();
 }
 
-static std::atomic_bool s_launch_thread_running{false};
 
 // Wayland / EGL frontends: build the shared GPU-thread context via EGL instead of GLX.
 #ifdef ENABLE_OPENGL
@@ -3600,6 +3714,9 @@ static void libretro_create_shared_gl_context()
 // touch the GPU during teardown asks here first.
 static std::atomic_bool s_frontend_context_gone{false};
 
+// Runs on: anything. Set from the frontend's thread in context_destroy and
+// read by the GPU thread and the shader cache loader, which is why it is an
+// atomic and not a bool.
 bool libretro_gpu_context_gone()
 {
 	return s_frontend_context_gone.load(std::memory_order_acquire);
@@ -3665,6 +3782,9 @@ static void libretro_create_renderer()
 	}
 }
 
+// Runs on: the frontend's thread, inside retro_run or the load that precedes
+// it - never the GPU thread, which is why everything it does to that thread is
+// done by asking rather than by calling.
 static void libretro_context_reset()
 {
 	s_hw_render_initialized = true;
@@ -3754,46 +3874,12 @@ static void libretro_context_reset()
 	windowInfo.dpi_scale = 1.0;
 	windowInfo.app_active = true;
 
-	// Launch game in a separate thread so we don't block the frontend render loop
-	// (loading from rclone/network can take a long time)
-	if (!s_launch_thread_running && !s_emu_initialized)
-	{
-		s_launch_thread_running = true;
-		std::thread([]() {
-			// An exception leaving a thread function is std::terminate, which
-			// is an abort with the whole process behind it - and closing the
-			// content while this is still preparing the title is enough to
-			// produce one. A cancelled launch is not a reason to take
-			// RetroArch down, so say what happened and let the thread end.
-			//
-			// The flag is cleared by the guard rather than at the end, so it
-			// is cleared on the way out of an exception too; leaving it set
-			// would make every later load believe a launch was still running.
-			struct ClearRunningFlag
-			{
-				~ClearRunningFlag() { s_launch_thread_running = false; }
-			} clearRunningFlag;
-
-			try
-			{
-				libretro_launch_game();
-			}
-			catch (const std::exception& ex)
-			{
-				cemuLog_log(LogType::Force, "[libretro] the launch thread ended with an exception: {}", ex.what());
-				if (log_cb)
-					log_cb(RETRO_LOG_ERROR, "Cemu: could not launch the title: %s\n", ex.what());
-			}
-			catch (...)
-			{
-				cemuLog_log(LogType::Force, "[libretro] the launch thread ended with an exception of unknown type");
-				if (log_cb)
-					log_cb(RETRO_LOG_ERROR, "Cemu: could not launch the title\n");
-			}
-		}).detach();
-	}
+	// The title is not started here. It starts on the frontend's own thread,
+	// inside the first retro_run, and that call does not return until it is
+	// running - see the handshake there for why.
 }
 
+// Runs on: the frontend's thread, the same one as context_reset.
 static void libretro_context_destroy()
 {
 	// The frontend is about to take its graphics context apart while the title
@@ -3818,30 +3904,64 @@ static void libretro_context_destroy()
 	// objects being forgotten rather than freed.
 	Latte_RequestGpuTeardownForContextLoss();
 	Latte_RequestGpuPause();
-	// Parking happens at a command boundary, and there is one stretch of the GPU
-	// thread's life that has no command boundaries in it: the renderer's own
-	// bring-up, which runs from the thread starting until it reports its init
-	// finished and which is inside the driver nearly the whole way. Asking a
-	// thread in there to park times out, and the context then goes away under
-	// calls that are still being made through it - a jump through a null entry
-	// in the Mali driver's dispatch table (pc=0, lr in libGLES_mali.so), on a
-	// title that was closed about a second after it started. So wait for the
-	// bring-up to end first; after that the thread is in the command processor
-	// and the park below is a wait that can actually finish.
-	for (int i = 0; i < 3000 && !Latte_HasFinishedRendererInit(); i++)
-		std::this_thread::sleep_for(std::chrono::milliseconds(1));
-	if (log_cb && !Latte_HasFinishedRendererInit())
-		log_cb(RETRO_LOG_WARN, "Cemu: the renderer was still coming up when the context went away\n");
-	// Two waits, because they are two questions and only one of them is about
+	// Nothing to wait for if there is no thread: a close sets the stop signal
+	// before the frontend takes its context apart, so by the time this runs the
+	// GPU thread may already have left through one of its own stop checks - and
+	// it tore the context's contents down on the way out. Waiting for that
+	// thread to park is waiting for nobody, which is exactly how this path used
+	// to end a close: half a second at the gate, then the process.
+	if (!Latte_IsGpuThreadAlive())
+	{
+		Latte_CancelGpuTeardownForContextLoss();
+		Latte_ReleaseGpuPause();
+		libretro_frame_gate_hold_open(false);
+		if (!libretro_wait_for_gpu_handover("the GPU thread was already gone when the context went away"))
+			cemuLog_log(LogType::Force, "[LatteThread] the GPU thread was already gone when the context went away");
+		s_hw_render_initialized = false;
+		s_frontend_read_fbo = 0;
+		s_frontend_read_rbo_attached = 0;
+		s_gpu_context_made_current = false;
+		s_frontend_context_gone = true;
+		return;
+	}
+
+	// No check for a GPU thread that was created but has not run its first line
+	// yet, and none for one still inside the renderer's bring-up. Both were
+	// real - the second is where the Mali abort came from - and both belong to
+	// a startup that ran on a thread of its own. It runs in the first retro_run
+	// now, on the frontend's thread, and Latte_Start does not return until the
+	// GPU thread has reported its init finished. This function arrives on that
+	// same thread, so by the time it can run there is either no GPU thread at
+	// all or one that is past both windows.
+	//
+	// Two waits below, because they are two questions and only one of them is about
 	// liveness. Reaching the gate is the thread answering at all - it happens
 	// at a command boundary, so half a second is generous and a thread that
 	// misses it is stuck inside a command handler.
-	for (int i = 0; i < 500 && !Latte_IsGpuAtPauseGate(); i++)
+	// A thread on its way out is the second way this ends, and not a failure:
+	// a close sets the stop signal first, so the thread that reads it leaves
+	// through LatteThread_Exit and runs the same teardown there. Waiting for a
+	// gate it will never reach is how that turned into the whole budget spent
+	// and then the teardown racing the device's destruction.
+	for (int i = 0; i < 500 && !Latte_IsGpuAtPauseGate() && Latte_IsGpuThreadAlive(); i++)
 		std::this_thread::sleep_for(std::chrono::milliseconds(1));
 	if (!Latte_IsGpuAtPauseGate())
 	{
+		// It may still arrive, so the request is withdrawn rather than left
+		// standing: a teardown that runs after this point would hand back a
+		// context that is already gone, and the pause would hold the thread
+		// for a frontend that has stopped waiting.
+		Latte_CancelGpuTeardownForContextLoss();
+		Latte_ReleaseGpuPause();
 		libretro_frame_gate_hold_open(false);
-		Latte_FailGpuThread("the GPU thread did not reach the pause gate before the graphics context went away");
+		if (!libretro_wait_for_gpu_handover("the GPU thread left instead of reaching the pause gate"))
+			libretro_gpu_thread_late("the GPU thread did not reach the pause gate before the graphics context went away");
+		s_hw_render_initialized = false;
+		s_frontend_read_fbo = 0;
+		s_frontend_read_rbo_attached = 0;
+		s_gpu_context_made_current = false;
+		s_frontend_context_gone = true;
+		return;
 	}
 	// Finishing there is work rather than an answer: freeing every texture,
 	// shader and pipeline this run built and then destroying the renderer.
@@ -3854,7 +3974,13 @@ static void libretro_context_destroy()
 		std::this_thread::sleep_for(std::chrono::milliseconds(1));
 	libretro_frame_gate_hold_open(false);
 	if (!Latte_IsGpuParked())
-		Latte_FailGpuThread("the GPU thread reached the pause gate but did not finish handing the graphics context back");
+	{
+		// Reached the gate and is still working there, ten seconds in. Nothing
+		// to withdraw - the teardown is already running - so this is only said
+		// out loud; what it is freeing belongs to a context that is about to go,
+		// and the unload deletes whatever is left.
+		libretro_gpu_thread_late("the GPU thread reached the pause gate but did not finish handing the graphics context back");
+	}
 	if (log_cb && Latte_GpuTeardownForContextLossDone())
 		log_cb(RETRO_LOG_INFO, "Cemu: handed the core's GPU objects back before the context went away\n");
 
@@ -3889,7 +4015,7 @@ static bool libretro_disc_key_available(const fs::path& gamePath)
 	// FindDiscKey decrypts the partition header to recognise a key, and the two
 	// AES entry points are function pointers that stay null until AES128_init
 	// picks an implementation. The emulator does that in CemuCommonInit, which
-	// runs from context_reset - after this, and only if this lets the load
+	// runs from the first retro_run - after this, and only if this lets the load
 	// through. Asking here therefore means asking before the crypto exists:
 	// with a key to try, the first one dereferences a null pointer and takes
 	// the process down before Cemu has even opened its log.
@@ -3919,7 +4045,7 @@ RETRO_API bool retro_load_game(const struct retro_game_info* game)
 	if (!game || !game->path)
 		return false;
 
-	// Before the renderer, the context and the launch thread: a load that cannot
+	// Before the renderer, the context and the title: a load that cannot
 	// possibly succeed should fail while the frontend is still in a position to
 	// say so and stay in its menu.
 	if (!libretro_disc_key_available(fs::path(game->path)))
@@ -4055,10 +4181,11 @@ RETRO_API bool retro_load_game(const struct retro_game_info* game)
 	};
 	environ_cb(RETRO_ENVIRONMENT_SET_INPUT_DESCRIPTORS, (void*)input_desc);
 
-	// Nothing above managed to set a hardware render context: the game would
-	// never boot (context_reset is what launches it) and the frontend would be
-	// left running a core that hands it no frames. Fail the load instead, so the
-	// frontend says so rather than the user staring at a black screen.
+	// Nothing above managed to set a hardware render context: the title would
+	// never boot - the first retro_run starts it, and it will not start one
+	// without a renderer to run on - and the frontend would be left with a core
+	// that hands it no frames. Fail the load instead, so the frontend says so
+	// rather than the user staring at a black screen.
 	if (!s_use_hw_render)
 	{
 		if (log_cb)
@@ -4066,7 +4193,8 @@ RETRO_API bool retro_load_game(const struct retro_game_info* game)
 		return false;
 	}
 
-	// Store game path - actual launch happens in context_reset when GL is ready
+	// Store the path. The title itself starts in the first retro_run, once
+	// context_reset has built a renderer for it to run on.
 	s_game_path = game->path;
 
 	// Whether the conversion options are declared at all depends on there being
@@ -4101,36 +4229,26 @@ RETRO_API bool retro_load_game_special(unsigned game_type, const struct retro_ga
 // and already knows to leave the device and instance themselves alone when they
 // are not ours (m_useExternalDevice), so what it destroys is exactly what this
 // core allocated.
-//
-// A title that did not stop inside libretro_shutdown_title_for_exit's window
-// still has threads submitting work while that happens. The teardown runs
-// anyway: there is no safe thing to do with those threads, and a fault here is
-// a diagnosable bug rather than something to paper over.
-// Stops one service with a deadline. Detached rather than joined for the same
-// reason the title shutdown is: a service that will not come back must not take
-// the frontend with it.
+
+// Stops one service.
 static bool libretro_stop_service(const char* name, void (*stop)())
 {
-	auto finished = std::make_shared<std::atomic_bool>(false);
-	std::thread([finished, stop]() {
-		stop();
-		*finished = true;
-	}).detach();
-
-	constexpr int kServiceStopTimeoutMs = 3000;
-	for (int i = 0; i < kServiceStopTimeoutMs && !*finished; i++)
-		std::this_thread::sleep_for(std::chrono::milliseconds(1));
-
+	// Inline, and with no deadline: every one of these services stops by
+	// joining its own thread (IPCService::Stop), which is what upstream does
+	// and what it expects to finish. The line before it is what turns a hang
+	// into something findable - the log ends with the name of the service that
+	// did not come back.
+	cemuLog_log(LogType::Force, "[libretro] stopping the {} service", name);
+	stop();
 	if (log_cb)
-		log_cb(*finished ? RETRO_LOG_INFO : RETRO_LOG_WARN,
-			*finished ? "Cemu: %s stopped\n" : "Cemu: %s did not stop\n", name);
-	return *finished;
+		log_cb(RETRO_LOG_INFO, "Cemu: %s service stopped\n", name);
+	return true;
 }
 
 // CafeSystem::Shutdown() is what normally stops these, and calling it here
 // hangs the frontend every time without saying which of the four does not come
-// back (#17). One at a time with a deadline each: the log names the one that
-// hung, and the others are stopped either way.
+// back (#17). One at a time instead, each with its own line in the log before
+// it: a log that ends on one of those names the service that did not stop.
 //
 // Only ever once - mcp and fsa join their thread unconditionally, so a second
 // pass would be a std::terminate on an already-joined thread.
@@ -4155,13 +4273,19 @@ static void libretro_stop_system_services()
 	// destructor blocks in pthread_cond_destroy() and the frontend hangs - and
 	// a worker that outlives the request is one still answering ioctls for a
 	// title that ended, which is the shape of every bug this evening.
+	//
+	// The one deadline left in this core, because these are the one set of
+	// threads that cannot be joined: upstream detaches them and keeps no
+	// handle. Five seconds, and then the process stops rather than leaving an
+	// orphan answering ioctls - including save-data ones - for a title that has
+	// ended, with the next run reading the same files.
 	iosuIoctl_requestShutdown();
 	if (!iosuIoctl_waitForWorkersToStop(5000))
 	{
-		cemuLog_log(LogType::Force, "[IOSU] {} deprecated worker(s) did not stop when asked. They answer ioctls for a title that has ended, and the semaphores they are parked on are about to be destroyed.",
-			iosuIoctl_runningWorkerCount());
-		cemuLog_waitForFlush();
-		std::abort();
+		libretro_fail_fast("IOSU",
+			fmt::format("{} deprecated worker(s) did not stop when asked. They answer ioctls for a title that "
+						"has ended, and the semaphores they are parked on are about to be destroyed.",
+				iosuIoctl_runningWorkerCount()));
 	}
 	// They are gone, so the queues and their semaphores can go back to how init
 	// left them rather than being handed to the next run with a shutdown's
@@ -4177,12 +4301,14 @@ static void libretro_stop_system_services()
 
 RETRO_API void retro_unload_game()
 {
-	// Before anything else: stop handing the frontend audio. Cemu's AX thread
-	// is what submits it, and a thread that outlives the close keeps calling
-	// into an audio driver the frontend is taking apart - which is a crash
-	// inside the frontend's own audio stack, with nothing of ours on the
-	// stack to show for it. Nothing here can join that thread in time, so the
-	// callback is closed off instead and late submissions become no-ops.
+	// Before anything else: stop handing the frontend audio. This used to be
+	// the line that mattered, back when Cemu's AX thread called the frontend
+	// directly and could outlive the close. It no longer can: AX writes into
+	// the ring and nothing but FlushAudio takes it out, from retro_run, on the
+	// thread the frontend is standing on right now. So nothing can submit
+	// between here and the end of this function, and the flag is kept for the
+	// close the core asks for itself, where frames do still go out between the
+	// request and the unload - see the SHUTDOWN in retro_run.
 	s_audio_submission_allowed = false;
 
 	// A close during the shader cache load never reaches the line that turns
@@ -4191,10 +4317,22 @@ RETRO_API void retro_unload_game()
 	// with a progress bar it never asked for and an environment call behind it.
 	libretro_set_load_progress(nullptr, -1);
 
+	// The title now starts inside retro_run, so a close cannot arrive while it
+	// is starting - the frontend is in this core either way, and it is
+	// in only one place at a time. What this flag still does is stop the frame
+	// path once the close is under way.
+	s_shutting_down = true;
+
 	// A GPU device/renderer may have been created even if the title failed to finish
 	// loading (s_game_loaded false), and that renderer still has to go.
 	if (!s_game_loaded && !s_gpu_context_created)
+	{
+		// Nothing was torn down, so nothing is shutting down either: the flag
+		// above belongs to this close and the next load has to start with it
+		// clear, or retro_run skips every frame of a run that is fine.
+		s_shutting_down = false;
 		return;
+	}
 
 	const bool stopped = libretro_shutdown_title_for_exit();
 
@@ -4232,30 +4370,20 @@ RETRO_API void retro_unload_game()
 	InputManager::instance().Shutdown();
 
 #ifdef ENABLE_VULKAN
-	// Before the renderer goes, not after: the pipeline stable cache's compiler
-	// threads are detached and run until told to stop, and each pipeline they
-	// finish is unregistered from the renderer when it is destroyed.
-	//
-	// LatteShaderCache_Close stops them on the GPU thread's way out, and since
-	// the teardown moved to context_destroy that is where it happens on a close
-	// as well as on a reset - so this is a fallback rather than the usual path.
-	// What is left for it is the run where the GPU thread would not park and
-	// its teardown was withdrawn: the threads are still there and nothing else
-	// will stop them. A title closed a second after it started is exactly when
-	// one is still in flight.
+	// Before the renderer goes, not after: every one of these threads works
+	// through it. The GPU thread's teardown does this for any run that had a
+	// title in it, at context_destroy, with the device still alive - so what is
+	// left for this is a load that built a renderer and never started one.
 	if (s_graphics_api == SelectedGraphicsAPI::Vulkan)
 	{
+		// The same three stops the GPU thread's teardown makes, in the same
+		// order, through the same upstream functions - see
+		// Latte_TeardownGpuState. This is only the run where that teardown
+		// never happened, which means no title ever started: the renderer was
+		// built, its thread pools with it, and nothing was ever compiled on
+		// them. They are asleep on their queues and leave as soon as they are
+		// woken, so joining them here costs nothing and leaves nothing behind.
 		RendererShaderVk::Shutdown();
-		// All of this stops threads without touching the device, which is why
-		// it can run even once the context has gone. Until it was added, a
-		// closed title left seven compilePl threads, the driver cache thread
-		// and the cache writer behind, still alive while the next title built
-		// a device of its own - which shows up as a title hanging on boot
-		// after a run that had not closed RetroArch as well.
-		// Close() rather than just stopping the threads: it also drops the set
-		// of pipelines the cache believes it has and closes the cache file,
-		// both of which belong to the title that is ending. BeginLoading for
-		// the next one asserts if the file is still open.
 		VulkanPipelineStableCache::GetInstance().Close();
 		PipelineCompiler::CompileThreadPool_Stop();
 	}
@@ -4288,6 +4416,25 @@ RETRO_API void retro_unload_game()
 	// it now lets it see there is nothing to render on and leave while this is
 	// still its own close.
 	Latte_ReleaseGpuPause();
+	// And then wait for it to actually go. Waking it is not the same as it
+	// being gone: what it does next is LatteThread_Exit, and the teardown there
+	// deletes whatever g_renderer points at. If this returns first, the
+	// frontend is free to load the next title, whose context_reset builds a
+	// renderer - and the straggler from the last run deletes that one, leaving
+	// the new title with nothing to render on. What that looks like is a black
+	// screen with no shader cache progress at all, and nothing in the log to
+	// say why: the next run's renderer is deleted by a thread the last run was
+	// supposed to have taken with it.
+	//
+	// By joining it, which is how every other thread on a terminate path is
+	// waited for here and upstream. This is the one case Latte_Stop does not
+	// cover - a thread that left through its own exit was never joined by
+	// anyone - and there is nothing left for it to do but leave: it has no
+	// renderer, so its own stop check takes it out at the next command
+	// boundary.
+	if (Latte_IsGpuThreadAlive() || Latte_IsGpuHandingContextBack())
+		cemuLog_log(LogType::Force, "[LatteThread] waiting for the GPU thread from this run to finish leaving");
+	Latte_JoinGpuThreadIfLeft();
 
 #ifdef ENABLE_OPENGL
 	s_gl_callbacks.reset();
@@ -4303,6 +4450,7 @@ RETRO_API void retro_unload_game()
 	s_hw_render_initialized = false;
 	s_gpu_context_made_current = false;
 	s_emu_initialized = false;
+	s_launch_attempted = false;
 	s_shutting_down = false;
 	s_frame_ready = false;
 	{
@@ -4586,132 +4734,17 @@ static void libretro_load_blit_gl_funcs()
 extern GLuint libretro_getBackbufferRBO();
 #endif
 
-// A periodic snapshot of the emulated machine's threads: name, state, and the
-// address each one is sitting at, resolved to a module when the loader knows
-// one. A title that stops asking the emulator for anything - a save that never
-// starts, a load that never ends - shows up here either as a thread parked in
-// WAITING, which names the subsystem to look at, or as one spinning inside the
-// game's own code, which says the emulator is not the one that stopped.
-// The name of the HLE export a thread is sitting in, or empty if the address is
-// not one. Cemu compiles every export into a stub built from a single
-// instruction whose primary opcode is 1 and whose low 16 bits are the function's
-// index in the HLE table (PPCInterpreter_virtualHLE decodes the same thing), so
-// the name is one read away. It is the difference between "waiting somewhere in
-// coreinit" and "waiting in OSWaitEvent", which is the whole question when a
-// title stops asking the emulator for anything.
-static std::string_view ResolveHLEFunctionName(uint32 pc)
-{
-	if (!memory_getPointerFromVirtualOffsetAllowNull(pc))
-		return {};
-	const uint32 opcode = memory_readU32(pc);
-	if ((opcode >> 26) != 1)
-		return {};
-	return osLib_getFunctionNameByIndex((sint32)(opcode & 0xFFFF));
-}
-
-static void DumpEmulatedThreads()
-{
-	cemuLog_log(LogType::Force, "--- Wii U threads ---");
-	// The three numbers that say whether the picture is the emulator's problem
-	// or the frontend's: where the GPU thread is, how many vsync events the
-	// title has been given, and how many frames have actually gone out.
-	cemuLog_log(LogType::Force, "  gpu: phase={} vsync={} gx2Init={} framesFromGpu={} framesPresented={} retroRun={} gateGrants={}",
-		Latte_GetThreadPhase(), LatteTiming_GetVsyncCount(),
-		(uint32)LatteGPUState.gx2InitCalled,
-		s_frames_from_gpu.load(std::memory_order_relaxed),
-		s_frames_presented.load(std::memory_order_relaxed),
-		s_runs_entered.load(std::memory_order_relaxed),
-		s_gate_grants.load(std::memory_order_relaxed));
-
-	// What the title is polling, if anything. An event with a five-figure count
-	// between two snapshots is a spin loop waiting on something that never
-	// arrives - and its address is the object to look at.
-	std::vector<coreinit::EventPollStats> polls;
-	coreinit::GetZeroTimeoutPollCounts(polls);
-	std::sort(polls.begin(), polls.end(), [](const auto& a, const auto& b) { return a.polls > b.polls; });
-	for (size_t i = 0; i < polls.size() && i < 6; i++)
-	{
-		cemuLog_log(LogType::Force, "  event {:08x}: polled {} times, signalled {}", polls[i].address, polls[i].polls,
-			polls[i].signals);
-	}
-	for (sint32 i = 0; i < activeThreadCount; i++)
-	{
-		const MPTR threadMPTR = activeThread[i];
-		if (!threadMPTR)
-			continue;
-
-		OSThread_t* thread = (OSThread_t*)memory_getPointerFromVirtualOffsetAllowNull(threadMPTR);
-		if (!thread)
-			continue;
-
-		const char* name = thread->threadName.GetPtr() ? thread->threadName.GetPtr() : "<unnamed>";
-
-		const char* state = "?";
-		switch (thread->state.value())
-		{
-			case OSThread_t::THREAD_STATE::STATE_NONE: state = "none"; break;
-			case OSThread_t::THREAD_STATE::STATE_READY: state = "ready"; break;
-			case OSThread_t::THREAD_STATE::STATE_RUNNING: state = "running"; break;
-			case OSThread_t::THREAD_STATE::STATE_WAITING: state = "waiting"; break;
-			case OSThread_t::THREAD_STATE::STATE_MORIBUND: state = "moribund"; break;
-		}
-
-		const uint32 pc = thread->context.srr0;
-
-		// Where it is: the game's own code (module + offset), an HLE export by
-		// name, or a bare address when it is neither.
-		std::string where;
-		RPLModule* module = RPLLoader_FindModuleByCodeAddr(pc);
-		if (module)
-			where = fmt::format("pc={:08x} ({}+0x{:x})", pc, module->moduleName, pc - module->regionMappingBase_text.GetMPTR());
-		else if (std::string_view hleName = ResolveHLEFunctionName(pc); !hleName.empty())
-			where = fmt::format("pc={:08x} ({})", pc, hleName);
-		else
-			where = fmt::format("pc={:08x}", pc);
-
-		// And what it is waiting for. A mutex names the thread that holds it,
-		// which turns "everything is waiting" into a chain with one end; a wait
-		// queue is at least an address to match against the events above.
-		std::string blockedOn;
-		if (thread->state.value() == OSThread_t::THREAD_STATE::STATE_WAITING)
-		{
-			if (coreinit::OSMutex* mutex = thread->waitingForMutex.GetPtr())
-			{
-				OSThread_t* owner = mutex->owner.GetPtr();
-				const char* ownerName = (owner && owner->threadName.GetPtr()) ? owner->threadName.GetPtr() : "<unnamed>";
-				blockedOn = fmt::format(" mutex={:08x} held-by={:08x} {}", thread->waitingForMutex.GetMPTR(),
-					mutex->owner.GetMPTR(), owner ? ownerName : "<nobody>");
-			}
-			else if (thread->currentWaitQueue.GetMPTR())
-			{
-				blockedOn = fmt::format(" queue={:08x}", thread->currentWaitQueue.GetMPTR());
-			}
-		}
-
-		cemuLog_log(LogType::Force, "  {:08x} {:24} {:9} suspend={} {}{}", threadMPTR, name, state,
-			(sint32)thread->suspendCounter, where, blockedOn);
-	}
-}
-
 RETRO_API void retro_run()
 {
-	s_runs_entered.fetch_add(1, std::memory_order_relaxed);
-	// Off unless the option is on; every few seconds is enough to tell a parked
-	// thread from a busy one, and cheap next to a frame.
-	if (s_log_thread_dump)
-	{
-		static std::chrono::steady_clock::time_point s_last_dump;
-		const auto now = std::chrono::steady_clock::now();
-		if (now - s_last_dump >= std::chrono::seconds(3))
-		{
-			s_last_dump = now;
-			DumpEmulatedThreads();
-		}
-	}
-
 	if (s_ppc_process_exited.exchange(false, std::memory_order_acq_rel) && environ_cb)
 	{
 		cemuLog_log(LogType::Force, "[Libretro] emulated process exited, asking the frontend to shut down");
+		// Nothing more into the frontend's audio driver from here on. This is
+		// the one close the core starts itself, so it is the one close where
+		// there is a "before" to stop in - a close the user asks for arrives as
+		// retro_unload_game with no warning ahead of it. The title has exited
+		// either way, so what is left in the ring is a title's worth of nothing.
+		s_audio_submission_allowed = false;
 		environ_cb(RETRO_ENVIRONMENT_SHUTDOWN, nullptr);
 	}
 
@@ -4836,6 +4869,63 @@ RETRO_API void retro_run()
 		}
 	}
 
+	// The startup handshake, and the reason most of the startup machinery that
+	// used to be here is gone. The title starts on this thread, in this call,
+	// and this call does not return until it is running or has failed. While
+	// the core is inside retro_run the frontend cannot close the content, so
+	// the window a launch on its own thread had to be guarded against - a close
+	// arriving mid-launch, a renderer released from under Latte_Start, a GPU
+	// thread entering on a context that is already gone - does not exist.
+	//
+	// The cost is the frontend's menu waiting for the load, which is what it is
+	// waiting for anyway.
+	if (!s_game_loaded && !s_launch_attempted && !s_game_path.empty() &&
+		(!s_use_hw_render || s_hw_render_initialized))
+	{
+		s_launch_attempted = true;
+		if (s_use_hw_render && !g_renderer)
+		{
+			// context_reset ran and left no renderer behind. There is nothing to
+			// start a GPU thread on, and every later symptom of carrying on -
+			// the null dereference inside the driver, the black screen - is
+			// worse than saying so here.
+			cemuLog_log(LogType::Force, "[libretro] the frontend's context produced no renderer - not launching");
+			if (log_cb)
+				log_cb(RETRO_LOG_ERROR, "Cemu: could not create a renderer on the frontend's graphics context\n");
+			if (environ_cb)
+				environ_cb(RETRO_ENVIRONMENT_SHUTDOWN, nullptr);
+			video_cb(NULL, SCREEN_WIDTH, SCREEN_HEIGHT, 0);
+			return;
+		}
+		try
+		{
+			libretro_launch_game();
+		}
+		catch (const std::exception& ex)
+		{
+			cemuLog_log(LogType::Force, "[libretro] the launch ended with an exception: {}", ex.what());
+			if (log_cb)
+				log_cb(RETRO_LOG_ERROR, "Cemu: could not launch the title: %s\n", ex.what());
+		}
+		catch (...)
+		{
+			cemuLog_log(LogType::Force, "[libretro] the launch ended with an exception of unknown type");
+			if (log_cb)
+				log_cb(RETRO_LOG_ERROR, "Cemu: could not launch the title\n");
+		}
+		if (!s_game_loaded)
+		{
+			// The launch is not retried: whatever stopped it - a missing key, a
+			// title that would not prepare - is still true next frame, and a
+			// core that keeps trying says nothing about why.
+			if (environ_cb)
+				environ_cb(RETRO_ENVIRONMENT_SHUTDOWN, nullptr);
+		}
+		// The first frame belongs to the title, not to the load that just ran.
+		video_cb(NULL, SCREEN_WIDTH, SCREEN_HEIGHT, 0);
+		return;
+	}
+
 	if (!s_game_loaded)
 	{
 		video_cb(NULL, SCREEN_WIDTH, SCREEN_HEIGHT, 0);
@@ -4905,7 +4995,6 @@ RETRO_API void retro_run()
 			}
 		}
 		video_cb(RETRO_HW_FRAME_BUFFER_VALID, SCREEN_WIDTH, SCREEN_HEIGHT, 0);
-		s_frames_presented++;
 		LibretroAudioAPI::FlushAudio();
 		return;
 	}
@@ -4994,7 +5083,6 @@ RETRO_API void retro_run()
 #endif // ENABLE_OPENGL
 
 	video_cb(RETRO_HW_FRAME_BUFFER_VALID, SCREEN_WIDTH, SCREEN_HEIGHT, 0);
-	s_frames_presented++;
 
 	// Flush audio
 	LibretroAudioAPI::FlushAudio();

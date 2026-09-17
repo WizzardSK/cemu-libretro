@@ -155,8 +155,35 @@ fs::path cemuLog_GetLogFilePath()
     return ActiveSettings::GetUserDataPath("log.txt");
 }
 
+#ifdef RETRO_CORE
+static std::atomic<bool> s_fileLoggingEnabled{true};
+
+void cemuLog_setFileLoggingEnabled(bool enabled)
+{
+	if (s_fileLoggingEnabled.exchange(enabled) == enabled)
+		return;
+	if (enabled)
+	{
+		cemuLog_createLogFile(false);
+		return;
+	}
+	std::unique_lock lock(LogContext.log_mutex);
+	if (LogContext.file_stream.is_open())
+	{
+		LogContext.file_stream.flush();
+		LogContext.file_stream.close();
+	}
+}
+#endif
+
 void cemuLog_createLogFile(bool triggeredByCrash)
 {
+#ifdef RETRO_CORE
+	// A crash still writes one: the frontend's log is the first thing a report
+	// leaves out, and this is the file that says what happened.
+	if (!triggeredByCrash && !s_fileLoggingEnabled.load())
+		return;
+#endif
 	std::unique_lock lock(LogContext.log_mutex);
 	if (LogContext.file_stream.is_open())
 		return;
@@ -205,9 +232,11 @@ void cemuLog_writeLineToLog(std::string_view text, bool date, bool new_line)
 	{
 		for (const auto& entry : LogContext.text_cache)
 			LogContext.file_stream.write(entry.data(), entry.size());
-		LogContext.text_cache.clear();
 		LogContext.file_stream.flush();
 	}
+	// Cleared either way. With no file to drain it into, a cache that is only
+	// ever appended to is a leak that grows for as long as the core runs.
+	LogContext.text_cache.clear();
 	lock.unlock();
 #else
 	lock.unlock();

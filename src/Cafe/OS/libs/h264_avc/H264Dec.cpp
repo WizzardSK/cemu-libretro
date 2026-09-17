@@ -392,6 +392,29 @@ namespace H264
 
 	}
 
+	// Host state that outlives the title it belongs to. The session map and the
+	// handle counter live for the whole process, and nothing closes a session
+	// when a title is stopped from outside - H264DECClose is the title's own
+	// call and an abrupt stop never reaches it. What is left is a decoder
+	// backend per session that no one will free, and a handle counter that has
+	// the next title's first session starting at whatever number the last one
+	// reached.
+	//
+	// Cleared at the end of the run that made them rather than at the start of
+	// the next: the objects belong to a title that has stopped, and the next
+	// one should find this module the way a freshly loaded RPL would.
+	void ResetToDefaultState()
+	{
+		std::unique_lock _lock(sDecoderSessionsMutex);
+		for (auto& it : sDecoderSessions)
+		{
+			it.second->Destroy();
+			delete it.second;
+		}
+		sDecoderSessions.clear();
+		sCurrentSessionHandle.store(1);
+	}
+
 	static void _DestroyDecoderSession(uint32 handle)
 	{
 		std::unique_lock _lock(sDecoderSessionsMutex);
