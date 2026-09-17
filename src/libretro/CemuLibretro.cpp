@@ -2754,6 +2754,29 @@ RETRO_API void retro_init()
 		GetConfig().SetMLCPath(s_mlc_path, false);
 	cemuLog_log(LogType::Force, "mlc01: {}", _pathToUtf8(ActiveSettings::GetMlcPath()));
 
+	// Where updates and DLC go. Neither is content the frontend can hand over:
+	// an update mounts over the base title's /vol/content and a DLC mounts as
+	// /vol/aoc, and both are chosen by title id out of the title list rather
+	// than by the path that was loaded. So the only thing a core without a file
+	// browser is missing is a place to put them, and this is it - scanned like
+	// any of Cemu's own game paths, which means it takes an update in the raw
+	// NUS form it is downloaded in (.app and .h3 files next to title.tmd and
+	// title.tik) as well as an unpacked code/content/meta folder, and it
+	// descends into subdirectories, so one folder per update or DLC is fine.
+	//
+	// Nothing is copied anywhere: the files stay where the user put them, which
+	// for a title update is several gigabytes not written twice.
+	{
+		std::error_code ec;
+		const fs::path extraTitles = ActiveSettings::GetUserDataPath("titles");
+		fs::create_directories(extraTitles, ec);
+		const std::string extraTitlesUtf8 = _pathToUtf8(extraTitles);
+		auto& gamePaths = GetConfig().game_paths;
+		if (std::find(gamePaths.begin(), gamePaths.end(), extraTitlesUtf8) == gamePaths.end())
+			gamePaths.emplace_back(extraTitlesUtf8);
+		cemuLog_log(LogType::Force, "updates and DLC: {}", extraTitlesUtf8);
+	}
+
 	// Select graphics API based on core option
 #ifdef ENABLE_OPENGL
 	s_graphics_api = SelectedGraphicsAPI::OpenGL;
