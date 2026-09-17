@@ -204,7 +204,9 @@ bool Latte_IsGpuAtPauseGate(); // reached the gate; parked is only true once it 
 // Asks the GPU thread to hand back everything it built on the graphics context,
 // which it does at the pause gate. Request it before asking for the pause.
 void Latte_RequestGpuTeardownForContextLoss();
+void Latte_CancelGpuTeardownForContextLoss();
 bool Latte_GpuTeardownForContextLossDone();
+bool Latte_IsGpuThreadAlive(); // false once the thread has left, whatever took it out
 bool Latte_IsRendererRebuildPending();
 void Latte_GpuPauseGate(); // GPU thread only - called by the command processor
 bool Latte_HasFinishedRendererInit(); // false while the GPU thread is still bringing the renderer up

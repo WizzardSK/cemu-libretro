@@ -59,6 +59,12 @@ std::atomic_bool sLatteThreadRunning = false;
 // Set by the GPU thread as its first act, so a caller can tell "created but not
 // running yet" from "running".
 static std::atomic_bool sLatteThreadEntered{false};
+// Cleared by the GPU thread on its way out. sLatteThreadRunning says whether a
+// stop has been asked for, which is not the same question: a thread that left
+// on its own - the gate, a stop seen in one of the loops - is gone while that
+// flag still says it is running, and a frontend waiting for it to park then
+// waits for nobody.
+static std::atomic_bool sLatteThreadAlive{false};
 // Freeing what this core built on the graphics context has exactly one safe
 // moment, and it is while the context is still there. The frontend names that
 // moment - context_destroy - and it is the last one: the close arrives after
@@ -83,6 +89,22 @@ void Latte_RequestGpuTeardownForContextLoss()
 {
 	sTeardownForContextLossDone.store(false, std::memory_order_release);
 	sTeardownForContextLoss.store(true, std::memory_order_release);
+}
+
+// Withdraws it again. For the caller that asked and then found nobody coming to
+// the gate: without this the request sits there and the next thread to reach a
+// gate - the one the next run starts - would hand back a context that is not
+// going anywhere.
+void Latte_CancelGpuTeardownForContextLoss()
+{
+	sTeardownForContextLoss.store(false, std::memory_order_release);
+	sTeardownForContextLossDone.store(false, std::memory_order_release);
+}
+
+// Whether there is a GPU thread to wait for at all.
+bool Latte_IsGpuThreadAlive()
+{
+	return sLatteThreadAlive.load(std::memory_order_acquire);
 }
 
 bool Latte_GpuTeardownForContextLossDone()
@@ -630,6 +652,7 @@ void Latte_Start()
 	sLatteThreadFinishedInit = false;
 #ifdef ENABLE_LIBRETRO
 	sLatteThreadEntered.store(false, std::memory_order_release);
+	sLatteThreadAlive.store(true, std::memory_order_release);
 #endif
 	sLatteThread = std::thread(Latte_ThreadEntry);
 	// wait until initialized
@@ -716,6 +739,10 @@ void LatteThread_Exit()
 {
 #ifdef ENABLE_LIBRETRO
 	LatteThread_SetPhase("exiting");
+	// Before the teardown rather than after it: from here on there is no thread
+	// for a frontend to wait at the gate for, and a close that arrives while
+	// this runs should not spend its budget on one.
+	sLatteThreadAlive.store(false, std::memory_order_release);
 #endif
 	if (LatteThread_libretro_debug_enabled())
 		cemuLog_log(LogType::Force, "[LatteThread] LatteThread_Exit begin renderer={}", g_renderer ? 1 : 0);
