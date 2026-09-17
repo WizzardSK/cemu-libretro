@@ -60,10 +60,15 @@
         "jpeg",
         "zip"
       ]
-    },
-    "libusb"
+    }
   ],
   "features": {
+    "usb": {
+      "description": "libusb, for the Wii U GamePad and USB controllers (not built where the platform has no USB API)",
+      "dependencies": [
+        "libusb"
+      ]
+    },
     "gui": {
       "description": "wxWidgets desktop UI (not built by the libretro core)",
       "dependencies": [
@@ -78,6 +83,10 @@
     }
   },
   "overrides": [
+    {
+      "name": "openssl",
+      "version": "3.6.2"
+    },
     {
       "name": "glslang",
       "version": "15.1.0"

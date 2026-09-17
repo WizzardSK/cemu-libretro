@@ -76,8 +76,6 @@ if(ENABLE_LIBRETRO)
 		main.cpp
 		mainLLE.cpp
 		libretro/CemuLibretro.cpp
-		libretro/LibretroVkQueue.cpp
-		libretro/LibretroVkQueue.h
 		libretro/LibretroAudioAPI.cpp
 		libretro/LibretroWindowSystem.cpp
 	)
@@ -98,6 +96,13 @@ if(ENABLE_LIBRETRO)
 
 	if(ENABLE_VULKAN)
 		target_compile_definitions(cemu_libretro PRIVATE ENABLE_VULKAN)
+		# The frontend's Vulkan queue wrapper, and libretro_vulkan.h with it -
+		# that header includes vulkan/vulkan.h, which a build without Vulkan has
+		# no reason to have installed (and an iOS or tvOS one does not).
+		target_sources(cemu_libretro PRIVATE
+			libretro/LibretroVkQueue.cpp
+			libretro/LibretroVkQueue.h
+		)
 	endif()
 
 	set_property(TARGET cemu_libretro PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")

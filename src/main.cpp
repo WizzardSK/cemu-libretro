@@ -38,7 +38,10 @@
 #if BOOST_OS_LINUX
 #define _putenv(__s) putenv((char*)(__s))
 #include <sys/sysinfo.h>
-#elif BOOST_OS_MACOS || BOOST_OS_BSD
+#elif defined(__APPLE__) || BOOST_OS_BSD
+// __APPLE__ rather than BOOST_OS_MACOS: boost.predef gives an iOS build
+// BOOST_OS_IOS and leaves BOOST_OS_MACOS at zero, so iOS matched neither branch
+// and was left without _putenv at all.
 #define _putenv(__s) putenv((char*)(__s))
 #include <sys/types.h>
 #include <sys/sysctl.h>

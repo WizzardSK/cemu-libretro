@@ -9,6 +9,14 @@
 #include "Cafe/GameProfile/GameProfile.h"
 
 #include "Cafe/HW/Latte/Core/LatteBufferCache.h"
+// Vulkan, for the stride workaround further down - and only for that. The
+// shader stage bits in stageUniformModifiedMask used to come from
+// VulkanRendererConst, which meant this renderer-agnostic file did not compile
+// at all without Vulkan (an iOS or tvOS core is built with USE_VULKAN off, and
+// so is any other build that turns it off). Those constants are defined as the
+// LatteConst::ShaderType values cast to int, with static_asserts that they are
+// 0, 1 and 2 - so the enum itself is used below, which is what the "todo - move
+// this enum to Latte?" beside them was asking for.
 #ifdef ENABLE_VULKAN
 #include "Cafe/HW/Latte/Renderer/Vulkan/VulkanRenderer.h"
 #endif
@@ -280,16 +288,16 @@ void LatteBufferCache_Sync(uint32 maxIndex, uint32 baseInstance, uint32 instance
 	if (vertexShader && vertexShader->uniformMode == LATTE_DECOMPILER_UNIFORM_MODE_FULL_CBANK)
 	{
 		if (LatteBufferCache_syncGPUUniformBuffers(vertexShader, mmSQ_VTX_UNIFORM_BLOCK_START, LatteConst::ShaderType::Vertex, vsUniformBufferDirtyMask))
-			stageUniformModifiedMask |= (1<<VulkanRendererConst::SHADER_STAGE_INDEX_VERTEX);
+			stageUniformModifiedMask |= (1 << static_cast<int>(LatteConst::ShaderType::Vertex));
 	}
 	if (pixelShader && pixelShader->uniformMode == LATTE_DECOMPILER_UNIFORM_MODE_FULL_CBANK)
 	{
 		if (LatteBufferCache_syncGPUUniformBuffers(pixelShader, mmSQ_PS_UNIFORM_BLOCK_START, LatteConst::ShaderType::Pixel, psUniformBufferDirtyMask))
-			stageUniformModifiedMask |= (1<<VulkanRendererConst::SHADER_STAGE_INDEX_FRAGMENT); // todo - move this enum to Latte?
+			stageUniformModifiedMask |= (1 << static_cast<int>(LatteConst::ShaderType::Pixel));
 	}
 	if (geometryShader && geometryShader->uniformMode == LATTE_DECOMPILER_UNIFORM_MODE_FULL_CBANK)
 	{
 		if ( LatteBufferCache_syncGPUUniformBuffers(geometryShader, mmSQ_GS_UNIFORM_BLOCK_START, LatteConst::ShaderType::Geometry, gsUniformBufferDirtyMask) )
-			stageUniformModifiedMask |= (1<<VulkanRendererConst::SHADER_STAGE_INDEX_GEOMETRY);
+			stageUniformModifiedMask |= (1 << static_cast<int>(LatteConst::ShaderType::Geometry));
 	}
 }

@@ -551,7 +551,10 @@ if (ENABLE_VULKAN)
   )
 endif()
 
-if(APPLE)
+# MetalView is an NSView subclass, so it belongs to macOS rather than to Apple:
+# iOS and tvOS have UIKit and no AppKit at all, and MetalLayer.mm answers for
+# them without it (there is no window in a libretro core to attach a layer to).
+if(APPLE AND NOT CMAKE_SYSTEM_NAME STREQUAL "iOS" AND NOT CMAKE_SYSTEM_NAME STREQUAL "tvOS")
 	target_sources(CemuCafe PRIVATE
 	    HW/Latte/Renderer/MetalView.mm
 	    HW/Latte/Renderer/MetalView.h
