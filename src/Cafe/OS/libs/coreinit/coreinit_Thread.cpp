@@ -1623,6 +1623,39 @@ namespace coreinit
 	}
 
     // shuts down all scheduler host threads and deletes all fibers and ppc threads
+	// The guest side of a core that has stopped moving. Same fields the crash
+	// handler prints, into the log, because a scheduler thread that will not
+	// come back is a scheduler thread with a guest thread on it, and which one
+	// it is - and what it is waiting on - is the whole question.
+	static void __OSLogActivePPCThreads(const char* reason)
+	{
+		cemuLog_log(LogType::Force, "PPC threads ({}), {} active:", reason, activeThreadCount);
+		for (sint32 i = 0; i < activeThreadCount; i++)
+		{
+			MPTR threadMPTR = activeThread[i];
+			OSThread_t* thread = (OSThread_t*)memory_getPointerFromVirtualOffset(threadMPTR);
+			const char* state = "UNDEFINED";
+			if (thread->suspendCounter != 0)
+				state = "SUSPENDED";
+			else if (thread->state == OSThread_t::THREAD_STATE::STATE_NONE)
+				state = "NONE";
+			else if (thread->state == OSThread_t::THREAD_STATE::STATE_READY)
+				state = "READY";
+			else if (thread->state == OSThread_t::THREAD_STATE::STATE_RUNNING)
+				state = "RUNNING";
+			else if (thread->state == OSThread_t::THREAD_STATE::STATE_WAITING)
+				state = "WAITING";
+			else if (thread->state == OSThread_t::THREAD_STATE::STATE_MORIBUND)
+				state = "MORIBUND";
+			const uint8 affinity = thread->attr;
+			cemuLog_log(LogType::Force, "  {:08x} IP {:08x} LR {:08x} {} Aff {}{}{} Pri {} Name {}",
+				threadMPTR, (uint32)thread->context.srr0, _swapEndianU32(thread->context.lr), state,
+				(affinity >> 0) & 1, (affinity >> 1) & 1, (affinity >> 2) & 1,
+				(sint32)thread->effectivePriority,
+				thread->threadName.IsNull() ? "NULL" : thread->threadName.GetPtr());
+		}
+	}
+
 	void OSSchedulerEnd()
 	{
 		std::unique_lock _lock(sSchedulerStateMtx);
@@ -1645,22 +1678,40 @@ namespace coreinit
 		// counts stand still is inside a guest thread that has not come back.
 		std::atomic_bool joinsFinished{false};
 		std::thread joinWatchdog([&joinsFinished]() {
+			uint64 lastIdleLoops[Espresso::CORE_COUNT] = {};
+			uint64 lastTimeslices[Espresso::CORE_COUNT] = {};
+			bool dumpedThreads = false;
 			for (int elapsed = 2; !joinsFinished.load(std::memory_order_acquire); elapsed += 2)
 			{
 				for (int i = 0; i < 20 && !joinsFinished.load(std::memory_order_acquire); i++)
 					std::this_thread::sleep_for(std::chrono::milliseconds(100));
 				if (joinsFinished.load(std::memory_order_acquire))
 					break;
+				bool anyFrozen = false;
 				for (size_t c = 0; c < Espresso::CORE_COUNT; c++)
+				{
+					const uint64 idleLoops = sSchedulerIdleLoopCount[c].load(std::memory_order_relaxed);
+					const uint64 timeslices = sSchedulerTimeslice[c].load(std::memory_order_relaxed);
+					const bool alive = sSchedulerHostAlive[c].load(std::memory_order_relaxed) != 0;
 					cemuLog_log(LogType::Force,
 						"OSSchedulerEnd: {}s in - core {} alive={} idleLoops={} timeslices={} idleWait enter/wake={}/{} sysEventStage={}",
-						elapsed, c,
-						sSchedulerHostAlive[c].load(std::memory_order_relaxed),
-						sSchedulerIdleLoopCount[c].load(std::memory_order_relaxed),
-						sSchedulerTimeslice[c].load(std::memory_order_relaxed),
+						elapsed, c, alive ? 1 : 0, idleLoops, timeslices,
 						sSchedulerIdleWaitEnterCount[c].load(std::memory_order_relaxed),
 						sSchedulerIdleWaitWakeCount[c].load(std::memory_order_relaxed),
 						sSchedulerSystemEventStage.load(std::memory_order_relaxed));
+					// Alive, and neither counter moved since the last sample:
+					// that core is not in the idle loop, it is inside a guest
+					// thread that has not come back.
+					if (alive && idleLoops == lastIdleLoops[c] && timeslices == lastTimeslices[c])
+						anyFrozen = true;
+					lastIdleLoops[c] = idleLoops;
+					lastTimeslices[c] = timeslices;
+				}
+				if (anyFrozen && !dumpedThreads)
+				{
+					dumpedThreads = true;
+					__OSLogActivePPCThreads("a core stopped moving while the scheduler was being stopped");
+				}
 			}
 		});
 
