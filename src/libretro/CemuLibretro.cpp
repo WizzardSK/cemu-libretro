@@ -26,6 +26,8 @@
 #include "Cafe/TitleList/TitleConverter.h"
 #include "Cafe/TitleList/GameInfo.h"
 #include "Cafe/HW/Latte/Core/Latte.h"
+#include "Cafe/OS/libs/TCL/TCL.h"
+#include "Cafe/OS/libs/gx2/GX2_Event.h"
 #include "Cafe/HW/Latte/Core/LatteTiming.h"
 #include "Cafe/HW/Latte/Renderer/Renderer.h"
 #ifdef ENABLE_OPENGL
@@ -2828,6 +2830,32 @@ RETRO_API void retro_set_controller_port_device(unsigned port, unsigned device)
 // retro_unload_game). One that did not stop still has threads drawing through
 // the frontend's Vulkan device; the teardown happens regardless, and the return
 // value is what tells the log which of the two it was.
+// Everything the title could still be waiting on the GPU for, declared done.
+//
+// By the time a close reaches here the GPU thread is gone - context_destroy
+// stopped it - so nothing will retire another command buffer or execute another
+// flip. A guest thread waiting on either waits forever, and the ones that poll
+// rather than block never return to the scheduler at all: that is a core that
+// cannot be stopped, and OSSchedulerEnd joining it is the close that never ends.
+// sco's thread dump is exactly that shape - twenty-six threads WAITING and one
+// RUNNING on core 1, with the core's counters frozen.
+//
+// So the close finishes the GPU's work on paper: every submitted buffer is
+// retired, every requested flip is executed, and the queues that guest threads
+// park on for FLIP and VSYNC are woken. Nothing here draws anything - the title
+// is going away - it only makes the waits end.
+static void libretro_release_gpu_waiters()
+{
+	TCL::TCLGPUDeclareEverythingRetired();
+
+	if (LatteGPUState.sharedArea)
+		LatteGPUState.sharedArea->flipExecuteCountBE = LatteGPUState.sharedArea->flipRequestCountBE;
+	LatteGPUState.flipRequestCount.store(0);
+
+	GX2::__GX2NotifyEvent(GX2::GX2CallbackEventType::FLIP);
+	GX2::__GX2NotifyEvent(GX2::GX2CallbackEventType::VSYNC);
+}
+
 static bool libretro_shutdown_title_for_exit()
 {
 	if (!s_game_loaded)
@@ -2871,6 +2899,10 @@ static bool libretro_shutdown_title_for_exit()
 	// leaves through its own exit.
 	Latte_AbandonRendererRebuild();
 	Latte_ReleaseGpuPause();
+
+	// Before the scheduler is stopped, because stopping it waits for the cores
+	// to come back and a core inside a GPU wait does not.
+	libretro_release_gpu_waiters();
 
 	// On this thread, and with no budget on it. Everything it waits for, it
 	// waits for by joining: OSSchedulerEnd joins the three scheduler threads,

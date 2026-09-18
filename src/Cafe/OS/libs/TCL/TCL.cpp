@@ -25,6 +25,17 @@ namespace TCL
 		__OSUnlockScheduler();
 	}
 
+	// For a close: the GPU is gone and nothing else will ever be retired, so
+	// every buffer that was submitted is declared retired here. Without it a
+	// title that is waiting on the marker waits forever - and one that polls it
+	// from guest code never yields, which is a scheduler core that cannot be
+	// stopped and a close that never ends.
+	void TCLGPUDeclareEverythingRetired()
+	{
+		s_tclStatePPC->gpuRetireMarker = s_currentRetireMarker;
+		TCLGPUNotifyNewRetirementTimestamp();
+	}
+
 	int TCLTimestamp(TCLTimestampId id, uint64be* timestampOut)
 	{
 		if (id == TCLTimestampId::TIMESTAMP_LAST_BUFFER_RETIRED)
