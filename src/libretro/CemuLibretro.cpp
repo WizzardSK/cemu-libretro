@@ -4940,6 +4940,17 @@ RETRO_API void retro_run()
 			}
 
 			auto* vkRenderer = VulkanRenderer::GetInstance();
+			// Nothing drawn into it yet: its memory is whatever the driver had,
+			// and handing that over is the band of corrupt pixels that showed
+			// after a reset until the title drew its first frame. A fresh start
+			// never showed it only because the frontend gets null frames until
+			// the title is loaded, and a reset skips that window.
+			if (vkRenderer && !vkRenderer->m_presentImageHasContent)
+			{
+				video_cb(NULL, SCREEN_WIDTH, SCREEN_HEIGHT, 0);
+				LibretroAudioAPI::FlushAudio();
+				return;
+			}
 			if (vkRenderer && vkRenderer->m_presentImageView && s_vk_interface && s_vk_interface->set_image)
 			{
 				// Set the presentation image for RetroArch to display

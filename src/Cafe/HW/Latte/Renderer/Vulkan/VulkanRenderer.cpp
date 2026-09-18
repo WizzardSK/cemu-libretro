@@ -1016,6 +1016,7 @@ void VulkanRenderer::CreatePresentationImage(uint32 width, uint32 height)
 
 	m_presentWidth = width;
 	m_presentHeight = height;
+	m_presentImageHasContent = false;
 	cemuLog_log(LogType::Force, "[Vulkan-LR] Created presentation image {}x{}", width, height);
 }
 
@@ -3677,6 +3678,7 @@ void VulkanRenderer::DrawBackbufferQuad(LatteTextureView* texView, RendererOutpu
 			// and clears the image to opaque black so SBS / TopBottom gaps are
 			// deterministic regardless of TV/DRC order. Subsequent blits in
 			// the same frame preserve prior content (SHADER_READ_ONLY → TRANSFER_DST).
+			m_presentImageHasContent = true;
 			const uint32 currentFrame = LatteGPUState.frameCounter;
 			const bool preservePrior = (m_presentLastFrameCounter == currentFrame);
 			m_presentLastFrameCounter = currentFrame;

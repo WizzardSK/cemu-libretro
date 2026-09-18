@@ -660,6 +660,10 @@ public:
 	VkImage m_presentImage = VK_NULL_HANDLE;
 	VkDeviceMemory m_presentImageMemory = VK_NULL_HANDLE;
 	VkImageView m_presentImageView = VK_NULL_HANDLE;
+	// Whether anything has been composited into the presentation image since it
+	// was created. Its memory is undefined until the first blit, and a frontend
+	// handed it before that draws whatever the driver left there.
+	bool m_presentImageHasContent = false;
 	uint32 m_presentWidth = 0;
 	uint32 m_presentHeight = 0;
 	// Tracks the LatteGPUState.frameCounter value at which m_presentImage was
