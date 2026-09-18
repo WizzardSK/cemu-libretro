@@ -3329,8 +3329,27 @@ static void libretro_start_wua_conversion(TitleId baseTitleId, const fs::path& g
 // Preparing the title and starting it. Split out of libretro_launch_game so
 // that a reset can do it again without CemuCommonInit, which initialises the
 // emulated machine itself and is not something to run twice.
+// Puts the frame gate back the way a run starts with. A close does this as part
+// of resetting everything else, but a reset does not go through that path: it
+// releases the gate on its way down - which it must, or the cores would sit in
+// it waiting for a frame that is not coming - and nothing put it back. So the
+// title that followed a reset ran with the gate permanently open: no frame
+// pacing, and no pause either, because pausing in a libretro core is the
+// frontend not calling retro_run and the gate is what turns that into the
+// emulator standing still.
+static void libretro_frame_gate_rearm()
+{
+	std::lock_guard lock(s_gate_mutex);
+	s_gate_released = false;
+	s_gate_tokens = 1;
+	s_frame_permit = true;
+	s_gate_hold_open = 0;
+	s_gate_cv.notify_all();
+}
+
 static void libretro_prepare_and_launch_title()
 {
+	libretro_frame_gate_rearm();
 	fs::path gamePath = s_game_path;
 	CafeSystem::PREPARE_STATUS_CODE status;
 
