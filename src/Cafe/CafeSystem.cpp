@@ -972,8 +972,24 @@ namespace CafeSystem
 		// start system
 		sSystemRunning = true;
 		WindowSystem::NotifyGameLoaded();
+#ifdef ENABLE_LIBRETRO
+		// On this thread, not a detached one. What that thread does is start the
+		// IOSU modules, scan the title for patches and bring the scheduler up -
+		// all of it reading the memory space the title was just mounted into -
+		// and detaching it means the launch outlives the call that asked for it.
+		// A reset then tears that memory space down while the scan is still
+		// walking it: GamePatch_scan faulting on a page marked ---p, one
+		// millisecond after "ShutdownTitle: releasing memory".
+		//
+		// A core has somewhere to do this work: the frontend's own thread,
+		// inside the retro_run that asked for the title. Nothing of the launch
+		// outlives that call now, so a stop that comes after it has nothing
+		// left to race.
+		_LaunchTitleThread();
+#else
 		std::thread t(_LaunchTitleThread);
 		t.detach();
+#endif
 	}
 
 	bool IsTitleRunning()
