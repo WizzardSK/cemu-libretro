@@ -552,9 +552,9 @@ static std::atomic_bool s_shutting_down{false};
 // Set by the first retro_run that runs the startup handshake. A launch that
 // fails is not tried again - see the handshake for why.
 static bool s_launch_attempted = false;
-// Set by retro_reset once the title is down: the start that follows belongs to
-// the next retro_run, where every other start happens.
-static bool s_relaunch_pending = false;
+// Set by retro_reset, read by retro_run: both halves of a reset - the stop and
+// the start - belong to retro_run's thread, whatever thread asked for it.
+static std::atomic_bool s_reset_requested{false};
 // Whether audio may still be handed to the frontend. Cleared as unload starts
 // and set again when a title is loaded.
 static std::atomic_bool s_audio_submission_allowed{true};
@@ -2894,11 +2894,26 @@ RETRO_API void retro_reset()
 	if (!s_game_loaded || s_game_path.empty())
 		return;
 
-	// Stop the title and start it again, here, in this process. This used to
-	// end the process and have the shell start a fresh RetroArch: tearing a
-	// title down under a live GPU thread faulted inside the driver, and there
-	// was no way to stop one reliably. There is now - the same one a second
-	// retro_load_game uses - so a reset can be a reset.
+	// Asked for here, done in retro_run, and the reason is in sco's reset log:
+	// the shutdown and a relaunch were interleaved line for line in the same
+	// millisecond, which one thread cannot do. A frontend is free to call
+	// retro_reset from a thread of its own - RetroArch's menu task is one - and
+	// this core's lifecycle then had two of them in it at once: ShutdownTitle
+	// tearing down the state a launch on the other thread was still building,
+	// ending in a fault on a fiber whose stack had just been freed.
+	//
+	// So no lifecycle work happens on whichever thread this is. retro_run is
+	// one thread and it already owns every start; it owns this stop too now,
+	// and a reset that arrives twice before the next frame is one reset.
+	s_reset_requested.store(true, std::memory_order_release);
+	if (log_cb)
+		log_cb(RETRO_LOG_INFO, "Cemu: reset requested\n");
+}
+
+// The stop half of a reset, on retro_run's thread. Returns whether the title
+// went down; a title that would not stop is not one to start again on top of.
+static bool libretro_reset_stop_title()
+{
 	if (log_cb)
 		log_cb(RETRO_LOG_INFO, "Cemu: reset - stopping the title\n");
 
@@ -2910,7 +2925,7 @@ RETRO_API void retro_reset()
 		// disappearing from under it.
 		libretro_show_message(RETRO_LOG_ERROR, 6000,
 			"Reset failed: the title did not stop cleanly, so it was not restarted");
-		return;
+		return false;
 	}
 
 #ifdef ENABLE_VULKAN
@@ -2923,13 +2938,6 @@ RETRO_API void retro_reset()
 	// what a reset of Deus Ex produced here.
 	if (s_graphics_api == SelectedGraphicsAPI::Vulkan)
 	{
-		// The same three stops the GPU thread's teardown makes, in the same
-		// order, through the same upstream functions - see
-		// Latte_TeardownGpuState. This is only the run where that teardown
-		// never happened, which means no title ever started: the renderer was
-		// built, its thread pools with it, and nothing was ever compiled on
-		// them. They are asleep on their queues and leave as soon as they are
-		// woken, so joining them here costs nothing and leaves nothing behind.
 		RendererShaderVk::Shutdown();
 		VulkanPipelineStableCache::GetInstance().Close();
 		PipelineCompiler::CompileThreadPool_Stop();
@@ -2941,22 +2949,8 @@ RETRO_API void retro_reset()
 	// leaving it set through the relaunch is a reset that shuts the title down
 	// and then skips every frame of the run that follows.
 	s_shutting_down = false;
-
-	// And the start itself is not done here. A title starts in exactly one
-	// place in this core - the handshake at the top of retro_run - and a reset
-	// is a stop followed by a start like any other. Doing it here instead meant
-	// two starts that could overlap: a frontend that sends a second reset while
-	// the first relaunch is still running had the previous run's scheduler
-	// fibers alive underneath the next one, which is a fault in
-	// PPCRecompiler_attemptEnter on a stack that has been freed.
-	//
-	// Nothing overlaps now, because retro_run is one thread and it is the same
-	// thread this runs on: the next call does the start, and a reset that
-	// arrives before it simply stops a title that is already stopped.
-	s_relaunch_pending = true;
-	s_game_loaded = false;
+	return true;
 }
-
 
 // The emulated controllers on ports 2-4, and the Wii Remote port 1 can share
 // with the GamePad. The GamePad reads libretro input directly (see vpad.cpp),
@@ -4422,7 +4416,7 @@ RETRO_API void retro_unload_game()
 	s_gpu_context_made_current = false;
 	s_emu_initialized = false;
 	s_launch_attempted = false;
-	s_relaunch_pending = false;
+	s_reset_requested.store(false, std::memory_order_release);
 	s_shutting_down = false;
 	s_frame_ready = false;
 	{
@@ -4806,17 +4800,20 @@ RETRO_API void retro_run()
 	//
 	// The cost is the frontend's menu waiting for the load, which is what it is
 	// waiting for anyway.
-	if (s_relaunch_pending)
+	if (s_reset_requested.exchange(false, std::memory_order_acq_rel) && s_game_loaded)
 	{
-		// A reset stopped the title and left the start to here. CemuCommonInit
+		// Both halves here, on this thread, one after the other. CemuCommonInit
 		// is deliberately not repeated - it sets up the emulated machine, not
-		// the title, and it has already run - so this is the title half of the
-		// launch only. The renderer went down with the title: LatteThread_Exit
-		// deletes it and releases g_renderer, and the Latte thread this starts
-		// dereferences that pointer before anything else it does.
-		s_relaunch_pending = false;
-		libretro_create_renderer();
-		libretro_prepare_and_launch_title();
+		// the title, and it has already run - so the start is the title half of
+		// the launch only. The renderer went down with the title:
+		// LatteThread_Exit deletes it and releases g_renderer, and the Latte
+		// thread this starts dereferences that pointer before anything else it
+		// does.
+		if (libretro_reset_stop_title())
+		{
+			libretro_create_renderer();
+			libretro_prepare_and_launch_title();
+		}
 		video_cb(NULL, SCREEN_WIDTH, SCREEN_HEIGHT, 0);
 		return;
 	}

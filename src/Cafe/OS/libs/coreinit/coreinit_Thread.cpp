@@ -1637,6 +1637,33 @@ namespace coreinit
 		// lines says which core it was and what it was doing: whether it is
 		// still marked alive, how many times it went round the idle loop, how
 		// many timeslices it took, and whether it is parked on its run queue.
+		// And a watchdog on top of the lines below, because a snapshot taken
+		// before a join says nothing about a join that never returns. This one
+		// keeps printing while they are outstanding, so two consecutive samples
+		// answer the question the single line cannot: a core whose idle loop
+		// count is still climbing is spinning in the idle loop, and one whose
+		// counts stand still is inside a guest thread that has not come back.
+		std::atomic_bool joinsFinished{false};
+		std::thread joinWatchdog([&joinsFinished]() {
+			for (int elapsed = 2; !joinsFinished.load(std::memory_order_acquire); elapsed += 2)
+			{
+				for (int i = 0; i < 20 && !joinsFinished.load(std::memory_order_acquire); i++)
+					std::this_thread::sleep_for(std::chrono::milliseconds(100));
+				if (joinsFinished.load(std::memory_order_acquire))
+					break;
+				for (size_t c = 0; c < Espresso::CORE_COUNT; c++)
+					cemuLog_log(LogType::Force,
+						"OSSchedulerEnd: {}s in - core {} alive={} idleLoops={} timeslices={} idleWait enter/wake={}/{} sysEventStage={}",
+						elapsed, c,
+						sSchedulerHostAlive[c].load(std::memory_order_relaxed),
+						sSchedulerIdleLoopCount[c].load(std::memory_order_relaxed),
+						sSchedulerTimeslice[c].load(std::memory_order_relaxed),
+						sSchedulerIdleWaitEnterCount[c].load(std::memory_order_relaxed),
+						sSchedulerIdleWaitWakeCount[c].load(std::memory_order_relaxed),
+						sSchedulerSystemEventStage.load(std::memory_order_relaxed));
+			}
+		});
+
 		for (size_t idx = 0; idx < sSchedulerThreads.size(); idx++)
 		{
 			cemuLog_log(LogType::Force,
@@ -1651,6 +1678,8 @@ namespace coreinit
 			sSchedulerThreads[idx].join();
 			cemuLog_log(LogType::Force, "OSSchedulerEnd: core {} joined", idx);
 		}
+		joinsFinished.store(true, std::memory_order_release);
+		joinWatchdog.join();
 		sSchedulerThreads.clear();
 		g_schedulerThreadHandles.clear();
 #if BOOST_OS_LINUX
