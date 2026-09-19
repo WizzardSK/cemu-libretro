@@ -3875,6 +3875,49 @@ static void libretro_context_reset()
 // Runs on: the frontend's thread, the same one as context_reset.
 static void libretro_context_destroy()
 {
+	// This is the close, so the title goes down here, while there is still a
+	// renderer to go down with.
+	//
+	// Upstream's ShutdownTitle stops the scheduler first and the GPU thread
+	// second. That order is what lets it finish: a guest thread waiting on the
+	// GPU is still being served while the scheduler winds down, so it reaches a
+	// yield point and the join returns. This core could not use that order,
+	// because context_destroy runs before retro_unload_game and took the
+	// renderer with it - and a guest thread that polls the GPU rather than
+	// sleeping on it then never yields. That is the join on core 1 that never
+	// came back in sco's logs: 26 threads WAITING and one RUNNING.
+	//
+	// What made this impossible was not knowing whether a context_destroy was a
+	// close or something the frontend does with a title still running, like a
+	// fullscreen toggle. hunterk confirmed there is nothing left that calls it
+	// with cache_context set - which this core sets on both the GL and the
+	// Vulkan path - other than unloading content, exiting, and a real device
+	// loss. All three end the title anyway, so it is treated as the close.
+	//
+	// If that assumption is ever wrong, the symptom is a title that stops on a
+	// frontend operation it should have survived, and the line below says when
+	// it happened.
+	if (s_game_loaded)
+	{
+		cemuLog_log(LogType::Force, "[libretro] the graphics context is going away, which is the close: stopping the title first, scheduler before GPU thread");
+
+		s_shutting_down = true;
+
+		// The GPU thread may be at the frame gate waiting for a retro_run that
+		// is never coming, and Latte_Stop inside ShutdownTitle joins it.
+		{
+			std::lock_guard lock(s_frame_mutex);
+			s_frame_ready = true;
+			s_frame_cv.notify_all();
+		}
+		libretro_frame_gate_release();
+
+		CafeSystem::ShutdownTitle();
+		s_game_loaded = false;
+
+		cemuLog_log(LogType::Force, "[libretro] the title is down; the context can go");
+	}
+
 	// The frontend is about to take its graphics context apart while the title
 	// keeps running (a fullscreen toggle does exactly this). Park the GPU thread
 	// at a command boundary first: it renders through the frontend's Vulkan
