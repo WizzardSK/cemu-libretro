@@ -964,14 +964,39 @@ VulkanRenderer::VulkanRenderer(VkInstance instance, VkPhysicalDevice physDevice,
 	cemuLog_log(LogType::Force, "VulkanRenderer (libretro shared device) initialized successfully");
 }
 
+// The frontend gets a UNORM view of this image, always, so whatever bytes are
+// in it are the bytes it shows. What the image's own format decides is what a
+// blit does on the way in - and that is where the missing piece was.
+//
+// Upstream does not blit. It draws the backbuffer quad through
+// RendererOutputShader, which ends with
+//
+//     if (applySRGBEncoding) colorOut0 = sRGBEncode(colorOut0.rgb);
+//
+// and applySRGBEncoding is LatteGPUState.tvBufferUsesSRGB. The libretro path
+// replaced that draw with vkCmdBlitImage, which does no such thing: the values
+// land in the image linear and the frontend shows them uncorrected, which is
+// the "Vulkan is too dark, OpenGL looks right" report - the GL path still goes
+// through the output shader.
+//
+// An sRGB destination puts the encode back, in the hardware instead of in a
+// shader: a blit into it converts linear -> sRGB on write, which is the same
+// operation the shader was doing. So the image is sRGB exactly when upstream
+// would have encoded, and UNORM otherwise.
+//
+// What this does not restore is the rest of that shader - the bicubic and
+// nearest filters, and the TV/DRC gamma settings. A blit can only do linear or
+// nearest. Presenting through the output shader is the real fix for those.
 void VulkanRenderer::CreatePresentationImage(uint32 width, uint32 height)
 {
 	DestroyPresentationImage();
 
+	m_presentImageIsSRGB = LatteGPUState.tvBufferUsesSRGB;
+
 	VkImageCreateInfo imageInfo{};
 	imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
 	imageInfo.imageType = VK_IMAGE_TYPE_2D;
-	imageInfo.format = VK_FORMAT_R8G8B8A8_UNORM;
+	imageInfo.format = m_presentImageIsSRGB ? VK_FORMAT_R8G8B8A8_SRGB : VK_FORMAT_R8G8B8A8_UNORM;
 	imageInfo.extent = {width, height, 1};
 	imageInfo.mipLevels = 1;
 	imageInfo.arrayLayers = 1;
@@ -1004,6 +1029,9 @@ void VulkanRenderer::CreatePresentationImage(uint32 width, uint32 height)
 	viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
 	viewInfo.image = m_presentImage;
 	viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+	// Deliberately UNORM even when the image is sRGB - the image was created
+	// with MUTABLE_FORMAT for this. Sampling it as sRGB would decode what the
+	// blit just encoded and hand the frontend the dark picture again.
 	viewInfo.format = VK_FORMAT_R8G8B8A8_UNORM;
 	viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
 	viewInfo.subresourceRange.baseMipLevel = 0;
@@ -1017,7 +1045,24 @@ void VulkanRenderer::CreatePresentationImage(uint32 width, uint32 height)
 	m_presentWidth = width;
 	m_presentHeight = height;
 	m_presentImageHasContent = false;
-	cemuLog_log(LogType::Force, "[Vulkan-LR] Created presentation image {}x{}", width, height);
+	cemuLog_log(LogType::Force, "[Vulkan-LR] Created presentation image {}x{} ({})", width, height,
+		m_presentImageIsSRGB ? "sRGB, blits encode into it" : "UNORM, blits go in as they are");
+}
+
+// The scan buffer's sRGB-ness is a property of the title's own framebuffer and
+// can change while it runs - a title that starts on a linear buffer and moves
+// to an sRGB one would otherwise keep presenting through the wrong encode.
+void VulkanRenderer::UpdatePresentationImageColorSpace()
+{
+	if (m_presentImage == VK_NULL_HANDLE)
+		return;
+	if (m_presentImageIsSRGB == LatteGPUState.tvBufferUsesSRGB)
+		return;
+
+	cemuLog_log(LogType::Force, "[Vulkan-LR] the scan buffer changed colour space; rebuilding the presentation image");
+	const uint32 width = m_presentWidth;
+	const uint32 height = m_presentHeight;
+	CreatePresentationImage(width, height);
 }
 
 void VulkanRenderer::DestroyPresentationImage()
@@ -3678,6 +3723,8 @@ void VulkanRenderer::DrawBackbufferQuad(LatteTextureView* texView, RendererOutpu
 			// and clears the image to opaque black so SBS / TopBottom gaps are
 			// deterministic regardless of TV/DRC order. Subsequent blits in
 			// the same frame preserve prior content (SHADER_READ_ONLY → TRANSFER_DST).
+			UpdatePresentationImageColorSpace();
+
 			m_presentImageHasContent = true;
 			const uint32 currentFrame = LatteGPUState.frameCounter;
 			const bool preservePrior = (m_presentLastFrameCounter == currentFrame);

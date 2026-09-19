@@ -671,7 +671,15 @@ public:
 	// before the blit and subsequent blits in that frame preserve prior
 	// content. ~0u sentinel = no blit yet.
 	uint32 m_presentLastFrameCounter = ~0u;
+	// Whether the image itself is an sRGB format. The view handed to the
+	// frontend is always UNORM, so this decides one thing only: whether a blit
+	// into the image encodes linear -> sRGB on the way in. See
+	// CreatePresentationImage.
+	bool m_presentImageIsSRGB = false;
 	void CreatePresentationImage(uint32 width, uint32 height);
+	// Re-creates the image if the scan buffer's sRGB-ness has changed since it
+	// was made. Cheap and a no-op in the usual case.
+	void UpdatePresentationImageColorSpace();
 	void DestroyPresentationImage();
 private:
 #endif
