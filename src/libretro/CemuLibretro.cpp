@@ -1791,7 +1791,7 @@ static void libretro_next_screen_layout()
 }
 
 static void libretro_start_wua_conversion(TitleId baseTitleId, const fs::path& gamePath);
-static bool libretro_shutdown_title_for_exit();
+static bool libretro_stop_title();
 static void libretro_prepare_and_launch_title();
 static void libretro_create_renderer();
 static void libretro_set_convert_status(std::string text, int progress = -1);
@@ -2825,7 +2825,26 @@ RETRO_API void retro_set_controller_port_device(unsigned port, unsigned device)
 		libretro_setup_controllers();
 }
 
-// Bring a running title down cleanly before this process leaves.
+// Wake whatever is waiting for a frame that is never coming, and let the frame
+// gate go. Both halves of a stop need this - a title that is being shut down
+// and a GPU thread that exists without one - and it used to be written out at
+// each of the three places that stop something.
+static void libretro_wake_frame_waiters()
+{
+	s_shutting_down = true;
+	{
+		std::lock_guard lock(s_frame_mutex);
+		s_frame_ready = true;
+		s_frame_cv.notify_all();
+	}
+	// Before ShutdownTitle, which stops the GPU thread: a thread parked at the
+	// frame gate is a thread that never gets there.
+	libretro_frame_gate_release();
+}
+
+// Bring a running title down cleanly. Every stop ends here: the close, a
+// reset, and the graphics context going away - which is why the name no longer
+// says "for exit".
 //
 // Cemu's emulated filesystem writes through buffered std::fstream objects, so
 // anything still sitting in those buffers never reaches disk if the process goes
@@ -2844,24 +2863,7 @@ RETRO_API void retro_set_controller_port_device(unsigned port, unsigned device)
 // retro_unload_game). One that did not stop still has threads drawing through
 // the frontend's Vulkan device; the teardown happens regardless, and the return
 // value is what tells the log which of the two it was.
-// Wake whatever is waiting for a frame that is never coming, and let the frame
-// gate go. Both halves of a stop need this - a title that is being shut down
-// and a GPU thread that exists without one - and it used to be written out at
-// each of the three places that stop something.
-static void libretro_wake_frame_waiters()
-{
-	s_shutting_down = true;
-	{
-		std::lock_guard lock(s_frame_mutex);
-		s_frame_ready = true;
-		s_frame_cv.notify_all();
-	}
-	// Before ShutdownTitle, which stops the GPU thread: a thread parked at the
-	// frame gate is a thread that never gets there.
-	libretro_frame_gate_release();
-}
-
-static bool libretro_shutdown_title_for_exit()
+static bool libretro_stop_title()
 {
 	if (!s_game_loaded)
 	{
@@ -2944,7 +2946,7 @@ static bool libretro_reset_stop_title()
 {
 	libretro_log(RETRO_LOG_INFO, "reset - stopping the title\n");
 
-	if (!libretro_shutdown_title_for_exit())
+	if (!libretro_stop_title())
 	{
 		// The GPU thread would not park, which is the case the old exit existed
 		// for. Restarting on top of it is the fault this must not commit, so the
@@ -3934,7 +3936,7 @@ static void libretro_context_destroy()
 		// knows what stopping a title takes. Its two Latte calls are no-ops
 		// here - nothing has asked for a pause or a renderer rebuild yet,
 		// because the handshake below is what starts that.
-		libretro_shutdown_title_for_exit();
+		libretro_stop_title();
 
 		cemuLog_log(LogType::Force, "[libretro] the title is down; the context can go");
 	}
@@ -4382,7 +4384,7 @@ RETRO_API void retro_unload_game()
 
 	// Whichever way it goes, this wakes anything still waiting on a frame that
 	// is never coming: both of its paths call libretro_wake_frame_waiters.
-	const bool stopped = libretro_shutdown_title_for_exit();
+	const bool stopped = libretro_stop_title();
 
 	if (!stopped)
 	{
