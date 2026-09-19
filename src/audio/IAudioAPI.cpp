@@ -201,6 +201,16 @@ std::vector<IAudioAPI::DeviceDescriptionPtr> IAudioAPI::GetDevices(AudioAPI api)
 	}
 }
 
+void IAudioAPI::SetAudioDelay(uint32 delay)
+{
+	s_audioDelay = delay;
+}
+
+uint32 IAudioAPI::GetStaticAudioDelay()
+{
+	return s_audioDelay;
+}
+
 void IAudioAPI::SetAudioDelayOverride(uint32 delay)
 {
 	m_audioDelayOverride = delay;
