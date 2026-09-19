@@ -2051,18 +2051,25 @@ static void libretro_apply_core_options()
 		libretro_set_log_to_file(toFile);
 	}
 
-	// Cemu's own on-screen notifications - the shader compilation one above all,
-	// since that is the one that appears mid-game. A frontend has an on-screen
-	// display of its own, so this is the core drawing a second one over it, and
-	// the cost is not only the text: with a notification position set,
-	// LatteOverlay_render runs in full on every presented frame and the imgui
-	// frame around it is built whether or not anything is shown.
-	if (const char* v = libretro_get_option_value("cemu_onscreen_notifications"))
-	{
-		bool b;
-		if (libretro_parse_enabled_disabled(v, b))
-			cfg.notification.position = b ? ScreenPosition::kTopLeft : ScreenPosition::kDisabled;
-	}
+	// Cemu's own on-screen notifications cannot appear in this core at all, so
+	// they are held off rather than offered as a setting.
+	//
+	// Both renderers refuse the imgui frame they would be drawn in.
+	// OpenGLRenderer::ImguiBegin returns false on its first line under
+	// ENABLE_LIBRETRO - there is no GL context on the GPU thread - and
+	// VulkanRenderer::ImguiBegin gets there through AcquireNextSwapchainImage,
+	// which fails because a core that presents into an image the frontend owns
+	// has no swapchain. So nothing imgui ever reaches the screen either way.
+	//
+	// Leaving the position set only made LatteOverlay_wantsToDraw() say yes on
+	// every presented frame, for an ImguiBegin that returns false. Disabled, it
+	// says no and the call goes away.
+	//
+	// The notifications themselves are still worth having - the async shader
+	// compile warning is the one that matters - but through the frontend's own
+	// OSD, which is a different piece of work: forward
+	// LatteOverlay_pushNotification to SET_MESSAGE_EXT.
+	cfg.notification.position = ScreenPosition::kDisabled;
 
 	// Async shader compilation
 	if (const char* v = libretro_get_option_value("cemu_async_shader_compile"))
@@ -2277,7 +2284,6 @@ static const char* libretro_option_category(const char* key)
 		{"cemu_convert_to_wua", "convert"},
 
 
-		{"cemu_onscreen_notifications", "video"},
 
 		{"cemu_emulate_skylander_portal", "addons"},
 		{"cemu_emulate_infinity_base", "addons"},
@@ -2699,7 +2705,6 @@ static void libretro_publish_core_options(retro_environment_t cb)
 		{"cemu_log_texture_memory", "Log Texture Memory (debugging); disabled|enabled"},
 		{"cemu_log_input_api", "Log Controller API Calls (debugging); disabled|enabled"},
 		{"cemu_bc1_16bit", "Reduce BC1 Texture Memory; disabled|enabled"},
-		{"cemu_onscreen_notifications", "On-Screen Notifications; enabled|disabled"},
 #if defined(ENABLE_VULKAN) && defined(ENABLE_OPENGL)
 		{"cemu_gpu_api", "Graphics API (restart); OpenGL|Vulkan"},
 #endif
