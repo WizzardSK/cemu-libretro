@@ -42,8 +42,6 @@ public:
 	void EndLoading();
 	void LoadPipelineFromCache(std::span<uint8> fileData);
     void Close(); // called on title exit
-	void StopCompilerThreads(); // must run before the renderer goes away
-	void StopCacheStoreThread();
 
 	bool HasPipelineCached(uint64 baseHash, uint64 pipelineStateHash);
 	void AddCurrentStateToCache(uint64 baseHash, uint64 pipelineStateHash);
@@ -53,23 +51,26 @@ public:
 	bool DeserializePipeline(class MemStreamReader& memReader, struct CachedPipeline& cachedPipeline);
 
 private:
-	int CompilerThread();
-	void WorkerThread();
+	int CompilerThread(); // runs on: this cache's own plCacheCompiler threads
+	void WorkerThread();  // runs on: this cache's own plCacheWriter thread
 
 	std::thread* m_pipelineCacheStoreThread;
-	// The writer is detached and its loop had no way out at all, so it
-	// outlived every title the core ever loaded.
+#ifdef ENABLE_LIBRETRO
+	// Upstream detaches both kinds of thread and never waits for them, which
+	// costs nothing in a process that is about to end. A core outlives the
+	// title: the compiler threads build pipelines that are registered with the
+	// renderer, and the writer holds the cache file, so both have to be gone
+	// before the renderer is - and a handle is what lets Close() join them
+	// instead of waiting on a flag. The loops themselves are upstream's.
+	std::vector<std::thread> m_compilerThreads;
 	std::atomic_bool m_stopCacheStoreThread{ false };
-	std::atomic_bool m_cacheStoreThreadLive{ false };
+#endif
 
 	std::unordered_set<PipelineHash, PipelineHash::HashFunc> m_pipelineIsCached;
 	FSpinlock m_pipelineIsCachedLock;
 	class FileCache* s_cache;
 
 	std::atomic_uint32_t m_numCompilationThreads{ 0 };
-	// The compiler threads are detached, so they cannot be joined; this counts
-	// how many are still inside CompilerThread so Close can wait them out.
-	std::atomic_uint32_t m_compilerThreadsLive{ 0 };
 	ConcurrentQueue<std::vector<uint8>> m_compilationQueue;
 	std::atomic_uint32_t m_compilationCount;
 };

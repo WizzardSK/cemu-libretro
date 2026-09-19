@@ -972,8 +972,24 @@ namespace CafeSystem
 		// start system
 		sSystemRunning = true;
 		WindowSystem::NotifyGameLoaded();
+#ifdef ENABLE_LIBRETRO
+		// On this thread, not a detached one. What that thread does is start the
+		// IOSU modules, scan the title for patches and bring the scheduler up -
+		// all of it reading the memory space the title was just mounted into -
+		// and detaching it means the launch outlives the call that asked for it.
+		// A reset then tears that memory space down while the scan is still
+		// walking it: GamePatch_scan faulting on a page marked ---p, one
+		// millisecond after "ShutdownTitle: releasing memory".
+		//
+		// A core has somewhere to do this work: the frontend's own thread,
+		// inside the retro_run that asked for the title. Nothing of the launch
+		// outlives that call now, so a stop that comes after it has nothing
+		// left to race.
+		_LaunchTitleThread();
+#else
 		std::thread t(_LaunchTitleThread);
 		t.detach();
+#endif
 	}
 
 	bool IsTitleRunning()
@@ -1133,7 +1149,14 @@ namespace CafeSystem
 			cemuLog_log(LogType::Force, "ShutdownTitle: no title was running, nothing to stop");
 			return;
 		}
-		auto phase = [](const char* name) { s_shutdownPhase.store(name, std::memory_order_release); };
+		// Logged as well as stored. The store is for anyone who asks afterwards;
+		// the line is for a shutdown that never finishes, where the last one
+		// written is the step it is still in. Nothing bounds this any more, so
+		// this log is the only thing that can name a wedge.
+		auto phase = [](const char* name) {
+			s_shutdownPhase.store(name, std::memory_order_release);
+			cemuLog_log(LogType::Force, "ShutdownTitle: {}", name);
+		};
 		phase("stopping the scheduler");
 		coreinit::OSSchedulerEnd();
 		phase("stopping the GPU thread");
@@ -1147,6 +1170,8 @@ namespace CafeSystem
 		GX2::_GX2DriverReset();
 		phase("resetting save state");
 		nn::save::ResetToDefaultState();
+		phase("resetting the H264 decoder");
+		H264::ResetToDefaultState();
 		phase("deleting PPC threads");
 		coreinit::__OSDeleteAllActivePPCThreads();
 		phase("unloading modules");

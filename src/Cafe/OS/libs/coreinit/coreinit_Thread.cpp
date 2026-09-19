@@ -21,17 +21,6 @@
 void libretro_frame_window_wait();
 #endif
 
-static bool coreinit_libretro_debug_enabled()
-{
-	static int s_cached = -1;
-	if (s_cached == -1)
-	{
-		const char* env = std::getenv("CEMU_LIBRETRO_DEBUG");
-		s_cached = (env && env[0] != '\0' && env[0] != '0') ? 1 : 0;
-	}
-	return s_cached != 0;
-}
-
 #ifdef __arm64__
 #if defined(__clang__)
 #include <arm_acle.h>
@@ -1367,8 +1356,6 @@ namespace coreinit
 				// stopped.
 				if (!sSchedulerActive.load(std::memory_order::relaxed))
 				{
-					if (coreinit_libretro_debug_enabled())
-						cemuLog_log(LogType::Force, "[OSScheduler] Core {} idle loop detected shutdown, switching to scheduler fiber", t_assignedCoreIndex);
 					Fiber::Switch(*t_schedulerFiber); // switch back to original thread to exit
 				}
 				__OSCheckSystemEvents();
@@ -1383,8 +1370,6 @@ namespace coreinit
 				sSchedulerIdleWaitWakeCount[t_assignedCoreIndex].fetch_add(1, std::memory_order_relaxed);
 				if (!sSchedulerActive.load(std::memory_order::relaxed))
 				{
-					if (coreinit_libretro_debug_enabled())
-						cemuLog_log(LogType::Force, "[OSScheduler] Core {} idle loop detected shutdown, switching to scheduler fiber", t_assignedCoreIndex);
 					Fiber::Switch(*t_schedulerFiber); // switch back to original thread to exit
 				}
 			}
@@ -1408,8 +1393,6 @@ namespace coreinit
 
 		if (!sSchedulerActive.load(std::memory_order::relaxed))
 		{
-			if (coreinit_libretro_debug_enabled())
-				cemuLog_log(LogType::Force, "[OSScheduler] Core {} __OSThreadSwitchToNext detected shutdown, switching to scheduler fiber", t_assignedCoreIndex);
 			__OSUnlockScheduler();
 			Fiber::Switch(*t_schedulerFiber); // switch back to original thread entry for it to exit
 		}
@@ -1574,12 +1557,8 @@ namespace coreinit
 		g_idleLoopFiber[t_assignedCoreIndex]->SetDebugName(fmt::format("cemu idle core {}", t_assignedCoreIndex).c_str());
 		cemu_assert_debug(PPCInterpreter_getCurrentInstance() == nullptr);
 		__OSLockScheduler();
-		if (coreinit_libretro_debug_enabled())
-			cemuLog_log(LogType::Force, "[OSScheduler] Core {} entering idle loop", t_assignedCoreIndex);
 		Fiber::Switch(*g_idleLoopFiber[t_assignedCoreIndex]);
 		// returned from scheduler loop, exit thread
-		if (coreinit_libretro_debug_enabled())
-			cemuLog_log(LogType::Force, "[OSScheduler] Core {} exited idle loop, thread exiting", t_assignedCoreIndex);
 		cemu_assert_debug(!__OSHasSchedulerLock());
 		if (t_assignedCoreIndex >= 0 && t_assignedCoreIndex < 3)
 			sSchedulerHostAlive[t_assignedCoreIndex].store(0, std::memory_order_relaxed);
@@ -1644,29 +1623,114 @@ namespace coreinit
 	}
 
     // shuts down all scheduler host threads and deletes all fibers and ppc threads
+	// The guest side of a core that has stopped moving. Same fields the crash
+	// handler prints, into the log, because a scheduler thread that will not
+	// come back is a scheduler thread with a guest thread on it, and which one
+	// it is - and what it is waiting on - is the whole question.
+	static void __OSLogActivePPCThreads(const char* reason)
+	{
+		cemuLog_log(LogType::Force, "PPC threads ({}), {} active:", reason, activeThreadCount);
+		for (sint32 i = 0; i < activeThreadCount; i++)
+		{
+			MPTR threadMPTR = activeThread[i];
+			OSThread_t* thread = (OSThread_t*)memory_getPointerFromVirtualOffset(threadMPTR);
+			const char* state = "UNDEFINED";
+			if (thread->suspendCounter != 0)
+				state = "SUSPENDED";
+			else if (thread->state == OSThread_t::THREAD_STATE::STATE_NONE)
+				state = "NONE";
+			else if (thread->state == OSThread_t::THREAD_STATE::STATE_READY)
+				state = "READY";
+			else if (thread->state == OSThread_t::THREAD_STATE::STATE_RUNNING)
+				state = "RUNNING";
+			else if (thread->state == OSThread_t::THREAD_STATE::STATE_WAITING)
+				state = "WAITING";
+			else if (thread->state == OSThread_t::THREAD_STATE::STATE_MORIBUND)
+				state = "MORIBUND";
+			const uint8 affinity = thread->attr;
+			cemuLog_log(LogType::Force, "  {:08x} IP {:08x} LR {:08x} {} Aff {}{}{} Pri {} Name {}",
+				threadMPTR, (uint32)thread->context.srr0, _swapEndianU32(thread->context.lr), state,
+				(affinity >> 0) & 1, (affinity >> 1) & 1, (affinity >> 2) & 1,
+				(sint32)thread->effectivePriority,
+				thread->threadName.IsNull() ? "NULL" : thread->threadName.GetPtr());
+		}
+	}
+
 	void OSSchedulerEnd()
 	{
-		if (coreinit_libretro_debug_enabled())
-			cemuLog_log(LogType::Force, "[OSScheduler] OSSchedulerEnd begin threadCount={}", sSchedulerThreads.size());
 		std::unique_lock _lock(sSchedulerStateMtx);
-		if (coreinit_libretro_debug_enabled())
-			cemuLog_log(LogType::Force, "[OSScheduler] OSSchedulerEnd locked, setting sSchedulerActive=false");
 		sSchedulerActive.store(false);
 		for (size_t i = 0; i < Espresso::CORE_COUNT; i++)
 			g_coreRunQueueThreadCount[i].increment(); // make sure to wake up cores if they are paused and waiting for runnable threads
-		if (coreinit_libretro_debug_enabled())
-			cemuLog_log(LogType::Force, "[OSScheduler] OSSchedulerEnd woke cores, joining threads...");
 		// wait for threads to stop execution
+		//
+		// One line per core, before and after. This join is where a close can
+		// stop for good - a core that is inside a guest thread only notices the
+		// stop when that thread reaches the scheduler again - and the pair of
+		// lines says which core it was and what it was doing: whether it is
+		// still marked alive, how many times it went round the idle loop, how
+		// many timeslices it took, and whether it is parked on its run queue.
+		// And a watchdog on top of the lines below, because a snapshot taken
+		// before a join says nothing about a join that never returns. This one
+		// keeps printing while they are outstanding, so two consecutive samples
+		// answer the question the single line cannot: a core whose idle loop
+		// count is still climbing is spinning in the idle loop, and one whose
+		// counts stand still is inside a guest thread that has not come back.
+		std::atomic_bool joinsFinished{false};
+		std::thread joinWatchdog([&joinsFinished]() {
+			uint64 lastIdleLoops[Espresso::CORE_COUNT] = {};
+			uint64 lastTimeslices[Espresso::CORE_COUNT] = {};
+			bool dumpedThreads = false;
+			for (int elapsed = 2; !joinsFinished.load(std::memory_order_acquire); elapsed += 2)
+			{
+				for (int i = 0; i < 20 && !joinsFinished.load(std::memory_order_acquire); i++)
+					std::this_thread::sleep_for(std::chrono::milliseconds(100));
+				if (joinsFinished.load(std::memory_order_acquire))
+					break;
+				bool anyFrozen = false;
+				for (size_t c = 0; c < Espresso::CORE_COUNT; c++)
+				{
+					const uint64 idleLoops = sSchedulerIdleLoopCount[c].load(std::memory_order_relaxed);
+					const uint64 timeslices = sSchedulerTimeslice[c].load(std::memory_order_relaxed);
+					const bool alive = sSchedulerHostAlive[c].load(std::memory_order_relaxed) != 0;
+					cemuLog_log(LogType::Force,
+						"OSSchedulerEnd: {}s in - core {} alive={} idleLoops={} timeslices={} idleWait enter/wake={}/{} sysEventStage={}",
+						elapsed, c, alive ? 1 : 0, idleLoops, timeslices,
+						sSchedulerIdleWaitEnterCount[c].load(std::memory_order_relaxed),
+						sSchedulerIdleWaitWakeCount[c].load(std::memory_order_relaxed),
+						sSchedulerSystemEventStage.load(std::memory_order_relaxed));
+					// Alive, and neither counter moved since the last sample:
+					// that core is not in the idle loop, it is inside a guest
+					// thread that has not come back.
+					if (alive && idleLoops == lastIdleLoops[c] && timeslices == lastTimeslices[c])
+						anyFrozen = true;
+					lastIdleLoops[c] = idleLoops;
+					lastTimeslices[c] = timeslices;
+				}
+				if (anyFrozen && !dumpedThreads)
+				{
+					dumpedThreads = true;
+					__OSLogActivePPCThreads("a core stopped moving while the scheduler was being stopped");
+				}
+			}
+		});
+
 		for (size_t idx = 0; idx < sSchedulerThreads.size(); idx++)
 		{
-			if (coreinit_libretro_debug_enabled())
-				cemuLog_log(LogType::Force, "[OSScheduler] OSSchedulerEnd joining thread {}", idx);
+			cemuLog_log(LogType::Force,
+				"OSSchedulerEnd: joining core {} (alive={} idleLoops={} timeslices={} idleWait enter/wake={}/{} sysEventStage={})",
+				idx,
+				idx < 3 ? sSchedulerHostAlive[idx].load(std::memory_order_relaxed) : 0,
+				idx < 3 ? sSchedulerIdleLoopCount[idx].load(std::memory_order_relaxed) : 0,
+				idx < 3 ? sSchedulerTimeslice[idx].load(std::memory_order_relaxed) : 0,
+				idx < 3 ? sSchedulerIdleWaitEnterCount[idx].load(std::memory_order_relaxed) : 0,
+				idx < 3 ? sSchedulerIdleWaitWakeCount[idx].load(std::memory_order_relaxed) : 0,
+				sSchedulerSystemEventStage.load(std::memory_order_relaxed));
 			sSchedulerThreads[idx].join();
-			if (coreinit_libretro_debug_enabled())
-				cemuLog_log(LogType::Force, "[OSScheduler] OSSchedulerEnd thread {} joined", idx);
+			cemuLog_log(LogType::Force, "OSSchedulerEnd: core {} joined", idx);
 		}
-		if (coreinit_libretro_debug_enabled())
-			cemuLog_log(LogType::Force, "[OSScheduler] OSSchedulerEnd all threads joined");
+		joinsFinished.store(true, std::memory_order_release);
+		joinWatchdog.join();
 		sSchedulerThreads.clear();
 		g_schedulerThreadHandles.clear();
 #if BOOST_OS_LINUX
@@ -1709,16 +1773,12 @@ namespace coreinit
 			c.store(0, std::memory_order_relaxed);
 		for (auto& c : sSchedulerPpcFiberInstructionHeartbeatCount)
 			c.store(0, std::memory_order_relaxed);
-		if (coreinit_libretro_debug_enabled())
-			cemuLog_log(LogType::Force, "[OSScheduler] OSSchedulerEnd deleting fibers, count={}", s_threadToFiber.size());
 		for (auto& it : s_threadToFiber)
 		{
 			OSHostThread* hostThread = it.second;
 			delete hostThread;
 		}
 		s_threadToFiber.clear();
-		if (coreinit_libretro_debug_enabled())
-			cemuLog_log(LogType::Force, "[OSScheduler] OSSchedulerEnd done");
 	}
 
 	bool OSSchedulerIsActive()

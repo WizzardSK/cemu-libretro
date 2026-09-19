@@ -187,6 +187,16 @@ uint32 LatteCP_readU32Deprc()
 			return cmdWord;
 		if (Latte_GetStopSignal())
 			LatteThread_Exit();
+#ifdef ENABLE_LIBRETRO
+		// A thread waiting here for a command that is not coming is the shape
+		// of "the GPU thread did not reach the pause gate (phase: command
+		// processor)": the gate at the top of the ring buffer loop is only
+		// reached once a command has been read, and with the emulated cores
+		// parked there is nothing to read. So the gate is asked here too,
+		// where the waiting actually happens. It costs an atomic load when
+		// nobody is asking for a pause.
+		Latte_GpuPauseGate();
+#endif
 
 		// still no command data available, do some other tasks
 		LatteTiming_HandleTimedVsync();
