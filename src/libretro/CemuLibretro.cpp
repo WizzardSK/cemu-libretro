@@ -1864,6 +1864,59 @@ static void libretro_request_conversion()
 	libretro_start_wua_conversion(baseTitleId, gamePath);
 }
 
+// The three options the game profile owns, and the reason they are not applied
+// with the rest.
+//
+// gameProfile_load() runs inside CafeSystem::PrepareForegroundTitle, and it
+// begins with ResetOptional(), which puts accurate shader mul, shader fast math
+// and the thread quantum back to their defaults - and then copies the quantum
+// into ppcThreadQuantum. Applying them before the launch, which is where every
+// other option is applied from, meant the profile overwrote them a moment
+// later: the option moved the value and the title ran with the default anyway.
+//
+// So they are applied twice, and both are needed. Here, called from the launch
+// after the profile has loaded, is what makes them hold for the run. From
+// libretro_apply_core_options is what makes a change take effect mid-title,
+// where no profile load follows.
+static void libretro_apply_profile_options()
+{
+	if (const char* v = libretro_get_option_value("cemu_accurate_shader_mul"))
+	{
+		bool enabled;
+		if (libretro_parse_enabled_disabled(v, enabled) && g_current_game_profile)
+			g_current_game_profile->SetAccurateShaderMul(enabled ? AccurateShaderMulOption::True : AccurateShaderMulOption::False);
+	}
+
+	if (const char* v = libretro_get_option_value("cemu_shader_fast_math"))
+	{
+		bool enabled;
+		if (libretro_parse_enabled_disabled(v, enabled))
+		{
+#ifdef ENABLE_METAL
+			if (g_current_game_profile)
+				g_current_game_profile->SetShaderFastMath(enabled);
+#else
+			// upstream keeps shader fast math as a Metal-only game profile knob,
+			// so on every build but Apple's this option has nothing to set.
+			(void)enabled;
+#endif
+		}
+	}
+
+	// Set through the variable rather than the profile: gameProfile_load is what
+	// copies the profile's quantum into it, and that has already happened by the
+	// time this runs.
+	if (const char* v = libretro_get_option_value("cemu_thread_quantum"))
+	{
+		const int quantum = atoi(v);
+		if (quantum >= 1000 && quantum <= 536870912)
+		{
+			extern uint32 ppcThreadQuantum;
+			ppcThreadQuantum = (uint32)quantum;
+		}
+	}
+}
+
 static void libretro_apply_core_options()
 {
 	// The conversion switch is not a setting, it is a request, and it is acted
@@ -2095,15 +2148,6 @@ static void libretro_apply_core_options()
 	}
 
 	// Thread quantum
-	if (const char* v = libretro_get_option_value("cemu_thread_quantum"))
-	{
-		int quantum = atoi(v);
-		if (quantum >= 1000 && quantum <= 536870912)
-		{
-			extern uint32 ppcThreadQuantum;
-			ppcThreadQuantum = (uint32)quantum;
-		}
-	}
 
 	// Audio latency. Writing the config alone changed nothing: the value the
 	// audio path reads is IAudioAPI's static copy, which is taken from the
@@ -2126,32 +2170,7 @@ static void libretro_apply_core_options()
 		}
 	}
 
-	// Accurate shader multiplication
-	if (const char* v = libretro_get_option_value("cemu_accurate_shader_mul"))
-	{
-		bool enabled;
-		if (libretro_parse_enabled_disabled(v, enabled))
-		{
-			if (g_current_game_profile)
-				g_current_game_profile->SetAccurateShaderMul(enabled ? AccurateShaderMulOption::True : AccurateShaderMulOption::False);
-		}
-	}
-
-	// Shader fast math
-	if (const char* v = libretro_get_option_value("cemu_shader_fast_math"))
-	{
-		bool enabled;
-		if (libretro_parse_enabled_disabled(v, enabled))
-		{
-#ifdef ENABLE_METAL
-			if (g_current_game_profile)
-				g_current_game_profile->SetShaderFastMath(enabled);
-#else
-			// upstream keeps shader fast math as a Metal-only game profile knob
-			(void)enabled;
-#endif
-		}
-	}
+	libretro_apply_profile_options();
 
 	// USB Device emulation
 	if (const char* v = libretro_get_option_value("cemu_emulate_skylander_portal"))
@@ -2243,7 +2262,6 @@ static const char* libretro_option_category(const char* key)
 		{"cemu_upscale_filter", "video"},
 		{"cemu_downscale_filter", "video"},
 		{"cemu_fullscreen_scaling", "video"},
-		{"cemu_skip_draw_on_dupe", "video"},
 
 		{"cemu_async_shader_compile", "shaders"},
 		{"cemu_precompiled_shaders", "shaders"},
@@ -2666,7 +2684,6 @@ static void libretro_publish_core_options(retro_environment_t cb)
 		{"cemu_emulate_skylander_portal", "Emulate Skylander Portal; disabled|enabled"},
 		{"cemu_emulate_infinity_base", "Emulate Infinity Base; disabled|enabled"},
 		{"cemu_emulate_dimensions_toypad", "Emulate Dimensions Toypad; disabled|enabled"},
-		{"cemu_skip_draw_on_dupe", "Skip Draw on Duplicate Frames; disabled|enabled"},
 		{"cemu_number_of_screen_layouts", "# of Screen Layouts; 1|2|3|4|5"},
 		{"cemu_screen_layout1", "Layout 1; Default Screen|GamePad Screen|Side by Side|Top Bottom|Picture in Picture"},
 		{"cemu_screen_layout2", "Layout 2; Default Screen|GamePad Screen|Side by Side|Top Bottom|Picture in Picture"},
@@ -3449,6 +3466,9 @@ static void libretro_prepare_and_launch_title()
 		libretro_log(RETRO_LOG_ERROR, "Failed to prepare game (status %d)\n", (int)status);
 		return;
 	}
+
+	// The profile is loaded now, so the options it owns can be set for good.
+	libretro_apply_profile_options();
 
 	// Launch the title
 	libretro_log(RETRO_LOG_INFO, "launching the foreground title\n");
