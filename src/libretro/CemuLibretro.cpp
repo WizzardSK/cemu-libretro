@@ -2105,12 +2105,25 @@ static void libretro_apply_core_options()
 		}
 	}
 
-	// Audio latency
+	// Audio latency. Writing the config alone changed nothing: the value the
+	// audio path reads is IAudioAPI's static copy, which is taken from the
+	// config in InitializeStatic() - and only the standalone's main() calls
+	// that, so in the core it kept its built-in default of 2 whatever the
+	// option said. Set it directly, which also makes the option take effect
+	// while a title is running rather than only at load.
 	if (const char* v = libretro_get_option_value("cemu_audio_latency"))
 	{
 		int delay = atoi(v);
 		if (delay >= 1 && delay <= 8)
+		{
 			cfg.audio_delay = delay;
+
+			if (IAudioAPI::GetStaticAudioDelay() != (uint32)delay)
+			{
+				IAudioAPI::SetAudioDelay((uint32)delay);
+				cemuLog_log(LogType::Force, "[libretro] audio latency set to {} blocks", delay);
+			}
+		}
 	}
 
 	// Accurate shader multiplication

@@ -67,6 +67,13 @@ public:
 	void SetAudioDelayOverride(uint32 delay);
 	uint32 GetAudioDelay() const;
 
+	// The static delay is normally taken from the config once, in
+	// InitializeStatic(), which only the standalone calls. A frontend that
+	// carries its own settings sets it here instead, and can do so while a
+	// title is running.
+	static void SetAudioDelay(uint32 delay);
+	static uint32 GetStaticAudioDelay();
+
 	static void PrintLogging();
 	static void InitializeStatic();
 	static bool IsAudioAPIAvailable(AudioAPI api);
