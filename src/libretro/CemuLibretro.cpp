@@ -1377,14 +1377,17 @@ static void libretro_init_paths()
 // Helper: Create libretro audio device
 // ============================================================================
 
-static void libretro_init_audio()
-{
-	std::unique_lock lock(g_audioMutex);
-	g_tvAudio = std::make_unique<LibretroAudioAPI>(48000, 2, 256, 16);
-	g_tvAudio->Play();
-	// Don't create pad audio - it shares the same static buffer as TV
-	// and mixing both causes distortion
-}
+// No audio device is created here any more, and that was a bug rather than a
+// tidy-up. This made one with 256 samples per block; AX hands FeedBlock a group
+// of four 3 ms frames, which is 576. FeedBlock copies m_bytesPerBlock worth and
+// no more, so every block AX produced was cut to under half and the rest
+// dropped - the crackle that has been there since the ring landed.
+//
+// AXOut_init makes the device itself, with AX's own block size, and it only
+// does so when there is not one already. So the device this made was the one
+// that survived, on every run except the one after a reset: a reset destroys it
+// in snd_core::reset and does not come back through here, which is why the
+// audio after a reset was audibly better than the audio of a fresh start.
 
 // ============================================================================
 // Libretro API implementation
@@ -3474,9 +3477,9 @@ static void libretro_launch_game()
 	// Apply core options before launch
 	libretro_apply_core_options();
 
-	// Init audio through libretro
+	// AXOut_init creates the audio device when the title starts it, with the
+	// block size AX actually feeds.
 	s_audio_submission_allowed = true;
-	libretro_init_audio();
 
 	// Hand each WPAD channel the libretro pad its port was set to
 	libretro_setup_controllers();
