@@ -3786,6 +3786,10 @@ static void libretro_create_renderer()
 // done by asking rather than by calling.
 static void libretro_context_reset()
 {
+	// In Cemu's own log, not only the frontend's: log.txt is what a bug report
+	// carries, and "did the context come back" was not answerable from it.
+	cemuLog_log(LogType::Force, "[libretro] the frontend has given us a graphics context");
+
 	s_hw_render_initialized = true;
 	// A context exists again, so GPU teardown is allowed again.
 	s_frontend_context_gone = false;
@@ -3806,10 +3810,13 @@ static void libretro_context_reset()
 		}
 		else
 		{
-			// Context restored (e.g. fullscreen toggle) - re-capture the DC and
-			// let the GPU thread make its context current again.
+			// A context after a context: not a fullscreen toggle, which with
+			// cache_context set never reaches here, but a real device loss or a
+			// frontend that could not keep the old one. Re-capture the DC and let
+			// the GPU thread make its context current again.
 			s_wgl_frontend_dc = wglGetCurrentDC();
 			s_gpu_context_made_current = false;
+			cemuLog_log(LogType::Force, "[libretro] a context came back with a shared WGL context still here - the rebuild path");
 			libretro_log(RETRO_LOG_INFO, "WGL context restored, dc=%p\n", s_wgl_frontend_dc);
 		}
 #else
@@ -3825,19 +3832,23 @@ static void libretro_context_reset()
 		}
 		else if (s_use_egl)
 		{
-			// Context restored (e.g. fullscreen toggle) - refresh display/surface for MakeCurrent
+			// A context after a context - see the WGL branch above for what that
+			// means now. Refresh display/surface for MakeCurrent.
 			s_egl_display = egl_current_display();
 			s_egl_surface = eglGetCurrentSurface(EGL_DRAW);
 			s_gpu_context_made_current = false;
+			cemuLog_log(LogType::Force, "[libretro] a context came back with a shared EGL context still here - the rebuild path");
 			libretro_log(RETRO_LOG_INFO, "EGL context restored, surface=%p\n", s_egl_surface);
 		}
 #ifndef __ANDROID__
 		else
 		{
-			// Context restored (e.g. fullscreen toggle) - update drawable for MakeCurrent
+			// A context after a context - see the WGL branch above. Update the
+			// drawable for MakeCurrent.
 			s_glx_display = glXGetCurrentDisplay();
 			s_glx_drawable = glXGetCurrentDrawable();
 			s_gpu_context_made_current = false;
+			cemuLog_log(LogType::Force, "[libretro] a context came back with a shared GLX context still here - the rebuild path");
 			libretro_log(RETRO_LOG_INFO, "Context restored, updating drawable=0x%lx\n",
 				(unsigned long)s_glx_drawable);
 		}
@@ -3914,12 +3925,16 @@ static void libretro_context_destroy()
 
 		cemuLog_log(LogType::Force, "[libretro] the title is down; the context can go");
 	}
+	else
+	{
+		cemuLog_log(LogType::Force, "[libretro] the graphics context is going away with no title loaded");
+	}
 
-	// The frontend is about to take its graphics context apart while the title
-	// keeps running (a fullscreen toggle does exactly this). Park the GPU thread
-	// at a command boundary first: it renders through the frontend's Vulkan
-	// device, and carrying on through the teardown either wedges it on a lock or
-	// faults inside the driver.
+	// Everything below runs with no title: either the close above stopped one,
+	// or there was none to stop. What can still be alive is the GPU thread, and
+	// it renders through the frontend's device - carrying on through the
+	// teardown either wedges it on a lock or faults inside the driver - so it
+	// is parked at a command boundary before the context goes.
 	//
 	// Bounded: if the GPU thread is stuck somewhere it cannot reach the gate,
 	// a frozen frontend would be worse than the race we are closing.
@@ -4014,7 +4029,7 @@ static void libretro_context_destroy()
 		// and the unload deletes whatever is left.
 		libretro_gpu_thread_late("the GPU thread reached the pause gate but did not finish handing the graphics context back");
 	}
-	if (log_cb && Latte_GpuTeardownForContextLossDone())
+	if (Latte_GpuTeardownForContextLossDone())
 		libretro_log(RETRO_LOG_INFO, "handed the core's GPU objects back before the context went away\n");
 
 	s_hw_render_initialized = false;
