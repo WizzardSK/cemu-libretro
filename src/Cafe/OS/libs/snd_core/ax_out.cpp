@@ -557,10 +557,19 @@ namespace snd_core
 		// s_last_check is always set to the timestamp at the time of firing
 		// it's used to enforce the minimum wait delay (we want to avoid calling AX update in quick succession because other threads may need to do work first) 
 
-		static auto s_ax_interval_timer = now_cached() - kWaitDuration;
-		static auto s_last_check = now_cached();
+		// tick_cached, not now_cached: these are deltas, so what they want is a
+		// monotonic clock - and on a MinGW build now_cached falls back to
+		// std::chrono::high_resolution_clock, which is libstdc++'s system_clock
+		// and on Windows ticks with the system timer, not with QPC. A clock that
+		// only moves every ~15.6 ms never opens this 3 ms gate on time: AX then
+		// queues one 3 ms frame per tick instead of five, which is audio at a
+		// fifth of real time - silence on WASAPI, underruns everywhere else.
+		// Upstream never meets this because its Windows build is MSVC, where
+		// now_cached is QPC by hand. tick_cached is QPC on every compiler.
+		static auto s_ax_interval_timer = tick_cached() - kWaitDuration;
+		static auto s_last_check = tick_cached();
 
-		const auto now = now_cached();
+		const auto now = tick_cached();
 		const auto diff = (now - s_ax_interval_timer);
 
 		if (diff < wait_duration)
