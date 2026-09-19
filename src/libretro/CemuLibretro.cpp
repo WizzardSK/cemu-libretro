@@ -8,6 +8,7 @@
 #include <string>
 #include <vector>
 #include <cstring>
+#include <cstdarg>
 #include "libretro.h"
 
 #include "config/CemuConfig.h"
@@ -249,6 +250,27 @@ static retro_input_poll_t input_poll_cb = nullptr;
 static retro_input_state_t input_state_cb = nullptr;
 static retro_log_printf_t log_cb = nullptr;
 
+// Every line this core sends the frontend used to be written the same way: a
+// guard on the pointer, then the call, then the same "Cemu: " prefix inside the
+// format string. That was 77 guards around 86 calls, so it is one function now.
+// The format is checked at every call site as before.
+#ifdef __GNUC__
+__attribute__((format(printf, 2, 3)))
+#endif
+static void libretro_log(enum retro_log_level level, const char* fmt, ...)
+{
+	if (!log_cb)
+		return;
+
+	char text[1024];
+	va_list args;
+	va_start(args, fmt);
+	vsnprintf(text, sizeof text, fmt, args);
+	va_end(args);
+
+	log_cb(level, "Cemu: %s", text);
+}
+
 // Cemu's log, handed to the frontend instead of to a file. Installed only while
 // log.txt is switched off: with both on, every line would be written twice, and
 // with both off - the frontend's own log file is a setting too - a run touches
@@ -376,8 +398,7 @@ static void libretro_gpu_thread_late(const char* what)
 {
 	cemuLog_log(LogType::Force, "[LatteThread] {} (phase: {}). Carrying on without the handover; the renderer "
 		"goes with the unload instead.", what, Latte_GetThreadPhase());
-	if (log_cb)
-		log_cb(RETRO_LOG_WARN, "Cemu: %s\n", what);
+	libretro_log(RETRO_LOG_WARN, "%s\n", what);
 }
 
 static std::atomic_bool s_game_loaded{false};   // read by the GPU thread at the frame gate
@@ -648,8 +669,7 @@ static bool libretro_vk_create_device(
 	unsigned num_required_device_layers,
 	const VkPhysicalDeviceFeatures* required_features)
 {
-	if (log_cb)
-		log_cb(RETRO_LOG_INFO, "Cemu: Vulkan create_device called (gpu=%p, surface=%p)\n", gpu, surface);
+	libretro_log(RETRO_LOG_INFO, "Vulkan create_device called (gpu=%p, surface=%p)\n", gpu, surface);
 
 	// Load instance functions
 	if (!InitializeGlobalVulkan())
@@ -742,8 +762,8 @@ static bool libretro_vk_create_device(
 	supportedFeatures2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
 	if (vkGetPhysicalDeviceFeatures2)
 		vkGetPhysicalDeviceFeatures2(gpu, &supportedFeatures2);
-	else if (log_cb)
-		log_cb(RETRO_LOG_WARN, "Cemu: cannot query device features, asking for none beyond the frontend's\n");
+	else
+	libretro_log(RETRO_LOG_WARN, "cannot query device features, asking for none beyond the frontend's\n");
 	const VkPhysicalDeviceFeatures& supported = supportedFeatures2.features;
 
 	VkPhysicalDeviceFeatures features{};
@@ -770,7 +790,7 @@ static bool libretro_vk_create_device(
 	wantFeature(&VkPhysicalDeviceFeatures::depthClamp, "depthClamp");
 	wantFeature(&VkPhysicalDeviceFeatures::depthBiasClamp, "depthBiasClamp");
 	if (!missingFeatures.empty() && log_cb)
-		log_cb(RETRO_LOG_INFO, "Cemu: this GPU does not have %s - carrying on without them\n", missingFeatures.c_str());
+		libretro_log(RETRO_LOG_INFO, "this GPU does not have %s - carrying on without them\n", missingFeatures.c_str());
 
 	float queuePriority = 1.0f;
 	VkDeviceQueueCreateInfo queueInfo{};
@@ -798,8 +818,7 @@ static bool libretro_vk_create_device(
 	VkResult result = vkCreateDevice(gpu, &createInfo, nullptr, &device);
 	if (result != VK_SUCCESS)
 	{
-		if (log_cb)
-			log_cb(RETRO_LOG_ERROR, "Cemu: Failed to create Vulkan device: %d\n", result);
+		libretro_log(RETRO_LOG_ERROR, "Failed to create Vulkan device: %d\n", result);
 		return false;
 	}
 
@@ -818,15 +837,13 @@ static bool libretro_vk_create_device(
 	s_vk_context = *context;
 	s_vk_device_created = true;
 
-	if (log_cb)
-		log_cb(RETRO_LOG_INFO, "Cemu: Vulkan device created (queue family %u)\n", graphicsFamily);
+	libretro_log(RETRO_LOG_INFO, "Vulkan device created (queue family %u)\n", graphicsFamily);
 	return true;
 }
 
 static void libretro_vk_destroy_device()
 {
-	if (log_cb)
-		log_cb(RETRO_LOG_INFO, "Cemu: Vulkan destroy_device called\n");
+	libretro_log(RETRO_LOG_INFO, "Vulkan destroy_device called\n");
 	s_vk_device_created = false;
 }
 
@@ -1045,14 +1062,12 @@ public:
 			if (wglMakeCurrent(s_wgl_frontend_dc, s_wgl_shared_context))
 			{
 				s_gpu_context_made_current = true;
-				if (log_cb)
-					log_cb(RETRO_LOG_INFO, "Cemu: GPU thread WGL context made current successfully\n");
+				libretro_log(RETRO_LOG_INFO, "GPU thread WGL context made current successfully\n");
 			}
 			else
 			{
-				if (log_cb)
-					log_cb(RETRO_LOG_ERROR, "Cemu: Failed to make GPU thread WGL context current (%lu)\n",
-						(unsigned long)GetLastError());
+				libretro_log(RETRO_LOG_ERROR, "Failed to make GPU thread WGL context current (%lu)\n",
+					(unsigned long)GetLastError());
 				return false;
 			}
 		}
@@ -1068,13 +1083,11 @@ public:
 				if (eglMakeCurrent(s_egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, s_egl_shared_context))
 				{
 					s_gpu_context_made_current = true;
-					if (log_cb)
-						log_cb(RETRO_LOG_INFO, "Cemu: GPU thread EGL context made current successfully\n");
+					libretro_log(RETRO_LOG_INFO, "GPU thread EGL context made current successfully\n");
 				}
 				else
 				{
-					if (log_cb)
-						log_cb(RETRO_LOG_ERROR, "Cemu: Failed to make GPU thread EGL context current (0x%x)\n", eglGetError());
+					libretro_log(RETRO_LOG_ERROR, "Failed to make GPU thread EGL context current (0x%x)\n", eglGetError());
 					return false;
 				}
 			}
@@ -1086,13 +1099,11 @@ public:
 			if (result)
 			{
 				s_gpu_context_made_current = true;
-				if (log_cb)
-					log_cb(RETRO_LOG_INFO, "Cemu: GPU thread GL context made current successfully\n");
+				libretro_log(RETRO_LOG_INFO, "GPU thread GL context made current successfully\n");
 			}
 			else
 			{
-				if (log_cb)
-					log_cb(RETRO_LOG_ERROR, "Cemu: Failed to make GPU thread GL context current\n");
+				libretro_log(RETRO_LOG_ERROR, "Failed to make GPU thread GL context current\n");
 				return false;
 			}
 		}
@@ -1241,8 +1252,7 @@ extern std::atomic_bool g_isGPUInitFinished;
 // process down with it, so the frontend log is where the breadcrumbs have to go.
 void LibretroInitProgress(const char* stage)
 {
-	if (log_cb)
-		log_cb(RETRO_LOG_INFO, "Cemu: init stage: %s\n", stage);
+	libretro_log(RETRO_LOG_INFO, "init stage: %s\n", stage);
 }
 
 // ============================================================================
@@ -1255,8 +1265,7 @@ void LibretroInitProgress(const char* stage)
 // assumes, and is all an older one understands.
 static void libretro_show_message(unsigned level, unsigned durationMs, const std::string& text)
 {
-	if (log_cb)
-		log_cb(level >= RETRO_LOG_ERROR ? RETRO_LOG_ERROR : RETRO_LOG_INFO, "Cemu: %s\n", text.c_str());
+	libretro_log(level >= RETRO_LOG_ERROR ? RETRO_LOG_ERROR : RETRO_LOG_INFO, "%s\n", text.c_str());
 
 	if (!environ_cb)
 		return;
@@ -1365,8 +1374,7 @@ static void libretro_init_paths()
 			if (!ec)
 			{
 				fs::remove(strayCache, ec);
-				if (log_cb)
-					log_cb(RETRO_LOG_INFO, "Cemu: moved the shader cache out of shaderCache/shaderCache\n");
+				libretro_log(RETRO_LOG_INFO, "moved the shader cache out of shaderCache/shaderCache\n");
 			}
 		}
 	}
@@ -1471,7 +1479,7 @@ static void libretro_set_option_value(const char* key, const char* value)
 		return;
 	struct retro_variable var{key, value};
 	if (!environ_cb(RETRO_ENVIRONMENT_SET_VARIABLE, &var) && log_cb)
-		log_cb(RETRO_LOG_WARN, "Cemu: the frontend would not set %s back to %s\n", key, value);
+		libretro_log(RETRO_LOG_WARN, "the frontend would not set %s back to %s\n", key, value);
 }
 
 // A SAF URI is not a filesystem path: std::filesystem would put a backslash in
@@ -1581,9 +1589,8 @@ static void libretro_collect_wua_destinations(bool force = false)
 			continue;
 		if (!libretro_directory_is_writable(candidate.path))
 		{
-			if (log_cb)
-				log_cb(RETRO_LOG_INFO, "Cemu: not offering %s - the frontend says it is read-only\n",
-					candidate.path.c_str());
+			libretro_log(RETRO_LOG_INFO, "not offering %s - the frontend says it is read-only\n",
+				candidate.path.c_str());
 			continue;
 		}
 		candidate.hasExisting = VFSFileStream::Exists(fs::path(libretro_path_join(candidate.path, outputName)));
@@ -1593,13 +1600,10 @@ static void libretro_collect_wua_destinations(bool force = false)
 	if (s_wua_destinations.empty())
 		s_wua_unavailable_reason = "there is nowhere this core may write";
 
-	if (log_cb)
-	{
-		log_cb(RETRO_LOG_INFO, "Cemu: %u place(s) to convert to%s%s\n",
-			(unsigned)s_wua_destinations.size(),
-			s_wua_unavailable_reason.empty() ? "" : ": ",
-			s_wua_unavailable_reason.c_str());
-	}
+	libretro_log(RETRO_LOG_INFO, "%u place(s) to convert to%s%s\n",
+		(unsigned)s_wua_destinations.size(),
+		s_wua_unavailable_reason.empty() ? "" : ": ",
+		s_wua_unavailable_reason.c_str());
 }
 
 static std::optional<CafeConsoleLanguage> libretro_parse_console_language(const char* v)
@@ -1764,7 +1768,7 @@ static void libretro_read_screen_layout_options()
 		case LibretroLayoutButton::AllShoulders: name = "L + R + L2 + R2 + L3 + R3"; break;
 		case LibretroLayoutButton::KeyTab: name = "the Tab key"; break;
 		}
-		log_cb(RETRO_LOG_INFO, "Cemu: next screen layout is on %s\n", name);
+		libretro_log(RETRO_LOG_INFO, "next screen layout is on %s\n", name);
 	}
 
 	libretro_update_screen_layout_visibility();
@@ -1781,10 +1785,9 @@ static void libretro_next_screen_layout()
 	// libretro_apply_screen_layout returns early on its own.
 	libretro_apply_screen_layout();
 
-	if (log_cb)
-		log_cb(RETRO_LOG_INFO, "Cemu: screen layout %u of %u (%s)\n",
-			s_screen_layout_index + 1, s_screen_layout_count,
-			libretro_screen_layout_name(g_libretroScreenLayout));
+	libretro_log(RETRO_LOG_INFO, "screen layout %u of %u (%s)\n",
+		s_screen_layout_index + 1, s_screen_layout_count,
+		libretro_screen_layout_name(g_libretroScreenLayout));
 }
 
 static void libretro_start_wua_conversion(TitleId baseTitleId, const fs::path& gamePath);
@@ -1835,8 +1838,7 @@ static void libretro_request_conversion()
 	if (s_convert_mode.load() || !s_game_loaded || s_game_path.empty())
 		return;
 
-	if (log_cb)
-		log_cb(RETRO_LOG_INFO, "Cemu: conversion requested - the title keeps running\n");
+	libretro_log(RETRO_LOG_INFO, "conversion requested - the title keeps running\n");
 
 	// The title is left running. It and the conversion both read the same
 	// files and neither writes them, so the reads do not conflict; what they do
@@ -2087,7 +2089,7 @@ static void libretro_apply_core_options()
 			extern float g_libretroRenderScale;
 			g_libretroRenderScale = (float)newHeight / 720.0f;
 			if (log_cb && g_libretroRenderScale != 1.0f)
-				log_cb(RETRO_LOG_INFO, "Cemu: rendering screen-sized targets at %ux%u (%.2fx)\n",
+				libretro_log(RETRO_LOG_INFO, "rendering screen-sized targets at %ux%u (%.2fx)\n",
 					newWidth, newHeight, g_libretroRenderScale);
 		}
 	}
@@ -2271,6 +2273,39 @@ static const char* libretro_option_category(const char* key)
 // The old flat list has one way of saying what the default is: put it first.
 // Options whose values are listed in their own order instead get rotated here,
 // so a frontend without categories still starts where it should.
+// "Description; a|b|c" as the two halves both option interfaces want: the text
+// the frontend shows, and the values it may pick from. Returns false when there
+// is no value list at all, which is the case each caller passes straight
+// through. Written once because v0 and v2 below both began by doing this, and
+// then walking the bar-separated list, by hand.
+static bool libretro_split_option(const char* text, std::string& desc, std::vector<std::string>& values)
+{
+	desc = text ? text : "";
+	values.clear();
+
+	const size_t split = desc.find(';');
+	if (split == std::string::npos)
+		return false;
+
+	std::string list = desc.substr(split + 1);
+	desc.erase(split);
+	while (!list.empty() && list.front() == ' ')
+		list.erase(list.begin());
+
+	size_t pos = 0;
+	while (pos <= list.size())
+	{
+		const size_t bar = list.find('|', pos);
+		std::string value = list.substr(pos, bar == std::string::npos ? std::string::npos : bar - pos);
+		if (!value.empty())
+			values.push_back(std::move(value));
+		if (bar == std::string::npos)
+			break;
+		pos = bar + 1;
+	}
+	return true;
+}
+
 static bool libretro_set_core_variables(retro_environment_t cb, const struct retro_variable* variables)
 {
 	static std::deque<std::string> storage;
@@ -2281,39 +2316,24 @@ static bool libretro_set_core_variables(retro_environment_t cb, const struct ret
 		for (const struct retro_variable* var = variables; var->key; ++var)
 		{
 			const char* explicitDefault = libretro_option_default(var->key);
-			if (!explicitDefault || !var->value)
+			std::string desc;
+			std::vector<std::string> values;
+			if (!explicitDefault || !var->value || !libretro_split_option(var->value, desc, values))
 			{
 				rotated.push_back(*var);
 				continue;
 			}
 
-			std::string desc(var->value);
-			const size_t split = desc.find(';');
-			if (split == std::string::npos)
-			{
-				rotated.push_back(*var);
-				continue;
-			}
-
-			std::string values = desc.substr(split + 1);
-			desc.erase(split);
-			while (!values.empty() && values.front() == ' ')
-				values.erase(values.begin());
-
+			// This interface has no default field: the first value is the
+			// default, so the list is rotated to put it there.
 			std::string rebuilt = explicitDefault;
-			size_t pos = 0;
-			while (pos <= values.size())
+			for (const std::string& value : values)
 			{
-				const size_t bar = values.find('|', pos);
-				std::string value = values.substr(pos, bar == std::string::npos ? std::string::npos : bar - pos);
-				if (!value.empty() && value != explicitDefault)
+				if (value != explicitDefault)
 				{
 					rebuilt += '|';
 					rebuilt += value;
 				}
-				if (bar == std::string::npos)
-					break;
-				pos = bar + 1;
 			}
 
 			storage.push_back(desc + "; " + rebuilt);
@@ -2417,16 +2437,9 @@ static bool libretro_set_core_options_v2(retro_environment_t cb, const struct re
 				(strcmp(var->key, "cemu_wua_output_dir") == 0 || strcmp(var->key, "cemu_convert_to_wua") == 0))
 				continue;
 
-			std::string desc(var->value ? var->value : "");
-			std::string values;
-			const size_t split = desc.find(';');
-			if (split != std::string::npos)
-			{
-				values = desc.substr(split + 1);
-				desc.erase(split);
-			}
-			while (!values.empty() && values.front() == ' ')
-				values.erase(values.begin());
+			std::string desc;
+			std::vector<std::string> values;
+			libretro_split_option(var->value, desc, values);
 
 			const char* explicitDefault = libretro_option_default(var->key);
 
@@ -2495,25 +2508,18 @@ static bool libretro_set_core_options_v2(retro_environment_t cb, const struct re
 			}
 
 			size_t count = 0;
-			size_t pos = 0;
-			while (pos <= values.size() && count + 1 < RETRO_NUM_CORE_OPTION_VALUES_MAX)
+			for (std::string& value : values)
 			{
-				const size_t bar = values.find('|', pos);
-				std::string value = values.substr(pos, bar == std::string::npos ? std::string::npos : bar - pos);
-				if (!value.empty())
-				{
-					const bool isDefault = explicitDefault ? (value == explicitDefault) : (count == 0);
-					const std::string label = libretro_option_value_label(var->key, value);
-					def.values[count].value = keep(std::move(value));
-					if (!label.empty())
-						def.values[count].label = keep(label);
-					if (isDefault)
-						def.default_value = def.values[count].value;
-					++count;
-				}
-				if (bar == std::string::npos)
+				if (count + 1 >= RETRO_NUM_CORE_OPTION_VALUES_MAX)
 					break;
-				pos = bar + 1;
+				const bool isDefault = explicitDefault ? (value == explicitDefault) : (count == 0);
+				const std::string label = libretro_option_value_label(var->key, value);
+				def.values[count].value = keep(std::move(value));
+				if (!label.empty())
+					def.values[count].label = keep(label);
+				if (isDefault)
+					def.default_value = def.values[count].value;
+				++count;
 			}
 
 			definitions.push_back(def);
@@ -2575,13 +2581,12 @@ RETRO_API void retro_set_environment(retro_environment_t cb)
 				// while it was being investigated.
 				const uint32_t version = wanted;
 				VFSFileStream::SetVFSInterface(vfs_info.iface, version);
-				if (log_cb)
-					log_cb(RETRO_LOG_INFO, "Cemu: using the frontend's VFS interface (v%u)\n", version);
+				libretro_log(RETRO_LOG_INFO, "using the frontend's VFS interface (v%u)\n", version);
 				break;
 			}
 		}
 		if (!VFSFileStream::UsesVFS() && log_cb)
-			log_cb(RETRO_LOG_INFO, "Cemu: no VFS interface offered, reading files directly\n");
+			libretro_log(RETRO_LOG_INFO, "no VFS interface offered, reading files directly\n");
 	}
 
 	// Declare that we need a game file
@@ -2730,14 +2735,12 @@ RETRO_API void retro_init()
 		{
 			s_graphics_api = SelectedGraphicsAPI::Vulkan;
 			GetConfig().graphic_api = kVulkan;
-			if (log_cb)
-				log_cb(RETRO_LOG_INFO, "Cemu: Vulkan graphics API selected\n");
+			libretro_log(RETRO_LOG_INFO, "Vulkan graphics API selected\n");
 		}
 		else
 		{
 			s_graphics_api = SelectedGraphicsAPI::OpenGL;
-			if (log_cb)
-				log_cb(RETRO_LOG_WARN, "Cemu: Vulkan not available, falling back to OpenGL\n");
+			libretro_log(RETRO_LOG_WARN, "Vulkan not available, falling back to OpenGL\n");
 		}
 	}
 #endif
@@ -2828,29 +2831,12 @@ RETRO_API void retro_set_controller_port_device(unsigned port, unsigned device)
 // retro_unload_game). One that did not stop still has threads drawing through
 // the frontend's Vulkan device; the teardown happens regardless, and the return
 // value is what tells the log which of the two it was.
-static bool libretro_shutdown_title_for_exit()
+// Wake whatever is waiting for a frame that is never coming, and let the frame
+// gate go. Both halves of a stop need this - a title that is being shut down
+// and a GPU thread that exists without one - and it used to be written out at
+// each of the three places that stop something.
+static void libretro_wake_frame_waiters()
 {
-	if (!s_game_loaded)
-	{
-		// Reported as stopped, and nothing is stopped: the scheduler, the GPU
-		// thread and the title's memory are all left as they are. True whenever
-		// the title is genuinely down, and the thing to suspect when a thread
-		// turns up alive after a close.
-		if (log_cb)
-			log_cb(RETRO_LOG_INFO, "Cemu: no title was loaded, nothing to shut down\n");
-		// Except the recompiler, which starts while the title is still being
-		// prepared and so can be running even when no title ever finished
-		// loading. CafeSystem::ShutdownTitle is what normally joins it, and
-		// that is exactly what is being skipped here - leaving its thread
-		// alive inside a static object whose destructor then runs at exit and
-		// calls std::terminate on a joinable thread. Closing content a second
-		// after opening it does this every time. Shutdown is a no-op if the
-		// recompiler never started.
-		PPCRecompiler_Shutdown();
-		return true;
-	}
-	s_game_loaded = false;
-
 	s_shutting_down = true;
 	{
 		std::lock_guard lock(s_frame_mutex);
@@ -2860,6 +2846,34 @@ static bool libretro_shutdown_title_for_exit()
 	// Before ShutdownTitle, which stops the GPU thread: a thread parked at the
 	// frame gate is a thread that never gets there.
 	libretro_frame_gate_release();
+}
+
+static bool libretro_shutdown_title_for_exit()
+{
+	if (!s_game_loaded)
+	{
+		// Reported as stopped, and nothing is stopped: the scheduler, the GPU
+		// thread and the title's memory are all left as they are. True whenever
+		// the title is genuinely down, and the thing to suspect when a thread
+		// turns up alive after a close.
+		libretro_log(RETRO_LOG_INFO, "no title was loaded, nothing to shut down\n");
+		// Except the recompiler, which starts while the title is still being
+		// prepared and so can be running even when no title ever finished
+		// loading. CafeSystem::ShutdownTitle is what normally joins it, and
+		// that is exactly what is being skipped here - leaving its thread
+		// alive inside a static object whose destructor then runs at exit and
+		// calls std::terminate on a joinable thread. Closing content a second
+		// after opening it does this every time. Shutdown is a no-op if the
+		// recompiler never started.
+		PPCRecompiler_Shutdown();
+		// A GPU thread can exist without a title ever having launched, and it
+		// parks at the frame gate like any other.
+		libretro_wake_frame_waiters();
+		return true;
+	}
+	s_game_loaded = false;
+
+	libretro_wake_frame_waiters();
 
 	// And the same for the pause gate, which is the other place it waits. A
 	// close that arrives after context_destroy finds the GPU thread parked with
@@ -2886,8 +2900,7 @@ static bool libretro_shutdown_title_for_exit()
 	cemuLog_log(LogType::Force, "[libretro] shutting the title down: scheduler, GPU thread, IOSU, then the save flush");
 	CafeSystem::ShutdownTitle();
 
-	if (log_cb)
-		log_cb(RETRO_LOG_INFO, "Cemu: title shut down, save data flushed\n");
+	libretro_log(RETRO_LOG_INFO, "title shut down, save data flushed\n");
 
 	return true;
 }
@@ -2909,16 +2922,14 @@ RETRO_API void retro_reset()
 	// one thread and it already owns every start; it owns this stop too now,
 	// and a reset that arrives twice before the next frame is one reset.
 	s_reset_requested.store(true, std::memory_order_release);
-	if (log_cb)
-		log_cb(RETRO_LOG_INFO, "Cemu: reset requested\n");
+	libretro_log(RETRO_LOG_INFO, "reset requested\n");
 }
 
 // The stop half of a reset, on retro_run's thread. Returns whether the title
 // went down; a title that would not stop is not one to start again on top of.
 static bool libretro_reset_stop_title()
 {
-	if (log_cb)
-		log_cb(RETRO_LOG_INFO, "Cemu: reset - stopping the title\n");
+	libretro_log(RETRO_LOG_INFO, "reset - stopping the title\n");
 
 	if (!libretro_shutdown_title_for_exit())
 	{
@@ -2962,6 +2973,23 @@ static bool libretro_reset_stop_title()
 // on that channel (TickFunction in padscore.cpp), and a title that is never
 // told will not read one either.
 
+// One mapping: which button of the emulated controller, and which libretro
+// input drives it. The three pads below are nothing but lists of these, so they
+// are written as lists rather than as three runs of near-identical calls.
+struct LibretroPadMapping
+{
+	uint64 button;
+	uint64 source;
+};
+
+static void libretro_apply_pad_mappings(const EmulatedControllerPtr& controller,
+	const std::shared_ptr<LibretroController>& pad,
+	std::initializer_list<LibretroPadMapping> mappings)
+{
+	for (const LibretroPadMapping& mapping : mappings)
+		controller->set_mapping(mapping.button, pad, mapping.source);
+}
+
 // A RetroPad as a Wii Remote, held either way up.
 //
 // Upright: B and A keep the meaning they already have on the GamePad (B
@@ -2986,43 +3014,45 @@ static bool libretro_reset_stop_title()
 static void libretro_map_wiimote(const EmulatedControllerPtr& remote,
 	const std::shared_ptr<LibretroController>& pad, bool sideways)
 {
+	using W = WiimoteController;
+
 	if (sideways)
 	{
-		remote->set_mapping(WiimoteController::kButtonId_2, pad, kButton0 + RETRO_DEVICE_ID_JOYPAD_B);
-		remote->set_mapping(WiimoteController::kButtonId_1, pad, kButton0 + RETRO_DEVICE_ID_JOYPAD_A);
-		remote->set_mapping(WiimoteController::kButtonId_A, pad, kButton0 + RETRO_DEVICE_ID_JOYPAD_Y);
-		remote->set_mapping(WiimoteController::kButtonId_B, pad, kButton0 + RETRO_DEVICE_ID_JOYPAD_X);
+		libretro_apply_pad_mappings(remote, pad, {
+			{W::kButtonId_2, kButton0 + RETRO_DEVICE_ID_JOYPAD_B},
+			{W::kButtonId_1, kButton0 + RETRO_DEVICE_ID_JOYPAD_A},
+			{W::kButtonId_A, kButton0 + RETRO_DEVICE_ID_JOYPAD_Y},
+			{W::kButtonId_B, kButton0 + RETRO_DEVICE_ID_JOYPAD_X},
+			// The quarter turn, spelled out above.
+			{W::kButtonId_Right, kButton0 + RETRO_DEVICE_ID_JOYPAD_UP},
+			{W::kButtonId_Left, kButton0 + RETRO_DEVICE_ID_JOYPAD_DOWN},
+			{W::kButtonId_Up, kButton0 + RETRO_DEVICE_ID_JOYPAD_LEFT},
+			{W::kButtonId_Down, kButton0 + RETRO_DEVICE_ID_JOYPAD_RIGHT},
+		});
 	}
 	else
 	{
-		remote->set_mapping(WiimoteController::kButtonId_A, pad, kButton0 + RETRO_DEVICE_ID_JOYPAD_B);
-		remote->set_mapping(WiimoteController::kButtonId_B, pad, kButton0 + RETRO_DEVICE_ID_JOYPAD_A);
-		remote->set_mapping(WiimoteController::kButtonId_1, pad, kButton0 + RETRO_DEVICE_ID_JOYPAD_Y);
-		remote->set_mapping(WiimoteController::kButtonId_2, pad, kButton0 + RETRO_DEVICE_ID_JOYPAD_X);
+		libretro_apply_pad_mappings(remote, pad, {
+			{W::kButtonId_A, kButton0 + RETRO_DEVICE_ID_JOYPAD_B},
+			{W::kButtonId_B, kButton0 + RETRO_DEVICE_ID_JOYPAD_A},
+			{W::kButtonId_1, kButton0 + RETRO_DEVICE_ID_JOYPAD_Y},
+			{W::kButtonId_2, kButton0 + RETRO_DEVICE_ID_JOYPAD_X},
+			{W::kButtonId_Up, kButton0 + RETRO_DEVICE_ID_JOYPAD_UP},
+			{W::kButtonId_Down, kButton0 + RETRO_DEVICE_ID_JOYPAD_DOWN},
+			{W::kButtonId_Left, kButton0 + RETRO_DEVICE_ID_JOYPAD_LEFT},
+			{W::kButtonId_Right, kButton0 + RETRO_DEVICE_ID_JOYPAD_RIGHT},
+		});
 	}
 
-	remote->set_mapping(WiimoteController::kButtonId_Plus, pad, kButton0 + RETRO_DEVICE_ID_JOYPAD_START);
-	remote->set_mapping(WiimoteController::kButtonId_Minus, pad, kButton0 + RETRO_DEVICE_ID_JOYPAD_SELECT);
 	// Home on L, not on a stick click: pressing Home is how a game is asked to
 	// bring up its controller screen, and L is bound out of the box in
 	// RetroArch's default keyboard and pad layouts where L3 is not. A remote has
 	// no shoulder button for L to collide with; the two pads below do.
-	remote->set_mapping(WiimoteController::kButtonId_Home, pad, kButton0 + RETRO_DEVICE_ID_JOYPAD_L);
-
-	if (sideways)
-	{
-		remote->set_mapping(WiimoteController::kButtonId_Right, pad, kButton0 + RETRO_DEVICE_ID_JOYPAD_UP);
-		remote->set_mapping(WiimoteController::kButtonId_Left, pad, kButton0 + RETRO_DEVICE_ID_JOYPAD_DOWN);
-		remote->set_mapping(WiimoteController::kButtonId_Up, pad, kButton0 + RETRO_DEVICE_ID_JOYPAD_LEFT);
-		remote->set_mapping(WiimoteController::kButtonId_Down, pad, kButton0 + RETRO_DEVICE_ID_JOYPAD_RIGHT);
-	}
-	else
-	{
-		remote->set_mapping(WiimoteController::kButtonId_Up, pad, kButton0 + RETRO_DEVICE_ID_JOYPAD_UP);
-		remote->set_mapping(WiimoteController::kButtonId_Down, pad, kButton0 + RETRO_DEVICE_ID_JOYPAD_DOWN);
-		remote->set_mapping(WiimoteController::kButtonId_Left, pad, kButton0 + RETRO_DEVICE_ID_JOYPAD_LEFT);
-		remote->set_mapping(WiimoteController::kButtonId_Right, pad, kButton0 + RETRO_DEVICE_ID_JOYPAD_RIGHT);
-	}
+	libretro_apply_pad_mappings(remote, pad, {
+		{W::kButtonId_Plus, kButton0 + RETRO_DEVICE_ID_JOYPAD_START},
+		{W::kButtonId_Minus, kButton0 + RETRO_DEVICE_ID_JOYPAD_SELECT},
+		{W::kButtonId_Home, kButton0 + RETRO_DEVICE_ID_JOYPAD_L},
+	});
 }
 
 // A RetroPad as a Wii U Pro Controller. One for one with the GamePad mapping in
@@ -3041,36 +3071,40 @@ static void libretro_map_wiimote(const EmulatedControllerPtr& remote,
 static void libretro_map_pro(const EmulatedControllerPtr& pro,
 	const std::shared_ptr<LibretroController>& pad)
 {
-	pro->set_mapping(ProController::kButtonId_A, pad, kButton0 + RETRO_DEVICE_ID_JOYPAD_A); // east
-	pro->set_mapping(ProController::kButtonId_B, pad, kButton0 + RETRO_DEVICE_ID_JOYPAD_B); // south
-	pro->set_mapping(ProController::kButtonId_X, pad, kButton0 + RETRO_DEVICE_ID_JOYPAD_X); // north
-	pro->set_mapping(ProController::kButtonId_Y, pad, kButton0 + RETRO_DEVICE_ID_JOYPAD_Y); // west
+	using P = ProController;
 
-	pro->set_mapping(ProController::kButtonId_L, pad, kButton0 + RETRO_DEVICE_ID_JOYPAD_L);
-	pro->set_mapping(ProController::kButtonId_R, pad, kButton0 + RETRO_DEVICE_ID_JOYPAD_R);
-	pro->set_mapping(ProController::kButtonId_ZL, pad, kButton0 + RETRO_DEVICE_ID_JOYPAD_L2);
-	pro->set_mapping(ProController::kButtonId_ZR, pad, kButton0 + RETRO_DEVICE_ID_JOYPAD_R2);
+	libretro_apply_pad_mappings(pro, pad, {
+		{P::kButtonId_A, kButton0 + RETRO_DEVICE_ID_JOYPAD_A}, // east
+		{P::kButtonId_B, kButton0 + RETRO_DEVICE_ID_JOYPAD_B}, // south
+		{P::kButtonId_X, kButton0 + RETRO_DEVICE_ID_JOYPAD_X}, // north
+		{P::kButtonId_Y, kButton0 + RETRO_DEVICE_ID_JOYPAD_Y}, // west
 
-	pro->set_mapping(ProController::kButtonId_Plus, pad, kButton0 + RETRO_DEVICE_ID_JOYPAD_START);
-	pro->set_mapping(ProController::kButtonId_Minus, pad, kButton0 + RETRO_DEVICE_ID_JOYPAD_SELECT);
+		{P::kButtonId_L, kButton0 + RETRO_DEVICE_ID_JOYPAD_L},
+		{P::kButtonId_R, kButton0 + RETRO_DEVICE_ID_JOYPAD_R},
+		{P::kButtonId_ZL, kButton0 + RETRO_DEVICE_ID_JOYPAD_L2},
+		{P::kButtonId_ZR, kButton0 + RETRO_DEVICE_ID_JOYPAD_R2},
 
-	pro->set_mapping(ProController::kButtonId_Up, pad, kButton0 + RETRO_DEVICE_ID_JOYPAD_UP);
-	pro->set_mapping(ProController::kButtonId_Down, pad, kButton0 + RETRO_DEVICE_ID_JOYPAD_DOWN);
-	pro->set_mapping(ProController::kButtonId_Left, pad, kButton0 + RETRO_DEVICE_ID_JOYPAD_LEFT);
-	pro->set_mapping(ProController::kButtonId_Right, pad, kButton0 + RETRO_DEVICE_ID_JOYPAD_RIGHT);
+		{P::kButtonId_Plus, kButton0 + RETRO_DEVICE_ID_JOYPAD_START},
+		{P::kButtonId_Minus, kButton0 + RETRO_DEVICE_ID_JOYPAD_SELECT},
 
-	pro->set_mapping(ProController::kButtonId_StickL, pad, kButton0 + RETRO_DEVICE_ID_JOYPAD_L3);
-	pro->set_mapping(ProController::kButtonId_StickR, pad, kButton0 + RETRO_DEVICE_ID_JOYPAD_R3);
+		{P::kButtonId_Up, kButton0 + RETRO_DEVICE_ID_JOYPAD_UP},
+		{P::kButtonId_Down, kButton0 + RETRO_DEVICE_ID_JOYPAD_DOWN},
+		{P::kButtonId_Left, kButton0 + RETRO_DEVICE_ID_JOYPAD_LEFT},
+		{P::kButtonId_Right, kButton0 + RETRO_DEVICE_ID_JOYPAD_RIGHT},
 
-	pro->set_mapping(ProController::kButtonId_StickL_Up, pad, kAxisYP);
-	pro->set_mapping(ProController::kButtonId_StickL_Down, pad, kAxisYN);
-	pro->set_mapping(ProController::kButtonId_StickL_Left, pad, kAxisXN);
-	pro->set_mapping(ProController::kButtonId_StickL_Right, pad, kAxisXP);
+		{P::kButtonId_StickL, kButton0 + RETRO_DEVICE_ID_JOYPAD_L3},
+		{P::kButtonId_StickR, kButton0 + RETRO_DEVICE_ID_JOYPAD_R3},
 
-	pro->set_mapping(ProController::kButtonId_StickR_Up, pad, kRotationYP);
-	pro->set_mapping(ProController::kButtonId_StickR_Down, pad, kRotationYN);
-	pro->set_mapping(ProController::kButtonId_StickR_Left, pad, kRotationXN);
-	pro->set_mapping(ProController::kButtonId_StickR_Right, pad, kRotationXP);
+		{P::kButtonId_StickL_Up, kAxisYP},
+		{P::kButtonId_StickL_Down, kAxisYN},
+		{P::kButtonId_StickL_Left, kAxisXN},
+		{P::kButtonId_StickL_Right, kAxisXP},
+
+		{P::kButtonId_StickR_Up, kRotationYP},
+		{P::kButtonId_StickR_Down, kRotationYN},
+		{P::kButtonId_StickR_Left, kRotationXN},
+		{P::kButtonId_StickR_Right, kRotationXP},
+	});
 }
 
 // A RetroPad as a Classic Controller. The same pad as the Pro one above, minus
@@ -3080,34 +3114,38 @@ static void libretro_map_pro(const EmulatedControllerPtr& pro,
 static void libretro_map_classic(const EmulatedControllerPtr& classic,
 	const std::shared_ptr<LibretroController>& pad)
 {
-	classic->set_mapping(ClassicController::kButtonId_A, pad, kButton0 + RETRO_DEVICE_ID_JOYPAD_A);
-	classic->set_mapping(ClassicController::kButtonId_B, pad, kButton0 + RETRO_DEVICE_ID_JOYPAD_B);
-	classic->set_mapping(ClassicController::kButtonId_X, pad, kButton0 + RETRO_DEVICE_ID_JOYPAD_X);
-	classic->set_mapping(ClassicController::kButtonId_Y, pad, kButton0 + RETRO_DEVICE_ID_JOYPAD_Y);
+	using C = ClassicController;
 
-	classic->set_mapping(ClassicController::kButtonId_L, pad, kButton0 + RETRO_DEVICE_ID_JOYPAD_L);
-	classic->set_mapping(ClassicController::kButtonId_R, pad, kButton0 + RETRO_DEVICE_ID_JOYPAD_R);
-	classic->set_mapping(ClassicController::kButtonId_ZL, pad, kButton0 + RETRO_DEVICE_ID_JOYPAD_L2);
-	classic->set_mapping(ClassicController::kButtonId_ZR, pad, kButton0 + RETRO_DEVICE_ID_JOYPAD_R2);
+	libretro_apply_pad_mappings(classic, pad, {
+		{C::kButtonId_A, kButton0 + RETRO_DEVICE_ID_JOYPAD_A},
+		{C::kButtonId_B, kButton0 + RETRO_DEVICE_ID_JOYPAD_B},
+		{C::kButtonId_X, kButton0 + RETRO_DEVICE_ID_JOYPAD_X},
+		{C::kButtonId_Y, kButton0 + RETRO_DEVICE_ID_JOYPAD_Y},
 
-	classic->set_mapping(ClassicController::kButtonId_Plus, pad, kButton0 + RETRO_DEVICE_ID_JOYPAD_START);
-	classic->set_mapping(ClassicController::kButtonId_Minus, pad, kButton0 + RETRO_DEVICE_ID_JOYPAD_SELECT);
-	classic->set_mapping(ClassicController::kButtonId_Home, pad, kButton0 + RETRO_DEVICE_ID_JOYPAD_L3);
+		{C::kButtonId_L, kButton0 + RETRO_DEVICE_ID_JOYPAD_L},
+		{C::kButtonId_R, kButton0 + RETRO_DEVICE_ID_JOYPAD_R},
+		{C::kButtonId_ZL, kButton0 + RETRO_DEVICE_ID_JOYPAD_L2},
+		{C::kButtonId_ZR, kButton0 + RETRO_DEVICE_ID_JOYPAD_R2},
 
-	classic->set_mapping(ClassicController::kButtonId_Up, pad, kButton0 + RETRO_DEVICE_ID_JOYPAD_UP);
-	classic->set_mapping(ClassicController::kButtonId_Down, pad, kButton0 + RETRO_DEVICE_ID_JOYPAD_DOWN);
-	classic->set_mapping(ClassicController::kButtonId_Left, pad, kButton0 + RETRO_DEVICE_ID_JOYPAD_LEFT);
-	classic->set_mapping(ClassicController::kButtonId_Right, pad, kButton0 + RETRO_DEVICE_ID_JOYPAD_RIGHT);
+		{C::kButtonId_Plus, kButton0 + RETRO_DEVICE_ID_JOYPAD_START},
+		{C::kButtonId_Minus, kButton0 + RETRO_DEVICE_ID_JOYPAD_SELECT},
+		{C::kButtonId_Home, kButton0 + RETRO_DEVICE_ID_JOYPAD_L3},
 
-	classic->set_mapping(ClassicController::kButtonId_StickL_Up, pad, kAxisYP);
-	classic->set_mapping(ClassicController::kButtonId_StickL_Down, pad, kAxisYN);
-	classic->set_mapping(ClassicController::kButtonId_StickL_Left, pad, kAxisXN);
-	classic->set_mapping(ClassicController::kButtonId_StickL_Right, pad, kAxisXP);
+		{C::kButtonId_Up, kButton0 + RETRO_DEVICE_ID_JOYPAD_UP},
+		{C::kButtonId_Down, kButton0 + RETRO_DEVICE_ID_JOYPAD_DOWN},
+		{C::kButtonId_Left, kButton0 + RETRO_DEVICE_ID_JOYPAD_LEFT},
+		{C::kButtonId_Right, kButton0 + RETRO_DEVICE_ID_JOYPAD_RIGHT},
 
-	classic->set_mapping(ClassicController::kButtonId_StickR_Up, pad, kRotationYP);
-	classic->set_mapping(ClassicController::kButtonId_StickR_Down, pad, kRotationYN);
-	classic->set_mapping(ClassicController::kButtonId_StickR_Left, pad, kRotationXN);
-	classic->set_mapping(ClassicController::kButtonId_StickR_Right, pad, kRotationXP);
+		{C::kButtonId_StickL_Up, kAxisYP},
+		{C::kButtonId_StickL_Down, kAxisYN},
+		{C::kButtonId_StickL_Left, kAxisXN},
+		{C::kButtonId_StickL_Right, kAxisXP},
+
+		{C::kButtonId_StickR_Up, kRotationYP},
+		{C::kButtonId_StickR_Down, kRotationYN},
+		{C::kButtonId_StickR_Left, kRotationXN},
+		{C::kButtonId_StickR_Right, kRotationXP},
+	});
 }
 
 // What a port's device id asks for, once the GamePad has been accounted for.
@@ -3202,15 +3240,14 @@ static void libretro_setup_controllers()
 		default: libretro_map_wiimote(emulated, pad, sideways); break;
 		}
 
-		if (log_cb)
-			log_cb(RETRO_LOG_INFO, "Cemu: %s on RetroPad port %u (WPAD channel %u)\n",
-				libretro_wpad_name(type, sideways), (unsigned)port + 1, (unsigned)channel + 1);
+		libretro_log(RETRO_LOG_INFO, "%s on RetroPad port %u (WPAD channel %u)\n",
+			libretro_wpad_name(type, sideways), (unsigned)port + 1, (unsigned)channel + 1);
 		++channel;
 	}
 
 	s_polled_ports = polledPorts;
 	if (channel == 0 && log_cb)
-		log_cb(RETRO_LOG_INFO, "Cemu: no Wii Remote or Pro/Classic Controller on any port\n");
+		libretro_log(RETRO_LOG_INFO, "no Wii Remote or Pro/Classic Controller on any port\n");
 }
 
 static void libretro_set_convert_status(std::string text, int progress)
@@ -3360,24 +3397,20 @@ static void libretro_prepare_and_launch_title()
 	TitleInfo launchTitle{gamePath};
 	if (launchTitle.IsValid())
 	{
-		if (log_cb)
-			log_cb(RETRO_LOG_INFO, "Cemu: Valid title detected, launching via TitleId\n");
+		libretro_log(RETRO_LOG_INFO, "Valid title detected, launching via TitleId\n");
 
 		CafeTitleList::AddTitleFromPath(gamePath);
-		if (log_cb)
-			log_cb(RETRO_LOG_INFO, "Cemu: waiting for the mandatory title scan\n");
+		libretro_log(RETRO_LOG_INFO, "waiting for the mandatory title scan\n");
 		CafeTitleList::WaitForMandatoryScan();
 
 		TitleId baseTitleId;
 		if (!CafeTitleList::FindBaseTitleId(launchTitle.GetAppTitleId(), baseTitleId))
 		{
-			if (log_cb)
-				log_cb(RETRO_LOG_ERROR, "Cemu: Could not find base title ID\n");
+			libretro_log(RETRO_LOG_ERROR, "Could not find base title ID\n");
 			return;
 		}
 
-		if (log_cb)
-			log_cb(RETRO_LOG_INFO, "Cemu: preparing foreground title\n");
+		libretro_log(RETRO_LOG_INFO, "preparing foreground title\n");
 		status = CafeSystem::PrepareForegroundTitle(baseTitleId);
 	}
 	else
@@ -3386,33 +3419,28 @@ static void libretro_prepare_and_launch_title()
 		CafeTitleFileType fileType = DetermineCafeSystemFileType(gamePath);
 		if (fileType == CafeTitleFileType::RPX || fileType == CafeTitleFileType::ELF)
 		{
-			if (log_cb)
-				log_cb(RETRO_LOG_INFO, "Cemu: Launching as standalone RPX/ELF\n");
+			libretro_log(RETRO_LOG_INFO, "Launching as standalone RPX/ELF\n");
 			status = CafeSystem::PrepareForegroundTitleFromStandaloneRPX(gamePath);
 		}
 		else
 		{
-			if (log_cb)
-				log_cb(RETRO_LOG_ERROR, "Cemu: Unsupported file format\n");
+			libretro_log(RETRO_LOG_ERROR, "Unsupported file format\n");
 			return;
 		}
 	}
 
 	if (status != CafeSystem::PREPARE_STATUS_CODE::SUCCESS)
 	{
-		if (log_cb)
-			log_cb(RETRO_LOG_ERROR, "Cemu: Failed to prepare game (status %d)\n", (int)status);
+		libretro_log(RETRO_LOG_ERROR, "Failed to prepare game (status %d)\n", (int)status);
 		return;
 	}
 
 	// Launch the title
-	if (log_cb)
-		log_cb(RETRO_LOG_INFO, "Cemu: launching the foreground title\n");
+	libretro_log(RETRO_LOG_INFO, "launching the foreground title\n");
 	CafeSystem::LaunchForegroundTitle();
 
 	// Wait for GPU init
-	if (log_cb)
-		log_cb(RETRO_LOG_INFO, "Cemu: waiting for GPU init\n");
+	libretro_log(RETRO_LOG_INFO, "waiting for GPU init\n");
 	while (!g_isGPUInitFinished)
 		std::this_thread::sleep_for(std::chrono::milliseconds(5));
 
@@ -3421,8 +3449,7 @@ static void libretro_prepare_and_launch_title()
 	s_emu_initialized = true;
 	s_game_loaded = true;
 
-	if (log_cb)
-		log_cb(RETRO_LOG_INFO, "Cemu: Game loaded successfully - %s\n", CafeSystem::GetForegroundTitleName().c_str());
+	libretro_log(RETRO_LOG_INFO, "Game loaded successfully - %s\n", CafeSystem::GetForegroundTitleName().c_str());
 }
 
 static void libretro_launch_game()
@@ -3430,8 +3457,7 @@ static void libretro_launch_game()
 	if (s_game_path.empty() || s_emu_initialized)
 		return;
 
-	if (log_cb)
-		log_cb(RETRO_LOG_INFO, "Cemu: Initializing emulator...\n");
+	libretro_log(RETRO_LOG_INFO, "Initializing emulator...\n");
 
 	// Initialize emulator common systems
 	CemuCommonInit();
@@ -3453,8 +3479,7 @@ static void libretro_launch_game()
 		s_system_services_stopped = false;
 	}
 
-	if (log_cb)
-		log_cb(RETRO_LOG_INFO, "Cemu: common init done\n");
+	libretro_log(RETRO_LOG_INFO, "common init done\n");
 
 	// Load graphic packs (includes workarounds like NSMBU crash fix)
 	{
@@ -3471,8 +3496,7 @@ static void libretro_launch_game()
 		if (gp->IsDefaultEnabled() && !gp->IsEnabled())
 			gp->SetEnabled(true);
 	}
-	if (log_cb)
-		log_cb(RETRO_LOG_INFO, "Cemu: Loaded %d graphic packs\n", (int)GraphicPack2::GetGraphicPacks().size());
+	libretro_log(RETRO_LOG_INFO, "Loaded %d graphic packs\n", (int)GraphicPack2::GetGraphicPacks().size());
 
 	// Apply core options before launch
 	libretro_apply_core_options();
@@ -3501,34 +3525,29 @@ static void libretro_create_shared_wgl_context()
 	s_wgl_frontend_context = wglGetCurrentContext();
 	if (!s_wgl_frontend_dc || !s_wgl_frontend_context)
 	{
-		if (log_cb)
-			log_cb(RETRO_LOG_ERROR, "Cemu: Frontend WGL context not current in context_reset\n");
+		libretro_log(RETRO_LOG_ERROR, "Frontend WGL context not current in context_reset\n");
 		return;
 	}
 
-	if (log_cb)
-		log_cb(RETRO_LOG_INFO, "Cemu: Frontend GL context: dc=%p ctx=%p\n",
-			s_wgl_frontend_dc, s_wgl_frontend_context);
+	libretro_log(RETRO_LOG_INFO, "Frontend GL context: dc=%p ctx=%p\n",
+		s_wgl_frontend_dc, s_wgl_frontend_context);
 
 	HGLRC shared = wglCreateContext(s_wgl_frontend_dc);
 	if (!shared)
 	{
-		if (log_cb)
-			log_cb(RETRO_LOG_ERROR, "Cemu: wglCreateContext failed (%lu)\n", (unsigned long)GetLastError());
+		libretro_log(RETRO_LOG_ERROR, "wglCreateContext failed (%lu)\n", (unsigned long)GetLastError());
 		return;
 	}
 
 	if (!wglShareLists(s_wgl_frontend_context, shared))
 	{
-		if (log_cb)
-			log_cb(RETRO_LOG_ERROR, "Cemu: wglShareLists failed (%lu)\n", (unsigned long)GetLastError());
+		libretro_log(RETRO_LOG_ERROR, "wglShareLists failed (%lu)\n", (unsigned long)GetLastError());
 		wglDeleteContext(shared);
 		return;
 	}
 
 	s_wgl_shared_context = shared;
-	if (log_cb)
-		log_cb(RETRO_LOG_INFO, "Cemu: Created shared GL context for GPU thread: %p\n", s_wgl_shared_context);
+	libretro_log(RETRO_LOG_INFO, "Created shared GL context for GPU thread: %p\n", s_wgl_shared_context);
 }
 
 #else
@@ -3541,21 +3560,18 @@ static void libretro_create_shared_egl_context()
 
 	if (s_egl_frontend_context == EGL_NO_CONTEXT || s_egl_display == EGL_NO_DISPLAY)
 	{
-		if (log_cb)
-			log_cb(RETRO_LOG_ERROR, "Cemu: No current GLX or EGL context (frontend display=%p ctx=%p)\n",
-				s_egl_display, s_egl_frontend_context);
+		libretro_log(RETRO_LOG_ERROR, "No current GLX or EGL context (frontend display=%p ctx=%p)\n",
+			s_egl_display, s_egl_frontend_context);
 		return;
 	}
 
 	s_use_egl = true;
-	if (log_cb)
-		log_cb(RETRO_LOG_INFO, "Cemu: Frontend EGL context (Wayland path): display=%p surface=%p ctx=%p\n",
-			s_egl_display, s_egl_surface, s_egl_frontend_context);
+	libretro_log(RETRO_LOG_INFO, "Frontend EGL context (Wayland path): display=%p surface=%p ctx=%p\n",
+		s_egl_display, s_egl_surface, s_egl_frontend_context);
 
 	if (!eglBindAPI(EGL_OPENGL_API))
 	{
-		if (log_cb)
-			log_cb(RETRO_LOG_ERROR, "Cemu: eglBindAPI(EGL_OPENGL_API) failed (0x%x)\n", eglGetError());
+		libretro_log(RETRO_LOG_ERROR, "eglBindAPI(EGL_OPENGL_API) failed (0x%x)\n", eglGetError());
 		return;
 	}
 
@@ -3590,12 +3606,11 @@ static void libretro_create_shared_egl_context()
 
 	if (s_egl_shared_context != EGL_NO_CONTEXT)
 	{
-		if (log_cb)
-			log_cb(RETRO_LOG_INFO, "Cemu: Created shared EGL GL 4.5 context for GPU thread: %p\n", s_egl_shared_context);
+		libretro_log(RETRO_LOG_INFO, "Created shared EGL GL 4.5 context for GPU thread: %p\n", s_egl_shared_context);
 	}
-	else if (log_cb)
+	else
 	{
-		log_cb(RETRO_LOG_ERROR, "Cemu: Failed to create shared EGL context (0x%x)\n", eglGetError());
+		libretro_log(RETRO_LOG_ERROR, "Failed to create shared EGL context (0x%x)\n", eglGetError());
 	}
 }
 
@@ -3619,15 +3634,13 @@ static void libretro_create_shared_gl_context()
 
 	if (!s_glx_display)
 	{
-		if (log_cb)
-			log_cb(RETRO_LOG_ERROR, "Cemu: Cannot get current GLX display (ctx=%p)\n",
-				s_glx_frontend_context);
+		libretro_log(RETRO_LOG_ERROR, "Cannot get current GLX display (ctx=%p)\n",
+			s_glx_frontend_context);
 		return;
 	}
 
-	if (log_cb)
-		log_cb(RETRO_LOG_INFO, "Cemu: Frontend GL context: display=%p drawable=0x%lx ctx=%p\n",
-			s_glx_display, (unsigned long)s_glx_drawable, s_glx_frontend_context);
+	libretro_log(RETRO_LOG_INFO, "Frontend GL context: display=%p drawable=0x%lx ctx=%p\n",
+		s_glx_display, (unsigned long)s_glx_drawable, s_glx_frontend_context);
 
 	// Get the FBConfig used by the frontend context
 	// We need this to create a compatible shared context
@@ -3640,8 +3653,7 @@ static void libretro_create_shared_gl_context()
 
 	if (!_glXCreateContextAttribsARB)
 	{
-		if (log_cb)
-			log_cb(RETRO_LOG_ERROR, "Cemu: glXCreateContextAttribsARB not available\n");
+		libretro_log(RETRO_LOG_ERROR, "glXCreateContextAttribsARB not available\n");
 		return;
 	}
 
@@ -3654,8 +3666,7 @@ static void libretro_create_shared_gl_context()
 	GLXFBConfig* configs = glXGetFBConfigs(s_glx_display, screenNum, &nelements);
 	if (!configs || nelements == 0)
 	{
-		if (log_cb)
-			log_cb(RETRO_LOG_ERROR, "Cemu: No GLX FBConfigs available\n");
+		libretro_log(RETRO_LOG_ERROR, "No GLX FBConfigs available\n");
 		return;
 	}
 
@@ -3686,13 +3697,11 @@ static void libretro_create_shared_gl_context()
 
 	if (s_glx_shared_context)
 	{
-		if (log_cb)
-			log_cb(RETRO_LOG_INFO, "Cemu: Created shared GL 4.5 context for GPU thread: %p\n", s_glx_shared_context);
+		libretro_log(RETRO_LOG_INFO, "Created shared GL 4.5 context for GPU thread: %p\n", s_glx_shared_context);
 	}
 	else
 	{
-		if (log_cb)
-			log_cb(RETRO_LOG_ERROR, "Cemu: Failed to create shared GL context\n");
+		libretro_log(RETRO_LOG_ERROR, "Failed to create shared GL context\n");
 	}
 #endif // __ANDROID__
 }
@@ -3736,9 +3745,8 @@ static void libretro_create_renderer()
 			{
 				s_vk_interface = (const struct retro_hw_render_interface_vulkan*)iface;
 				LibretroVkQueue::SetInterface(s_vk_interface);
-				if (log_cb)
-					log_cb(RETRO_LOG_INFO, "Cemu: Got Vulkan HW render interface (device=%p queue=%p)\n",
-						(void*)s_vk_interface->device, (void*)s_vk_interface->queue);
+				libretro_log(RETRO_LOG_INFO, "Got Vulkan HW render interface (device=%p queue=%p)\n",
+					(void*)s_vk_interface->device, (void*)s_vk_interface->queue);
 
 				// Create VulkanRenderer using the shared device
 				auto vkRenderer = new VulkanRenderer(
@@ -3753,13 +3761,11 @@ static void libretro_create_renderer()
 				// Create presentation image
 				vkRenderer->CreatePresentationImage(SCREEN_WIDTH, SCREEN_HEIGHT);
 
-				if (log_cb)
-					log_cb(RETRO_LOG_INFO, "Cemu: VulkanRenderer created with shared device\n");
+				libretro_log(RETRO_LOG_INFO, "VulkanRenderer created with shared device\n");
 			}
 			else
 			{
-				if (log_cb)
-					log_cb(RETRO_LOG_ERROR, "Cemu: Failed to get Vulkan HW render interface\n");
+				libretro_log(RETRO_LOG_ERROR, "Failed to get Vulkan HW render interface\n");
 			}
 		}
 #ifdef ENABLE_OPENGL
@@ -3804,8 +3810,7 @@ static void libretro_context_reset()
 			// let the GPU thread make its context current again.
 			s_wgl_frontend_dc = wglGetCurrentDC();
 			s_gpu_context_made_current = false;
-			if (log_cb)
-				log_cb(RETRO_LOG_INFO, "Cemu: WGL context restored, dc=%p\n", s_wgl_frontend_dc);
+			libretro_log(RETRO_LOG_INFO, "WGL context restored, dc=%p\n", s_wgl_frontend_dc);
 		}
 #else
 #ifdef __ANDROID__
@@ -3824,8 +3829,7 @@ static void libretro_context_reset()
 			s_egl_display = egl_current_display();
 			s_egl_surface = eglGetCurrentSurface(EGL_DRAW);
 			s_gpu_context_made_current = false;
-			if (log_cb)
-				log_cb(RETRO_LOG_INFO, "Cemu: EGL context restored, surface=%p\n", s_egl_surface);
+			libretro_log(RETRO_LOG_INFO, "EGL context restored, surface=%p\n", s_egl_surface);
 		}
 #ifndef __ANDROID__
 		else
@@ -3834,9 +3838,8 @@ static void libretro_context_reset()
 			s_glx_display = glXGetCurrentDisplay();
 			s_glx_drawable = glXGetCurrentDrawable();
 			s_gpu_context_made_current = false;
-			if (log_cb)
-				log_cb(RETRO_LOG_INFO, "Cemu: Context restored, updating drawable=0x%lx\n",
-					(unsigned long)s_glx_drawable);
+			libretro_log(RETRO_LOG_INFO, "Context restored, updating drawable=0x%lx\n",
+				(unsigned long)s_glx_drawable);
 		}
 #endif // __ANDROID__
 #endif // _WIN32
@@ -3901,19 +3904,13 @@ static void libretro_context_destroy()
 	{
 		cemuLog_log(LogType::Force, "[libretro] the graphics context is going away, which is the close: stopping the title first, scheduler before GPU thread");
 
-		s_shutting_down = true;
-
-		// The GPU thread may be at the frame gate waiting for a retro_run that
-		// is never coming, and Latte_Stop inside ShutdownTitle joins it.
-		{
-			std::lock_guard lock(s_frame_mutex);
-			s_frame_ready = true;
-			s_frame_cv.notify_all();
-		}
-		libretro_frame_gate_release();
-
-		CafeSystem::ShutdownTitle();
-		s_game_loaded = false;
+		// The same stop as the one the close and a reset use, rather than a
+		// copy of it: it wakes anything parked at the frame gate before
+		// ShutdownTitle joins the GPU thread, and it is the one place that
+		// knows what stopping a title takes. Its two Latte calls are no-ops
+		// here - nothing has asked for a pause or a renderer rebuild yet,
+		// because the handshake below is what starts that.
+		libretro_shutdown_title_for_exit();
 
 		cemuLog_log(LogType::Force, "[libretro] the title is down; the context can go");
 	}
@@ -4018,7 +4015,7 @@ static void libretro_context_destroy()
 		libretro_gpu_thread_late("the GPU thread reached the pause gate but did not finish handing the graphics context back");
 	}
 	if (log_cb && Latte_GpuTeardownForContextLossDone())
-		log_cb(RETRO_LOG_INFO, "Cemu: handed the core's GPU objects back before the context went away\n");
+		libretro_log(RETRO_LOG_INFO, "handed the core's GPU objects back before the context went away\n");
 
 	s_hw_render_initialized = false;
 	s_frontend_read_fbo = 0;
@@ -4095,8 +4092,7 @@ RETRO_API bool retro_load_game(const struct retro_game_info* game)
 	enum retro_pixel_format fmt = RETRO_PIXEL_FORMAT_XRGB8888;
 	if (!environ_cb(RETRO_ENVIRONMENT_SET_PIXEL_FORMAT, &fmt))
 	{
-		if (log_cb)
-			log_cb(RETRO_LOG_ERROR, "XRGB8888 pixel format not supported\n");
+		libretro_log(RETRO_LOG_ERROR, "XRGB8888 pixel format not supported\n");
 		return false;
 	}
 
@@ -4122,21 +4118,18 @@ RETRO_API bool retro_load_game(const struct retro_game_info* game)
 		if (environ_cb(RETRO_ENVIRONMENT_SET_HW_RENDER, &s_hw_render))
 		{
 			s_use_hw_render = true;
-			if (log_cb)
-				log_cb(RETRO_LOG_INFO, "Cemu: Vulkan HW render context requested\n");
+			libretro_log(RETRO_LOG_INFO, "Vulkan HW render context requested\n");
 		}
 		else
 		{
 #ifdef ENABLE_OPENGL
-			if (log_cb)
-				log_cb(RETRO_LOG_WARN, "Cemu: Vulkan not supported by frontend, falling back to OpenGL\n");
+			libretro_log(RETRO_LOG_WARN, "Vulkan not supported by frontend, falling back to OpenGL\n");
 			s_graphics_api = SelectedGraphicsAPI::OpenGL;
 			GetConfig().graphic_api = kOpenGL;
 #else
 			// Nothing to fall back to: a build without the OpenGL backend (macOS,
 			// where Cemu uses Metal and Vulkan) has only this path.
-			if (log_cb)
-				log_cb(RETRO_LOG_ERROR, "Cemu: Vulkan not supported by frontend and this core has no OpenGL backend\n");
+			libretro_log(RETRO_LOG_ERROR, "Vulkan not supported by frontend and this core has no OpenGL backend\n");
 			return false;
 #endif
 		}
@@ -4164,8 +4157,7 @@ RETRO_API bool retro_load_game(const struct retro_game_info* game)
 		if (environ_cb(RETRO_ENVIRONMENT_SET_HW_RENDER, &s_hw_render))
 		{
 			s_use_hw_render = true;
-			if (log_cb)
-				log_cb(RETRO_LOG_INFO, "Cemu: Using OpenGL 4.5 HW rendering\n");
+			libretro_log(RETRO_LOG_INFO, "Using OpenGL 4.5 HW rendering\n");
 		}
 		else
 		{
@@ -4176,13 +4168,11 @@ RETRO_API bool retro_load_game(const struct retro_game_info* game)
 			if (environ_cb(RETRO_ENVIRONMENT_SET_HW_RENDER, &s_hw_render))
 			{
 				s_use_hw_render = true;
-				if (log_cb)
-					log_cb(RETRO_LOG_INFO, "Cemu: Using OpenGL 4.1 HW rendering\n");
+				libretro_log(RETRO_LOG_INFO, "Using OpenGL 4.1 HW rendering\n");
 			}
 			else
 			{
-				if (log_cb)
-					log_cb(RETRO_LOG_ERROR, "Cemu: HW rendering not available - OpenGL 4.1+ required\n");
+				libretro_log(RETRO_LOG_ERROR, "HW rendering not available - OpenGL 4.1+ required\n");
 				return false;
 			}
 		}
@@ -4224,8 +4214,7 @@ RETRO_API bool retro_load_game(const struct retro_game_info* game)
 	// rather than the user staring at a black screen.
 	if (!s_use_hw_render)
 	{
-		if (log_cb)
-			log_cb(RETRO_LOG_ERROR, "Cemu: no hardware renderer available - this core needs a Vulkan (or OpenGL 4.1+) capable frontend\n");
+		libretro_log(RETRO_LOG_ERROR, "no hardware renderer available - this core needs a Vulkan (or OpenGL 4.1+) capable frontend\n");
 		return false;
 	}
 
@@ -4276,8 +4265,7 @@ static bool libretro_stop_service(const char* name, void (*stop)())
 	// did not come back.
 	cemuLog_log(LogType::Force, "[libretro] stopping the {} service", name);
 	stop();
-	if (log_cb)
-		log_cb(RETRO_LOG_INFO, "Cemu: %s service stopped\n", name);
+	libretro_log(RETRO_LOG_INFO, "%s service stopped\n", name);
 	return true;
 }
 
@@ -4364,16 +4352,9 @@ RETRO_API void retro_unload_game()
 		return;
 	}
 
+	// Whichever way it goes, this wakes anything still waiting on a frame that
+	// is never coming: both of its paths call libretro_wake_frame_waiters.
 	const bool stopped = libretro_shutdown_title_for_exit();
-
-	// Wake anything still waiting on a frame that is never coming.
-	s_shutting_down = true;
-	{
-		std::lock_guard lock(s_frame_mutex);
-		s_frame_ready = true;
-		s_frame_cv.notify_all();
-	}
-	libretro_frame_gate_release();
 
 	if (!stopped)
 	{
@@ -4383,9 +4364,8 @@ RETRO_API void retro_unload_game()
 		// bug, with a backtrace pointing at whatever would not park. Exiting here
 		// instead would hide it behind a silent process death that no crash
 		// reporter picks up.
-		if (log_cb)
-			log_cb(RETRO_LOG_ERROR,
-				"Cemu: the title did not stop; tearing the renderer down with threads still live\n");
+		libretro_log(RETRO_LOG_ERROR,
+			"the title did not stop; tearing the renderer down with threads still live\n");
 	}
 
 	// After the title, never before it: the input update thread and the emulated
@@ -4502,8 +4482,7 @@ RETRO_API void retro_unload_game()
 	s_frontend_read_rbo_attached = 0;
 	s_frontend_upload_tex = 0;
 
-	if (log_cb)
-		log_cb(RETRO_LOG_INFO, "Cemu: content closed, core unloaded\n");
+	libretro_log(RETRO_LOG_INFO, "content closed, core unloaded\n");
 }
 
 RETRO_API void retro_deinit()
@@ -4513,8 +4492,8 @@ RETRO_API void retro_deinit()
 	// unload that bailed out - then a GPU device still exists and running this
 	// library's static destructors is not safe.
 	if ((s_emu_initialized || s_gpu_context_created) && log_cb)
-		log_cb(RETRO_LOG_ERROR,
-			"Cemu: deinit with a GPU device still alive - static teardown from here is not safe\n");
+		libretro_log(RETRO_LOG_ERROR,
+			"deinit with a GPU device still alive - static teardown from here is not safe\n");
 
 	// A conversion that is still running holds the title mounted, so it has to
 	// stop before anything below takes the system apart.
@@ -4833,8 +4812,7 @@ RETRO_API void retro_run()
 			{
 				if (progress < 0 || progress / 10 != s_shown_progress / 10)
 				{
-					if (log_cb)
-						log_cb(RETRO_LOG_INFO, "Cemu: %s\n", text.c_str());
+					libretro_log(RETRO_LOG_INFO, "%s\n", text.c_str());
 					s_logged_this = true;
 				}
 				s_shown_progress = progress;
@@ -4894,8 +4872,7 @@ RETRO_API void retro_run()
 			// the null dereference inside the driver, the black screen - is
 			// worse than saying so here.
 			cemuLog_log(LogType::Force, "[libretro] the frontend's context produced no renderer - not launching");
-			if (log_cb)
-				log_cb(RETRO_LOG_ERROR, "Cemu: could not create a renderer on the frontend's graphics context\n");
+			libretro_log(RETRO_LOG_ERROR, "could not create a renderer on the frontend's graphics context\n");
 			if (environ_cb)
 				environ_cb(RETRO_ENVIRONMENT_SHUTDOWN, nullptr);
 			video_cb(NULL, SCREEN_WIDTH, SCREEN_HEIGHT, 0);
@@ -4908,14 +4885,12 @@ RETRO_API void retro_run()
 		catch (const std::exception& ex)
 		{
 			cemuLog_log(LogType::Force, "[libretro] the launch ended with an exception: {}", ex.what());
-			if (log_cb)
-				log_cb(RETRO_LOG_ERROR, "Cemu: could not launch the title: %s\n", ex.what());
+			libretro_log(RETRO_LOG_ERROR, "could not launch the title: %s\n", ex.what());
 		}
 		catch (...)
 		{
 			cemuLog_log(LogType::Force, "[libretro] the launch ended with an exception of unknown type");
-			if (log_cb)
-				log_cb(RETRO_LOG_ERROR, "Cemu: could not launch the title\n");
+			libretro_log(RETRO_LOG_ERROR, "could not launch the title\n");
 		}
 		if (!s_game_loaded)
 		{
