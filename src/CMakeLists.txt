@@ -27,6 +27,10 @@ elseif(UNIX)
 		# there is no X11 or Wayland here, and the Vulkan headers would go
 		# looking for xcb/xcb.h if the desktop surfaces stayed on
 		add_compile_definitions(VK_USE_PLATFORM_ANDROID_KHR)
+	elseif(WEBOS)
+		# Same gap as Android, without an Android surface to put in its place:
+		# the frontend owns the window here, so the core creates no surface at
+		# all and no platform surface extension is defined.
 	else()
 		if (ENABLE_VULKAN)
 			add_compile_definitions(

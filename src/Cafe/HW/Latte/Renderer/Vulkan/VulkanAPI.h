@@ -130,7 +130,10 @@ VKFUNC_DEVICE(vkDestroyPipeline);
 VKFUNC_DEVICE(vkCmdBindPipeline);
 
 // swapchain
-#if defined(__ANDROID__)
+#if defined(WEBOS)
+// webOS is BOOST_OS_LINUX too, with no X11, no Wayland and no surface of its
+// own: the frontend hands the core one, so no platform entry point is loaded.
+#elif defined(__ANDROID__)
 // Android is BOOST_OS_LINUX too, but there is no X11 or Wayland here
 VKFUNC_INSTANCE(vkCreateAndroidSurfaceKHR);
 #elif BOOST_OS_LINUX || BOOST_OS_BSD

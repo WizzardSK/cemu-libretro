@@ -48,6 +48,10 @@ include:
   # Android
   - project: 'libretro-infrastructure/ci-templates'
     file: '/android-cmake.yml'
+  ################################### TELEVISION #############################
+  # webOS. aarch64 only - see the job at the end for why.
+  - project: 'libretro-infrastructure/ci-templates'
+    file: '/webos-cmake.yml'
 
 # Stages for building
 stages:
@@ -436,6 +440,104 @@ android-x86_64:
 
 ##################################### APPLE ##################################
 # iOS (arm64).
+################################## TELEVISION ################################
+# webOS, aarch64 only. The other half of the platform is armv7a, and the
+# recompiler backends here are x86-64 and arm64 (BackendX64 and xbyak_aarch64) -
+# there is nothing for a 32-bit ARM device to run Espresso code on, so that half
+# is not offered rather than offered and broken.
+#
+# The renderer is Vulkan. Cemu's GL backend is desktop GL 4.5 with direct state
+# access and the buildroot carries EGL and GLES and nothing else, so it is off
+# here the same way it is on Android. The loader is dlopen()ed at run time
+# (VulkanAPI.cpp) and the headers are vendored, so the build needs nothing from
+# the SDK for it - but that also means the core lands on the device's own
+# libvulkan, and a TV without one will load the core and fail at renderer
+# creation. That is the device's property, not the build's.
+#
+# The dependency set is the interesting part: vcpkg builds its ports with the
+# toolchain named by their triplet, not with the one CMakeLists chainloads, so
+# this needs a triplet of its own (dependencies/vcpkg_triplets/arm64-webos.cmake)
+# that points at the SDK's toolchain file.
+#
+# allow_failure while it is new: the SDK exists only on the buildbot, so the
+# first pipeline is the first time this toolchain has seen the tree.
+libretro-build-webos-aarch64:
+  allow_failure: true
+  extends:
+    - .libretro-webos-aarch64-cmake
+    - .core-defs
+  # vcpkg builds every dependency from source, as on the other platforms.
+  timeout: 3h
+  variables:
+    CORE_ARGS: >-
+      -DENABLE_LIBRETRO=ON
+      -DWEBOS=ON
+      -DENABLE_BLUEZ=OFF
+      -DENABLE_FERAL_GAMEMODE=OFF
+      -DENABLE_WAYLAND=OFF
+      -DENABLE_OPENGL=OFF
+      -DENABLE_VULKAN=ON
+      -DENABLE_DISCORD_RPC=OFF
+      -DENABLE_WXWIDGETS=OFF
+      -DENABLE_CUBEB=OFF
+      -DENABLE_LIBUSB=OFF
+      -DVCPKG_TARGET_TRIPLET=arm64-webos
+      -DVCPKG_HOST_TRIPLET=x64-linux
+  before_script:
+    # Repeated from the template, whose before_script this one replaces.
+    - export NUMPROC=$(($(nproc)/5))
+    - export BUILD_DIR=build/webos-${WEBOS_ARCH}
+    - . "$SDK_ENV"
+    # The triplet reads the toolchain from the environment - see its comment.
+    - export WEBOS_CMAKE_TOOLCHAIN_FILE="$CMAKE_TOOLCHAIN_FILE"
+    # environment-setup points every one of these at the cross toolchain, which
+    # is right for the core and wrong for everything vcpkg builds for the host
+    # triplet first (its own tools, and the ports x64-linux carries). The core's
+    # compiler comes from the toolchain file, not from here.
+    - unset CC CXX CPP CFLAGS CXXFLAGS CPPFLAGS LDFLAGS AR AS LD NM RANLIB OBJCOPY OBJDUMP
+    # The host is x86_64, so vcpkg can fetch its own cmake and ninja rather than
+    # being held to the image's. That flag belongs to the aarch64 Linux job.
+    - unset VCPKG_FORCE_SYSTEM_BINARIES
+    # This image is built around the webOS SDK and has never run vcpkg, so write
+    # down what it does and does not carry - a trace here needs an account to
+    # read, an artifact does not - and install what is missing if that is
+    # allowed. Not every libretro image runs as root.
+    - |
+      {
+        head -2 /etc/os-release; id
+        for t in git curl zip unzip tar pkg-config python3 ninja cmake make gcc g++ autoconf automake libtool nasm; do
+          printf '%-12s ' "$t"; command -v "$t" || echo MISSING
+        done
+      } > ci-webos-debug.log 2>&1
+    - |
+      if [ "$(id -u)" = 0 ]; then
+        {
+          apt-get update -qq &&
+          apt-get install -y --no-install-recommends \
+            build-essential make ninja-build nasm autoconf automake libtool \
+            pkg-config python3 zip unzip curl git ca-certificates
+        } >> ci-webos-debug.log 2>&1 || echo "apt-get failed with $?" >> ci-webos-debug.log
+      else
+        echo "not root - taking the image as it is" >> ci-webos-debug.log
+      fi
+    - bash ./dependencies/vcpkg/bootstrap-vcpkg.sh 2>&1 | tail -20 | tee -a ci-webos-debug.log
+  # vcpkg reports failures by pointing at logs the trace does not show.
+  after_script:
+    - |
+      for f in "build/webos-aarch64/vcpkg-manifest-install.log" \
+               $(ls -t dependencies/vcpkg/buildtrees/*/*-err.log 2>/dev/null | head -3); do
+        [ -f "$f" ] || continue
+        echo "===== $f (tail)" >> ci-webos-debug.log
+        tail -60 "$f" >> ci-webos-debug.log
+      done
+  artifacts:
+    when: always
+    expire_in: 1 week
+    paths:
+      - ci-webos-debug.log
+      - $LIBNAME
+
+################################## APPLE EMBEDDED ############################
 libretro-build-ios-arm64:
   extends:
     - .libretro-ios-cmake-arm64

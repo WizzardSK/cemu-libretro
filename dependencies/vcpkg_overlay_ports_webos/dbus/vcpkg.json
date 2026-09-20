@@ -1,0 +1,8 @@
+{
+  "name": "dbus",
+  "version": "1.16.2",
+  "port-version": 1,
+  "description": "D-Bus specification and reference implementation, taken from the system instead of built from source.",
+  "homepage": "https://www.freedesktop.org/wiki/Software/dbus/",
+  "license": null
+}

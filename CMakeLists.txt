@@ -22,6 +22,17 @@ execute_process(
 )
 add_definitions(-DEMULATOR_HASH=${GIT_HASH})
 
+# webOS is a Linux by CMAKE_SYSTEM_NAME with a buildroot as bare as Android's:
+# EGL and GLES and nothing else - no X11, no Wayland, no desktop GL, no session
+# bus. It has to be settled here, before the vcpkg block below picks the overlay
+# ports and before the option defaults further down are chosen - which is ahead
+# of project(), so the compiler is not known yet and the SDK's toolchain file is
+# what gives it away (/developer/aarch64-webos-linux-gnu_sdk-buildroot/...), the
+# same tell CEMU_TARGET_ANDROID uses below. -DWEBOS=ON says it outright.
+if(NOT WEBOS AND CMAKE_TOOLCHAIN_FILE MATCHES "webos")
+	set(WEBOS TRUE)
+endif()
+
 if (ENABLE_VCPKG)
 	# check if vcpkg is shallow and unshallow it if necessary
 	execute_process(
@@ -56,7 +67,19 @@ if (ENABLE_VCPKG)
 		unset(CMAKE_TOOLCHAIN_FILE CACHE)
 	endif()
 
-	if(CEMU_TARGET_ANDROID)
+	if(WEBOS)
+		# The Linux overlays take libpng, cairo and gtk3 from the system, which
+		# for a cross build would mean the host's x86_64 copies. Only the dbus
+		# one is worth carrying over - nothing links D-Bus, SDL dlopen()s it -
+		# and its port exists because upstream's tarball host answers 504 often
+		# enough to fail whole pipelines.
+		set(VCPKG_OVERLAY_PORTS "${CMAKE_CURRENT_LIST_DIR}/dependencies/vcpkg_overlay_ports_webos;${CMAKE_CURRENT_LIST_DIR}/dependencies/vcpkg_overlay_ports")
+		# vcpkg builds its ports with the triplet's own toolchain, not with the
+		# one this file chainloads for the core (that reaches try_compile and
+		# nothing else), so the cross compiler has to be named in a triplet of
+		# its own. arm64-linux would build them for the host.
+		set(VCPKG_OVERLAY_TRIPLETS "${CMAKE_CURRENT_LIST_DIR}/dependencies/vcpkg_triplets")
+	elseif(CEMU_TARGET_ANDROID)
 		# no android-specific overlay ports at the moment - vcpkg refuses to start
 		# if an overlay path does not exist, so do not name one that is not there
 		set(VCPKG_OVERLAY_PORTS "${CMAKE_CURRENT_LIST_DIR}/dependencies/vcpkg_overlay_ports")
@@ -86,7 +109,10 @@ if (ENABLE_VCPKG)
 	#
 	# This runs before project(), so APPLE is not set yet and the system name
 	# is what tells the platforms apart.
-	if (NOT CMAKE_SYSTEM_NAME STREQUAL "iOS" AND NOT CMAKE_SYSTEM_NAME STREQUAL "tvOS")
+	# webOS is left out for a different reason than the Apple ones: the port
+	# builds there, but its Linux backend wants libudev, which the buildroot
+	# does not carry - and a webOS app has no raw USB access to use it with.
+	if (NOT CMAKE_SYSTEM_NAME STREQUAL "iOS" AND NOT CMAKE_SYSTEM_NAME STREQUAL "tvOS" AND NOT WEBOS)
 		list(APPEND VCPKG_MANIFEST_FEATURES "usb")
 	endif()
 	set(CMAKE_TOOLCHAIN_FILE "${CMAKE_CURRENT_SOURCE_DIR}/dependencies/vcpkg/scripts/buildsystems/vcpkg.cmake"
@@ -156,9 +182,16 @@ if (APPLE)
 endif()
 
 if (UNIX AND NOT APPLE)
-	option(ENABLE_WAYLAND "Build with Wayland support" ON)
-	option(ENABLE_FERAL_GAMEMODE "Enables Feral Interactive GameMode Support" ON)
-	option(ENABLE_BLUEZ "Build with Bluez support" ON)
+	# None of the three exist on webOS: the buildroot carries no Wayland, no
+	# GameMode daemon and no BlueZ, and a TV has no Wiimote to pair over it.
+	if (WEBOS)
+		set(CEMU_DESKTOP_SESSION_DEFAULT OFF)
+	else()
+		set(CEMU_DESKTOP_SESSION_DEFAULT ON)
+	endif()
+	option(ENABLE_WAYLAND "Build with Wayland support" ${CEMU_DESKTOP_SESSION_DEFAULT})
+	option(ENABLE_FERAL_GAMEMODE "Enables Feral Interactive GameMode Support" ${CEMU_DESKTOP_SESSION_DEFAULT})
+	option(ENABLE_BLUEZ "Build with Bluez support" ${CEMU_DESKTOP_SESSION_DEFAULT})
 endif()
 
 if (APPLE)
@@ -166,7 +199,14 @@ if (APPLE)
 	set(ENABLE_OPENGL_DEFAULT OFF)
 else()
     set(ENABLE_METAL_DEFAULT OFF)
-	set(ENABLE_OPENGL_DEFAULT ON)
+	# The GL backend here is desktop GL 4.5 with direct state access; webOS
+	# offers GLES through EGL and nothing more, so Vulkan is the backend that
+	# fits there - the same split as Android.
+	if (WEBOS)
+		set(ENABLE_OPENGL_DEFAULT OFF)
+	else()
+		set(ENABLE_OPENGL_DEFAULT ON)
+	endif()
 endif()
 
 option(ENABLE_OPENGL "Enables the OpenGL backend" ${ENABLE_OPENGL_DEFAULT})
@@ -199,7 +239,7 @@ option(ENABLE_HIDAPI "Build with HIDAPI" ON)
 option(ENABLE_SDL "Enables the SDLController backend" ON)
 # Off on the Apple embedded platforms, where there is no USB API to talk to and
 # the dependency is not built either (see the manifest features above).
-if (CMAKE_SYSTEM_NAME STREQUAL "iOS" OR CMAKE_SYSTEM_NAME STREQUAL "tvOS")
+if (CMAKE_SYSTEM_NAME STREQUAL "iOS" OR CMAKE_SYSTEM_NAME STREQUAL "tvOS" OR WEBOS)
 	set(ENABLE_LIBUSB_DEFAULT OFF)
 else()
 	set(ENABLE_LIBUSB_DEFAULT ON)
@@ -265,9 +305,9 @@ if (NOT TARGET glslang::SPIRV AND TARGET SPIRV)
 	add_library(glslang::SPIRV ALIAS SPIRV)
 endif()
 
-# Android is UNIX as far as CMake is concerned, but has none of this: no X11, no
-# Wayland, no GTK, no BlueZ.
-if (UNIX AND NOT APPLE AND NOT ANDROID)
+# Android and webOS are UNIX as far as CMake is concerned, but have none of
+# this: no X11, no Wayland, no GTK, no BlueZ.
+if (UNIX AND NOT APPLE AND NOT ANDROID AND NOT WEBOS)
 	find_package(X11 REQUIRED)
 	if (ENABLE_WAYLAND)
 		find_package(Wayland REQUIRED Client)
@@ -295,14 +335,19 @@ if (UNIX AND NOT APPLE AND NOT ANDROID)
 
 endif()
 
+if (WEBOS)
+	add_compile_definitions(WEBOS)
+endif()
+
 if (ENABLE_VULKAN)
 	include_directories("dependencies/Vulkan-Headers/include")
 	add_compile_definitions(ENABLE_VULKAN)
 	add_compile_definitions(VK_NO_PROTOTYPES)
 endif()
 
-if (ENABLE_OPENGL AND NOT ANDROID)
-	# Android has no desktop OpenGL, only GLES/EGL - the core uses Vulkan there.
+if (ENABLE_OPENGL AND NOT ANDROID AND NOT WEBOS)
+	# Android and webOS have no desktop OpenGL, only GLES/EGL - the core uses
+	# Vulkan on both.
 	find_package(OpenGL REQUIRED)
 	add_compile_definitions(ENABLE_OPENGL)
 endif()
