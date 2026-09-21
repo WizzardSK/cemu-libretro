@@ -635,13 +635,15 @@ enum class LibretroLayoutButton
 };
 static LibretroLayoutButton s_next_layout_button = LibretroLayoutButton::None;
 static bool s_next_layout_button_held = false;
-// Set for the one frame a layout combination fires in. Every button in those
-// combinations means something to a title as well - L3, R3, the shoulders,
-// Select - so without this a layout change also fires whatever the game has on
-// them. The combinations are deliberately unusual, so anything holding them
-// meant the layout change and nothing else; dropping the whole frame's input is
-// enough and needs no per-button bookkeeping.
-static bool s_layout_switched_this_frame = false;
+// Set for every frame a layout combination is held, not only the frame the
+// layout changes in. Every button in those combinations means something to a
+// title as well - L3, R3, the shoulders, Select - so without this a layout
+// change also fires whatever the game has on them. Suppressing only the edge
+// frame was not enough: a press is held across many frames and the title saw
+// all of them but the first. The combinations are deliberately unusual, so a
+// pad holding one meant the layout change and nothing else; dropping the
+// frame's input wholesale is enough and needs no per-button bookkeeping.
+static bool s_layout_combo_held_this_frame = false;
 
 static retro_hw_render_callback s_hw_render{};
 
@@ -4598,7 +4600,7 @@ static void libretro_poll_input()
 
 	input_poll_cb();
 
-	s_layout_switched_this_frame = false;
+	s_layout_combo_held_this_frame = false;
 
 	// Raw pad state for the ports that drive something, for the Wii Remotes
 	// behind InputManager - and for the GamePad below, which is built from
@@ -4667,10 +4669,9 @@ static void libretro_poll_input()
 	{
 		const bool down = input_state_cb(0, RETRO_DEVICE_KEYBOARD, 0, RETROK_TAB) != 0;
 		if (down && !s_next_layout_button_held)
-		{
 			libretro_next_screen_layout();
-			s_layout_switched_this_frame = true;
-		}
+		if (down)
+			s_layout_combo_held_this_frame = true;
 		s_next_layout_button_held = down;
 	}
 	else if (s_next_layout_button != LibretroLayoutButton::None)
@@ -4695,18 +4696,17 @@ static void libretro_poll_input()
 			break;
 		}
 		if (down && !s_next_layout_button_held)
-		{
 			libretro_next_screen_layout();
-			s_layout_switched_this_frame = true;
-		}
+		if (down)
+			s_layout_combo_held_this_frame = true;
 		s_next_layout_button_held = down;
 	}
 
-	// The frame the layout changed in is the frame the title does not see. The
+	// Any frame the combination is held in is a frame the title does not see. The
 	// pad state above is already built, so it is cleared here rather than
 	// guarded at every assignment, and the accessors the Wii Remotes read
 	// through answer the same way for this frame.
-	if (s_layout_switched_this_frame)
+	if (s_layout_combo_held_this_frame)
 	{
 		std::memset(state.buttons, 0, sizeof(state.buttons));
 		state.left_x = 0;
@@ -4729,7 +4729,7 @@ static void libretro_poll_input()
 
 bool libretro_get_button_state(uint32_t button_id)
 {
-	if (s_layout_switched_this_frame)
+	if (s_layout_combo_held_this_frame)
 		return false;
 	if (button_id >= VPADController::kButtonId_Max)
 		return false;
@@ -4740,7 +4740,7 @@ bool libretro_get_button_state(uint32_t button_id)
 
 bool libretro_get_joypad_button(uint32_t port, uint32_t retro_id)
 {
-	if (s_layout_switched_this_frame)
+	if (s_layout_combo_held_this_frame)
 		return false;
 	if (port >= kLibretroMaxPorts || retro_id >= 16)
 		return false;
