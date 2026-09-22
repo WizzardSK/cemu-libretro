@@ -2756,15 +2756,23 @@ RETRO_API void retro_init()
 	if (s_initialized)
 		return;
 
+	// Breadcrumbs through the frontend's log rather than Cemu's. Cemu's log.txt
+	// does not exist until the paths below are set up, so a core that dies in
+	// here leaves nothing behind at all - which is exactly what jacklavin saw
+	// when it started crashing at core selection, before any content.
+	libretro_log(RETRO_LOG_INFO, "retro_init: start\n");
+
 	LibretroAudioAPI::SetAudioCallback([](const int16_t* data, size_t frames) -> size_t {
 		if (s_audio_submission_allowed && audio_batch_cb && data && frames > 0)
 			return audio_batch_cb(data, frames);
 		return 0;
 	});
 
+	libretro_log(RETRO_LOG_INFO, "retro_init: resolving paths\n");
 	libretro_init_paths();
 
 	// Configure settings
+	libretro_log(RETRO_LOG_INFO, "retro_init: loading settings.xml\n");
 	GetConfigHandle().SetFilename(ActiveSettings::GetConfigPath("settings.xml").generic_wstring());
 	if (fs::exists(ActiveSettings::GetConfigPath("settings.xml")))
 		GetConfigHandle().Load();
@@ -2775,6 +2783,8 @@ RETRO_API void retro_init()
 	if (GetConfig().mlc_path.GetValue().empty())
 		GetConfig().SetMLCPath(s_mlc_path, false);
 	cemuLog_log(LogType::Force, "mlc01: {}", _pathToUtf8(ActiveSettings::GetMlcPath()));
+
+	libretro_log(RETRO_LOG_INFO, "retro_init: choosing the graphics API\n");
 
 	// Select graphics API based on core option
 #ifdef ENABLE_OPENGL
@@ -2811,12 +2821,14 @@ RETRO_API void retro_init()
 	if (s_graphics_api == SelectedGraphicsAPI::OpenGL)
 		GetConfig().graphic_api = kOpenGL;
 
+	libretro_log(RETRO_LOG_INFO, "retro_init: activating settings\n");
 	ActiveSettings::Init();
 
 	// Set system implementation
 	CafeSystem::SetImplementation(&s_systemImpl);
 
 	s_initialized = true;
+	libretro_log(RETRO_LOG_INFO, "retro_init: done\n");
 }
 
 // retro_deinit is defined after retro_unload_game
