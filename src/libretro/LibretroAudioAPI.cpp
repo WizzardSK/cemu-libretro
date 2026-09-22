@@ -166,6 +166,7 @@ void LibretroAudioAPI::ReportStats()
 	// Where the samples would have to come from: the scheduler reaching its
 	// system-event check, that check reaching the AX gate, and the gate opening.
 	static uint64_t s_last_fibers[3] = {};
+	static uint64_t s_last_idles[3] = {};
 	static uint64_t s_last_processed = 0;
 	static uint64_t s_last_events = 0;
 	static uint64_t s_last_ax_calls = 0;
@@ -179,24 +180,31 @@ void LibretroAudioAPI::ReportStats()
 	// A gate that opens every time it is reached but produces one block per
 	// video frame means the wait is on the guest, not on us.
 	const uint64_t processed = snd_core::getNumProcessedFrames();
-	uint64_t fibers[3];
+	uint64_t fibers[3], idles[3];
 	for (int i = 0; i < 3; i++)
+	{
 		fibers[i] = coreinit::OSSchedulerGetPpcFiberLoopCount(i);
+		idles[i] = coreinit::OSSchedulerGetIdleLoopCount(i);
+	}
 
 	cemuLog_log(LogType::Force,
 		"audio: AX produced {} samples, ring dropped {}, drained {}, frontend took {}, "
 		"{} flushes ({} with nothing to send), ring holds {}; "
 		"scheduler events {}, AX update called {}, gate opened {}, "
-		"guest AX frames {}, core loops {}/{}/{}",
+		"guest AX frames {}, core loops {}/{}/{}, idle loops {}/{}/{}",
 		s_stat_offered, s_stat_offered - s_stat_written, s_stat_read, s_stat_sent,
 		s_stat_flushes, s_stat_empty_flushes, s_ring_buffer.GetReadAvailableSamples(),
 		events - s_last_events, ax_calls - s_last_ax_calls, ax_passed - s_last_ax_passed,
 		processed - s_last_processed,
-		fibers[0] - s_last_fibers[0], fibers[1] - s_last_fibers[1], fibers[2] - s_last_fibers[2]);
+		fibers[0] - s_last_fibers[0], fibers[1] - s_last_fibers[1], fibers[2] - s_last_fibers[2],
+		idles[0] - s_last_idles[0], idles[1] - s_last_idles[1], idles[2] - s_last_idles[2]);
 
 	s_last_processed = processed;
 	for (int i = 0; i < 3; i++)
+	{
 		s_last_fibers[i] = fibers[i];
+		s_last_idles[i] = idles[i];
+	}
 
 	s_last_events = events;
 	s_last_ax_calls = ax_calls;
