@@ -1,8 +1,18 @@
 #include "LibretroAudioAPI.h"
 
+#include <atomic>
 #include <chrono>
 
 #include "Cemu/Logging/CemuLogging.h"
+#include "Cafe/OS/libs/coreinit/coreinit_Thread.h"
+
+// Defined in snd_core/ax_out.cpp: how often the AX gate is reached and how
+// often it opens.
+namespace snd_core
+{
+	extern std::atomic<uint64_t> g_ax_update_calls;
+	extern std::atomic<uint64_t> g_ax_update_passed;
+}
 
 LibretroAudioAPI::AudioCallback LibretroAudioAPI::s_audio_callback = nullptr;
 bool LibretroAudioAPI::s_log_stats = false;
@@ -152,11 +162,26 @@ void LibretroAudioAPI::ReportStats()
 	// says whether the title is being given enough time to make audio at all;
 	// dropped says the ring overflowed; the frontend line says whether what was
 	// drained was actually taken.
+	// Where the samples would have to come from: the scheduler reaching its
+	// system-event check, that check reaching the AX gate, and the gate opening.
+	static uint64_t s_last_events = 0;
+	static uint64_t s_last_ax_calls = 0;
+	static uint64_t s_last_ax_passed = 0;
+	const uint64_t events = coreinit::OSSchedulerGetSystemEventCount();
+	const uint64_t ax_calls = snd_core::g_ax_update_calls.load(std::memory_order_relaxed);
+	const uint64_t ax_passed = snd_core::g_ax_update_passed.load(std::memory_order_relaxed);
+
 	cemuLog_log(LogType::Force,
 		"audio: AX produced {} samples, ring dropped {}, drained {}, frontend took {}, "
-		"{} flushes ({} with nothing to send), ring holds {}",
+		"{} flushes ({} with nothing to send), ring holds {}; "
+		"scheduler events {}, AX update called {}, gate opened {}",
 		s_stat_offered, s_stat_offered - s_stat_written, s_stat_read, s_stat_sent,
-		s_stat_flushes, s_stat_empty_flushes, s_ring_buffer.GetReadAvailableSamples());
+		s_stat_flushes, s_stat_empty_flushes, s_ring_buffer.GetReadAvailableSamples(),
+		events - s_last_events, ax_calls - s_last_ax_calls, ax_passed - s_last_ax_passed);
+
+	s_last_events = events;
+	s_last_ax_calls = ax_calls;
+	s_last_ax_passed = ax_passed;
 
 	s_stat_offered = 0;
 	s_stat_written = 0;

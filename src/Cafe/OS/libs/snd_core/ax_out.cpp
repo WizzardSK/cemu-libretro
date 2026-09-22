@@ -4,6 +4,8 @@
 #include "audio/IAudioAPI.h"
 #ifdef RETRO_CORE
 #include "libretro/LibretroAudioAPI.h"
+
+#include <atomic>
 #endif
 //#include "ax.h"
 #include "config/CemuConfig.h"
@@ -535,8 +537,16 @@ namespace snd_core
 	}
 
 	// called periodically to check for AX updates
+	// How often the gate is reached and how often it opens (cemu_log_audio).
+	// "AX produced too little" has two very different causes: the scheduler not
+	// reaching __OSCheckSystemEvents often enough, or it reaching it and the
+	// 3 ms gate holding it shut. These two counters tell them apart.
+	std::atomic<uint64_t> g_ax_update_calls{0};
+	std::atomic<uint64_t> g_ax_update_passed{0};
+
 	void AXOut_update()
 	{
+		g_ax_update_calls.fetch_add(1, std::memory_order_relaxed);
 		constexpr static auto kTimeout = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::milliseconds(((IAudioAPI::kBlockCount * 3) / 4) * (AX_FRAMES_PER_GROUP * 3)));
 		constexpr static auto kWaitDuration = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::milliseconds(3));
 		constexpr static auto kWaitDurationFast = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::microseconds(2900));
@@ -586,6 +596,8 @@ namespace snd_core
 
 		if (diff < wait_duration)
 			return;
+
+		g_ax_update_passed.fetch_add(1, std::memory_order_relaxed);
 
 		// handle minimum wait time (1.7MS)
 		if ((now - s_last_check) < kWaitDurationMinimum)
