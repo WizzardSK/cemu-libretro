@@ -12,6 +12,7 @@ namespace snd_core
 {
 	extern std::atomic<uint64_t> g_ax_update_calls;
 	extern std::atomic<uint64_t> g_ax_update_passed;
+	uint32 getNumProcessedFrames();
 }
 
 LibretroAudioAPI::AudioCallback LibretroAudioAPI::s_audio_callback = nullptr;
@@ -164,6 +165,8 @@ void LibretroAudioAPI::ReportStats()
 	// drained was actually taken.
 	// Where the samples would have to come from: the scheduler reaching its
 	// system-event check, that check reaching the AX gate, and the gate opening.
+	static uint64_t s_last_fibers[3] = {};
+	static uint64_t s_last_processed = 0;
 	static uint64_t s_last_events = 0;
 	static uint64_t s_last_ax_calls = 0;
 	static uint64_t s_last_ax_passed = 0;
@@ -171,13 +174,29 @@ void LibretroAudioAPI::ReportStats()
 	const uint64_t ax_calls = snd_core::g_ax_update_calls.load(std::memory_order_relaxed);
 	const uint64_t ax_passed = snd_core::g_ax_update_passed.load(std::memory_order_relaxed);
 
+	// And what the guest is doing with its time: how many frames its own AX
+	// thread finished, and how often each emulated core came round its loop.
+	// A gate that opens every time it is reached but produces one block per
+	// video frame means the wait is on the guest, not on us.
+	const uint64_t processed = snd_core::getNumProcessedFrames();
+	uint64_t fibers[3];
+	for (int i = 0; i < 3; i++)
+		fibers[i] = coreinit::OSSchedulerGetPpcFiberLoopCount(i);
+
 	cemuLog_log(LogType::Force,
 		"audio: AX produced {} samples, ring dropped {}, drained {}, frontend took {}, "
 		"{} flushes ({} with nothing to send), ring holds {}; "
-		"scheduler events {}, AX update called {}, gate opened {}",
+		"scheduler events {}, AX update called {}, gate opened {}, "
+		"guest AX frames {}, core loops {}/{}/{}",
 		s_stat_offered, s_stat_offered - s_stat_written, s_stat_read, s_stat_sent,
 		s_stat_flushes, s_stat_empty_flushes, s_ring_buffer.GetReadAvailableSamples(),
-		events - s_last_events, ax_calls - s_last_ax_calls, ax_passed - s_last_ax_passed);
+		events - s_last_events, ax_calls - s_last_ax_calls, ax_passed - s_last_ax_passed,
+		processed - s_last_processed,
+		fibers[0] - s_last_fibers[0], fibers[1] - s_last_fibers[1], fibers[2] - s_last_fibers[2]);
+
+	s_last_processed = processed;
+	for (int i = 0; i < 3; i++)
+		s_last_fibers[i] = fibers[i];
 
 	s_last_events = events;
 	s_last_ax_calls = ax_calls;
