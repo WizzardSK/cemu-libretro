@@ -575,6 +575,22 @@ void libretro_frame_gate_release()
 static std::mutex s_frame_mutex;
 static std::condition_variable s_frame_cv;
 std::atomic_bool s_frame_ready{false};
+
+// The GPU thread telling retro_run that the frame is done. Under the mutex and
+// with a notify, both of which matter: retro_run waits on s_frame_cv with a
+// 33 ms timeout, so a flag set without waking it is a frame that arrives when
+// the timeout expires rather than when it is ready - 30 fps out of a 60 fps
+// title. The Vulkan renderer used to store the flag on its own and did exactly
+// that, while the OpenGL path signalled properly, which is why one was half the
+// speed of the other.
+void libretro_signal_frame_ready()
+{
+	{
+		std::lock_guard lock(s_frame_mutex);
+		s_frame_ready.store(true, std::memory_order_release);
+	}
+	s_frame_cv.notify_one();
+}
 static std::atomic_bool s_shutting_down{false};
 // Set by the first retro_run that runs the startup handshake. A launch that
 // fails is not tried again - see the handshake for why.
@@ -1139,11 +1155,7 @@ public:
 			glBindFramebuffer(GL_READ_FRAMEBUFFER_EXT, fbo);
 			glReadPixels(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, GL_BGRA, GL_UNSIGNED_BYTE, s_framebuffer.data());
 
-			{
-				std::lock_guard lock(s_frame_mutex);
-				s_frame_ready = true;
-				s_frame_cv.notify_one();
-			}
+			libretro_signal_frame_ready();
 
 			// The frame is the frontend's now; wait to be asked for the next one.
 			// Only for the TV swap: a DRC swap is part of the same frame, and

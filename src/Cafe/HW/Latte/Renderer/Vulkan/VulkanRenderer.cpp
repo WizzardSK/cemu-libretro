@@ -3830,8 +3830,13 @@ void VulkanRenderer::DrawBackbufferQuad(LatteTextureView* texView, RendererOutpu
 			barrier_image<TRANSFER_READ, ANY_TRANSFER | IMAGE_WRITE>(baseTexture, srcLayers, VK_IMAGE_LAYOUT_GENERAL);
 		}
 
-		extern std::atomic_bool s_frame_ready;
-		s_frame_ready.store(true, std::memory_order_release);
+		// Through the core's signal, not the flag on its own: retro_run is
+		// waiting on a condition variable with a timeout, so a store nobody
+		// notifies makes the frame arrive when the timeout runs out instead of
+		// when it is ready - half the frame rate of the OpenGL path, which
+		// signalled properly.
+		extern void libretro_signal_frame_ready();
+		libretro_signal_frame_ready();
 	}
 	return;
 #endif
