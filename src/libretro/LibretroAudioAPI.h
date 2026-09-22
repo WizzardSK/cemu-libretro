@@ -129,8 +129,27 @@ public:
 
 	static void Reset();
 
+	// Once a second, report what AX produced, what the ring had to drop and
+	// what the frontend took (cemu_log_audio). Audio going missing has three
+	// possible ends - AX not producing, the ring overflowing, the frontend
+	// refusing - and a report that only says "too few samples" cannot tell
+	// them apart.
+	static void SetStatsLogging(bool enabled);
+
 private:
+	static void AccountWrite(size_t offered, size_t written);
+	static void AccountFlush(size_t read, size_t sent);
+	static void ReportStats();
+
 	static AudioCallback s_audio_callback;
 	static LibretroAudioRingBuffer s_ring_buffer;
 	static std::vector<int16_t> s_flush_buffer;
+
+	static bool s_log_stats;
+	static uint64_t s_stat_offered;
+	static uint64_t s_stat_written;
+	static uint64_t s_stat_read;
+	static uint64_t s_stat_sent;
+	static uint64_t s_stat_flushes;
+	static uint64_t s_stat_empty_flushes;
 };

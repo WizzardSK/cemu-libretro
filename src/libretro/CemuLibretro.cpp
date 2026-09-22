@@ -2031,6 +2031,13 @@ static void libretro_apply_core_options()
 				g_libretroNarrowBC1 = b;
 		}
 #endif
+		if (const char* v = libretro_get_option_value("cemu_log_audio"))
+		{
+			bool b;
+			if (libretro_parse_enabled_disabled(v, b))
+				LibretroAudioAPI::SetStatsLogging(b);
+		}
+
 		if (const char* v = libretro_get_option_value("cemu_log_texture_memory"))
 		{
 			bool b;
@@ -2306,6 +2313,7 @@ static const char* libretro_option_category(const char* key)
 		{"cemu_log_system_api", "logging"},
 		{"cemu_log_texture_memory", "logging"},
 		{"cemu_log_input_api", "logging"},
+		{"cemu_log_audio", "logging"},
 		{"cemu_bc1_16bit", "video"},
 	};
 	for (const Entry& entry : entries)
@@ -2517,6 +2525,11 @@ static bool libretro_set_core_options_v2(retro_environment_t cb, const struct re
 				def.info = keep(std::string("Reports how much of the texture memory is BC "
 					"that had to be decompressed because this GPU cannot sample it."));
 
+			if (strcmp(var->key, "cemu_log_audio") == 0)
+				def.info = keep(std::string("Once a second, how many samples AX produced, how many "
+					"the ring had to drop, and how many the frontend took. For working out "
+					"which end of that chain audio is going missing at."));
+
 			if (strcmp(var->key, "cemu_log_input_api") == 0)
 				def.info = keep(std::string("Logs every controller call a title makes - which "
 					"pads it probed for and what it was told. Noisy; for a few seconds at a time."));
@@ -2713,6 +2726,7 @@ static void libretro_publish_core_options(retro_environment_t cb)
 		{"cemu_log_system_api", "Log System API Calls (debugging); disabled|enabled"},
 		{"cemu_log_texture_memory", "Log Texture Memory (debugging); disabled|enabled"},
 		{"cemu_log_input_api", "Log Controller API Calls (debugging); disabled|enabled"},
+		{"cemu_log_audio", "Log Audio Pacing (debugging); disabled|enabled"},
 		{"cemu_bc1_16bit", "Reduce BC1 Texture Memory; disabled|enabled"},
 #if defined(ENABLE_VULKAN) && defined(ENABLE_OPENGL)
 		{"cemu_gpu_api", "Graphics API (restart); OpenGL|Vulkan"},

@@ -1,6 +1,17 @@
 #include "LibretroAudioAPI.h"
 
+#include <chrono>
+
+#include "Cemu/Logging/CemuLogging.h"
+
 LibretroAudioAPI::AudioCallback LibretroAudioAPI::s_audio_callback = nullptr;
+bool LibretroAudioAPI::s_log_stats = false;
+uint64_t LibretroAudioAPI::s_stat_offered = 0;
+uint64_t LibretroAudioAPI::s_stat_written = 0;
+uint64_t LibretroAudioAPI::s_stat_read = 0;
+uint64_t LibretroAudioAPI::s_stat_sent = 0;
+uint64_t LibretroAudioAPI::s_stat_flushes = 0;
+uint64_t LibretroAudioAPI::s_stat_empty_flushes = 0;
 LibretroAudioRingBuffer LibretroAudioAPI::s_ring_buffer;
 std::vector<int16_t> LibretroAudioAPI::s_flush_buffer;
 
@@ -35,6 +46,7 @@ bool LibretroAudioAPI::FeedBlock(sint16* data)
 
 	const size_t sampleCount = m_bytesPerBlock / sizeof(int16_t);
 	const size_t written = s_ring_buffer.Write(data, sampleCount);
+	AccountWrite(sampleCount, written);
 	return written > 0;
 }
 
@@ -68,7 +80,15 @@ void LibretroAudioAPI::FlushAudio()
 	// samples, which is what shows up as crackling.
 	const size_t availableSamples = s_ring_buffer.GetReadAvailableSamples();
 	if (availableSamples == 0)
+	{
+		if (s_log_stats)
+		{
+			s_stat_flushes++;
+			s_stat_empty_flushes++;
+			ReportStats();
+		}
 		return;
+	}
 
 	const size_t bufferCap = s_flush_buffer.size();
 	const size_t samplesToRead = (availableSamples <= bufferCap) ? availableSamples : bufferCap;
@@ -91,6 +111,59 @@ void LibretroAudioAPI::FlushAudio()
 		framesSent += accepted;
 		cursor += accepted * LibretroAudioRingBuffer::kChannels;
 	}
+
+	AccountFlush(samplesRead, framesSent * LibretroAudioRingBuffer::kChannels);
+}
+
+void LibretroAudioAPI::SetStatsLogging(bool enabled)
+{
+	s_log_stats = enabled;
+}
+
+void LibretroAudioAPI::AccountWrite(size_t offered, size_t written)
+{
+	if (!s_log_stats)
+		return;
+	s_stat_offered += offered;
+	s_stat_written += written;
+}
+
+void LibretroAudioAPI::AccountFlush(size_t read, size_t sent)
+{
+	if (!s_log_stats)
+		return;
+	s_stat_read += read;
+	s_stat_sent += sent;
+	s_stat_flushes++;
+	ReportStats();
+}
+
+void LibretroAudioAPI::ReportStats()
+{
+	using clock = std::chrono::steady_clock;
+	static clock::time_point s_last = clock::now();
+
+	const clock::time_point now = clock::now();
+	if (now - s_last < std::chrono::seconds(1))
+		return;
+	s_last = now;
+
+	// 48 kHz stereo is 96000 samples a second, so "AX produced" against that
+	// says whether the title is being given enough time to make audio at all;
+	// dropped says the ring overflowed; the frontend line says whether what was
+	// drained was actually taken.
+	cemuLog_log(LogType::Force,
+		"audio: AX produced {} samples, ring dropped {}, drained {}, frontend took {}, "
+		"{} flushes ({} with nothing to send), ring holds {}",
+		s_stat_offered, s_stat_offered - s_stat_written, s_stat_read, s_stat_sent,
+		s_stat_flushes, s_stat_empty_flushes, s_ring_buffer.GetReadAvailableSamples());
+
+	s_stat_offered = 0;
+	s_stat_written = 0;
+	s_stat_read = 0;
+	s_stat_sent = 0;
+	s_stat_flushes = 0;
+	s_stat_empty_flushes = 0;
 }
 
 void LibretroAudioAPI::Reset()
