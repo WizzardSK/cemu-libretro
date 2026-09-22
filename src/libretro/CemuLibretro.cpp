@@ -65,6 +65,8 @@
 #include "interface/WindowSystem.h"
 
 #include "LibretroAudioAPI.h"
+
+#include "Cafe/HW/MMU/MMU.h"
 #include "LibretroVkQueue.h"
 
 // GL function needed for framebuffer readback (glBindFramebuffer is in Cemu's glext.h)
@@ -243,6 +245,10 @@ static LibretroSystemImplementation s_systemImpl;
 // ============================================================================
 
 static retro_environment_t environ_cb = nullptr;
+
+// Defined further down, beside the cheat entry points they exist for.
+static void libretro_publish_memory_maps();
+static void libretro_clear_memory_maps();
 static retro_video_refresh_t video_cb = nullptr;
 static retro_audio_sample_t audio_cb = nullptr;
 static retro_audio_sample_batch_t audio_batch_cb = nullptr;
@@ -2958,6 +2964,7 @@ static bool libretro_stop_title()
 	// here names the phase it stopped in, and ShutdownTitle traces its own
 	// phases underneath.
 	cemuLog_log(LogType::Force, "[libretro] shutting the title down: scheduler, GPU thread, IOSU, then the save flush");
+	libretro_clear_memory_maps();
 	CafeSystem::ShutdownTitle();
 
 	libretro_log(RETRO_LOG_INFO, "title shut down, save data flushed\n");
@@ -3511,6 +3518,11 @@ static void libretro_prepare_and_launch_title()
 
 	s_emu_initialized = true;
 	s_game_loaded = true;
+
+	// The title is mounted, so its memory exists and can be described to the
+	// frontend - this is what makes RetroArch's cheat search and memory viewer
+	// work at all.
+	libretro_publish_memory_maps();
 
 	libretro_log(RETRO_LOG_INFO, "Game loaded successfully - %s\n", CafeSystem::GetForegroundTitleName().c_str());
 }
@@ -5196,6 +5208,77 @@ RETRO_API bool retro_serialize(void* data, size_t size)
 RETRO_API bool retro_unserialize(const void* data, size_t size)
 {
 	return false;
+}
+
+// ============================================================================
+// Memory maps, for the frontend's cheat search and memory viewer
+// ============================================================================
+
+// Cemu keeps the whole PowerPC address space in one host allocation, so a
+// window into it is a pointer and a length: memory_base plus the guest address.
+// The ranges are described rather than the whole 4 GiB, because a search over
+// space that was never mapped is both slow and full of false hits. The
+// addresses the frontend then shows are Wii U effective addresses, which is
+// what published codes use, and they are stable across runs.
+//
+// The pointers are only good while a title is mounted, so the map is registered
+// after the title launches and cleared when it shuts down.
+static std::vector<retro_memory_descriptor> s_memory_descriptors;
+
+static void libretro_add_memory_range(const MMURange& range, const char* name)
+{
+	if (!range.isMapped())
+		return;
+
+	retro_memory_descriptor desc{};
+	desc.flags = RETRO_MEMDESC_BIGENDIAN | RETRO_MEMDESC_SYSTEM_RAM; // Espresso is big-endian
+	desc.ptr = range.getPtr();
+	desc.offset = 0;
+	desc.start = range.getBase();
+	desc.len = range.getSize();
+	desc.addrspace = name;
+	s_memory_descriptors.push_back(desc);
+}
+
+static void libretro_publish_memory_maps()
+{
+	s_memory_descriptors.clear();
+	if (!memory_base)
+		return;
+
+	libretro_add_memory_range(mmuRange_MEM2, "MEM2");
+	libretro_add_memory_range(mmuRange_MEM1, "MEM1");
+	libretro_add_memory_range(mmuRange_FGBUCKET, "FGBUCKET");
+
+	if (s_memory_descriptors.empty())
+		return;
+
+	retro_memory_map map{};
+	map.descriptors = s_memory_descriptors.data();
+	map.num_descriptors = static_cast<unsigned>(s_memory_descriptors.size());
+	if (!environ_cb(RETRO_ENVIRONMENT_SET_MEMORY_MAPS, &map))
+	{
+		libretro_log(RETRO_LOG_INFO, "frontend took no memory maps\n");
+		s_memory_descriptors.clear();
+		return;
+	}
+
+	for (const retro_memory_descriptor& desc : s_memory_descriptors)
+		libretro_log(RETRO_LOG_INFO, "memory map: %s at 0x%08X, %u KB\n",
+			desc.addrspace, static_cast<unsigned>(desc.start),
+			static_cast<unsigned>(desc.len / 1024));
+}
+
+static void libretro_clear_memory_maps()
+{
+	if (s_memory_descriptors.empty())
+		return;
+
+	// Hand the frontend an empty map rather than leaving it holding pointers
+	// into memory that shutdown is about to unmap.
+	retro_memory_map map{};
+	environ_cb(RETRO_ENVIRONMENT_SET_MEMORY_MAPS, &map);
+	s_memory_descriptors.clear();
 }
 
 // ============================================================================
