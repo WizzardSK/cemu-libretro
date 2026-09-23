@@ -490,6 +490,9 @@ libretro-build-webos-aarch64:
     - . "$SDK_ENV"
     # The triplet reads the toolchain from the environment - see its comment.
     - export WEBOS_CMAKE_TOOLCHAIN_FILE="$CMAKE_TOOLCHAIN_FILE"
+    # And the SDK's pkg-config, which the ports cannot find under its toolchain
+    # file (curl failed with "pkg-config tool not found").
+    - export WEBOS_PKG_CONFIG="$(command -v pkg-config)"
     # environment-setup points every one of these at the cross toolchain, which
     # is right for the core and wrong for everything vcpkg builds for the host
     # triplet first (its own tools, and the ports x64-linux carries). The core's
