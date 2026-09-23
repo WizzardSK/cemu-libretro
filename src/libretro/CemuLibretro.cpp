@@ -5215,9 +5215,11 @@ RETRO_API void retro_run()
 	// Not a fixed 800 samples (48000 / 60): a device that manages retro_run
 	// only 20 times a second - sco8487's phone in Deus Ex - got a third of
 	// the audio it needed, and titles that follow their audio slowed down
-	// with it. Capped at three frames' worth, so a stall does not grow into a
-	// longer wait in the audio callback and a bigger grant after it, which is
-	// how the wall-clock audio before 296e8e01 settled at 10 fps.
+	// with it. Capped at 100 ms, so a stall does not grow into a longer wait
+	// in the audio callback and a bigger grant after it, which is how the
+	// wall-clock audio before 296e8e01 settled at 10 fps - but no lower: at
+	// 20 retro_run a second each one is 50 ms apart, and a 50 ms cap there
+	// cut every grant short (sco8487 heard it crackle).
 	{
 		static std::chrono::steady_clock::time_point s_last_audio_grant{};
 		const auto now = std::chrono::steady_clock::now();
@@ -5225,7 +5227,7 @@ RETRO_API void retro_run()
 		if (s_last_audio_grant.time_since_epoch().count() != 0)
 		{
 			const auto us = std::chrono::duration_cast<std::chrono::microseconds>(now - s_last_audio_grant).count();
-			samples = (int32_t)std::min<int64_t>(us * 48 / 1000, 2400);
+			samples = (int32_t)std::min<int64_t>(us * 48 / 1000, 4800);
 		}
 		s_last_audio_grant = now;
 		snd_core::AXOut_LibretroGrantSamples(samples);
