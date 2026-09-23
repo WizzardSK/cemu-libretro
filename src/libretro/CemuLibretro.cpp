@@ -2949,6 +2949,19 @@ RETRO_API void retro_get_system_info(struct retro_system_info* info)
 
 RETRO_API void retro_get_system_av_info(struct retro_system_av_info* info)
 {
+	// The frontend asks for this right after retro_load_game, before the core
+	// options are applied in the first retro_run - so read the output size
+	// the option asks for here, as the geometry has to say it from the start.
+	if (!s_out_size_taken)
+		if (const char* v = libretro_get_option_value("cemu_internal_resolution"))
+		{
+			unsigned w, h;
+			if (libretro_parse_internal_resolution(v, w, h))
+			{
+				s_wanted_out_width = w;
+				s_wanted_out_height = h;
+			}
+		}
 	info->geometry.base_width = libretro_out_width();
 	info->geometry.base_height = libretro_out_height();
 	info->geometry.max_width = SCREEN_WIDTH * 4;
@@ -3682,15 +3695,6 @@ static void libretro_launch_game()
 			gp->SetEnabled(true);
 	}
 	libretro_log(RETRO_LOG_INFO, "Loaded %d graphic packs\n", (int)GraphicPack2::GetGraphicPacks().size());
-	// Say what was found, in log.txt: a pack that is not there, not switched
-	// on (default = 1 in its [Definition]) or not for this title is otherwise
-	// silent, and "no graphic pack detected" is all a user can tell.
-	cemuLog_log(LogType::Force, "Graphic packs found: {}", GraphicPack2::GetGraphicPacks().size());
-	for (auto& gp : GraphicPack2::GetGraphicPacks())
-		cemuLog_log(LogType::Force, "  {} - {}, {} title id(s), {}", gp->GetVirtualPath(),
-			gp->IsEnabled() ? "on" : "off (set default = 1 in [Definition] to turn it on)",
-			gp->GetTitleIds().size(), _pathToUtf8(gp->GetRulesPath()));
-
 	// Apply core options before launch
 	libretro_apply_core_options();
 

@@ -419,6 +419,19 @@ void cemu_initForGame()
 	debugger_handleEntryBreakpoint(_entryPoint);
 	// load graphic packs
 	cemuLog_log(LogType::Force, "------- Activate graphic packs -------");
+#ifdef RETRO_CORE
+	// In the core there is no graphic pack window to see what was found: a
+	// pack that is not there, switched off (default = 1 in its [Definition]
+	// switches it on) or for another title is otherwise silent.
+	{
+		const uint64 titleId = CafeSystem::GetForegroundTitleId();
+		cemuLog_log(LogType::Force, "Graphic packs found: {}", GraphicPack2::GetGraphicPacks().size());
+		for (auto& gp : GraphicPack2::GetGraphicPacks())
+			cemuLog_log(LogType::Force, "  {}: {}, {}", gp->GetVirtualPath(),
+				gp->IsEnabled() ? "on" : "off",
+				gp->ContainsTitleId(titleId) ? "for this title" : "for other titles");
+	}
+#endif
 	GraphicPack2::ActivateForCurrentTitle();
 	// print audio log
 	IAudioAPI::PrintLogging();
