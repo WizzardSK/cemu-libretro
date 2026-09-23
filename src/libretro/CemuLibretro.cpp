@@ -486,14 +486,14 @@ static unsigned int s_frontend_upload_tex = 0;
 static std::mutex s_gate_mutex;
 static std::condition_variable s_gate_cv;
 static unsigned s_gate_tokens = 1;    // one, so the first frame does not wait
-static bool s_gate_released = false;  // shutting down: nothing waits any more
+static std::atomic_bool s_gate_released{false};  // shutting down: nothing waits any more
 
 // True between "the frontend asked for a frame" and "the frame was handed
 // over": the window in which the emulator is allowed to advance. The GPU
 // thread's own token is what paces the frame; this is what the emulated CPU
 // cores look at, since they must not consume tokens - they run many times per
 // frame - but they must not run outside the window either.
-static bool s_frame_permit = false;
+static std::atomic_bool s_frame_permit{false};
 
 // When retro_run last handed out a frame. The window above closes at every
 // swap, and holding the emulated cores to it starves everything the title
@@ -506,7 +506,8 @@ static bool s_frame_permit = false;
 // calling, and stand still only once it has stopped (#12): pausing is
 // retro_run not coming for well over a frame. The frames themselves stay paced
 // by the GPU thread's token, which this does not touch.
-static std::chrono::steady_clock::time_point s_last_grant{};
+// Nanoseconds on steady_clock, so the window can be read without the mutex.
+static std::atomic<int64_t> s_last_grant_ns{0};
 static constexpr auto kFrontendStoppedAfter = std::chrono::milliseconds(100);
 
 // Nonzero while something outside the frame loop needs the emulator to keep
@@ -514,7 +515,7 @@ static constexpr auto kFrontendStoppedAfter = std::chrono::milliseconds(100);
 // those threads to arrive somewhere would otherwise wait forever (see
 // libretro_context_destroy). A counter, not a flag, so overlapping holders
 // cannot open the gate for each other.
-static unsigned s_gate_hold_open = 0;
+static std::atomic<unsigned> s_gate_hold_open{0};
 
 // GPU thread, at a swap.
 //
@@ -529,7 +530,7 @@ void libretro_frame_gate_wait()
 	std::unique_lock lock(s_gate_mutex);
 	// The frame is delivered, so the window closes here rather than when the
 	// next one opens. The emulated cores keep going until the frontend has
-	// stopped asking altogether (s_last_grant); this thread waits for the next
+	// stopped asking altogether (s_last_grant_ns); this thread waits for the next
 	// token.
 	s_frame_permit = false;
 	s_gate_cv.wait(lock, [] { return s_gate_tokens > 0 || s_gate_released || s_gate_hold_open; });
@@ -548,13 +549,27 @@ void libretro_frame_window_wait()
 {
 	if (!s_game_loaded)
 		return;
+	// The state is written under s_gate_mutex but read here without it. This
+	// runs on every pass of the scheduler's idle loop - millions a second on
+	// the main core now that the cores are not parked between frames - and the
+	// GPU command processor takes it at every command. With the mutex on each
+	// of those, the idle loop held it nearly all the time and the GPU thread
+	// queued behind it at every command: 60 fps fell to 15. The lock is for
+	// waiting only.
+	auto open = [] {
+		const int64_t now = std::chrono::steady_clock::now().time_since_epoch().count();
+		return s_frame_permit.load(std::memory_order_acquire) ||
+			s_gate_released.load(std::memory_order_acquire) ||
+			s_gate_hold_open.load(std::memory_order_acquire) != 0 ||
+			now - s_last_grant_ns.load(std::memory_order_acquire) <
+				std::chrono::duration_cast<std::chrono::steady_clock::duration>(kFrontendStoppedAfter).count();
+	};
+	if (open())
+		return;
 	std::unique_lock lock(s_gate_mutex);
 	// Time only ever turns this from true to false; the way back is a grant,
-	// which notifies, so a plain predicate wait cannot miss it.
-	s_gate_cv.wait(lock, [] {
-		return s_frame_permit || s_gate_released || s_gate_hold_open ||
-			std::chrono::steady_clock::now() - s_last_grant < kFrontendStoppedAfter;
-	});
+	// which notifies under the mutex, so a predicate wait cannot miss it.
+	s_gate_cv.wait(lock, open);
 }
 
 // Lets the emulator run outside a frame for as long as the hold is held. For
@@ -579,7 +594,7 @@ static void libretro_frame_gate_grant()
 	std::lock_guard lock(s_gate_mutex);
 	s_gate_tokens = 1;
 	s_frame_permit = true;
-	s_last_grant = std::chrono::steady_clock::now();
+	s_last_grant_ns.store(std::chrono::steady_clock::now().time_since_epoch().count(), std::memory_order_release);
 	s_gate_cv.notify_all();
 }
 
