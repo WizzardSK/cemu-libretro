@@ -135,6 +135,7 @@ public:
 	// refusing - and a report that only says "too few samples" cannot tell
 	// them apart.
 	static void SetStatsLogging(bool enabled);
+	static bool IsStatsLogging() { return s_log_stats; }
 
 private:
 	static void AccountWrite(size_t offered, size_t written);

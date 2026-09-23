@@ -523,10 +523,25 @@ static std::atomic<unsigned> s_gate_hold_open{0};
 // waiting for the GPU thread, and the GPU thread swaps while it gets there -
 // so a gate that holds it then is holding it against a retro_run that cannot
 // be called yet, and the load never finishes. Boot swaps go straight through.
+// Where a frame's time goes (cemu_log_audio): the GPU thread's wait for a
+// token at the swap, and retro_run's own phases, reported once a second.
+static std::atomic<uint64_t> s_prof_gate_wait_us{0};
+static std::atomic<uint64_t> s_prof_frames_ready{0};
+
 void libretro_frame_gate_wait()
 {
 	if (!s_game_loaded)
 		return;
+	const auto waitStart = std::chrono::steady_clock::now();
+	struct AddWait
+	{
+		std::chrono::steady_clock::time_point start;
+		~AddWait()
+		{
+			s_prof_gate_wait_us.fetch_add(std::chrono::duration_cast<std::chrono::microseconds>(
+				std::chrono::steady_clock::now() - start).count(), std::memory_order_relaxed);
+		}
+	} addWait{waitStart};
 	std::unique_lock lock(s_gate_mutex);
 	// The frame is delivered, so the window closes here rather than when the
 	// next one opens. The emulated cores keep going until the frontend has
@@ -622,6 +637,7 @@ std::atomic_bool s_frame_ready{false};
 // speed of the other.
 void libretro_signal_frame_ready()
 {
+	s_prof_frames_ready.fetch_add(1, std::memory_order_relaxed);
 	{
 		std::lock_guard lock(s_frame_mutex);
 		s_frame_ready.store(true, std::memory_order_release);
@@ -5093,17 +5109,22 @@ RETRO_API void retro_run()
 	// Poll input
 	libretro_poll_input();
 
+	using prof_clock = std::chrono::steady_clock;
+	const auto profStart = prof_clock::now();
+	bool profTimedOut = false;
+
 	// Ask for a frame: the GPU thread is parked at the gate after the last swap.
 	libretro_frame_gate_grant();
 
 	// Wait for frame from GPU thread
 	{
 		std::unique_lock lock(s_frame_mutex);
-		s_frame_cv.wait_for(lock, std::chrono::milliseconds(33), [] {
+		profTimedOut = !s_frame_cv.wait_for(lock, std::chrono::milliseconds(33), [] {
 			return s_frame_ready.load();
 		});
 		s_frame_ready = false;
 	}
+	const auto profWaited = prof_clock::now();
 
 #ifdef ENABLE_VULKAN
 	// Vulkan: present via HW render interface
@@ -5247,9 +5268,39 @@ RETRO_API void retro_run()
 #endif // ENABLE_OPENGL
 
 	video_cb(RETRO_HW_FRAME_BUFFER_VALID, SCREEN_WIDTH, SCREEN_HEIGHT, 0);
+	const auto profPresented = prof_clock::now();
 
 	// Flush audio
 	LibretroAudioAPI::FlushAudio();
+
+	if (LibretroAudioAPI::IsStatsLogging())
+	{
+		static auto s_since = profStart;
+		static auto s_last_end = profStart;
+		static uint64_t s_runs = 0, s_timeouts = 0;
+		static int64_t s_wait_us = 0, s_present_us = 0, s_audio_us = 0, s_outside_us = 0;
+		const auto end = prof_clock::now();
+		auto us = [](auto d) { return (int64_t)std::chrono::duration_cast<std::chrono::microseconds>(d).count(); };
+		s_runs++;
+		s_timeouts += profTimedOut ? 1 : 0;
+		s_wait_us += us(profWaited - profStart);
+		s_present_us += us(profPresented - profWaited);
+		s_audio_us += us(end - profPresented);
+		s_outside_us += us(profStart - s_last_end);
+		s_last_end = end;
+		if (end - s_since >= std::chrono::seconds(1))
+		{
+			cemuLog_log(LogType::Force,
+				"frame: {} retro_run ({} timed out waiting for the GPU), {} frames ready; ms in retro_run: "
+				"wait {}, present {}, audio {}; ms outside retro_run {}; GPU thread waited at the gate {} ms",
+				s_runs, s_timeouts, s_prof_frames_ready.exchange(0),
+				s_wait_us / 1000, s_present_us / 1000, s_audio_us / 1000, s_outside_us / 1000,
+				s_prof_gate_wait_us.exchange(0) / 1000);
+			s_since = end;
+			s_runs = s_timeouts = 0;
+			s_wait_us = s_present_us = s_audio_us = s_outside_us = 0;
+		}
+	}
 }
 
 // ============================================================================
