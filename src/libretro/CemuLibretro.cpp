@@ -4934,6 +4934,46 @@ static void libretro_load_blit_gl_funcs()
 extern GLuint libretro_getBackbufferRBO();
 #endif
 
+// The end of every retro_run that got as far as a frame: hand the audio over,
+// and account for where the frame's time went (cemu_log_audio).
+static void libretro_finish_run(std::chrono::steady_clock::time_point start,
+	std::chrono::steady_clock::time_point waited, bool timedOut)
+{
+	using prof_clock = std::chrono::steady_clock;
+	const auto presented = prof_clock::now();
+
+	LibretroAudioAPI::FlushAudio();
+
+	if (LibretroAudioAPI::IsStatsLogging())
+	{
+		static auto s_since = start;
+		static auto s_last_end = start;
+		static uint64_t s_runs = 0, s_timeouts = 0;
+		static int64_t s_wait_us = 0, s_present_us = 0, s_audio_us = 0, s_outside_us = 0;
+		const auto end = prof_clock::now();
+		auto us = [](auto d) { return (int64_t)std::chrono::duration_cast<std::chrono::microseconds>(d).count(); };
+		s_runs++;
+		s_timeouts += timedOut ? 1 : 0;
+		s_wait_us += us(waited - start);
+		s_present_us += us(presented - waited);
+		s_audio_us += us(end - presented);
+		s_outside_us += us(start - s_last_end);
+		s_last_end = end;
+		if (end - s_since >= std::chrono::seconds(1))
+		{
+			cemuLog_log(LogType::Force,
+				"frame: {} retro_run ({} timed out waiting for the GPU), {} frames ready; ms in retro_run: "
+				"wait {}, present {}, audio {}; ms outside retro_run {}; GPU thread waited at the gate {} ms",
+				s_runs, s_timeouts, s_prof_frames_ready.exchange(0),
+				s_wait_us / 1000, s_present_us / 1000, s_audio_us / 1000, s_outside_us / 1000,
+				s_prof_gate_wait_us.exchange(0) / 1000);
+			s_since = end;
+			s_runs = s_timeouts = 0;
+			s_wait_us = s_present_us = s_audio_us = s_outside_us = 0;
+		}
+	}
+}
+
 RETRO_API void retro_run()
 {
 	if (s_ppc_process_exited.exchange(false, std::memory_order_acq_rel) && environ_cb)
@@ -5161,7 +5201,7 @@ RETRO_API void retro_run()
 			if (vkRenderer && !vkRenderer->m_presentImageHasContent)
 			{
 				video_cb(NULL, SCREEN_WIDTH, SCREEN_HEIGHT, 0);
-				LibretroAudioAPI::FlushAudio();
+				libretro_finish_run(profStart, profWaited, profTimedOut);
 				return;
 			}
 			if (vkRenderer && vkRenderer->m_presentImageView && s_vk_interface && s_vk_interface->set_image)
@@ -5180,7 +5220,7 @@ RETRO_API void retro_run()
 			}
 		}
 		video_cb(RETRO_HW_FRAME_BUFFER_VALID, SCREEN_WIDTH, SCREEN_HEIGHT, 0);
-		LibretroAudioAPI::FlushAudio();
+		libretro_finish_run(profStart, profWaited, profTimedOut);
 		return;
 	}
 #endif
@@ -5268,39 +5308,8 @@ RETRO_API void retro_run()
 #endif // ENABLE_OPENGL
 
 	video_cb(RETRO_HW_FRAME_BUFFER_VALID, SCREEN_WIDTH, SCREEN_HEIGHT, 0);
-	const auto profPresented = prof_clock::now();
-
 	// Flush audio
-	LibretroAudioAPI::FlushAudio();
-
-	if (LibretroAudioAPI::IsStatsLogging())
-	{
-		static auto s_since = profStart;
-		static auto s_last_end = profStart;
-		static uint64_t s_runs = 0, s_timeouts = 0;
-		static int64_t s_wait_us = 0, s_present_us = 0, s_audio_us = 0, s_outside_us = 0;
-		const auto end = prof_clock::now();
-		auto us = [](auto d) { return (int64_t)std::chrono::duration_cast<std::chrono::microseconds>(d).count(); };
-		s_runs++;
-		s_timeouts += profTimedOut ? 1 : 0;
-		s_wait_us += us(profWaited - profStart);
-		s_present_us += us(profPresented - profWaited);
-		s_audio_us += us(end - profPresented);
-		s_outside_us += us(profStart - s_last_end);
-		s_last_end = end;
-		if (end - s_since >= std::chrono::seconds(1))
-		{
-			cemuLog_log(LogType::Force,
-				"frame: {} retro_run ({} timed out waiting for the GPU), {} frames ready; ms in retro_run: "
-				"wait {}, present {}, audio {}; ms outside retro_run {}; GPU thread waited at the gate {} ms",
-				s_runs, s_timeouts, s_prof_frames_ready.exchange(0),
-				s_wait_us / 1000, s_present_us / 1000, s_audio_us / 1000, s_outside_us / 1000,
-				s_prof_gate_wait_us.exchange(0) / 1000);
-			s_since = end;
-			s_runs = s_timeouts = 0;
-			s_wait_us = s_present_us = s_audio_us = s_outside_us = 0;
-		}
-	}
+	libretro_finish_run(profStart, profWaited, profTimedOut);
 }
 
 // ============================================================================
