@@ -553,14 +553,14 @@ namespace snd_core
 	// 60 fps settled at 15, this machine's at 10, each retro_run spending
 	// ~100 ms handing over the ring's worth of audio. Paced by frames, the
 	// audio callback is what paces retro_run, at the frame rate the core
-	// reports. Capped at 100 ms, so a title that stalls does not come back
-	// with a burst to catch up, while a retro_run every 50 ms on a slow device
-	// still fits a grant on top of what is left of the last.
+	// reports. Capped at 250 ms, so a title that stalls does not come back
+	// with a long burst to catch up, while a slow device's retro_run, 100 ms
+	// or more apart, still fits a grant on top of what is left of the last.
 	static std::atomic<int32_t> s_libretro_ax_budget{0};
 
 	void AXOut_LibretroGrantSamples(int32_t samples)
 	{
-		constexpr int32_t kCap = 6 * 800;
+		constexpr int32_t kCap = 15 * 800; // 250 ms
 		int32_t cur = s_libretro_ax_budget.load(std::memory_order_relaxed);
 		while (!s_libretro_ax_budget.compare_exchange_weak(cur, std::min(cur + samples, kCap), std::memory_order_relaxed))
 			;

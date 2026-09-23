@@ -4992,6 +4992,10 @@ extern GLuint libretro_getBackbufferRBO();
 
 // The end of every retro_run that got as far as a frame: hand the audio over,
 // and account for where the frame's time went (cemu_log_audio).
+// How long the last hand-over of audio kept retro_run waiting in the
+// frontend's audio callback (see the audio grant in retro_run).
+static int64_t s_last_audio_wait_us = 0;
+
 static void libretro_finish_run(std::chrono::steady_clock::time_point start,
 	std::chrono::steady_clock::time_point waited, bool timedOut)
 {
@@ -4999,6 +5003,7 @@ static void libretro_finish_run(std::chrono::steady_clock::time_point start,
 	const auto presented = prof_clock::now();
 
 	LibretroAudioAPI::FlushAudio();
+	s_last_audio_wait_us = std::chrono::duration_cast<std::chrono::microseconds>(prof_clock::now() - presented).count();
 
 	if (LibretroAudioAPI::IsStatsLogging())
 	{
@@ -5211,23 +5216,31 @@ RETRO_API void retro_run()
 
 	// Ask for a frame: the GPU thread is parked at the gate after the last swap.
 	libretro_frame_gate_grant();
-	// And for the audio of the time since the last retro_run, at 48000 Hz.
+	// And for the audio of the time since the last retro_run, at 48000 Hz,
+	// less what of it went on waiting in the frontend's audio callback.
+	//
 	// Not a fixed 800 samples (48000 / 60): a device that manages retro_run
 	// only 20 times a second - sco8487's phone in Deus Ex - got a third of
 	// the audio it needed, and titles that follow their audio slowed down
-	// with it. Capped at 100 ms, so a stall does not grow into a longer wait
-	// in the audio callback and a bigger grant after it, which is how the
-	// wall-clock audio before 296e8e01 settled at 10 fps - but no lower: at
-	// 20 retro_run a second each one is 50 ms apart, and a 50 ms cap there
-	// cut every grant short (sco8487 heard it crackle).
+	// with it; where the phone's GPU holds each frame up for 100 ms, the
+	// audio of those 100 ms is still due.
+	//
+	// Not the plain time either. RetroArch waits in the audio callback until
+	// what it was given fits, so granting that wait too feeds it back: more
+	// audio, a longer wait, a larger grant - how the wall-clock audio before
+	// 296e8e01 drifted down to 10 fps. Leaving the wait out makes it undo
+	// itself instead: a long wait means a smaller grant next time, the
+	// frontend's buffer has room again, and the wait goes away. Capped at
+	// 250 ms against a stall.
 	{
 		static std::chrono::steady_clock::time_point s_last_audio_grant{};
 		const auto now = std::chrono::steady_clock::now();
 		int32_t samples = 800;
 		if (s_last_audio_grant.time_since_epoch().count() != 0)
 		{
-			const auto us = std::chrono::duration_cast<std::chrono::microseconds>(now - s_last_audio_grant).count();
-			samples = (int32_t)std::min<int64_t>(us * 48 / 1000, 4800);
+			const int64_t us = std::chrono::duration_cast<std::chrono::microseconds>(now - s_last_audio_grant).count()
+				- s_last_audio_wait_us;
+			samples = (int32_t)std::clamp<int64_t>(us * 48 / 1000, 0, 12000);
 		}
 		s_last_audio_grant = now;
 		snd_core::AXOut_LibretroGrantSamples(samples);
