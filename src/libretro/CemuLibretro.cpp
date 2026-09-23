@@ -523,6 +523,12 @@ static std::atomic<unsigned> s_gate_hold_open{0};
 // waiting for the GPU thread, and the GPU thread swaps while it gets there -
 // so a gate that holds it then is holding it against a retro_run that cannot
 // be called yet, and the load never finishes. Boot swaps go straight through.
+namespace snd_core
+{
+	// ax_out.cpp: one retro_run's worth of audio for AX to make.
+	void AXOut_LibretroGrantSamples(int32_t samples);
+}
+
 // Where a frame's time goes (cemu_log_audio): the GPU thread's wait for a
 // token at the swap, and retro_run's own phases, reported once a second.
 static std::atomic<uint64_t> s_prof_gate_wait_us{0};
@@ -5155,6 +5161,9 @@ RETRO_API void retro_run()
 
 	// Ask for a frame: the GPU thread is parked at the gate after the last swap.
 	libretro_frame_gate_grant();
+	// And for the frame's audio: 48000 / 60, the rate and frame rate
+	// retro_get_system_av_info reports.
+	snd_core::AXOut_LibretroGrantSamples(800);
 
 	// Wait for frame from GPU thread
 	{

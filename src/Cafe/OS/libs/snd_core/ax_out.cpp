@@ -544,9 +544,44 @@ namespace snd_core
 	std::atomic<uint64_t> g_ax_update_calls{0};
 	std::atomic<uint64_t> g_ax_update_passed{0};
 
+#ifdef RETRO_CORE
+	// Samples the frontend has asked for and AX has not made yet. In a libretro
+	// core the audio has to follow the frames the frontend asks for, not the
+	// wall clock: RetroArch blocks in the audio callback until what it was
+	// given has played, so audio made by the clock turns a slow frame into a
+	// longer wait in the next one, and a longer wait into more audio - NNshi's
+	// 60 fps settled at 15, this machine's at 10, each retro_run spending
+	// ~100 ms handing over the ring's worth of audio. Paced by frames, the
+	// audio callback is what paces retro_run, at the frame rate the core
+	// reports. Capped at a few frames, so a title that stalls does not come
+	// back with a burst to catch up.
+	static std::atomic<int32_t> s_libretro_ax_budget{0};
+
+	void AXOut_LibretroGrantSamples(int32_t samples)
+	{
+		constexpr int32_t kCap = 3 * 800;
+		int32_t cur = s_libretro_ax_budget.load(std::memory_order_relaxed);
+		while (!s_libretro_ax_budget.compare_exchange_weak(cur, std::min(cur + samples, kCap), std::memory_order_relaxed))
+			;
+	}
+#endif
+
 	void AXOut_update()
 	{
 		g_ax_update_calls.fetch_add(1, std::memory_order_relaxed);
+#ifdef RETRO_CORE
+		if (s_libretro_ax_budget.load(std::memory_order_relaxed) < AX_SAMPLES_PER_3MS_48KHZ)
+			return;
+		g_ax_update_passed.fetch_add(1, std::memory_order_relaxed);
+		if (snd_core::isInitialized() && numQueuedFramesSndGeneric == snd_core::getNumProcessedFrames())
+		{
+			AXOut_updateDevicePlayState(true);
+			snd_core::AXIst_QueueFrame();
+			numQueuedFramesSndGeneric++;
+			s_libretro_ax_budget.fetch_sub(AX_SAMPLES_PER_3MS_48KHZ, std::memory_order_relaxed);
+		}
+		return;
+#endif
 		constexpr static auto kTimeout = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::milliseconds(((IAudioAPI::kBlockCount * 3) / 4) * (AX_FRAMES_PER_GROUP * 3)));
 		constexpr static auto kWaitDuration = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::milliseconds(3));
 		constexpr static auto kWaitDurationFast = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::microseconds(2900));
