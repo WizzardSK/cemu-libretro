@@ -425,11 +425,13 @@ void cemu_initForGame()
 	// switches it on) or for another title is otherwise silent.
 	{
 		const uint64 titleId = CafeSystem::GetForegroundTitleId();
-		cemuLog_log(LogType::Force, "Graphic packs found: {}", GraphicPack2::GetGraphicPacks().size());
+		size_t forTitle = 0;
 		for (auto& gp : GraphicPack2::GetGraphicPacks())
-			cemuLog_log(LogType::Force, "  {}: {}, {}", gp->GetVirtualPath(),
-				gp->IsEnabled() ? "on" : "off",
-				gp->ContainsTitleId(titleId) ? "for this title" : "for other titles");
+			forTitle += gp->ContainsTitleId(titleId) ? 1 : 0;
+		cemuLog_log(LogType::Force, "Graphic packs found: {}, {} for this title", GraphicPack2::GetGraphicPacks().size(), forTitle);
+		for (auto& gp : GraphicPack2::GetGraphicPacks())
+			if (gp->ContainsTitleId(titleId))
+				cemuLog_log(LogType::Force, "  {}: {}", gp->GetVirtualPath(), gp->IsEnabled() ? "on" : "off");
 	}
 #endif
 	GraphicPack2::ActivateForCurrentTitle();
