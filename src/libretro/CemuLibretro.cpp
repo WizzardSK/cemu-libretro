@@ -673,6 +673,31 @@ static bool s_core_options_supported = false;
 enum class SelectedGraphicsAPI { OpenGL, Vulkan };
 static SelectedGraphicsAPI s_graphics_api = SelectedGraphicsAPI::OpenGL;
 
+// The size of the picture handed to the frontend. With Vulkan it follows the
+// internal resolution option, so a title rendered at 1440p or 4K reaches the
+// screen at that size rather than scaled down into 1280x720 (NNshi); it is
+// taken when the renderer's presentation image is made, and a change of the
+// option takes effect for the output at the next content load, as the GPU
+// thread draws into that image the whole time. The OpenGL path reads its
+// frames back into a fixed 1280x720 buffer and stays at that.
+static uint32_t s_out_width = SCREEN_WIDTH, s_out_height = SCREEN_HEIGHT;
+static bool s_out_size_taken = false;
+static uint32_t s_wanted_out_width = SCREEN_WIDTH, s_wanted_out_height = SCREEN_HEIGHT;
+
+// Before the presentation image exists - retro_get_system_av_info comes first -
+// the size is the one the option asks for.
+static uint32_t libretro_out_width()
+{
+	if (s_graphics_api != SelectedGraphicsAPI::Vulkan) return SCREEN_WIDTH;
+	return s_out_size_taken ? s_out_width : s_wanted_out_width;
+}
+
+static uint32_t libretro_out_height()
+{
+	if (s_graphics_api != SelectedGraphicsAPI::Vulkan) return SCREEN_HEIGHT;
+	return s_out_size_taken ? s_out_height : s_wanted_out_height;
+}
+
 // DRC layout state is shared with VulkanRenderer via LibretroDRC.h.
 #include "LibretroDRC.h"
 LibretroScreenLayout g_libretroScreenLayout = LibretroScreenLayout::Tv;
@@ -2241,6 +2266,8 @@ static void libretro_apply_core_options()
 		{
 			extern float g_libretroRenderScale;
 			g_libretroRenderScale = (float)newHeight / 720.0f;
+			s_wanted_out_width = newWidth;
+			s_wanted_out_height = newHeight;
 			if (log_cb && g_libretroRenderScale != 1.0f)
 				libretro_log(RETRO_LOG_INFO, "rendering screen-sized targets at %ux%u (%.2fx)\n",
 					newWidth, newHeight, g_libretroRenderScale);
@@ -2922,8 +2949,8 @@ RETRO_API void retro_get_system_info(struct retro_system_info* info)
 
 RETRO_API void retro_get_system_av_info(struct retro_system_av_info* info)
 {
-	info->geometry.base_width = SCREEN_WIDTH;
-	info->geometry.base_height = SCREEN_HEIGHT;
+	info->geometry.base_width = libretro_out_width();
+	info->geometry.base_height = libretro_out_height();
 	info->geometry.max_width = SCREEN_WIDTH * 4;
 	info->geometry.max_height = SCREEN_HEIGHT * 4;
 	info->geometry.aspect_ratio = 16.0f / 9.0f;
@@ -3655,6 +3682,14 @@ static void libretro_launch_game()
 			gp->SetEnabled(true);
 	}
 	libretro_log(RETRO_LOG_INFO, "Loaded %d graphic packs\n", (int)GraphicPack2::GetGraphicPacks().size());
+	// Say what was found, in log.txt: a pack that is not there, not switched
+	// on (default = 1 in its [Definition]) or not for this title is otherwise
+	// silent, and "no graphic pack detected" is all a user can tell.
+	cemuLog_log(LogType::Force, "Graphic packs found: {}", GraphicPack2::GetGraphicPacks().size());
+	for (auto& gp : GraphicPack2::GetGraphicPacks())
+		cemuLog_log(LogType::Force, "  {} - {}, {} title id(s), {}", gp->GetVirtualPath(),
+			gp->IsEnabled() ? "on" : "off (set default = 1 in [Definition] to turn it on)",
+			gp->GetTitleIds().size(), _pathToUtf8(gp->GetRulesPath()));
 
 	// Apply core options before launch
 	libretro_apply_core_options();
@@ -3916,8 +3951,14 @@ static void libretro_create_renderer()
 				g_renderer.reset(vkRenderer);
 				cemuLog_log(LogType::Force, "[libretro] renderer created");
 
-				// Create presentation image
-				vkRenderer->CreatePresentationImage(SCREEN_WIDTH, SCREEN_HEIGHT);
+				// Create presentation image, at the output size (see s_out_width)
+				if (!s_out_size_taken)
+				{
+					s_out_width = s_wanted_out_width;
+					s_out_height = s_wanted_out_height;
+					s_out_size_taken = true;
+				}
+				vkRenderer->CreatePresentationImage(s_out_width, s_out_height);
 
 				libretro_log(RETRO_LOG_INFO, "VulkanRenderer created with shared device\n");
 			}
@@ -4032,10 +4073,12 @@ static void libretro_context_reset()
 
 	// Set window info
 	auto& windowInfo = WindowSystem::GetWindowInfo();
-	windowInfo.width = SCREEN_WIDTH;
-	windowInfo.height = SCREEN_HEIGHT;
-	windowInfo.phys_width = SCREEN_WIDTH;
-	windowInfo.phys_height = SCREEN_HEIGHT;
+	// The blit into the presentation image fills the window, so the window is
+	// the output size.
+	windowInfo.width = libretro_out_width();
+	windowInfo.height = libretro_out_height();
+	windowInfo.phys_width = libretro_out_width();
+	windowInfo.phys_height = libretro_out_height();
 	windowInfo.dpi_scale = 1.0;
 	windowInfo.app_active = true;
 
@@ -4498,6 +4541,9 @@ static void libretro_stop_system_services()
 
 RETRO_API void retro_unload_game()
 {
+	// The next content takes the output size afresh from the option.
+	s_out_size_taken = false;
+
 	// Before anything else: stop handing the frontend audio. This used to be
 	// the line that mattered, back when Cemu's AX thread called the frontend
 	// directly and could outlive the close. It no longer can: AX writes into
@@ -4888,10 +4934,10 @@ bool libretro_get_touch_state(uint16_t* x, uint16_t* y)
 	// virtual canvas. In composite DRC modes (SBS / TopBottom / PiP) only the
 	// DRC sub-rect is the touchable area; clicks elsewhere don't belong on the
 	// GamePad. Map pointer → canvas → DRC sub-rect → GamePad touchscreen.
-	const int canvasX = (int)(((int32_t)s_input_state.touch_x + 0x7fff) * (int)SCREEN_WIDTH  / (2 * 0x7fff));
-	const int canvasY = (int)(((int32_t)s_input_state.touch_y + 0x7fff) * (int)SCREEN_HEIGHT / (2 * 0x7fff));
+	const int canvasX = (int)(((int32_t)s_input_state.touch_x + 0x7fff) * (int)libretro_out_width()  / (2 * 0x7fff));
+	const int canvasY = (int)(((int32_t)s_input_state.touch_y + 0x7fff) * (int)libretro_out_height() / (2 * 0x7fff));
 	int drcX, drcY, drcW, drcH;
-	LibretroDRC_ComputeViewport(true, (int)SCREEN_WIDTH, (int)SCREEN_HEIGHT, drcX, drcY, drcW, drcH);
+	LibretroDRC_ComputeViewport(true, (int)libretro_out_width(), (int)libretro_out_height(), drcX, drcY, drcW, drcH);
 	if (drcW <= 0 || drcH <= 0)
 		return false;
 	if (canvasX < drcX || canvasX >= drcX + drcW || canvasY < drcY || canvasY >= drcY + drcH)
@@ -5093,7 +5139,7 @@ RETRO_API void retro_run()
 			libretro_create_renderer();
 			libretro_prepare_and_launch_title();
 		}
-		video_cb(NULL, SCREEN_WIDTH, SCREEN_HEIGHT, 0);
+		video_cb(NULL, libretro_out_width(), libretro_out_height(), 0);
 		return;
 	}
 
@@ -5111,7 +5157,7 @@ RETRO_API void retro_run()
 			libretro_log(RETRO_LOG_ERROR, "could not create a renderer on the frontend's graphics context\n");
 			if (environ_cb)
 				environ_cb(RETRO_ENVIRONMENT_SHUTDOWN, nullptr);
-			video_cb(NULL, SCREEN_WIDTH, SCREEN_HEIGHT, 0);
+			video_cb(NULL, libretro_out_width(), libretro_out_height(), 0);
 			return;
 		}
 		try
@@ -5137,13 +5183,13 @@ RETRO_API void retro_run()
 				environ_cb(RETRO_ENVIRONMENT_SHUTDOWN, nullptr);
 		}
 		// The first frame belongs to the title, not to the load that just ran.
-		video_cb(NULL, SCREEN_WIDTH, SCREEN_HEIGHT, 0);
+		video_cb(NULL, libretro_out_width(), libretro_out_height(), 0);
 		return;
 	}
 
 	if (!s_game_loaded)
 	{
-		video_cb(NULL, SCREEN_WIDTH, SCREEN_HEIGHT, 0);
+		video_cb(NULL, libretro_out_width(), libretro_out_height(), 0);
 		return;
 	}
 
@@ -5161,9 +5207,25 @@ RETRO_API void retro_run()
 
 	// Ask for a frame: the GPU thread is parked at the gate after the last swap.
 	libretro_frame_gate_grant();
-	// And for the frame's audio: 48000 / 60, the rate and frame rate
-	// retro_get_system_av_info reports.
-	snd_core::AXOut_LibretroGrantSamples(800);
+	// And for the audio of the time since the last retro_run, at 48000 Hz.
+	// Not a fixed 800 samples (48000 / 60): a device that manages retro_run
+	// only 20 times a second - sco8487's phone in Deus Ex - got a third of
+	// the audio it needed, and titles that follow their audio slowed down
+	// with it. Capped at three frames' worth, so a stall does not grow into a
+	// longer wait in the audio callback and a bigger grant after it, which is
+	// how the wall-clock audio before 296e8e01 settled at 10 fps.
+	{
+		static std::chrono::steady_clock::time_point s_last_audio_grant{};
+		const auto now = std::chrono::steady_clock::now();
+		int32_t samples = 800;
+		if (s_last_audio_grant.time_since_epoch().count() != 0)
+		{
+			const auto us = std::chrono::duration_cast<std::chrono::microseconds>(now - s_last_audio_grant).count();
+			samples = (int32_t)std::min<int64_t>(us * 48 / 1000, 2400);
+		}
+		s_last_audio_grant = now;
+		snd_core::AXOut_LibretroGrantSamples(samples);
+	}
 
 	// Wait for frame from GPU thread - but not for long. retro_run has to keep
 	// coming at the 60 Hz the core reports whatever rate the title renders
@@ -5215,7 +5277,7 @@ RETRO_API void retro_run()
 			// the title is loaded, and a reset skips that window.
 			if (vkRenderer && !vkRenderer->m_presentImageHasContent)
 			{
-				video_cb(NULL, SCREEN_WIDTH, SCREEN_HEIGHT, 0);
+				video_cb(NULL, libretro_out_width(), libretro_out_height(), 0);
 				libretro_finish_run(profStart, profWaited, profTimedOut);
 				return;
 			}
@@ -5234,7 +5296,7 @@ RETRO_API void retro_run()
 					0, nullptr, VK_QUEUE_FAMILY_IGNORED);
 			}
 		}
-		video_cb(RETRO_HW_FRAME_BUFFER_VALID, SCREEN_WIDTH, SCREEN_HEIGHT, 0);
+		video_cb(RETRO_HW_FRAME_BUFFER_VALID, libretro_out_width(), libretro_out_height(), 0);
 		libretro_finish_run(profStart, profWaited, profTimedOut);
 		return;
 	}
@@ -5322,7 +5384,7 @@ RETRO_API void retro_run()
 	}
 #endif // ENABLE_OPENGL
 
-	video_cb(RETRO_HW_FRAME_BUFFER_VALID, SCREEN_WIDTH, SCREEN_HEIGHT, 0);
+	video_cb(RETRO_HW_FRAME_BUFFER_VALID, libretro_out_width(), libretro_out_height(), 0);
 	// Flush audio
 	libretro_finish_run(profStart, profWaited, profTimedOut);
 }
