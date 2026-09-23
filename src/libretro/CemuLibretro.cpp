@@ -495,6 +495,20 @@ static bool s_gate_released = false;  // shutting down: nothing waits any more
 // frame - but they must not run outside the window either.
 static bool s_frame_permit = false;
 
+// When retro_run last handed out a frame. The window above closes at every
+// swap, and holding the emulated cores to it starves everything the title
+// paces by the wall clock rather than by frames: AX asks for a 3 ms audio
+// frame, the title's AX thread on another core renders it, and only then is
+// the next one asked for. With the cores parked from the swap to the next
+// retro_run, that round trip fits once per video frame - 60 audio frames a
+// second where 333 are wanted, audio at under a fifth of real time. So the
+// cores keep running between frames for as long as the frontend is still
+// calling, and stand still only once it has stopped (#12): pausing is
+// retro_run not coming for well over a frame. The frames themselves stay paced
+// by the GPU thread's token, which this does not touch.
+static std::chrono::steady_clock::time_point s_last_grant{};
+static constexpr auto kFrontendStoppedAfter = std::chrono::milliseconds(100);
+
 // Nonzero while something outside the frame loop needs the emulator to keep
 // moving: the frame gate parks threads, and a handshake that waits for one of
 // those threads to arrive somewhere would otherwise wait forever (see
@@ -514,8 +528,9 @@ void libretro_frame_gate_wait()
 		return;
 	std::unique_lock lock(s_gate_mutex);
 	// The frame is delivered, so the window closes here rather than when the
-	// next one opens: from now until the frontend asks again, nothing should
-	// be running - the emulated cores included.
+	// next one opens. The emulated cores keep going until the frontend has
+	// stopped asking altogether (s_last_grant); this thread waits for the next
+	// token.
 	s_frame_permit = false;
 	s_gate_cv.wait(lock, [] { return s_gate_tokens > 0 || s_gate_released || s_gate_hold_open; });
 	if (s_gate_tokens > 0)
@@ -525,7 +540,8 @@ void libretro_frame_gate_wait()
 // Runs on: the emulated CPU threads and the GPU thread - everything that is
 // not the frame-pacing GPU swap itself: the emulated cores from the scheduler's
 // idle loop, and the GPU command processor at a command boundary. Neither may consume tokens - they come round many times
-// per frame - but neither may run outside the window either. The command
+// per frame - but neither may keep running once the frontend has stopped
+// calling retro_run. The command
 // processor has to be in here too: parked cores submit nothing, so a command
 // loop left running would spin on an empty ring instead of standing still.
 void libretro_frame_window_wait()
@@ -533,7 +549,12 @@ void libretro_frame_window_wait()
 	if (!s_game_loaded)
 		return;
 	std::unique_lock lock(s_gate_mutex);
-	s_gate_cv.wait(lock, [] { return s_frame_permit || s_gate_released || s_gate_hold_open; });
+	// Time only ever turns this from true to false; the way back is a grant,
+	// which notifies, so a plain predicate wait cannot miss it.
+	s_gate_cv.wait(lock, [] {
+		return s_frame_permit || s_gate_released || s_gate_hold_open ||
+			std::chrono::steady_clock::now() - s_last_grant < kFrontendStoppedAfter;
+	});
 }
 
 // Lets the emulator run outside a frame for as long as the hold is held. For
@@ -558,6 +579,7 @@ static void libretro_frame_gate_grant()
 	std::lock_guard lock(s_gate_mutex);
 	s_gate_tokens = 1;
 	s_frame_permit = true;
+	s_last_grant = std::chrono::steady_clock::now();
 	s_gate_cv.notify_all();
 }
 
