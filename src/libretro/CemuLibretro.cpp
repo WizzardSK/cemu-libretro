@@ -5165,10 +5165,16 @@ RETRO_API void retro_run()
 	// retro_get_system_av_info reports.
 	snd_core::AXOut_LibretroGrantSamples(800);
 
-	// Wait for frame from GPU thread
+	// Wait for frame from GPU thread - but not for long. retro_run has to keep
+	// coming at the 60 Hz the core reports whatever rate the title renders
+	// at, because each one is one frame's worth of audio: a 30 fps title
+	// waited on for up to 33 ms made retro_run itself 30 Hz and the audio half
+	// speed. 12 ms leaves a 60 fps frame that is a little late its chance;
+	// a frame that is not there by then shows up in the next retro_run, and
+	// this one presents the last image again.
 	{
 		std::unique_lock lock(s_frame_mutex);
-		profTimedOut = !s_frame_cv.wait_for(lock, std::chrono::milliseconds(33), [] {
+		profTimedOut = !s_frame_cv.wait_for(lock, std::chrono::milliseconds(12), [] {
 			return s_frame_ready.load();
 		});
 		s_frame_ready = false;
