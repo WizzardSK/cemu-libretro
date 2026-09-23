@@ -495,6 +495,12 @@ libretro-build-webos-aarch64:
     # triplet first (its own tools, and the ports x64-linux carries). The core's
     # compiler comes from the toolchain file, not from here.
     - unset CC CXX CPP CFLAGS CXXFLAGS CPPFLAGS LDFLAGS AR AS LD NM RANLIB OBJCOPY OBJDUMP
+    # It also exports the kernel build's ARCH, CROSS_COMPILE and KERNELDIR, and
+    # OpenSSL's Configure puts CROSS_COMPILE in front of the compiler the triplet
+    # gives it - an absolute path - so every object in the openssl port failed
+    # with "aarch64-webos-linux-gnu-/developer/.../aarch64-webos-linux-gnu-gcc:
+    # not found". Nothing here builds a kernel.
+    - unset ARCH CROSS_COMPILE KERNELDIR
     # The host is x86_64, so vcpkg can fetch its own cmake and ninja rather than
     # being held to the image's. That flag belongs to the aarch64 Linux job.
     - unset VCPKG_FORCE_SYSTEM_BINARIES
