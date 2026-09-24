@@ -27,3 +27,12 @@ endif()
 if(DEFINED ENV{WEBOS_PKG_CONFIG})
 	list(APPEND VCPKG_CMAKE_CONFIGURE_OPTIONS "-DPKG_CONFIG_EXECUTABLE=$ENV{WEBOS_PKG_CONFIG}")
 endif()
+
+# Everything here is linked into cemu_libretro.so, so it has to be position
+# independent. vcpkg's own Linux toolchain adds -fPIC, but with the SDK's file
+# chainloaded instead nothing does, and the first static library with a GOT
+# reference stopped the link: SDL3's SDL_dynapi.c.o, "relocation
+# R_AARCH64_ADR_PREL_PG_HI21 against symbol `stderr' ... can not be used".
+list(APPEND VCPKG_CMAKE_CONFIGURE_OPTIONS "-DCMAKE_POSITION_INDEPENDENT_CODE=ON")
+set(VCPKG_C_FLAGS "-fPIC")
+set(VCPKG_CXX_FLAGS "-fPIC")
