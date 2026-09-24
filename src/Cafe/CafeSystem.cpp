@@ -203,6 +203,11 @@ void InfoLog_TitleLoaded()
 {
 	uint64 titleId = CafeSystem::GetForegroundTitleId();
 	cemuLog_log(LogType::Force, "------- Loaded title -------");
+#ifdef RETRO_CORE
+	// The "Init" line that names the build is written before a libretro
+	// core's log.txt exists, so a log sent in never said which commit made it.
+	cemuLog_log(LogType::Force, "Build: {} (libretro)", BUILD_VERSION_WITH_NAME_STRING);
+#endif
 	cemuLog_log(LogType::Force, "TitleId: {:08x}-{:08x}", (uint32)(titleId >> 32), (uint32)(titleId & 0xFFFFFFFF));
 	cemuLog_log(LogType::Force, "TitleVersion: v{}", CafeSystem::GetForegroundTitleVersion());
 	CafeConsoleRegion region = CafeSystem::GetForegroundTitleRegion();
