@@ -68,6 +68,7 @@
 
 #include "Cafe/HW/MMU/MMU.h"
 #include "LibretroVkQueue.h"
+#include "libretro_core_options.h"
 
 // GL function needed for framebuffer readback (glBindFramebuffer is in Cemu's glext.h)
 #ifdef ENABLE_OPENGL
@@ -668,7 +669,6 @@ std::vector<uint32_t> s_libretro_framebuffer(SCREEN_WIDTH * SCREEN_HEIGHT);
 static auto& s_framebuffer = s_libretro_framebuffer; // alias for existing OpenGL code
 static bool s_use_hw_render = false;
 static bool s_hw_render_initialized = false;
-static bool s_core_options_supported = false;
 
 enum class SelectedGraphicsAPI { OpenGL, Vulkan };
 static SelectedGraphicsAPI s_graphics_api = SelectedGraphicsAPI::OpenGL;
@@ -1518,7 +1518,7 @@ static void libretro_init_paths()
 
 static const char* libretro_get_option_value(const char* key)
 {
-	// Don't gate on s_core_options_supported: some RetroArch versions return
+	// Don't gate on whether the options were accepted: some RetroArch versions return
 	// false from SET_VARIABLES even though they still happily serve values via
 	// GET_VARIABLE (reads cached value from the .opt file).
 	if (!environ_cb || !key)
@@ -2320,380 +2320,6 @@ static void libretro_apply_core_options()
 	}
 }
 
-// The default for an option whose value list does not start with it. A list
-// reads best in its own order - 1 to 5, or the screen layouts always in the
-// same sequence - and core options v2 carries the default separately, so it
-// does not have to be rotated to the front. A frontend that only speaks the
-// old flat list gets exactly that rotation, built below.
-static const char* libretro_option_default(const char* key)
-{
-	struct Entry
-	{
-		const char* key;
-		const char* value;
-	};
-	static const Entry entries[] = {
-		// These three read as a scale, and a list that starts at its default
-		// and then counts from the bottom reads as a mistake - 2, 1, 3, 4 for
-		// a latency, 45000 before 20000 for a quantum, 720p above 360p. The
-		// values are written in their own order above and the default named
-		// here instead, which is the same default either way.
-		// Six buttons at once, which no title asks for, so it can be on by
-		// default without taking anything away - and an overlay can carry it as
-		// a single button without the user configuring anything first.
-		{"cemu_next_screen_layout_button", "L + R + L2 + R2 + L3 + R3"},
-		// Off by default. The list reads best from the most useful setting
-		// down, but most titles never ask for a remote and every port that
-		// carries one costs twenty calls into the frontend per frame - so the
-		// setting that does nothing for most people should not be the one they
-		// pay for. Anything that does want a remote turns it on, and
-		// port1_shared is still there for the single-pad case.
-		{"cemu_audio_latency", "2"},
-		{"cemu_thread_quantum", "45000"},
-		{"cemu_internal_resolution", "1280x720"},
-		{"cemu_number_of_screen_layouts", "2"},
-		{"cemu_screen_layout2", "GamePad Screen"},
-		{"cemu_screen_layout3", "Side by Side"},
-		{"cemu_screen_layout4", "Top Bottom"},
-		{"cemu_screen_layout5", "Picture in Picture"},
-	};
-	for (const Entry& entry : entries)
-	{
-		if (std::strcmp(entry.key, key) == 0)
-			return entry.value;
-	}
-	return nullptr;
-}
-
-// Which submenu an option belongs under. Anything not named here sits at the
-// top level, which is where a new option lands until someone decides better.
-static const char* libretro_option_category(const char* key)
-{
-	struct Entry
-	{
-		const char* key;
-		const char* category;
-	};
-	static const Entry entries[] = {
-		{"cemu_number_of_screen_layouts", "screen"},
-		{"cemu_screen_layout1", "screen"},
-		{"cemu_screen_layout2", "screen"},
-		{"cemu_screen_layout3", "screen"},
-		{"cemu_screen_layout4", "screen"},
-		{"cemu_screen_layout5", "screen"},
-		{"cemu_next_screen_layout_button", "screen"},
-		{"cemu_drc_position", "screen"},
-
-		{"cemu_gpu_api", "video"},
-		{"cemu_internal_resolution", "video"},
-		{"cemu_upscale_filter", "video"},
-		{"cemu_downscale_filter", "video"},
-		{"cemu_fullscreen_scaling", "video"},
-
-		{"cemu_async_shader_compile", "shaders"},
-		{"cemu_precompiled_shaders", "shaders"},
-		{"cemu_accurate_shader_mul", "shaders"},
-		{"cemu_shader_fast_math", "shaders"},
-		{"cemu_gx2drawdone_sync", "shaders"},
-
-		{"cemu_cpu_mode", "system"},
-		{"cemu_console_language", "system"},
-		{"cemu_thread_quantum", "system"},
-
-		{"cemu_wua_output_dir", "convert"},
-		{"cemu_convert_to_wua", "convert"},
-
-
-
-		{"cemu_emulate_skylander_portal", "addons"},
-		{"cemu_emulate_infinity_base", "addons"},
-		{"cemu_emulate_dimensions_toypad", "addons"},
-
-		{"cemu_audio_latency", "audio"},
-
-		{"cemu_log_to_file", "logging"},
-		{"cemu_log_filesystem", "logging"},
-		{"cemu_log_thread_sync", "logging"},
-		{"cemu_log_system_api", "logging"},
-		{"cemu_log_texture_memory", "logging"},
-		{"cemu_log_input_api", "logging"},
-		{"cemu_log_audio", "logging"},
-		{"cemu_bc1_16bit", "video"},
-	};
-	for (const Entry& entry : entries)
-	{
-		if (std::strcmp(entry.key, key) == 0)
-			return entry.category;
-	}
-	return nullptr;
-}
-
-// The old flat list has one way of saying what the default is: put it first.
-// Options whose values are listed in their own order instead get rotated here,
-// so a frontend without categories still starts where it should.
-// "Description; a|b|c" as the two halves both option interfaces want: the text
-// the frontend shows, and the values it may pick from. Returns false when there
-// is no value list at all, which is the case each caller passes straight
-// through. Written once because v0 and v2 below both began by doing this, and
-// then walking the bar-separated list, by hand.
-static bool libretro_split_option(const char* text, std::string& desc, std::vector<std::string>& values)
-{
-	desc = text ? text : "";
-	values.clear();
-
-	const size_t split = desc.find(';');
-	if (split == std::string::npos)
-		return false;
-
-	std::string list = desc.substr(split + 1);
-	desc.erase(split);
-	while (!list.empty() && list.front() == ' ')
-		list.erase(list.begin());
-
-	size_t pos = 0;
-	while (pos <= list.size())
-	{
-		const size_t bar = list.find('|', pos);
-		std::string value = list.substr(pos, bar == std::string::npos ? std::string::npos : bar - pos);
-		if (!value.empty())
-			values.push_back(std::move(value));
-		if (bar == std::string::npos)
-			break;
-		pos = bar + 1;
-	}
-	return true;
-}
-
-static bool libretro_set_core_variables(retro_environment_t cb, const struct retro_variable* variables)
-{
-	static std::deque<std::string> storage;
-	static std::vector<struct retro_variable> rotated;
-
-	if (rotated.empty())
-	{
-		for (const struct retro_variable* var = variables; var->key; ++var)
-		{
-			const char* explicitDefault = libretro_option_default(var->key);
-			std::string desc;
-			std::vector<std::string> values;
-			if (!explicitDefault || !var->value || !libretro_split_option(var->value, desc, values))
-			{
-				rotated.push_back(*var);
-				continue;
-			}
-
-			// This interface has no default field: the first value is the
-			// default, so the list is rotated to put it there.
-			std::string rebuilt = explicitDefault;
-			for (const std::string& value : values)
-			{
-				if (value != explicitDefault)
-				{
-					rebuilt += '|';
-					rebuilt += value;
-				}
-			}
-
-			storage.push_back(desc + "; " + rebuilt);
-			rotated.push_back({var->key, storage.back().c_str()});
-		}
-		rotated.push_back({nullptr, nullptr});
-	}
-
-	return cb(RETRO_ENVIRONMENT_SET_VARIABLES, (void*)rotated.data());
-}
-
-// A frontend that speaks core options v2 gets the list as categories it can
-// page through - which is the only way to put the screen settings on a submenu
-// of their own. One that does not gets the flat list, which is where both come
-// from, so the two cannot drift apart.
-// What a config file stores and what a menu shows are not the same thing. The
-// values here are written the way the code reads them - lower case, words
-// joined by underscores - which is unreadable in a menu next to options that
-// spell theirs out. A v2 option can carry a label for each value, so give the
-// mechanical ones one, and leave what is already written for display (anything
-// with a capital or a space in it) and anything starting with a digit (a
-// resolution, a number of microseconds) alone.
-//
-// There used to be a table of per-value exceptions above this rule, holding the
-// two Wii Remote port values the rule read badly. Those values are gone with
-// the option - the ports are a frontend device type now - and every value left
-// reads correctly, so the exception is gone with them.
-static std::string libretro_option_value_label(const char* key, const std::string& value)
-{
-	(void)key;
-
-	if (value.empty() || value.front() < 'a' || value.front() > 'z')
-		return std::string();
-	for (const char c : value)
-	{
-		const bool plain = (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '_';
-		if (!plain)
-			return std::string();
-	}
-
-	std::string label = value;
-	bool startOfWord = true;
-	for (char& c : label)
-	{
-		if (c == '_')
-		{
-			c = ' ';
-			startOfWord = true;
-			continue;
-		}
-		if (startOfWord && c >= 'a' && c <= 'z')
-			c = (char)(c - 'a' + 'A');
-		startOfWord = false;
-	}
-	return label;
-}
-
-static bool libretro_set_core_options_v2(retro_environment_t cb, const struct retro_variable* variables)
-{
-	unsigned version = 0;
-	if (!cb(RETRO_ENVIRONMENT_GET_CORE_OPTIONS_VERSION, &version) || version < 2)
-		return false;
-
-	static std::deque<std::string> storage;
-	static std::vector<struct retro_core_option_v2_definition> definitions;
-	// The frontend shows the submenus in this order, so it is the order the
-	// list is read in: picture first, then what plays it, then the machine,
-	// with the tools at the end.
-	static struct retro_core_option_v2_category categories[] = {
-		{"video", "Video", "Resolution, scaling and frame pacing."},
-		{"shaders", "Shaders", "Shader translation, caching and compilation."},
-		{"screen", "Screen", "Which Wii U screen is shown, and how."},
-		{"audio", "Audio", "Sound output."},
-		// No Input category: what a port drives is a frontend device type, not
-		// a core option, and an empty submenu is worse than no submenu.
-		{"system", "System", "CPU, language and scheduling."},
-		{"addons", "Add-ons", "Skylanders, Infinity and Dimensions portals."},
-		{"logging", "Logging", "Extra log output, for diagnosing problems."},
-		{"convert", "Convert to WUA", "Write the loaded title out as a .wua archive."},
-		{nullptr, nullptr, nullptr},
-	};
-
-	// Rebuilt on every call rather than once: the destinations for a conversion
-	// are not known until content is loaded, so the core publishes its options
-	// again from retro_load_game. The strings stay in the deque - the frontend
-	// copies what it needs, but nothing here promises when.
-	definitions.clear();
-	{
-		auto keep = [](std::string value) -> const char* {
-			storage.push_back(std::move(value));
-			return storage.back().c_str();
-		};
-
-		for (const struct retro_variable* var = variables; var->key; ++var)
-		{
-			// An option the core declares is an option the frontend writes into
-			// its .opt file, so with nothing to convert to the pair is not
-			// declared at all - hiding them would still leave their names
-			// behind in there.
-			if (s_wua_destinations.empty() &&
-				(strcmp(var->key, "cemu_wua_output_dir") == 0 || strcmp(var->key, "cemu_convert_to_wua") == 0))
-				continue;
-
-			std::string desc;
-			std::vector<std::string> values;
-			libretro_split_option(var->value, desc, values);
-
-			const char* explicitDefault = libretro_option_default(var->key);
-
-			struct retro_core_option_v2_definition def{};
-			def.key = var->key;
-			def.desc = keep(desc);
-			def.category_key = libretro_option_category(var->key);
-
-			// What pressing it actually does, which is more than the name can
-			// carry: the conversion runs beside the title, which keeps playing.
-			if (strcmp(var->key, "cemu_convert_to_wua") == 0)
-				def.info = keep(std::string("Writes the title to the output directory as a .wua. "
-					"It keeps running while this happens."));
-
-			// Worth saying what the number is for, since it only means
-			// something on a device without BC support.
-			// Only means anything where BC has to be decompressed, so say so.
-			// The two below 720p are the reason this needs saying: they are not
-			// "worse quality" so much as "fewer pixels to draw".
-			if (strcmp(var->key, "cemu_internal_resolution") == 0)
-				def.info = keep(std::string("What the console renders at, before it is scaled to the output. "
-					"640x360 draws a quarter of the pixels of 720p."));
-
-			if (strcmp(var->key, "cemu_bc1_16bit") == 0)
-				def.info = keep(std::string("Halves what BC1 textures cost on a GPU that cannot sample BC, "
-					"at the price of one bit of green. No effect where BC is supported."));
-
-			if (strcmp(var->key, "cemu_log_texture_memory") == 0)
-				def.info = keep(std::string("Reports how much of the texture memory is BC "
-					"that had to be decompressed because this GPU cannot sample it."));
-
-			if (strcmp(var->key, "cemu_log_audio") == 0)
-				def.info = keep(std::string("Once a second, how many samples AX produced, how many "
-					"the ring had to drop, and how many the frontend took. For working out "
-					"which end of that chain audio is going missing at."));
-
-			if (strcmp(var->key, "cemu_log_input_api") == 0)
-				def.info = keep(std::string("Logs every controller call a title makes - which "
-					"pads it probed for and what it was told. Noisy; for a few seconds at a time."));
-
-			// The output directory is whatever the frontend turned out to
-			// allow, so its values are built here rather than written above.
-			if (strcmp(var->key, "cemu_wua_output_dir") == 0)
-			{
-				def.info = keep(s_wua_destinations.empty()
-					? fmt::format("Nothing to convert to: {}.", s_wua_unavailable_reason.empty()
-						? std::string("no destination is available")
-						: s_wua_unavailable_reason)
-					: std::string("Where the .wua is written. Needs room for it."));
-
-				size_t index = 0;
-				for (const LibretroWuaDestination& destination : s_wua_destinations)
-				{
-					if (index + 1 >= RETRO_NUM_CORE_OPTION_VALUES_MAX)
-						break;
-					def.values[index].value = keep(destination.path);
-					def.values[index].label = keep(destination.hasExisting
-						? fmt::format("{} ({}) - overwrites", destination.label, destination.path)
-						: fmt::format("{} ({})", destination.label, destination.path));
-					++index;
-				}
-				if (index == 0)
-				{
-					def.values[index].value = keep(std::string("unavailable"));
-					def.values[index].label = keep(std::string("Unavailable"));
-					++index;
-				}
-				def.default_value = def.values[0].value;
-				definitions.push_back(def);
-				continue;
-			}
-
-			size_t count = 0;
-			for (std::string& value : values)
-			{
-				if (count + 1 >= RETRO_NUM_CORE_OPTION_VALUES_MAX)
-					break;
-				const bool isDefault = explicitDefault ? (value == explicitDefault) : (count == 0);
-				const std::string label = libretro_option_value_label(var->key, value);
-				def.values[count].value = keep(std::move(value));
-				if (!label.empty())
-					def.values[count].label = keep(label);
-				if (isDefault)
-					def.default_value = def.values[count].value;
-				++count;
-			}
-
-			definitions.push_back(def);
-		}
-		definitions.push_back({});
-	}
-
-	struct retro_core_options_v2 options{categories, definitions.data()};
-	return cb(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_V2, &options);
-}
-
 static void libretro_publish_core_options(retro_environment_t cb);
 
 RETRO_API void retro_set_environment(retro_environment_t cb)
@@ -2795,52 +2421,66 @@ RETRO_API void retro_set_environment(retro_environment_t cb)
 // Published from retro_set_environment, and again from retro_load_game once
 // the destinations for a conversion are known - the option list carries them,
 // and they depend on the content.
+//
+// The definitions themselves live in libretro_core_options.h, in the layout
+// libretro's Crowdin scripts read: that is where the English texts are taken
+// from for translation, and where libretro_core_options_intl.h - the
+// translations - is generated next to. libretro_set_core_options there picks
+// the frontend's language and falls back to v1 or the flat v0 list for a
+// frontend that does not speak v2.
 static void libretro_publish_core_options(retro_environment_t cb)
 {
-	static const struct retro_variable variables[] = {
-		{"cemu_cpu_mode", "CPU Mode (restart); auto|singlecore_interpreter|singlecore_recompiler|multicore_recompiler|multicore_interpreter"},
-		{"cemu_console_language", "Console Language; English|Japanese|French|German|Italian|Spanish|Chinese|Korean|Dutch|Portuguese|Russian|Taiwanese"},
-		{"cemu_async_shader_compile", "Async Shader Compile; enabled|disabled"},
-		{"cemu_gx2drawdone_sync", "GX2DrawDone Sync; enabled|disabled"},
-		{"cemu_precompiled_shaders", "Precompiled Shaders; auto|enabled|disabled"},
-		{"cemu_accurate_shader_mul", "Accurate Shader Multiplication; enabled|disabled"},
-		{"cemu_shader_fast_math", "Shader Fast Math; enabled|disabled"},
-		{"cemu_upscale_filter", "Upscale Filter; linear|bicubic|bicubic_hermite|nearest"},
-		{"cemu_downscale_filter", "Downscale Filter; linear|bicubic|bicubic_hermite|nearest"},
-		{"cemu_internal_resolution", "Internal Resolution; 640x360|960x540|1280x720|1920x1080|2560x1440|3840x2160"},
-		{"cemu_fullscreen_scaling", "Fullscreen Scaling; keep_aspect|stretch"},
-		{"cemu_thread_quantum", "Thread Quantum; 20000|45000|60000|80000|100000"},
-		{"cemu_wua_output_dir", "Output Directory; <dynamic>"},
-		{"cemu_convert_to_wua", "Start Conversion to WUA; disabled|enabled"},
-		{"cemu_audio_latency", "Audio Latency; 1|2|3|4"},
-		{"cemu_emulate_skylander_portal", "Emulate Skylander Portal; disabled|enabled"},
-		{"cemu_emulate_infinity_base", "Emulate Infinity Base; disabled|enabled"},
-		{"cemu_emulate_dimensions_toypad", "Emulate Dimensions Toypad; disabled|enabled"},
-		{"cemu_number_of_screen_layouts", "# of Screen Layouts; 1|2|3|4|5"},
-		{"cemu_screen_layout1", "Layout 1; Default Screen|GamePad Screen|Side by Side|Top Bottom|Picture in Picture"},
-		{"cemu_screen_layout2", "Layout 2; Default Screen|GamePad Screen|Side by Side|Top Bottom|Picture in Picture"},
-		{"cemu_screen_layout3", "Layout 3; Default Screen|GamePad Screen|Side by Side|Top Bottom|Picture in Picture"},
-		{"cemu_screen_layout4", "Layout 4; Default Screen|GamePad Screen|Side by Side|Top Bottom|Picture in Picture"},
-		{"cemu_screen_layout5", "Layout 5; Default Screen|GamePad Screen|Side by Side|Top Bottom|Picture in Picture"},
-		{"cemu_next_screen_layout_button", "Next Screen Layout; Disabled|L + R + L2 + R2 + L3 + R3|Select + L3|Select + R3|Tab"},
-		{"cemu_drc_position", "GamePad Position; normal|swapped"},
-		{"cemu_log_to_file", "Write Cemu Log to log.txt; enabled|disabled"},
-		{"cemu_log_filesystem", "Log File Access (debugging); disabled|enabled"},
-		{"cemu_log_thread_sync", "Log Thread Synchronisation (debugging); disabled|enabled"},
-		{"cemu_log_system_api", "Log System API Calls (debugging); disabled|enabled"},
-		{"cemu_log_texture_memory", "Log Texture Memory (debugging); disabled|enabled"},
-		{"cemu_log_input_api", "Log Controller API Calls (debugging); disabled|enabled"},
-		{"cemu_log_audio", "Log Audio Pacing (debugging); disabled|enabled"},
-		{"cemu_bc1_16bit", "Reduce BC1 Texture Memory; disabled|enabled"},
-#if defined(ENABLE_VULKAN) && defined(ENABLE_OPENGL)
-		{"cemu_gpu_api", "Graphics API (restart); OpenGL|Vulkan"},
-#endif
-		{nullptr, nullptr},
+	// Only the conversion pair is decided here, and option_defs_us outlives
+	// this call, so every call starts from the array as written: a key dropped
+	// or a list filled in last time must not stick.
+	static const std::vector<struct retro_core_option_v2_definition> pristine(
+		std::begin(option_defs_us), std::end(option_defs_us));
+	std::copy(pristine.begin(), pristine.end(), option_defs_us);
+
+	// The frontend copies what it needs, but nothing here promises when, so
+	// the strings stay in the deque.
+	static std::deque<std::string> storage;
+	auto keep = [](std::string value) -> const char* {
+		storage.push_back(std::move(value));
+		return storage.back().c_str();
 	};
-	if (libretro_set_core_options_v2(cb, variables))
-		s_core_options_supported = true;
-	else
-		s_core_options_supported = libretro_set_core_variables(cb, variables);
+
+	for (struct retro_core_option_v2_definition& def : option_defs_us)
+	{
+		if (!def.key || strcmp(def.key, "cemu_wua_output_dir") != 0)
+			continue;
+
+		// An option the core declares is an option the frontend writes into
+		// its .opt file, so with nothing to convert to the pair is not
+		// declared at all - hiding them would still leave their names behind
+		// in there. They are the last two definitions, so ending the list here
+		// drops both and nothing else.
+		if (s_wua_destinations.empty())
+		{
+			def.key = nullptr;
+			break;
+		}
+
+		// The output directory is whatever the frontend turned out to allow,
+		// so its values are built here rather than written in the header.
+		size_t index = 0;
+		for (const LibretroWuaDestination& destination : s_wua_destinations)
+		{
+			if (index + 1 >= RETRO_NUM_CORE_OPTION_VALUES_MAX)
+				break;
+			def.values[index].value = keep(destination.path);
+			def.values[index].label = keep(destination.hasExisting
+				? fmt::format("{} ({}) - overwrites", destination.label, destination.path)
+				: fmt::format("{} ({})", destination.label, destination.path));
+			++index;
+		}
+		def.values[index] = {nullptr, nullptr};
+		def.default_value = def.values[0].value;
+		break;
+	}
+
+	bool categories_supported = false;
+	libretro_set_core_options(cb, &categories_supported);
 }
 
 RETRO_API void retro_set_video_refresh(retro_video_refresh_t cb) { video_cb = cb; }
