@@ -161,6 +161,10 @@ if(ENABLE_LIBRETRO)
 		if(ANDROID)
 			# No desktop GL and no X11 here - GLES/EGL plus the NDK libraries.
 			target_link_libraries(cemu_libretro PRIVATE EGL GLESv3 log android)
+		elseif(WEBOS)
+			# Nothing: no X11 and no desktop GL, and the core does not take GLES
+			# either - ENABLE_OPENGL is off here, and the EGL/GLX code in
+			# CemuLibretro.cpp is all behind it. Vulkan is loaded at run time.
 		else()
 			target_link_libraries(cemu_libretro PRIVATE GL EGL X11)
 		endif()
