@@ -12,9 +12,9 @@
 #include "egl.h"
 #undef EGL_EGL_PROTOTYPES
 
-// Android is BOOST_OS_LINUX as well, but it has no X11 and therefore no GLX -
-// the function loader goes through EGL there.
-#if !defined(__ANDROID__)
+// Android and webOS are BOOST_OS_LINUX as well, but have no X11 and therefore
+// no GLX - the function loader goes through EGL there.
+#if !defined(__ANDROID__) && !defined(WEBOS)
 
 // from Xlib
 #define Bool int
@@ -39,7 +39,7 @@ typedef struct __GLXFBConfigRec *GLXFBConfig;
 #undef True
 #undef False
 
-#endif // !__ANDROID__
+#endif // !__ANDROID__ && !WEBOS
 
 #endif
 
