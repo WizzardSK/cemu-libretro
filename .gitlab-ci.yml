@@ -508,9 +508,10 @@ libretro-build-webos-aarch64:
     # being held to the image's. That flag belongs to the aarch64 Linux job.
     - unset VCPKG_FORCE_SYSTEM_BINARIES
     # This image is built around the webOS SDK and has never run vcpkg, so write
-    # down what it does and does not carry - a trace here needs an account to
-    # read, an artifact does not - and install what is missing if that is
-    # allowed. Not every libretro image runs as root.
+    # down what it does and does not carry, and install what is missing if that
+    # is allowed. Not every libretro image runs as root. The notes go to the
+    # trace (after_script), not to an artifact: the buildbot packages every
+    # artifact of this job as a core.
     - |
       {
         head -2 /etc/os-release; id
@@ -539,11 +540,10 @@ libretro-build-webos-aarch64:
         echo "===== $f (tail)" >> ci-webos-debug.log
         tail -60 "$f" >> ci-webos-debug.log
       done
+      cat ci-webos-debug.log 2>/dev/null || true
   artifacts:
-    when: always
     expire_in: 1 week
     paths:
-      - ci-webos-debug.log
       - $LIBNAME
 
 ################################## APPLE EMBEDDED ############################
