@@ -24,12 +24,12 @@ bool VFSFileStream::IsRegularFile(const fs::path& path)
 	{
 		if (s_vfs_version >= 3 && s_vfs_interface->stat)
 		{
-			int32_t flags = s_vfs_interface->stat(path.string().c_str(), nullptr);
+			int32_t flags = s_vfs_interface->stat(_pathToUtf8(path).c_str(), nullptr);
 			return (flags & RETRO_VFS_STAT_IS_VALID) != 0 && (flags & RETRO_VFS_STAT_IS_DIRECTORY) == 0;
 		}
 		// Without stat the only question the frontend answers is whether it can
 		// open the path, which is the one that matters here anyway.
-		struct retro_vfs_file_handle* handle = s_vfs_interface->open(path.string().c_str(), RETRO_VFS_FILE_ACCESS_READ, RETRO_VFS_FILE_ACCESS_HINT_NONE);
+		struct retro_vfs_file_handle* handle = s_vfs_interface->open(_pathToUtf8(path).c_str(), RETRO_VFS_FILE_ACCESS_READ, RETRO_VFS_FILE_ACCESS_HINT_NONE);
 		if (!handle)
 			return false;
 		s_vfs_interface->close(handle);
@@ -44,7 +44,7 @@ bool VFSFileStream::IsDirectory(const fs::path& path)
 {
 	if (UsesVFS() && s_vfs_version >= 3 && s_vfs_interface->stat)
 	{
-		const int32_t flags = s_vfs_interface->stat(path.string().c_str(), nullptr);
+		const int32_t flags = s_vfs_interface->stat(_pathToUtf8(path).c_str(), nullptr);
 		return (flags & RETRO_VFS_STAT_IS_VALID) != 0 && (flags & RETRO_VFS_STAT_IS_DIRECTORY) != 0;
 	}
 	// Without stat there is no way to ask: a directory cannot be opened as a
@@ -60,7 +60,7 @@ std::optional<bool> VFSFileStream::IsReadOnly(const fs::path& path)
 	// two are different and the caller decides what to do with the silence.
 	if (UsesVFS() && s_vfs_version >= 5 && s_vfs_interface->stat)
 	{
-		const int32_t flags = s_vfs_interface->stat(path.string().c_str(), nullptr);
+		const int32_t flags = s_vfs_interface->stat(_pathToUtf8(path).c_str(), nullptr);
 		if ((flags & RETRO_VFS_STAT_IS_VALID) != 0)
 			return (flags & RETRO_VFS_STAT_IS_READONLY) != 0;
 	}
@@ -73,10 +73,10 @@ bool VFSFileStream::Exists(const fs::path& path)
 	{
 		if (s_vfs_version >= 3 && s_vfs_interface->stat)
 		{
-			const int32_t flags = s_vfs_interface->stat(path.string().c_str(), nullptr);
+			const int32_t flags = s_vfs_interface->stat(_pathToUtf8(path).c_str(), nullptr);
 			return (flags & RETRO_VFS_STAT_IS_VALID) != 0;
 		}
-		struct retro_vfs_file_handle* handle = s_vfs_interface->open(path.string().c_str(), RETRO_VFS_FILE_ACCESS_READ, RETRO_VFS_FILE_ACCESS_HINT_NONE);
+		struct retro_vfs_file_handle* handle = s_vfs_interface->open(_pathToUtf8(path).c_str(), RETRO_VFS_FILE_ACCESS_READ, RETRO_VFS_FILE_ACCESS_HINT_NONE);
 		if (handle)
 		{
 			s_vfs_interface->close(handle);
@@ -92,7 +92,7 @@ bool VFSFileStream::Exists(const fs::path& path)
 bool VFSFileStream::Remove(const fs::path& path)
 {
 	if (UsesVFS() && s_vfs_interface->remove)
-		return s_vfs_interface->remove(path.string().c_str()) == 0;
+		return s_vfs_interface->remove(_pathToUtf8(path).c_str()) == 0;
 	std::error_code ec;
 	return fs::remove(path, ec);
 }
@@ -100,7 +100,7 @@ bool VFSFileStream::Remove(const fs::path& path)
 bool VFSFileStream::Rename(const fs::path& from, const fs::path& to)
 {
 	if (UsesVFS() && s_vfs_interface->rename)
-		return s_vfs_interface->rename(from.string().c_str(), to.string().c_str()) == 0;
+		return s_vfs_interface->rename(_pathToUtf8(from).c_str(), _pathToUtf8(to).c_str()) == 0;
 	std::error_code ec;
 	fs::rename(from, to, ec);
 	return !ec;
@@ -151,7 +151,7 @@ VFSFileStream* VFSFileStream::openFile2(const fs::path& path, bool allowWrite)
 		// UPDATE_EXISTING is what separates opening a file from creating one:
 		// without it the frontend discards whatever the file already held.
 		unsigned int mode = allowWrite ? (RETRO_VFS_FILE_ACCESS_READ | RETRO_VFS_FILE_ACCESS_WRITE | RETRO_VFS_FILE_ACCESS_UPDATE_EXISTING) : RETRO_VFS_FILE_ACCESS_READ;
-		struct retro_vfs_file_handle* handle = s_vfs_interface->open(path.string().c_str(), mode, RETRO_VFS_FILE_ACCESS_HINT_NONE);
+		struct retro_vfs_file_handle* handle = s_vfs_interface->open(_pathToUtf8(path).c_str(), mode, RETRO_VFS_FILE_ACCESS_HINT_NONE);
 		if (handle)
 			return new VFSFileStream(handle);
 		return nullptr;
@@ -181,7 +181,7 @@ VFSFileStream* VFSFileStream::createFile2(const fs::path& path)
 		// No UPDATE_EXISTING here: creating a file means starting from empty,
 		// which is what FileStream::createFile2() does.
 		unsigned int mode = RETRO_VFS_FILE_ACCESS_READ | RETRO_VFS_FILE_ACCESS_WRITE;
-		struct retro_vfs_file_handle* handle = s_vfs_interface->open(path.string().c_str(), mode, RETRO_VFS_FILE_ACCESS_HINT_NONE);
+		struct retro_vfs_file_handle* handle = s_vfs_interface->open(_pathToUtf8(path).c_str(), mode, RETRO_VFS_FILE_ACCESS_HINT_NONE);
 		if (handle)
 			return new VFSFileStream(handle);
 		return nullptr;

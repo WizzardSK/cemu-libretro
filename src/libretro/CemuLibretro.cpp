@@ -1445,8 +1445,8 @@ static void libretro_init_paths()
 		return named;
 	};
 
-	fs::path sysPath = in_named_dir(fs::path(system_dir));
-	fs::path savePath = in_named_dir(fs::path(save_dir));
+	fs::path sysPath = in_named_dir(_utf8ToPath(system_dir));
+	fs::path savePath = in_named_dir(_utf8ToPath(save_dir));
 
 	std::error_code ec;
 	fs::create_directories(sysPath, ec);
@@ -1702,7 +1702,7 @@ static void libretro_collect_wua_destinations(bool force = false)
 			[&candidate](const LibretroWuaDestination& kept) { return kept.path == candidate.path; });
 		if (duplicate)
 			continue;
-		if (!VFSFileStream::IsDirectory(fs::path(candidate.path)))
+		if (!VFSFileStream::IsDirectory(_utf8ToPath(candidate.path)))
 			continue;
 		if (!libretro_directory_is_writable(candidate.path))
 		{
@@ -1710,7 +1710,7 @@ static void libretro_collect_wua_destinations(bool force = false)
 				candidate.path.c_str());
 			continue;
 		}
-		candidate.hasExisting = VFSFileStream::Exists(fs::path(libretro_path_join(candidate.path, outputName)));
+		candidate.hasExisting = VFSFileStream::Exists(_utf8ToPath(libretro_path_join(candidate.path, outputName)));
 		s_wua_destinations.push_back(std::move(candidate));
 	}
 
@@ -3151,12 +3151,12 @@ static void libretro_start_wua_conversion(TitleId baseTitleId, const fs::path& g
 	}
 
 	const std::string outputName = _pathToUtf8(gamePath.stem()) + ".wua";
-	const fs::path outputPath = fs::path(libretro_path_join(outputDir, outputName));
+	const fs::path outputPath = _utf8ToPath(libretro_path_join(outputDir, outputName));
 
 	// The preconditions are checked again here rather than trusted from the
 	// menu: that was built when the content loaded, and the folder is somebody
 	// else's to change in the meantime.
-	if (!VFSFileStream::IsDirectory(fs::path(outputDir)))
+	if (!VFSFileStream::IsDirectory(_utf8ToPath(outputDir)))
 	{
 		libretro_set_convert_status(fmt::format("Not converting: {} is not there any more", outputDir));
 		s_convert_finished = true;
@@ -3175,7 +3175,7 @@ static void libretro_start_wua_conversion(TitleId baseTitleId, const fs::path& g
 	{
 		const uintmax_t needed = libretro_title_input_size(titles);
 		std::error_code ec;
-		const fs::space_info space = fs::space(fs::path(outputDir), ec);
+		const fs::space_info space = fs::space(_utf8ToPath(outputDir), ec);
 		if (!ec && needed > 0 && space.available < needed)
 		{
 			libretro_set_convert_status(fmt::format("Not converting: {} MiB free in {}, {} MiB needed",
@@ -3958,7 +3958,7 @@ RETRO_API bool retro_load_game(const struct retro_game_info* game)
 	// Before the renderer, the context and the title: a load that cannot
 	// possibly succeed should fail while the frontend is still in a position to
 	// say so and stay in its menu.
-	if (!libretro_disc_key_available(fs::path(game->path)))
+	if (!libretro_disc_key_available(_utf8ToPath(game->path)))
 		return false;
 
 	// Re-decided below for this load; a stale value from a previous one would
