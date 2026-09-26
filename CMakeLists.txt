@@ -97,8 +97,10 @@ if (ENABLE_VCPKG)
 	endif()
 	# The libretro core forces ENABLE_WXWIDGETS OFF, so keep wxWidgets and its
 	# gtk3/cairo/... dependency tree out of the install plan for that build.
+	# SDL3 likewise: the core takes its input from the frontend (see the input
+	# backends below).
 	if (NOT ENABLE_LIBRETRO)
-		list(APPEND VCPKG_MANIFEST_FEATURES "gui")
+		list(APPEND VCPKG_MANIFEST_FEATURES "gui" "sdl")
 	endif()
 	# libusb is a feature rather than a plain dependency because iOS and tvOS
 	# have no USB API to build it against: its Darwin backend is IOKit's USB
@@ -216,6 +218,22 @@ option(ENABLE_DISCORD_RPC "Enables the Discord Rich Presence feature" ON)
 
 if (ENABLE_METAL AND NOT APPLE)
     message(FATAL_ERROR "Metal backend is only supported on Apple platforms")
+endif()
+
+# The libretro core gets its input from the frontend, through
+# LibretroControllerProvider, so the standalone's own controller backends are
+# left out of it. They were not idle there: InputManager started the DSU client
+# (a UDP socket and two threads) and the real-Wiimote provider (three threads
+# scanning HID and Bluetooth) in every core, and SDL3 was linked in whole for a
+# provider the core never starts. libusb stays - nsyshid passes real USB toy
+# portals through to the game with it, which the frontend cannot do.
+if (ENABLE_LIBRETRO)
+	set(ENABLE_SDL OFF CACHE BOOL "" FORCE)
+	set(ENABLE_HIDAPI OFF CACHE BOOL "" FORCE)
+	set(ENABLE_BLUEZ OFF CACHE BOOL "" FORCE)
+	set(ENABLE_XINPUT OFF CACHE BOOL "" FORCE)
+	set(ENABLE_DIRECTINPUT OFF CACHE BOOL "" FORCE)
+	add_compile_definitions(HAS_KEYBOARD=0 HAS_DSU=0 HAS_XINPUT=0)
 endif()
 
 # input backends

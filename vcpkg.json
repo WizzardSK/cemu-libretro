@@ -11,10 +11,6 @@
       "default-features": false
     },
     "rapidjson",
-    {
-      "name": "sdl3",
-      "default-features": false
-    },
     "boost-tokenizer",
     "boost-container",
     "boost-context",
@@ -67,6 +63,15 @@
       "description": "libusb, for the Wii U GamePad and USB controllers (not built where the platform has no USB API)",
       "dependencies": [
         "libusb"
+      ]
+    },
+    "sdl": {
+      "description": "SDL3, for the standalone's own controller support (not built by the libretro core, whose input comes from the frontend)",
+      "dependencies": [
+        {
+          "name": "sdl3",
+          "default-features": false
+        }
       ]
     },
     "gui": {
