@@ -82,6 +82,39 @@ static void log_cb(enum retro_log_level level, const char *fmt, ...)
 	va_end(ap);
 }
 
+// An OpenGL 4.5 core context on a hidden window, standing in for RetroArch's
+// glcore driver (on a runner without a GPU this is Mesa's llvmpipe).
+static struct retro_hw_render_callback *g_hw;
+static HGLRC g_glrc; static HDC g_dc;
+typedef HGLRC (WINAPI *PFNCCA)(HDC, HGLRC, const int *);
+static uintptr_t hw_get_fb(void) { return 0; }
+static retro_proc_address_t hw_get_proc(const char *sym)
+{
+	PROC p = wglGetProcAddress(sym);
+	if (!p || p == (PROC)1 || p == (PROC)2 || p == (PROC)3 || p == (PROC)-1)
+		p = GetProcAddress(GetModuleHandleA("opengl32.dll"), sym);
+	return (retro_proc_address_t)p;
+}
+static bool make_gl_context(void)
+{
+	WNDCLASSA wc = {0}; wc.lpfnWndProc = DefWindowProcA; wc.hInstance = GetModuleHandleA(NULL); wc.lpszClassName = "harness"; wc.style = CS_OWNDC;
+	RegisterClassA(&wc);
+	HWND w = CreateWindowA("harness", "harness", WS_OVERLAPPEDWINDOW, 0, 0, 640, 480, NULL, NULL, wc.hInstance, NULL);
+	g_dc = GetDC(w);
+	PIXELFORMATDESCRIPTOR pfd = { sizeof pfd, 1, PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER, PFD_TYPE_RGBA, 32 };
+	pfd.cDepthBits = 24; pfd.cStencilBits = 8;
+	SetPixelFormat(g_dc, ChoosePixelFormat(g_dc, &pfd), &pfd);
+	HGLRC legacy = wglCreateContext(g_dc); wglMakeCurrent(g_dc, legacy);
+	PFNCCA cca = (PFNCCA)wglGetProcAddress("wglCreateContextAttribsARB");
+	if (!cca) { printf("no wglCreateContextAttribsARB\n"); return false; }
+	const int attrs[] = { 0x2091, 4, 0x2092, 5, 0x9126, 0x00000001, 0 }; // 4.5 core
+	g_glrc = cca(g_dc, NULL, attrs);
+	wglMakeCurrent(g_dc, g_glrc); wglDeleteContext(legacy);
+	const char *(WINAPI *gs)(unsigned) = (void *)GetProcAddress(GetModuleHandleA("opengl32.dll"), "glGetString");
+	printf("GL: %s / %s\n", gs(0x1F00), gs(0x1F02)); fflush(stdout);
+	return g_glrc != NULL;
+}
+
 static bool env_cb(unsigned cmd, void *data)
 {
 	switch (cmd)
@@ -149,39 +182,6 @@ static void audio_cb(int16_t l, int16_t r) {}
 static void input_poll_cb(void) {}
 static int16_t input_state_cb(unsigned port, unsigned dev, unsigned idx, unsigned id) { return 0; }
 
-
-// An OpenGL 4.5 core context on a hidden window, standing in for RetroArch's
-// glcore driver (on a runner without a GPU this is Mesa's llvmpipe).
-static struct retro_hw_render_callback *g_hw;
-static HGLRC g_glrc; static HDC g_dc;
-typedef HGLRC (WINAPI *PFNCCA)(HDC, HGLRC, const int *);
-static uintptr_t hw_get_fb(void) { return 0; }
-static retro_proc_address_t hw_get_proc(const char *sym)
-{
-	PROC p = wglGetProcAddress(sym);
-	if (!p || p == (PROC)1 || p == (PROC)2 || p == (PROC)3 || p == (PROC)-1)
-		p = GetProcAddress(GetModuleHandleA("opengl32.dll"), sym);
-	return (retro_proc_address_t)p;
-}
-static bool make_gl_context(void)
-{
-	WNDCLASSA wc = {0}; wc.lpfnWndProc = DefWindowProcA; wc.hInstance = GetModuleHandleA(NULL); wc.lpszClassName = "harness"; wc.style = CS_OWNDC;
-	RegisterClassA(&wc);
-	HWND w = CreateWindowA("harness", "harness", WS_OVERLAPPEDWINDOW, 0, 0, 640, 480, NULL, NULL, wc.hInstance, NULL);
-	g_dc = GetDC(w);
-	PIXELFORMATDESCRIPTOR pfd = { sizeof pfd, 1, PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER, PFD_TYPE_RGBA, 32 };
-	pfd.cDepthBits = 24; pfd.cStencilBits = 8;
-	SetPixelFormat(g_dc, ChoosePixelFormat(g_dc, &pfd), &pfd);
-	HGLRC legacy = wglCreateContext(g_dc); wglMakeCurrent(g_dc, legacy);
-	PFNCCA cca = (PFNCCA)wglGetProcAddress("wglCreateContextAttribsARB");
-	if (!cca) { printf("no wglCreateContextAttribsARB\n"); return false; }
-	const int attrs[] = { 0x2091, 4, 0x2092, 5, 0x9126, 0x00000001, 0 }; // 4.5 core
-	g_glrc = cca(g_dc, NULL, attrs);
-	wglMakeCurrent(g_dc, g_glrc); wglDeleteContext(legacy);
-	const char *(WINAPI *gs)(unsigned) = (void *)GetProcAddress(GetModuleHandleA("opengl32.dll"), "glGetString");
-	printf("GL: %s / %s\n", gs(0x1F00), gs(0x1F02)); fflush(stdout);
-	return g_glrc != NULL;
-}
 
 static LONG WINAPI on_crash(EXCEPTION_POINTERS *ep)
 {
