@@ -177,16 +177,13 @@ if (APPLE)
 endif()
 
 if (UNIX AND NOT APPLE)
-	# None of the three exist on webOS: the buildroot carries no Wayland, no
-	# GameMode daemon and no BlueZ, and a TV has no Wiimote to pair over it.
+	# webOS: the buildroot carries no Wayland.
 	if (WEBOS)
 		set(CEMU_DESKTOP_SESSION_DEFAULT OFF)
 	else()
 		set(CEMU_DESKTOP_SESSION_DEFAULT ON)
 	endif()
 	option(ENABLE_WAYLAND "Build with Wayland support" ${CEMU_DESKTOP_SESSION_DEFAULT})
-	option(ENABLE_FERAL_GAMEMODE "Enables Feral Interactive GameMode Support" ${CEMU_DESKTOP_SESSION_DEFAULT})
-	option(ENABLE_BLUEZ "Build with Bluez support" ${CEMU_DESKTOP_SESSION_DEFAULT})
 endif()
 
 if (APPLE)
@@ -207,47 +204,17 @@ endif()
 option(ENABLE_OPENGL "Enables the OpenGL backend" ${ENABLE_OPENGL_DEFAULT})
 option(ENABLE_VULKAN "Enables the Vulkan backend" ON)
 option(ENABLE_METAL "Enables the Metal backend" ${ENABLE_METAL_DEFAULT})
-option(ENABLE_DISCORD_RPC "Enables the Discord Rich Presence feature" ON)
 
 if (ENABLE_METAL AND NOT APPLE)
     message(FATAL_ERROR "Metal backend is only supported on Apple platforms")
 endif()
 
-# The libretro core gets its input from the frontend, through
-# LibretroControllerProvider, so the standalone's own controller backends are
-# left out of it. They were not idle there: InputManager started the DSU client
-# (a UDP socket and two threads) and the real-Wiimote provider (three threads
-# scanning HID and Bluetooth) in every core, and SDL3 was linked in whole for a
-# provider the core never starts. libusb stays - nsyshid passes real USB toy
+# Input comes from the frontend (LibretroControllerProvider) and audio goes to
+# it (LibretroAudioAPI); the standalone's own backends - SDL, the DSU client,
+# the keyboard, real Wiimotes over hidapi/BlueZ, XInput, DirectInput, cubeb,
+# XAudio2, DirectSound - are gone. libusb stays: nsyshid passes real USB toy
 # portals through to the game with it, which the frontend cannot do.
-if (ENABLE_LIBRETRO)
-	set(ENABLE_SDL OFF CACHE BOOL "" FORCE)
-	set(ENABLE_HIDAPI OFF CACHE BOOL "" FORCE)
-	set(ENABLE_BLUEZ OFF CACHE BOOL "" FORCE)
-	set(ENABLE_XINPUT OFF CACHE BOOL "" FORCE)
-	set(ENABLE_DIRECTINPUT OFF CACHE BOOL "" FORCE)
-	add_compile_definitions(HAS_KEYBOARD=0 HAS_DSU=0 HAS_XINPUT=0)
-endif()
-
-# input backends
-if (WIN32)
-	option(ENABLE_XINPUT "Enables the usage of XInput" ON)
-	# DirectInput reaches for GetdfDIJoystick(), which comes with the MSVC DirectX SDK;
-	# MinGW's dinput.h only has the c_dfDIJoystick data it wraps. Same story for the
-	# DirectSound/XAudio2 audio backends below, so all of them are MSVC-only. Nothing is
-	# lost in the libretro build, where input and audio belong to the frontend anyway.
-	if (MSVC)
-		option(ENABLE_DIRECTINPUT "Enables the usage of DirectInput" ON)
-	else()
-		set(ENABLE_DIRECTINPUT OFF)
-	endif()
-	if (ENABLE_DIRECTINPUT)
-		add_compile_definitions(HAS_DIRECTINPUT)
-	endif()
-endif()
-
-option(ENABLE_HIDAPI "Build with HIDAPI" ON)
-option(ENABLE_SDL "Enables the SDLController backend" ON)
+#
 # Off on the Apple embedded platforms, where there is no USB API to talk to and
 # the dependency is not built either (see the manifest features above).
 if (CMAKE_SYSTEM_NAME STREQUAL "iOS" OR CMAKE_SYSTEM_NAME STREQUAL "tvOS" OR WEBOS)
@@ -261,24 +228,14 @@ if (ENABLE_LIBUSB)
 	add_compile_definitions(HAS_LIBUSB)
 endif()
 
-# audio backends
-if (WIN32)
-	option(ENABLE_DIRECTAUDIO "Enables the directaudio backend" ON)
-	option(ENABLE_XAUDIO "Enables the xaudio backend" ON)
-endif()
-option(ENABLE_CUBEB "Enabled cubeb backend" ON)
-
 if (ENABLE_LIBRETRO)
-	set(ENABLE_DISCORD_RPC OFF)
 	add_compile_definitions(ENABLE_LIBRETRO)
 	# All static libs must be compiled with -fPIC for shared library linking
 	set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 endif()
 
-# Disable cubeb for libretro builds (COM threading issues with WASAPI)
 if(ENABLE_LIBRETRO)
 	add_compile_definitions(RETRO_CORE)
-	set(ENABLE_CUBEB OFF CACHE BOOL "" FORCE)
 endif()
 
 find_package(Threads REQUIRED)
@@ -300,18 +257,13 @@ find_package(glm REQUIRED)
 find_package(fmt 12.1 REQUIRED)
 find_package(PNG REQUIRED)
 
-if(ENABLE_SDL)
-	find_package(SDL3 REQUIRED CONFIG REQUIRED COMPONENTS SDL3)
-	add_compile_definitions(HAS_SDL)
-endif()
-
 # glslang versions older than 11.11.0 define targets without a namespace
 if (NOT TARGET glslang::SPIRV AND TARGET SPIRV)
 	add_library(glslang::SPIRV ALIAS SPIRV)
 endif()
 
 # Android and webOS are UNIX as far as CMake is concerned, but have none of
-# this: no X11, no Wayland, no GTK, no BlueZ.
+# this: no X11 and no Wayland.
 if (UNIX AND NOT APPLE AND NOT ANDROID AND NOT WEBOS)
 	find_package(X11 REQUIRED)
 	if (ENABLE_WAYLAND)
@@ -326,12 +278,6 @@ if (UNIX AND NOT APPLE AND NOT ANDROID AND NOT WEBOS)
 		target_include_directories(CemuWaylandProtocols PUBLIC "${CMAKE_CURRENT_BINARY_DIR}")
 		target_include_directories(CemuWaylandProtocols PRIVATE ${Wayland_INCLUDE_DIRS})
 		add_compile_definitions(HAS_WAYLAND)
-	endif()
-
-	if(ENABLE_BLUEZ)
-		find_package(bluez REQUIRED)
-		set(SUPPORTS_WIIMOTE ON)
-		add_compile_definitions(HAS_BLUEZ)
 	endif()
 
 endif()
@@ -357,39 +303,6 @@ if (ENABLE_METAL)
     include_directories(${CMAKE_SOURCE_DIR}/dependencies/metal-cpp)
 
     add_compile_definitions(ENABLE_METAL)
-endif()
-
-if (ENABLE_DISCORD_RPC)
-	add_compile_definitions(ENABLE_DISCORD_RPC)
-endif()
-
-if (ENABLE_HIDAPI)
-	set(SUPPORTS_WIIMOTE ON)
-	add_compile_definitions(HAS_HIDAPI)
-endif ()
-
-if(UNIX AND NOT APPLE)
-	if(ENABLE_FERAL_GAMEMODE)
-		add_compile_definitions(ENABLE_FERAL_GAMEMODE)
-		add_subdirectory(dependencies/gamemode EXCLUDE_FROM_ALL)
-		target_include_directories(gamemode INTERFACE ./dependencies/gamemode/lib)
-	endif()
-endif()
-
-if (ENABLE_CUBEB)
-	if (NOT ENABLE_VCPKG)
-	    find_package(cubeb)
-	endif()
-	if (NOT cubeb_FOUND)
-		option(BUILD_TESTS "" OFF)
-		option(BUILD_TOOLS "" OFF)
-		option(BUNDLE_SPEEX "" OFF)
-		set(USE_WINMM OFF CACHE BOOL "")
-		add_subdirectory("dependencies/cubeb" EXCLUDE_FROM_ALL SYSTEM)
-		set_property(TARGET cubeb PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
-		add_library(cubeb::cubeb ALIAS cubeb)
-	endif()
-	add_compile_definitions("HAS_CUBEB=1")
 endif()
 
 add_subdirectory("dependencies/ih264d" EXCLUDE_FROM_ALL)

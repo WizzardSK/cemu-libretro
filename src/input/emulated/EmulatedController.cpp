@@ -2,9 +2,6 @@
 
 #include "input/api/Controller.h"
 
-#ifdef SUPPORTS_WIIMOTE
-#include "input/api/Wiimote/NativeWiimoteController.h"
-#endif
 
 std::string_view EmulatedController::type_to_string(Type type)
 {
@@ -131,15 +128,6 @@ bool EmulatedController::has_second_motion() const
 		if(controller->use_motion())
 		{
 			// if wiimote has nunchuck connected, we use its acceleration
-            #if SUPPORTS_WIIMOTE
-            if(controller->api() == InputAPI::Wiimote)
-			{
-				if(((NativeWiimoteController*)controller.get())->get_extension() == NativeWiimoteController::Nunchuck)
-				{
-					return true;
-				}
-			}
-            #endif
 			motion++;
 		}
 	}
@@ -156,15 +144,6 @@ MotionSample EmulatedController::get_second_motion_data() const
 		if (controller->use_motion())
 		{
 			// if wiimote has nunchuck connected, we use its acceleration
-            #ifdef SUPPORTS_WIIMOTE
-			if (controller->api() == InputAPI::Wiimote)
-			{
-				if (((NativeWiimoteController*)controller.get())->get_extension() == NativeWiimoteController::Nunchuck)
-				{
-					return ((NativeWiimoteController*)controller.get())->get_nunchuck_motion_sample();
-				}
-			}
-			#endif
 
 			motion++;
 			if(motion == 2)
@@ -222,11 +201,6 @@ void EmulatedController::add_controller(std::shared_ptr<ControllerBase> controll
 {
 	controller->connect();
 
-    #ifdef SUPPORTS_WIIMOTE
-    if (const auto wiimote = std::dynamic_pointer_cast<NativeWiimoteController>(controller)) {
-		wiimote->set_player_index(m_player_index);
-	}
-    #endif
 	std::scoped_lock lock(m_mutex);
 	m_controllers.emplace_back(std::move(controller));
 }

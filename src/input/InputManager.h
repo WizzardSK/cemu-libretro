@@ -1,24 +1,6 @@
 #pragma once
 
-#if HAS_DIRECTINPUT
-#include "input/api/DirectInput/DirectInputControllerProvider.h"
-#endif
-#if BOOST_OS_WINDOWS
-#include "input/api/XInput/XInputControllerProvider.h"
-#endif
-
-#ifdef SUPPORTS_WIIMOTE
-#include "input/api/Wiimote/WiimoteControllerProvider.h"
-#endif
-
-#ifdef HAS_SDL
-#include "input/api/SDL/SDLControllerProvider.h"
-#endif
-
-#include "input/api/Keyboard/KeyboardControllerProvider.h"
 #include "input/api/Libretro/LibretroControllerProvider.h"
-#include "input/api/DSU/DSUControllerProvider.h"
-#include "input/api/GameCube/GameCubeControllerProvider.h"
 
 #include "input/emulated/VPADController.h"
 #include "input/emulated/WPADController.h"

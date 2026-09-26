@@ -1,7 +1,4 @@
 #include "IAudioInputAPI.h"
-#if HAS_CUBEB
-#include "CubebInputAPI.h"
-#endif
 
 std::shared_mutex g_audioInputMutex;
 AudioInputAPIPtr g_inputAudio;
@@ -22,9 +19,6 @@ void IAudioInputAPI::PrintLogging()
 
 void IAudioInputAPI::InitializeStatic()
 {
-#if HAS_CUBEB
-	s_availableApis[Cubeb] = CubebInputAPI::InitializeStatic();
-#endif
 }
 
 bool IAudioInputAPI::IsAudioInputAPIAvailable(AudioInputAPI api)
@@ -43,13 +37,6 @@ AudioInputAPIPtr IAudioInputAPI::CreateDevice(AudioInputAPI api, const DeviceDes
 
 	switch(api)
 	{
-#if HAS_CUBEB
-	case Cubeb:
-	{
-		const auto tmp = std::dynamic_pointer_cast<CubebInputAPI::CubebDeviceDescription>(device);
-		return std::make_unique<CubebInputAPI>(tmp->GetDeviceId(), samplerate, channels, samples_per_block, bits_per_sample);
-	}
-#endif
 	default:
 		throw std::runtime_error(fmt::format("invalid audio api: {}", api));
 	}
@@ -62,12 +49,6 @@ std::vector<IAudioInputAPI::DeviceDescriptionPtr> IAudioInputAPI::GetDevices(Aud
 	
 	switch(api)
 	{
-#if HAS_CUBEB
-	case Cubeb:
-	{
-		return CubebInputAPI::GetDevices();
-	}
-#endif
 	default:
 		throw std::runtime_error(fmt::format("invalid audio api: {}", api));
 	}

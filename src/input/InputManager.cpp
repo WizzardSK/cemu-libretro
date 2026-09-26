@@ -25,34 +25,8 @@ InputManager::InputManager()
 		}
 	}
 	*/
-#if HAS_KEYBOARD
-	create_provider<KeyboardControllerProvider>();
-#endif
 #if HAS_LIBRETRO
 	create_provider<LibretroControllerProvider>();
-#endif
-// In a libretro core the frontend owns input and LibretroControllerProvider
-// above already covers it, so SDL would only enumerate the same pads a second
-// time. On Android it does worse than that: SDL_InitSubSystem fails without the
-// Java glue a core does not have, InitSDL throws on its own thread, and the
-// process aborts before a game ever boots (issue #5).
-#if defined(HAS_SDL) && !HAS_LIBRETRO
-	create_provider<SDLControllerProvider>();
-#endif
-#if HAS_XINPUT
-	create_provider<XInputControllerProvider>();
-#endif
-#if HAS_DIRECTINPUT
-	create_provider<DirectInputControllerProvider>();
-#endif
-#if HAS_DSU
-	create_provider<DSUControllerProvider>();
-#endif
-#if defined(HAS_GAMECUBE) && HAS_GAMECUBE && defined(HAS_LIBUSB)
-	create_provider<GameCubeControllerProvider>();
-#endif
-#if HAS_WIIMOTE
-	create_provider<WiimoteControllerProvider>();
 #endif
 
 	m_update_thread_shutdown.store(false);
