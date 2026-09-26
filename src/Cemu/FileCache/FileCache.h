@@ -94,3 +94,7 @@ private:
 
 	std::recursive_mutex mutex;
 };
+
+// Writes out queued cache entries and ends the writer thread (it restarts on
+// the next write). For a libretro core to call before it is unloaded.
+void FileCache_StopAsyncWriter();

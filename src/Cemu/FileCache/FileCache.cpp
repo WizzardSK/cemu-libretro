@@ -16,19 +16,27 @@ struct FileCacheAsyncJob
 
 struct _FileCacheAsyncWriter
 {
-	_FileCacheAsyncWriter()
+	// The thread is started by the first write rather than by the constructor.
+	// This object is a static, so a constructor-started thread ran from the
+	// moment the library was loaded, and the only thing that ever stopped it
+	// was the destructor - which in a libretro core runs inside FreeLibrary,
+	// under the loader lock, where the join waits for a thread that cannot
+	// exit without that same lock. RetroArch then hung for good on closing
+	// content (seen with the MinGW build). Stop() is called from retro_deinit
+	// instead, before the library goes, and leaves the destructor nothing to do.
+	~_FileCacheAsyncWriter()
 	{
-		m_isRunning.store(true);
-		m_fileCacheThread = std::thread(&_FileCacheAsyncWriter::FileCacheThread, this);
+		Stop();
 	}
 
-	~_FileCacheAsyncWriter()
+	// Writes out whatever is queued and ends the thread. A later AddJob starts
+	// a new one.
+	void Stop()
 	{
 		{
 			// Under the lock: the thread checks m_isRunning only after waking,
 			// so a stop set while it is between "no work" and wait() misses the
-			// notify and the join below never returns. As a static destructor
-			// that is a process that will not exit.
+			// notify and the join below never returns.
 			std::lock_guard lock(m_fileCacheMutex);
 			m_isRunning.store(false);
 		}
@@ -47,6 +55,11 @@ struct _FileCacheAsyncWriter
 
 		std::unique_lock lock(m_fileCacheMutex);
 		m_writeRequests.emplace_back(std::move(async));
+		if (!m_fileCacheThread.joinable())
+		{
+			m_isRunning.store(true);
+			m_fileCacheThread = std::thread(&_FileCacheAsyncWriter::FileCacheThread, this);
+		}
 
 		lock.unlock();
 		m_fileCacheCondVar.notify_one();
@@ -59,11 +72,14 @@ private:
 		while (true)
 		{
 			std::unique_lock lock(m_fileCacheMutex);
+			// Checked before waiting as well as after: a Stop() that came while
+			// this thread was busy writing has already notified, and waiting
+			// for it again would never return.
 			while (m_writeRequests.empty())
 			{
-				m_fileCacheCondVar.wait(lock);
 				if (!m_isRunning.load(std::memory_order::relaxed))
 					return;
+				m_fileCacheCondVar.wait(lock);
 			}
 
 			std::vector<FileCacheAsyncJob> requestsCopy;
@@ -81,8 +97,13 @@ private:
 	std::mutex m_fileCacheMutex;
 	std::condition_variable m_fileCacheCondVar;
 	std::vector<FileCacheAsyncJob> m_writeRequests;
-	std::atomic_bool m_isRunning;
+	std::atomic_bool m_isRunning{false};
 }FileCacheAsyncWriter;
+
+void FileCache_StopAsyncWriter()
+{
+	FileCacheAsyncWriter.Stop();
+}
 
 #define FILECACHE_MAGIC_V1					0x8371b694 // used prior to Cemu 1.7.4, only supported caches up to 4GB
 #define FILECACHE_MAGIC_V2					0x8371b695 // added support for large caches

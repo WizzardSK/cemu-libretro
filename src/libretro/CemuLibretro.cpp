@@ -21,6 +21,7 @@
 #include "Cafe/OS/libs/coreinit/coreinit_Thread.h"
 #include "Cafe/OS/common/OSCommon.h"
 #include "Cafe/OS/RPL/rpl_structs.h"
+#include "Cemu/FileCache/FileCache.h"
 #include "Cafe/TitleList/TitleList.h"
 #include "Cafe/TitleList/TitleInfo.h"
 #include "Cafe/TitleList/SaveList.h"
@@ -4400,6 +4401,11 @@ RETRO_API void retro_deinit()
 	// frontend never exits. Until those services can be stopped without
 	// blocking, the threads are left as they are.
 	CafeTitleList::Shutdown();
+
+	// The shader cache writer is a thread owned by a static. Left to the
+	// static's destructor, it is joined inside FreeLibrary under the loader
+	// lock, which the thread needs in order to exit: the frontend hangs.
+	FileCache_StopAsyncWriter();
 
 	s_initialized = false;
 }
