@@ -45,8 +45,6 @@ extern "C" {
 #define CATEGORY_SHADERS_INFO_0_AR NULL
 #define CATEGORY_SCREEN_LABEL_AR NULL
 #define CATEGORY_SCREEN_INFO_0_AR NULL
-#define CATEGORY_AUDIO_LABEL_AR NULL
-#define CATEGORY_AUDIO_INFO_0_AR NULL
 #define CATEGORY_SYSTEM_LABEL_AR NULL
 #define CATEGORY_SYSTEM_INFO_0_AR NULL
 #define CATEGORY_ADDONS_LABEL_AR NULL
@@ -97,7 +95,6 @@ extern "C" {
 #define OPTION_VAL_KEEP_ASPECT_AR NULL
 #define OPTION_VAL_STRETCH_AR NULL
 #define CEMU_THREAD_QUANTUM_LABEL_AR NULL
-#define CEMU_AUDIO_LATENCY_LABEL_AR NULL
 #define CEMU_EMULATE_SKYLANDER_PORTAL_LABEL_AR NULL
 #define CEMU_EMULATE_INFINITY_BASE_LABEL_AR NULL
 #define CEMU_EMULATE_DIMENSIONS_TOYPAD_LABEL_AR NULL
@@ -144,7 +141,6 @@ struct retro_core_option_v2_category option_cats_ar[] = {
 	{ "video", CATEGORY_VIDEO_LABEL_AR, CATEGORY_VIDEO_INFO_0_AR },
 	{ "shaders", CATEGORY_SHADERS_LABEL_AR, CATEGORY_SHADERS_INFO_0_AR },
 	{ "screen", CATEGORY_SCREEN_LABEL_AR, CATEGORY_SCREEN_INFO_0_AR },
-	{ "audio", CATEGORY_AUDIO_LABEL_AR, CATEGORY_AUDIO_INFO_0_AR },
 	// No Input category: what a port drives is a frontend device type, not
 	// a core option, and an empty submenu is worse than no submenu.
 	{ "system", CATEGORY_SYSTEM_LABEL_AR, CATEGORY_SYSTEM_INFO_0_AR },
@@ -346,22 +342,6 @@ struct retro_core_option_v2_definition option_defs_ar[] = {
 			{ NULL, NULL },
 		},
 		"45000"
-	},
-	{
-		"cemu_audio_latency",
-		CEMU_AUDIO_LATENCY_LABEL_AR,
-		NULL,
-		NULL,
-		NULL,
-		"audio",
-		{
-			{ "1", NULL },
-			{ "2", NULL },
-			{ "3", NULL },
-			{ "4", NULL },
-			{ NULL, NULL },
-		},
-		"2"
 	},
 	{
 		"cemu_emulate_skylander_portal",
@@ -708,8 +688,6 @@ struct retro_core_options_v2 options_ar = {
 #define CATEGORY_SHADERS_INFO_0_AST NULL
 #define CATEGORY_SCREEN_LABEL_AST NULL
 #define CATEGORY_SCREEN_INFO_0_AST NULL
-#define CATEGORY_AUDIO_LABEL_AST NULL
-#define CATEGORY_AUDIO_INFO_0_AST NULL
 #define CATEGORY_SYSTEM_LABEL_AST NULL
 #define CATEGORY_SYSTEM_INFO_0_AST NULL
 #define CATEGORY_ADDONS_LABEL_AST NULL
@@ -760,7 +738,6 @@ struct retro_core_options_v2 options_ar = {
 #define OPTION_VAL_KEEP_ASPECT_AST NULL
 #define OPTION_VAL_STRETCH_AST NULL
 #define CEMU_THREAD_QUANTUM_LABEL_AST NULL
-#define CEMU_AUDIO_LATENCY_LABEL_AST NULL
 #define CEMU_EMULATE_SKYLANDER_PORTAL_LABEL_AST NULL
 #define CEMU_EMULATE_INFINITY_BASE_LABEL_AST NULL
 #define CEMU_EMULATE_DIMENSIONS_TOYPAD_LABEL_AST NULL
@@ -807,7 +784,6 @@ struct retro_core_option_v2_category option_cats_ast[] = {
 	{ "video", CATEGORY_VIDEO_LABEL_AST, CATEGORY_VIDEO_INFO_0_AST },
 	{ "shaders", CATEGORY_SHADERS_LABEL_AST, CATEGORY_SHADERS_INFO_0_AST },
 	{ "screen", CATEGORY_SCREEN_LABEL_AST, CATEGORY_SCREEN_INFO_0_AST },
-	{ "audio", CATEGORY_AUDIO_LABEL_AST, CATEGORY_AUDIO_INFO_0_AST },
 	// No Input category: what a port drives is a frontend device type, not
 	// a core option, and an empty submenu is worse than no submenu.
 	{ "system", CATEGORY_SYSTEM_LABEL_AST, CATEGORY_SYSTEM_INFO_0_AST },
@@ -1009,22 +985,6 @@ struct retro_core_option_v2_definition option_defs_ast[] = {
 			{ NULL, NULL },
 		},
 		"45000"
-	},
-	{
-		"cemu_audio_latency",
-		CEMU_AUDIO_LATENCY_LABEL_AST,
-		NULL,
-		NULL,
-		NULL,
-		"audio",
-		{
-			{ "1", NULL },
-			{ "2", NULL },
-			{ "3", NULL },
-			{ "4", NULL },
-			{ NULL, NULL },
-		},
-		"2"
 	},
 	{
 		"cemu_emulate_skylander_portal",
@@ -1371,8 +1331,6 @@ struct retro_core_options_v2 options_ast = {
 #define CATEGORY_SHADERS_INFO_0_BE NULL
 #define CATEGORY_SCREEN_LABEL_BE NULL
 #define CATEGORY_SCREEN_INFO_0_BE NULL
-#define CATEGORY_AUDIO_LABEL_BE NULL
-#define CATEGORY_AUDIO_INFO_0_BE NULL
 #define CATEGORY_SYSTEM_LABEL_BE NULL
 #define CATEGORY_SYSTEM_INFO_0_BE NULL
 #define CATEGORY_ADDONS_LABEL_BE NULL
@@ -1423,7 +1381,6 @@ struct retro_core_options_v2 options_ast = {
 #define OPTION_VAL_KEEP_ASPECT_BE NULL
 #define OPTION_VAL_STRETCH_BE NULL
 #define CEMU_THREAD_QUANTUM_LABEL_BE NULL
-#define CEMU_AUDIO_LATENCY_LABEL_BE NULL
 #define CEMU_EMULATE_SKYLANDER_PORTAL_LABEL_BE NULL
 #define CEMU_EMULATE_INFINITY_BASE_LABEL_BE NULL
 #define CEMU_EMULATE_DIMENSIONS_TOYPAD_LABEL_BE NULL
@@ -1470,7 +1427,6 @@ struct retro_core_option_v2_category option_cats_be[] = {
 	{ "video", CATEGORY_VIDEO_LABEL_BE, CATEGORY_VIDEO_INFO_0_BE },
 	{ "shaders", CATEGORY_SHADERS_LABEL_BE, CATEGORY_SHADERS_INFO_0_BE },
 	{ "screen", CATEGORY_SCREEN_LABEL_BE, CATEGORY_SCREEN_INFO_0_BE },
-	{ "audio", CATEGORY_AUDIO_LABEL_BE, CATEGORY_AUDIO_INFO_0_BE },
 	// No Input category: what a port drives is a frontend device type, not
 	// a core option, and an empty submenu is worse than no submenu.
 	{ "system", CATEGORY_SYSTEM_LABEL_BE, CATEGORY_SYSTEM_INFO_0_BE },
@@ -1672,22 +1628,6 @@ struct retro_core_option_v2_definition option_defs_be[] = {
 			{ NULL, NULL },
 		},
 		"45000"
-	},
-	{
-		"cemu_audio_latency",
-		CEMU_AUDIO_LATENCY_LABEL_BE,
-		NULL,
-		NULL,
-		NULL,
-		"audio",
-		{
-			{ "1", NULL },
-			{ "2", NULL },
-			{ "3", NULL },
-			{ "4", NULL },
-			{ NULL, NULL },
-		},
-		"2"
 	},
 	{
 		"cemu_emulate_skylander_portal",
@@ -2034,8 +1974,6 @@ struct retro_core_options_v2 options_be = {
 #define CATEGORY_SHADERS_INFO_0_CA NULL
 #define CATEGORY_SCREEN_LABEL_CA NULL
 #define CATEGORY_SCREEN_INFO_0_CA NULL
-#define CATEGORY_AUDIO_LABEL_CA NULL
-#define CATEGORY_AUDIO_INFO_0_CA NULL
 #define CATEGORY_SYSTEM_LABEL_CA NULL
 #define CATEGORY_SYSTEM_INFO_0_CA NULL
 #define CATEGORY_ADDONS_LABEL_CA NULL
@@ -2086,7 +2024,6 @@ struct retro_core_options_v2 options_be = {
 #define OPTION_VAL_KEEP_ASPECT_CA NULL
 #define OPTION_VAL_STRETCH_CA NULL
 #define CEMU_THREAD_QUANTUM_LABEL_CA NULL
-#define CEMU_AUDIO_LATENCY_LABEL_CA NULL
 #define CEMU_EMULATE_SKYLANDER_PORTAL_LABEL_CA NULL
 #define CEMU_EMULATE_INFINITY_BASE_LABEL_CA NULL
 #define CEMU_EMULATE_DIMENSIONS_TOYPAD_LABEL_CA NULL
@@ -2133,7 +2070,6 @@ struct retro_core_option_v2_category option_cats_ca[] = {
 	{ "video", CATEGORY_VIDEO_LABEL_CA, CATEGORY_VIDEO_INFO_0_CA },
 	{ "shaders", CATEGORY_SHADERS_LABEL_CA, CATEGORY_SHADERS_INFO_0_CA },
 	{ "screen", CATEGORY_SCREEN_LABEL_CA, CATEGORY_SCREEN_INFO_0_CA },
-	{ "audio", CATEGORY_AUDIO_LABEL_CA, CATEGORY_AUDIO_INFO_0_CA },
 	// No Input category: what a port drives is a frontend device type, not
 	// a core option, and an empty submenu is worse than no submenu.
 	{ "system", CATEGORY_SYSTEM_LABEL_CA, CATEGORY_SYSTEM_INFO_0_CA },
@@ -2335,22 +2271,6 @@ struct retro_core_option_v2_definition option_defs_ca[] = {
 			{ NULL, NULL },
 		},
 		"45000"
-	},
-	{
-		"cemu_audio_latency",
-		CEMU_AUDIO_LATENCY_LABEL_CA,
-		NULL,
-		NULL,
-		NULL,
-		"audio",
-		{
-			{ "1", NULL },
-			{ "2", NULL },
-			{ "3", NULL },
-			{ "4", NULL },
-			{ NULL, NULL },
-		},
-		"2"
 	},
 	{
 		"cemu_emulate_skylander_portal",
@@ -2697,8 +2617,6 @@ struct retro_core_options_v2 options_ca = {
 #define CATEGORY_SHADERS_INFO_0_CHS NULL
 #define CATEGORY_SCREEN_LABEL_CHS NULL
 #define CATEGORY_SCREEN_INFO_0_CHS NULL
-#define CATEGORY_AUDIO_LABEL_CHS NULL
-#define CATEGORY_AUDIO_INFO_0_CHS NULL
 #define CATEGORY_SYSTEM_LABEL_CHS NULL
 #define CATEGORY_SYSTEM_INFO_0_CHS NULL
 #define CATEGORY_ADDONS_LABEL_CHS NULL
@@ -2749,7 +2667,6 @@ struct retro_core_options_v2 options_ca = {
 #define OPTION_VAL_KEEP_ASPECT_CHS NULL
 #define OPTION_VAL_STRETCH_CHS NULL
 #define CEMU_THREAD_QUANTUM_LABEL_CHS NULL
-#define CEMU_AUDIO_LATENCY_LABEL_CHS NULL
 #define CEMU_EMULATE_SKYLANDER_PORTAL_LABEL_CHS NULL
 #define CEMU_EMULATE_INFINITY_BASE_LABEL_CHS NULL
 #define CEMU_EMULATE_DIMENSIONS_TOYPAD_LABEL_CHS NULL
@@ -2796,7 +2713,6 @@ struct retro_core_option_v2_category option_cats_chs[] = {
 	{ "video", CATEGORY_VIDEO_LABEL_CHS, CATEGORY_VIDEO_INFO_0_CHS },
 	{ "shaders", CATEGORY_SHADERS_LABEL_CHS, CATEGORY_SHADERS_INFO_0_CHS },
 	{ "screen", CATEGORY_SCREEN_LABEL_CHS, CATEGORY_SCREEN_INFO_0_CHS },
-	{ "audio", CATEGORY_AUDIO_LABEL_CHS, CATEGORY_AUDIO_INFO_0_CHS },
 	// No Input category: what a port drives is a frontend device type, not
 	// a core option, and an empty submenu is worse than no submenu.
 	{ "system", CATEGORY_SYSTEM_LABEL_CHS, CATEGORY_SYSTEM_INFO_0_CHS },
@@ -2998,22 +2914,6 @@ struct retro_core_option_v2_definition option_defs_chs[] = {
 			{ NULL, NULL },
 		},
 		"45000"
-	},
-	{
-		"cemu_audio_latency",
-		CEMU_AUDIO_LATENCY_LABEL_CHS,
-		NULL,
-		NULL,
-		NULL,
-		"audio",
-		{
-			{ "1", NULL },
-			{ "2", NULL },
-			{ "3", NULL },
-			{ "4", NULL },
-			{ NULL, NULL },
-		},
-		"2"
 	},
 	{
 		"cemu_emulate_skylander_portal",
@@ -3360,8 +3260,6 @@ struct retro_core_options_v2 options_chs = {
 #define CATEGORY_SHADERS_INFO_0_CHT NULL
 #define CATEGORY_SCREEN_LABEL_CHT NULL
 #define CATEGORY_SCREEN_INFO_0_CHT NULL
-#define CATEGORY_AUDIO_LABEL_CHT NULL
-#define CATEGORY_AUDIO_INFO_0_CHT NULL
 #define CATEGORY_SYSTEM_LABEL_CHT NULL
 #define CATEGORY_SYSTEM_INFO_0_CHT NULL
 #define CATEGORY_ADDONS_LABEL_CHT NULL
@@ -3412,7 +3310,6 @@ struct retro_core_options_v2 options_chs = {
 #define OPTION_VAL_KEEP_ASPECT_CHT NULL
 #define OPTION_VAL_STRETCH_CHT NULL
 #define CEMU_THREAD_QUANTUM_LABEL_CHT NULL
-#define CEMU_AUDIO_LATENCY_LABEL_CHT NULL
 #define CEMU_EMULATE_SKYLANDER_PORTAL_LABEL_CHT NULL
 #define CEMU_EMULATE_INFINITY_BASE_LABEL_CHT NULL
 #define CEMU_EMULATE_DIMENSIONS_TOYPAD_LABEL_CHT NULL
@@ -3459,7 +3356,6 @@ struct retro_core_option_v2_category option_cats_cht[] = {
 	{ "video", CATEGORY_VIDEO_LABEL_CHT, CATEGORY_VIDEO_INFO_0_CHT },
 	{ "shaders", CATEGORY_SHADERS_LABEL_CHT, CATEGORY_SHADERS_INFO_0_CHT },
 	{ "screen", CATEGORY_SCREEN_LABEL_CHT, CATEGORY_SCREEN_INFO_0_CHT },
-	{ "audio", CATEGORY_AUDIO_LABEL_CHT, CATEGORY_AUDIO_INFO_0_CHT },
 	// No Input category: what a port drives is a frontend device type, not
 	// a core option, and an empty submenu is worse than no submenu.
 	{ "system", CATEGORY_SYSTEM_LABEL_CHT, CATEGORY_SYSTEM_INFO_0_CHT },
@@ -3661,22 +3557,6 @@ struct retro_core_option_v2_definition option_defs_cht[] = {
 			{ NULL, NULL },
 		},
 		"45000"
-	},
-	{
-		"cemu_audio_latency",
-		CEMU_AUDIO_LATENCY_LABEL_CHT,
-		NULL,
-		NULL,
-		NULL,
-		"audio",
-		{
-			{ "1", NULL },
-			{ "2", NULL },
-			{ "3", NULL },
-			{ "4", NULL },
-			{ NULL, NULL },
-		},
-		"2"
 	},
 	{
 		"cemu_emulate_skylander_portal",
@@ -4023,8 +3903,6 @@ struct retro_core_options_v2 options_cht = {
 #define CATEGORY_SHADERS_INFO_0_CS NULL
 #define CATEGORY_SCREEN_LABEL_CS NULL
 #define CATEGORY_SCREEN_INFO_0_CS NULL
-#define CATEGORY_AUDIO_LABEL_CS NULL
-#define CATEGORY_AUDIO_INFO_0_CS NULL
 #define CATEGORY_SYSTEM_LABEL_CS NULL
 #define CATEGORY_SYSTEM_INFO_0_CS NULL
 #define CATEGORY_ADDONS_LABEL_CS NULL
@@ -4075,7 +3953,6 @@ struct retro_core_options_v2 options_cht = {
 #define OPTION_VAL_KEEP_ASPECT_CS NULL
 #define OPTION_VAL_STRETCH_CS NULL
 #define CEMU_THREAD_QUANTUM_LABEL_CS NULL
-#define CEMU_AUDIO_LATENCY_LABEL_CS NULL
 #define CEMU_EMULATE_SKYLANDER_PORTAL_LABEL_CS NULL
 #define CEMU_EMULATE_INFINITY_BASE_LABEL_CS NULL
 #define CEMU_EMULATE_DIMENSIONS_TOYPAD_LABEL_CS NULL
@@ -4122,7 +3999,6 @@ struct retro_core_option_v2_category option_cats_cs[] = {
 	{ "video", CATEGORY_VIDEO_LABEL_CS, CATEGORY_VIDEO_INFO_0_CS },
 	{ "shaders", CATEGORY_SHADERS_LABEL_CS, CATEGORY_SHADERS_INFO_0_CS },
 	{ "screen", CATEGORY_SCREEN_LABEL_CS, CATEGORY_SCREEN_INFO_0_CS },
-	{ "audio", CATEGORY_AUDIO_LABEL_CS, CATEGORY_AUDIO_INFO_0_CS },
 	// No Input category: what a port drives is a frontend device type, not
 	// a core option, and an empty submenu is worse than no submenu.
 	{ "system", CATEGORY_SYSTEM_LABEL_CS, CATEGORY_SYSTEM_INFO_0_CS },
@@ -4324,22 +4200,6 @@ struct retro_core_option_v2_definition option_defs_cs[] = {
 			{ NULL, NULL },
 		},
 		"45000"
-	},
-	{
-		"cemu_audio_latency",
-		CEMU_AUDIO_LATENCY_LABEL_CS,
-		NULL,
-		NULL,
-		NULL,
-		"audio",
-		{
-			{ "1", NULL },
-			{ "2", NULL },
-			{ "3", NULL },
-			{ "4", NULL },
-			{ NULL, NULL },
-		},
-		"2"
 	},
 	{
 		"cemu_emulate_skylander_portal",
@@ -4686,8 +4546,6 @@ struct retro_core_options_v2 options_cs = {
 #define CATEGORY_SHADERS_INFO_0_DE NULL
 #define CATEGORY_SCREEN_LABEL_DE NULL
 #define CATEGORY_SCREEN_INFO_0_DE NULL
-#define CATEGORY_AUDIO_LABEL_DE NULL
-#define CATEGORY_AUDIO_INFO_0_DE NULL
 #define CATEGORY_SYSTEM_LABEL_DE NULL
 #define CATEGORY_SYSTEM_INFO_0_DE NULL
 #define CATEGORY_ADDONS_LABEL_DE NULL
@@ -4738,7 +4596,6 @@ struct retro_core_options_v2 options_cs = {
 #define OPTION_VAL_KEEP_ASPECT_DE NULL
 #define OPTION_VAL_STRETCH_DE NULL
 #define CEMU_THREAD_QUANTUM_LABEL_DE NULL
-#define CEMU_AUDIO_LATENCY_LABEL_DE NULL
 #define CEMU_EMULATE_SKYLANDER_PORTAL_LABEL_DE NULL
 #define CEMU_EMULATE_INFINITY_BASE_LABEL_DE NULL
 #define CEMU_EMULATE_DIMENSIONS_TOYPAD_LABEL_DE NULL
@@ -4785,7 +4642,6 @@ struct retro_core_option_v2_category option_cats_de[] = {
 	{ "video", CATEGORY_VIDEO_LABEL_DE, CATEGORY_VIDEO_INFO_0_DE },
 	{ "shaders", CATEGORY_SHADERS_LABEL_DE, CATEGORY_SHADERS_INFO_0_DE },
 	{ "screen", CATEGORY_SCREEN_LABEL_DE, CATEGORY_SCREEN_INFO_0_DE },
-	{ "audio", CATEGORY_AUDIO_LABEL_DE, CATEGORY_AUDIO_INFO_0_DE },
 	// No Input category: what a port drives is a frontend device type, not
 	// a core option, and an empty submenu is worse than no submenu.
 	{ "system", CATEGORY_SYSTEM_LABEL_DE, CATEGORY_SYSTEM_INFO_0_DE },
@@ -4987,22 +4843,6 @@ struct retro_core_option_v2_definition option_defs_de[] = {
 			{ NULL, NULL },
 		},
 		"45000"
-	},
-	{
-		"cemu_audio_latency",
-		CEMU_AUDIO_LATENCY_LABEL_DE,
-		NULL,
-		NULL,
-		NULL,
-		"audio",
-		{
-			{ "1", NULL },
-			{ "2", NULL },
-			{ "3", NULL },
-			{ "4", NULL },
-			{ NULL, NULL },
-		},
-		"2"
 	},
 	{
 		"cemu_emulate_skylander_portal",
@@ -5349,8 +5189,6 @@ struct retro_core_options_v2 options_de = {
 #define CATEGORY_SHADERS_INFO_0_EL NULL
 #define CATEGORY_SCREEN_LABEL_EL NULL
 #define CATEGORY_SCREEN_INFO_0_EL NULL
-#define CATEGORY_AUDIO_LABEL_EL NULL
-#define CATEGORY_AUDIO_INFO_0_EL NULL
 #define CATEGORY_SYSTEM_LABEL_EL NULL
 #define CATEGORY_SYSTEM_INFO_0_EL NULL
 #define CATEGORY_ADDONS_LABEL_EL NULL
@@ -5401,7 +5239,6 @@ struct retro_core_options_v2 options_de = {
 #define OPTION_VAL_KEEP_ASPECT_EL NULL
 #define OPTION_VAL_STRETCH_EL NULL
 #define CEMU_THREAD_QUANTUM_LABEL_EL NULL
-#define CEMU_AUDIO_LATENCY_LABEL_EL NULL
 #define CEMU_EMULATE_SKYLANDER_PORTAL_LABEL_EL NULL
 #define CEMU_EMULATE_INFINITY_BASE_LABEL_EL NULL
 #define CEMU_EMULATE_DIMENSIONS_TOYPAD_LABEL_EL NULL
@@ -5448,7 +5285,6 @@ struct retro_core_option_v2_category option_cats_el[] = {
 	{ "video", CATEGORY_VIDEO_LABEL_EL, CATEGORY_VIDEO_INFO_0_EL },
 	{ "shaders", CATEGORY_SHADERS_LABEL_EL, CATEGORY_SHADERS_INFO_0_EL },
 	{ "screen", CATEGORY_SCREEN_LABEL_EL, CATEGORY_SCREEN_INFO_0_EL },
-	{ "audio", CATEGORY_AUDIO_LABEL_EL, CATEGORY_AUDIO_INFO_0_EL },
 	// No Input category: what a port drives is a frontend device type, not
 	// a core option, and an empty submenu is worse than no submenu.
 	{ "system", CATEGORY_SYSTEM_LABEL_EL, CATEGORY_SYSTEM_INFO_0_EL },
@@ -5650,22 +5486,6 @@ struct retro_core_option_v2_definition option_defs_el[] = {
 			{ NULL, NULL },
 		},
 		"45000"
-	},
-	{
-		"cemu_audio_latency",
-		CEMU_AUDIO_LATENCY_LABEL_EL,
-		NULL,
-		NULL,
-		NULL,
-		"audio",
-		{
-			{ "1", NULL },
-			{ "2", NULL },
-			{ "3", NULL },
-			{ "4", NULL },
-			{ NULL, NULL },
-		},
-		"2"
 	},
 	{
 		"cemu_emulate_skylander_portal",
@@ -6012,8 +5832,6 @@ struct retro_core_options_v2 options_el = {
 #define CATEGORY_SHADERS_INFO_0_EN NULL
 #define CATEGORY_SCREEN_LABEL_EN NULL
 #define CATEGORY_SCREEN_INFO_0_EN NULL
-#define CATEGORY_AUDIO_LABEL_EN NULL
-#define CATEGORY_AUDIO_INFO_0_EN NULL
 #define CATEGORY_SYSTEM_LABEL_EN NULL
 #define CATEGORY_SYSTEM_INFO_0_EN NULL
 #define CATEGORY_ADDONS_LABEL_EN NULL
@@ -6064,7 +5882,6 @@ struct retro_core_options_v2 options_el = {
 #define OPTION_VAL_KEEP_ASPECT_EN NULL
 #define OPTION_VAL_STRETCH_EN NULL
 #define CEMU_THREAD_QUANTUM_LABEL_EN NULL
-#define CEMU_AUDIO_LATENCY_LABEL_EN NULL
 #define CEMU_EMULATE_SKYLANDER_PORTAL_LABEL_EN NULL
 #define CEMU_EMULATE_INFINITY_BASE_LABEL_EN NULL
 #define CEMU_EMULATE_DIMENSIONS_TOYPAD_LABEL_EN NULL
@@ -6111,7 +5928,6 @@ struct retro_core_option_v2_category option_cats_en[] = {
 	{ "video", CATEGORY_VIDEO_LABEL_EN, CATEGORY_VIDEO_INFO_0_EN },
 	{ "shaders", CATEGORY_SHADERS_LABEL_EN, CATEGORY_SHADERS_INFO_0_EN },
 	{ "screen", CATEGORY_SCREEN_LABEL_EN, CATEGORY_SCREEN_INFO_0_EN },
-	{ "audio", CATEGORY_AUDIO_LABEL_EN, CATEGORY_AUDIO_INFO_0_EN },
 	// No Input category: what a port drives is a frontend device type, not
 	// a core option, and an empty submenu is worse than no submenu.
 	{ "system", CATEGORY_SYSTEM_LABEL_EN, CATEGORY_SYSTEM_INFO_0_EN },
@@ -6313,22 +6129,6 @@ struct retro_core_option_v2_definition option_defs_en[] = {
 			{ NULL, NULL },
 		},
 		"45000"
-	},
-	{
-		"cemu_audio_latency",
-		CEMU_AUDIO_LATENCY_LABEL_EN,
-		NULL,
-		NULL,
-		NULL,
-		"audio",
-		{
-			{ "1", NULL },
-			{ "2", NULL },
-			{ "3", NULL },
-			{ "4", NULL },
-			{ NULL, NULL },
-		},
-		"2"
 	},
 	{
 		"cemu_emulate_skylander_portal",
@@ -6675,8 +6475,6 @@ struct retro_core_options_v2 options_en = {
 #define CATEGORY_SHADERS_INFO_0_EO NULL
 #define CATEGORY_SCREEN_LABEL_EO NULL
 #define CATEGORY_SCREEN_INFO_0_EO NULL
-#define CATEGORY_AUDIO_LABEL_EO NULL
-#define CATEGORY_AUDIO_INFO_0_EO NULL
 #define CATEGORY_SYSTEM_LABEL_EO NULL
 #define CATEGORY_SYSTEM_INFO_0_EO NULL
 #define CATEGORY_ADDONS_LABEL_EO NULL
@@ -6727,7 +6525,6 @@ struct retro_core_options_v2 options_en = {
 #define OPTION_VAL_KEEP_ASPECT_EO NULL
 #define OPTION_VAL_STRETCH_EO NULL
 #define CEMU_THREAD_QUANTUM_LABEL_EO NULL
-#define CEMU_AUDIO_LATENCY_LABEL_EO NULL
 #define CEMU_EMULATE_SKYLANDER_PORTAL_LABEL_EO NULL
 #define CEMU_EMULATE_INFINITY_BASE_LABEL_EO NULL
 #define CEMU_EMULATE_DIMENSIONS_TOYPAD_LABEL_EO NULL
@@ -6774,7 +6571,6 @@ struct retro_core_option_v2_category option_cats_eo[] = {
 	{ "video", CATEGORY_VIDEO_LABEL_EO, CATEGORY_VIDEO_INFO_0_EO },
 	{ "shaders", CATEGORY_SHADERS_LABEL_EO, CATEGORY_SHADERS_INFO_0_EO },
 	{ "screen", CATEGORY_SCREEN_LABEL_EO, CATEGORY_SCREEN_INFO_0_EO },
-	{ "audio", CATEGORY_AUDIO_LABEL_EO, CATEGORY_AUDIO_INFO_0_EO },
 	// No Input category: what a port drives is a frontend device type, not
 	// a core option, and an empty submenu is worse than no submenu.
 	{ "system", CATEGORY_SYSTEM_LABEL_EO, CATEGORY_SYSTEM_INFO_0_EO },
@@ -6976,22 +6772,6 @@ struct retro_core_option_v2_definition option_defs_eo[] = {
 			{ NULL, NULL },
 		},
 		"45000"
-	},
-	{
-		"cemu_audio_latency",
-		CEMU_AUDIO_LATENCY_LABEL_EO,
-		NULL,
-		NULL,
-		NULL,
-		"audio",
-		{
-			{ "1", NULL },
-			{ "2", NULL },
-			{ "3", NULL },
-			{ "4", NULL },
-			{ NULL, NULL },
-		},
-		"2"
 	},
 	{
 		"cemu_emulate_skylander_portal",
@@ -7338,8 +7118,6 @@ struct retro_core_options_v2 options_eo = {
 #define CATEGORY_SHADERS_INFO_0_ES NULL
 #define CATEGORY_SCREEN_LABEL_ES NULL
 #define CATEGORY_SCREEN_INFO_0_ES NULL
-#define CATEGORY_AUDIO_LABEL_ES NULL
-#define CATEGORY_AUDIO_INFO_0_ES NULL
 #define CATEGORY_SYSTEM_LABEL_ES NULL
 #define CATEGORY_SYSTEM_INFO_0_ES NULL
 #define CATEGORY_ADDONS_LABEL_ES NULL
@@ -7390,7 +7168,6 @@ struct retro_core_options_v2 options_eo = {
 #define OPTION_VAL_KEEP_ASPECT_ES NULL
 #define OPTION_VAL_STRETCH_ES NULL
 #define CEMU_THREAD_QUANTUM_LABEL_ES NULL
-#define CEMU_AUDIO_LATENCY_LABEL_ES NULL
 #define CEMU_EMULATE_SKYLANDER_PORTAL_LABEL_ES NULL
 #define CEMU_EMULATE_INFINITY_BASE_LABEL_ES NULL
 #define CEMU_EMULATE_DIMENSIONS_TOYPAD_LABEL_ES NULL
@@ -7437,7 +7214,6 @@ struct retro_core_option_v2_category option_cats_es[] = {
 	{ "video", CATEGORY_VIDEO_LABEL_ES, CATEGORY_VIDEO_INFO_0_ES },
 	{ "shaders", CATEGORY_SHADERS_LABEL_ES, CATEGORY_SHADERS_INFO_0_ES },
 	{ "screen", CATEGORY_SCREEN_LABEL_ES, CATEGORY_SCREEN_INFO_0_ES },
-	{ "audio", CATEGORY_AUDIO_LABEL_ES, CATEGORY_AUDIO_INFO_0_ES },
 	// No Input category: what a port drives is a frontend device type, not
 	// a core option, and an empty submenu is worse than no submenu.
 	{ "system", CATEGORY_SYSTEM_LABEL_ES, CATEGORY_SYSTEM_INFO_0_ES },
@@ -7639,22 +7415,6 @@ struct retro_core_option_v2_definition option_defs_es[] = {
 			{ NULL, NULL },
 		},
 		"45000"
-	},
-	{
-		"cemu_audio_latency",
-		CEMU_AUDIO_LATENCY_LABEL_ES,
-		NULL,
-		NULL,
-		NULL,
-		"audio",
-		{
-			{ "1", NULL },
-			{ "2", NULL },
-			{ "3", NULL },
-			{ "4", NULL },
-			{ NULL, NULL },
-		},
-		"2"
 	},
 	{
 		"cemu_emulate_skylander_portal",
@@ -8001,8 +7761,6 @@ struct retro_core_options_v2 options_es = {
 #define CATEGORY_SHADERS_INFO_0_FA NULL
 #define CATEGORY_SCREEN_LABEL_FA NULL
 #define CATEGORY_SCREEN_INFO_0_FA NULL
-#define CATEGORY_AUDIO_LABEL_FA NULL
-#define CATEGORY_AUDIO_INFO_0_FA NULL
 #define CATEGORY_SYSTEM_LABEL_FA NULL
 #define CATEGORY_SYSTEM_INFO_0_FA NULL
 #define CATEGORY_ADDONS_LABEL_FA NULL
@@ -8053,7 +7811,6 @@ struct retro_core_options_v2 options_es = {
 #define OPTION_VAL_KEEP_ASPECT_FA NULL
 #define OPTION_VAL_STRETCH_FA NULL
 #define CEMU_THREAD_QUANTUM_LABEL_FA NULL
-#define CEMU_AUDIO_LATENCY_LABEL_FA NULL
 #define CEMU_EMULATE_SKYLANDER_PORTAL_LABEL_FA NULL
 #define CEMU_EMULATE_INFINITY_BASE_LABEL_FA NULL
 #define CEMU_EMULATE_DIMENSIONS_TOYPAD_LABEL_FA NULL
@@ -8100,7 +7857,6 @@ struct retro_core_option_v2_category option_cats_fa[] = {
 	{ "video", CATEGORY_VIDEO_LABEL_FA, CATEGORY_VIDEO_INFO_0_FA },
 	{ "shaders", CATEGORY_SHADERS_LABEL_FA, CATEGORY_SHADERS_INFO_0_FA },
 	{ "screen", CATEGORY_SCREEN_LABEL_FA, CATEGORY_SCREEN_INFO_0_FA },
-	{ "audio", CATEGORY_AUDIO_LABEL_FA, CATEGORY_AUDIO_INFO_0_FA },
 	// No Input category: what a port drives is a frontend device type, not
 	// a core option, and an empty submenu is worse than no submenu.
 	{ "system", CATEGORY_SYSTEM_LABEL_FA, CATEGORY_SYSTEM_INFO_0_FA },
@@ -8302,22 +8058,6 @@ struct retro_core_option_v2_definition option_defs_fa[] = {
 			{ NULL, NULL },
 		},
 		"45000"
-	},
-	{
-		"cemu_audio_latency",
-		CEMU_AUDIO_LATENCY_LABEL_FA,
-		NULL,
-		NULL,
-		NULL,
-		"audio",
-		{
-			{ "1", NULL },
-			{ "2", NULL },
-			{ "3", NULL },
-			{ "4", NULL },
-			{ NULL, NULL },
-		},
-		"2"
 	},
 	{
 		"cemu_emulate_skylander_portal",
@@ -8664,8 +8404,6 @@ struct retro_core_options_v2 options_fa = {
 #define CATEGORY_SHADERS_INFO_0_FI NULL
 #define CATEGORY_SCREEN_LABEL_FI NULL
 #define CATEGORY_SCREEN_INFO_0_FI NULL
-#define CATEGORY_AUDIO_LABEL_FI NULL
-#define CATEGORY_AUDIO_INFO_0_FI NULL
 #define CATEGORY_SYSTEM_LABEL_FI NULL
 #define CATEGORY_SYSTEM_INFO_0_FI NULL
 #define CATEGORY_ADDONS_LABEL_FI NULL
@@ -8716,7 +8454,6 @@ struct retro_core_options_v2 options_fa = {
 #define OPTION_VAL_KEEP_ASPECT_FI NULL
 #define OPTION_VAL_STRETCH_FI NULL
 #define CEMU_THREAD_QUANTUM_LABEL_FI NULL
-#define CEMU_AUDIO_LATENCY_LABEL_FI NULL
 #define CEMU_EMULATE_SKYLANDER_PORTAL_LABEL_FI NULL
 #define CEMU_EMULATE_INFINITY_BASE_LABEL_FI NULL
 #define CEMU_EMULATE_DIMENSIONS_TOYPAD_LABEL_FI NULL
@@ -8763,7 +8500,6 @@ struct retro_core_option_v2_category option_cats_fi[] = {
 	{ "video", CATEGORY_VIDEO_LABEL_FI, CATEGORY_VIDEO_INFO_0_FI },
 	{ "shaders", CATEGORY_SHADERS_LABEL_FI, CATEGORY_SHADERS_INFO_0_FI },
 	{ "screen", CATEGORY_SCREEN_LABEL_FI, CATEGORY_SCREEN_INFO_0_FI },
-	{ "audio", CATEGORY_AUDIO_LABEL_FI, CATEGORY_AUDIO_INFO_0_FI },
 	// No Input category: what a port drives is a frontend device type, not
 	// a core option, and an empty submenu is worse than no submenu.
 	{ "system", CATEGORY_SYSTEM_LABEL_FI, CATEGORY_SYSTEM_INFO_0_FI },
@@ -8965,22 +8701,6 @@ struct retro_core_option_v2_definition option_defs_fi[] = {
 			{ NULL, NULL },
 		},
 		"45000"
-	},
-	{
-		"cemu_audio_latency",
-		CEMU_AUDIO_LATENCY_LABEL_FI,
-		NULL,
-		NULL,
-		NULL,
-		"audio",
-		{
-			{ "1", NULL },
-			{ "2", NULL },
-			{ "3", NULL },
-			{ "4", NULL },
-			{ NULL, NULL },
-		},
-		"2"
 	},
 	{
 		"cemu_emulate_skylander_portal",
@@ -9327,8 +9047,6 @@ struct retro_core_options_v2 options_fi = {
 #define CATEGORY_SHADERS_INFO_0_FR NULL
 #define CATEGORY_SCREEN_LABEL_FR NULL
 #define CATEGORY_SCREEN_INFO_0_FR NULL
-#define CATEGORY_AUDIO_LABEL_FR NULL
-#define CATEGORY_AUDIO_INFO_0_FR NULL
 #define CATEGORY_SYSTEM_LABEL_FR NULL
 #define CATEGORY_SYSTEM_INFO_0_FR NULL
 #define CATEGORY_ADDONS_LABEL_FR NULL
@@ -9379,7 +9097,6 @@ struct retro_core_options_v2 options_fi = {
 #define OPTION_VAL_KEEP_ASPECT_FR NULL
 #define OPTION_VAL_STRETCH_FR NULL
 #define CEMU_THREAD_QUANTUM_LABEL_FR NULL
-#define CEMU_AUDIO_LATENCY_LABEL_FR NULL
 #define CEMU_EMULATE_SKYLANDER_PORTAL_LABEL_FR NULL
 #define CEMU_EMULATE_INFINITY_BASE_LABEL_FR NULL
 #define CEMU_EMULATE_DIMENSIONS_TOYPAD_LABEL_FR NULL
@@ -9426,7 +9143,6 @@ struct retro_core_option_v2_category option_cats_fr[] = {
 	{ "video", CATEGORY_VIDEO_LABEL_FR, CATEGORY_VIDEO_INFO_0_FR },
 	{ "shaders", CATEGORY_SHADERS_LABEL_FR, CATEGORY_SHADERS_INFO_0_FR },
 	{ "screen", CATEGORY_SCREEN_LABEL_FR, CATEGORY_SCREEN_INFO_0_FR },
-	{ "audio", CATEGORY_AUDIO_LABEL_FR, CATEGORY_AUDIO_INFO_0_FR },
 	// No Input category: what a port drives is a frontend device type, not
 	// a core option, and an empty submenu is worse than no submenu.
 	{ "system", CATEGORY_SYSTEM_LABEL_FR, CATEGORY_SYSTEM_INFO_0_FR },
@@ -9628,22 +9344,6 @@ struct retro_core_option_v2_definition option_defs_fr[] = {
 			{ NULL, NULL },
 		},
 		"45000"
-	},
-	{
-		"cemu_audio_latency",
-		CEMU_AUDIO_LATENCY_LABEL_FR,
-		NULL,
-		NULL,
-		NULL,
-		"audio",
-		{
-			{ "1", NULL },
-			{ "2", NULL },
-			{ "3", NULL },
-			{ "4", NULL },
-			{ NULL, NULL },
-		},
-		"2"
 	},
 	{
 		"cemu_emulate_skylander_portal",
@@ -9990,8 +9690,6 @@ struct retro_core_options_v2 options_fr = {
 #define CATEGORY_SHADERS_INFO_0_GA NULL
 #define CATEGORY_SCREEN_LABEL_GA NULL
 #define CATEGORY_SCREEN_INFO_0_GA NULL
-#define CATEGORY_AUDIO_LABEL_GA NULL
-#define CATEGORY_AUDIO_INFO_0_GA NULL
 #define CATEGORY_SYSTEM_LABEL_GA NULL
 #define CATEGORY_SYSTEM_INFO_0_GA NULL
 #define CATEGORY_ADDONS_LABEL_GA NULL
@@ -10042,7 +9740,6 @@ struct retro_core_options_v2 options_fr = {
 #define OPTION_VAL_KEEP_ASPECT_GA NULL
 #define OPTION_VAL_STRETCH_GA NULL
 #define CEMU_THREAD_QUANTUM_LABEL_GA NULL
-#define CEMU_AUDIO_LATENCY_LABEL_GA NULL
 #define CEMU_EMULATE_SKYLANDER_PORTAL_LABEL_GA NULL
 #define CEMU_EMULATE_INFINITY_BASE_LABEL_GA NULL
 #define CEMU_EMULATE_DIMENSIONS_TOYPAD_LABEL_GA NULL
@@ -10089,7 +9786,6 @@ struct retro_core_option_v2_category option_cats_ga[] = {
 	{ "video", CATEGORY_VIDEO_LABEL_GA, CATEGORY_VIDEO_INFO_0_GA },
 	{ "shaders", CATEGORY_SHADERS_LABEL_GA, CATEGORY_SHADERS_INFO_0_GA },
 	{ "screen", CATEGORY_SCREEN_LABEL_GA, CATEGORY_SCREEN_INFO_0_GA },
-	{ "audio", CATEGORY_AUDIO_LABEL_GA, CATEGORY_AUDIO_INFO_0_GA },
 	// No Input category: what a port drives is a frontend device type, not
 	// a core option, and an empty submenu is worse than no submenu.
 	{ "system", CATEGORY_SYSTEM_LABEL_GA, CATEGORY_SYSTEM_INFO_0_GA },
@@ -10291,22 +9987,6 @@ struct retro_core_option_v2_definition option_defs_ga[] = {
 			{ NULL, NULL },
 		},
 		"45000"
-	},
-	{
-		"cemu_audio_latency",
-		CEMU_AUDIO_LATENCY_LABEL_GA,
-		NULL,
-		NULL,
-		NULL,
-		"audio",
-		{
-			{ "1", NULL },
-			{ "2", NULL },
-			{ "3", NULL },
-			{ "4", NULL },
-			{ NULL, NULL },
-		},
-		"2"
 	},
 	{
 		"cemu_emulate_skylander_portal",
@@ -10653,8 +10333,6 @@ struct retro_core_options_v2 options_ga = {
 #define CATEGORY_SHADERS_INFO_0_GL NULL
 #define CATEGORY_SCREEN_LABEL_GL NULL
 #define CATEGORY_SCREEN_INFO_0_GL NULL
-#define CATEGORY_AUDIO_LABEL_GL NULL
-#define CATEGORY_AUDIO_INFO_0_GL NULL
 #define CATEGORY_SYSTEM_LABEL_GL NULL
 #define CATEGORY_SYSTEM_INFO_0_GL NULL
 #define CATEGORY_ADDONS_LABEL_GL NULL
@@ -10705,7 +10383,6 @@ struct retro_core_options_v2 options_ga = {
 #define OPTION_VAL_KEEP_ASPECT_GL NULL
 #define OPTION_VAL_STRETCH_GL NULL
 #define CEMU_THREAD_QUANTUM_LABEL_GL NULL
-#define CEMU_AUDIO_LATENCY_LABEL_GL NULL
 #define CEMU_EMULATE_SKYLANDER_PORTAL_LABEL_GL NULL
 #define CEMU_EMULATE_INFINITY_BASE_LABEL_GL NULL
 #define CEMU_EMULATE_DIMENSIONS_TOYPAD_LABEL_GL NULL
@@ -10752,7 +10429,6 @@ struct retro_core_option_v2_category option_cats_gl[] = {
 	{ "video", CATEGORY_VIDEO_LABEL_GL, CATEGORY_VIDEO_INFO_0_GL },
 	{ "shaders", CATEGORY_SHADERS_LABEL_GL, CATEGORY_SHADERS_INFO_0_GL },
 	{ "screen", CATEGORY_SCREEN_LABEL_GL, CATEGORY_SCREEN_INFO_0_GL },
-	{ "audio", CATEGORY_AUDIO_LABEL_GL, CATEGORY_AUDIO_INFO_0_GL },
 	// No Input category: what a port drives is a frontend device type, not
 	// a core option, and an empty submenu is worse than no submenu.
 	{ "system", CATEGORY_SYSTEM_LABEL_GL, CATEGORY_SYSTEM_INFO_0_GL },
@@ -10954,22 +10630,6 @@ struct retro_core_option_v2_definition option_defs_gl[] = {
 			{ NULL, NULL },
 		},
 		"45000"
-	},
-	{
-		"cemu_audio_latency",
-		CEMU_AUDIO_LATENCY_LABEL_GL,
-		NULL,
-		NULL,
-		NULL,
-		"audio",
-		{
-			{ "1", NULL },
-			{ "2", NULL },
-			{ "3", NULL },
-			{ "4", NULL },
-			{ NULL, NULL },
-		},
-		"2"
 	},
 	{
 		"cemu_emulate_skylander_portal",
@@ -11316,8 +10976,6 @@ struct retro_core_options_v2 options_gl = {
 #define CATEGORY_SHADERS_INFO_0_HE NULL
 #define CATEGORY_SCREEN_LABEL_HE NULL
 #define CATEGORY_SCREEN_INFO_0_HE NULL
-#define CATEGORY_AUDIO_LABEL_HE NULL
-#define CATEGORY_AUDIO_INFO_0_HE NULL
 #define CATEGORY_SYSTEM_LABEL_HE NULL
 #define CATEGORY_SYSTEM_INFO_0_HE NULL
 #define CATEGORY_ADDONS_LABEL_HE NULL
@@ -11368,7 +11026,6 @@ struct retro_core_options_v2 options_gl = {
 #define OPTION_VAL_KEEP_ASPECT_HE NULL
 #define OPTION_VAL_STRETCH_HE NULL
 #define CEMU_THREAD_QUANTUM_LABEL_HE NULL
-#define CEMU_AUDIO_LATENCY_LABEL_HE NULL
 #define CEMU_EMULATE_SKYLANDER_PORTAL_LABEL_HE NULL
 #define CEMU_EMULATE_INFINITY_BASE_LABEL_HE NULL
 #define CEMU_EMULATE_DIMENSIONS_TOYPAD_LABEL_HE NULL
@@ -11415,7 +11072,6 @@ struct retro_core_option_v2_category option_cats_he[] = {
 	{ "video", CATEGORY_VIDEO_LABEL_HE, CATEGORY_VIDEO_INFO_0_HE },
 	{ "shaders", CATEGORY_SHADERS_LABEL_HE, CATEGORY_SHADERS_INFO_0_HE },
 	{ "screen", CATEGORY_SCREEN_LABEL_HE, CATEGORY_SCREEN_INFO_0_HE },
-	{ "audio", CATEGORY_AUDIO_LABEL_HE, CATEGORY_AUDIO_INFO_0_HE },
 	// No Input category: what a port drives is a frontend device type, not
 	// a core option, and an empty submenu is worse than no submenu.
 	{ "system", CATEGORY_SYSTEM_LABEL_HE, CATEGORY_SYSTEM_INFO_0_HE },
@@ -11617,22 +11273,6 @@ struct retro_core_option_v2_definition option_defs_he[] = {
 			{ NULL, NULL },
 		},
 		"45000"
-	},
-	{
-		"cemu_audio_latency",
-		CEMU_AUDIO_LATENCY_LABEL_HE,
-		NULL,
-		NULL,
-		NULL,
-		"audio",
-		{
-			{ "1", NULL },
-			{ "2", NULL },
-			{ "3", NULL },
-			{ "4", NULL },
-			{ NULL, NULL },
-		},
-		"2"
 	},
 	{
 		"cemu_emulate_skylander_portal",
@@ -11979,8 +11619,6 @@ struct retro_core_options_v2 options_he = {
 #define CATEGORY_SHADERS_INFO_0_HU NULL
 #define CATEGORY_SCREEN_LABEL_HU NULL
 #define CATEGORY_SCREEN_INFO_0_HU NULL
-#define CATEGORY_AUDIO_LABEL_HU NULL
-#define CATEGORY_AUDIO_INFO_0_HU NULL
 #define CATEGORY_SYSTEM_LABEL_HU NULL
 #define CATEGORY_SYSTEM_INFO_0_HU NULL
 #define CATEGORY_ADDONS_LABEL_HU NULL
@@ -12031,7 +11669,6 @@ struct retro_core_options_v2 options_he = {
 #define OPTION_VAL_KEEP_ASPECT_HU NULL
 #define OPTION_VAL_STRETCH_HU NULL
 #define CEMU_THREAD_QUANTUM_LABEL_HU NULL
-#define CEMU_AUDIO_LATENCY_LABEL_HU NULL
 #define CEMU_EMULATE_SKYLANDER_PORTAL_LABEL_HU NULL
 #define CEMU_EMULATE_INFINITY_BASE_LABEL_HU NULL
 #define CEMU_EMULATE_DIMENSIONS_TOYPAD_LABEL_HU NULL
@@ -12078,7 +11715,6 @@ struct retro_core_option_v2_category option_cats_hu[] = {
 	{ "video", CATEGORY_VIDEO_LABEL_HU, CATEGORY_VIDEO_INFO_0_HU },
 	{ "shaders", CATEGORY_SHADERS_LABEL_HU, CATEGORY_SHADERS_INFO_0_HU },
 	{ "screen", CATEGORY_SCREEN_LABEL_HU, CATEGORY_SCREEN_INFO_0_HU },
-	{ "audio", CATEGORY_AUDIO_LABEL_HU, CATEGORY_AUDIO_INFO_0_HU },
 	// No Input category: what a port drives is a frontend device type, not
 	// a core option, and an empty submenu is worse than no submenu.
 	{ "system", CATEGORY_SYSTEM_LABEL_HU, CATEGORY_SYSTEM_INFO_0_HU },
@@ -12280,22 +11916,6 @@ struct retro_core_option_v2_definition option_defs_hu[] = {
 			{ NULL, NULL },
 		},
 		"45000"
-	},
-	{
-		"cemu_audio_latency",
-		CEMU_AUDIO_LATENCY_LABEL_HU,
-		NULL,
-		NULL,
-		NULL,
-		"audio",
-		{
-			{ "1", NULL },
-			{ "2", NULL },
-			{ "3", NULL },
-			{ "4", NULL },
-			{ NULL, NULL },
-		},
-		"2"
 	},
 	{
 		"cemu_emulate_skylander_portal",
@@ -12642,8 +12262,6 @@ struct retro_core_options_v2 options_hu = {
 #define CATEGORY_SHADERS_INFO_0_ID NULL
 #define CATEGORY_SCREEN_LABEL_ID NULL
 #define CATEGORY_SCREEN_INFO_0_ID NULL
-#define CATEGORY_AUDIO_LABEL_ID NULL
-#define CATEGORY_AUDIO_INFO_0_ID NULL
 #define CATEGORY_SYSTEM_LABEL_ID NULL
 #define CATEGORY_SYSTEM_INFO_0_ID NULL
 #define CATEGORY_ADDONS_LABEL_ID NULL
@@ -12694,7 +12312,6 @@ struct retro_core_options_v2 options_hu = {
 #define OPTION_VAL_KEEP_ASPECT_ID NULL
 #define OPTION_VAL_STRETCH_ID NULL
 #define CEMU_THREAD_QUANTUM_LABEL_ID NULL
-#define CEMU_AUDIO_LATENCY_LABEL_ID NULL
 #define CEMU_EMULATE_SKYLANDER_PORTAL_LABEL_ID NULL
 #define CEMU_EMULATE_INFINITY_BASE_LABEL_ID NULL
 #define CEMU_EMULATE_DIMENSIONS_TOYPAD_LABEL_ID NULL
@@ -12741,7 +12358,6 @@ struct retro_core_option_v2_category option_cats_id[] = {
 	{ "video", CATEGORY_VIDEO_LABEL_ID, CATEGORY_VIDEO_INFO_0_ID },
 	{ "shaders", CATEGORY_SHADERS_LABEL_ID, CATEGORY_SHADERS_INFO_0_ID },
 	{ "screen", CATEGORY_SCREEN_LABEL_ID, CATEGORY_SCREEN_INFO_0_ID },
-	{ "audio", CATEGORY_AUDIO_LABEL_ID, CATEGORY_AUDIO_INFO_0_ID },
 	// No Input category: what a port drives is a frontend device type, not
 	// a core option, and an empty submenu is worse than no submenu.
 	{ "system", CATEGORY_SYSTEM_LABEL_ID, CATEGORY_SYSTEM_INFO_0_ID },
@@ -12943,22 +12559,6 @@ struct retro_core_option_v2_definition option_defs_id[] = {
 			{ NULL, NULL },
 		},
 		"45000"
-	},
-	{
-		"cemu_audio_latency",
-		CEMU_AUDIO_LATENCY_LABEL_ID,
-		NULL,
-		NULL,
-		NULL,
-		"audio",
-		{
-			{ "1", NULL },
-			{ "2", NULL },
-			{ "3", NULL },
-			{ "4", NULL },
-			{ NULL, NULL },
-		},
-		"2"
 	},
 	{
 		"cemu_emulate_skylander_portal",
@@ -13305,8 +12905,6 @@ struct retro_core_options_v2 options_id = {
 #define CATEGORY_SHADERS_INFO_0_IT NULL
 #define CATEGORY_SCREEN_LABEL_IT NULL
 #define CATEGORY_SCREEN_INFO_0_IT NULL
-#define CATEGORY_AUDIO_LABEL_IT NULL
-#define CATEGORY_AUDIO_INFO_0_IT NULL
 #define CATEGORY_SYSTEM_LABEL_IT NULL
 #define CATEGORY_SYSTEM_INFO_0_IT NULL
 #define CATEGORY_ADDONS_LABEL_IT NULL
@@ -13357,7 +12955,6 @@ struct retro_core_options_v2 options_id = {
 #define OPTION_VAL_KEEP_ASPECT_IT NULL
 #define OPTION_VAL_STRETCH_IT NULL
 #define CEMU_THREAD_QUANTUM_LABEL_IT NULL
-#define CEMU_AUDIO_LATENCY_LABEL_IT NULL
 #define CEMU_EMULATE_SKYLANDER_PORTAL_LABEL_IT NULL
 #define CEMU_EMULATE_INFINITY_BASE_LABEL_IT NULL
 #define CEMU_EMULATE_DIMENSIONS_TOYPAD_LABEL_IT NULL
@@ -13404,7 +13001,6 @@ struct retro_core_option_v2_category option_cats_it[] = {
 	{ "video", CATEGORY_VIDEO_LABEL_IT, CATEGORY_VIDEO_INFO_0_IT },
 	{ "shaders", CATEGORY_SHADERS_LABEL_IT, CATEGORY_SHADERS_INFO_0_IT },
 	{ "screen", CATEGORY_SCREEN_LABEL_IT, CATEGORY_SCREEN_INFO_0_IT },
-	{ "audio", CATEGORY_AUDIO_LABEL_IT, CATEGORY_AUDIO_INFO_0_IT },
 	// No Input category: what a port drives is a frontend device type, not
 	// a core option, and an empty submenu is worse than no submenu.
 	{ "system", CATEGORY_SYSTEM_LABEL_IT, CATEGORY_SYSTEM_INFO_0_IT },
@@ -13606,22 +13202,6 @@ struct retro_core_option_v2_definition option_defs_it[] = {
 			{ NULL, NULL },
 		},
 		"45000"
-	},
-	{
-		"cemu_audio_latency",
-		CEMU_AUDIO_LATENCY_LABEL_IT,
-		NULL,
-		NULL,
-		NULL,
-		"audio",
-		{
-			{ "1", NULL },
-			{ "2", NULL },
-			{ "3", NULL },
-			{ "4", NULL },
-			{ NULL, NULL },
-		},
-		"2"
 	},
 	{
 		"cemu_emulate_skylander_portal",
@@ -13968,8 +13548,6 @@ struct retro_core_options_v2 options_it = {
 #define CATEGORY_SHADERS_INFO_0_JA NULL
 #define CATEGORY_SCREEN_LABEL_JA NULL
 #define CATEGORY_SCREEN_INFO_0_JA NULL
-#define CATEGORY_AUDIO_LABEL_JA NULL
-#define CATEGORY_AUDIO_INFO_0_JA NULL
 #define CATEGORY_SYSTEM_LABEL_JA NULL
 #define CATEGORY_SYSTEM_INFO_0_JA NULL
 #define CATEGORY_ADDONS_LABEL_JA NULL
@@ -14020,7 +13598,6 @@ struct retro_core_options_v2 options_it = {
 #define OPTION_VAL_KEEP_ASPECT_JA NULL
 #define OPTION_VAL_STRETCH_JA NULL
 #define CEMU_THREAD_QUANTUM_LABEL_JA NULL
-#define CEMU_AUDIO_LATENCY_LABEL_JA NULL
 #define CEMU_EMULATE_SKYLANDER_PORTAL_LABEL_JA NULL
 #define CEMU_EMULATE_INFINITY_BASE_LABEL_JA NULL
 #define CEMU_EMULATE_DIMENSIONS_TOYPAD_LABEL_JA NULL
@@ -14067,7 +13644,6 @@ struct retro_core_option_v2_category option_cats_ja[] = {
 	{ "video", CATEGORY_VIDEO_LABEL_JA, CATEGORY_VIDEO_INFO_0_JA },
 	{ "shaders", CATEGORY_SHADERS_LABEL_JA, CATEGORY_SHADERS_INFO_0_JA },
 	{ "screen", CATEGORY_SCREEN_LABEL_JA, CATEGORY_SCREEN_INFO_0_JA },
-	{ "audio", CATEGORY_AUDIO_LABEL_JA, CATEGORY_AUDIO_INFO_0_JA },
 	// No Input category: what a port drives is a frontend device type, not
 	// a core option, and an empty submenu is worse than no submenu.
 	{ "system", CATEGORY_SYSTEM_LABEL_JA, CATEGORY_SYSTEM_INFO_0_JA },
@@ -14269,22 +13845,6 @@ struct retro_core_option_v2_definition option_defs_ja[] = {
 			{ NULL, NULL },
 		},
 		"45000"
-	},
-	{
-		"cemu_audio_latency",
-		CEMU_AUDIO_LATENCY_LABEL_JA,
-		NULL,
-		NULL,
-		NULL,
-		"audio",
-		{
-			{ "1", NULL },
-			{ "2", NULL },
-			{ "3", NULL },
-			{ "4", NULL },
-			{ NULL, NULL },
-		},
-		"2"
 	},
 	{
 		"cemu_emulate_skylander_portal",
@@ -14631,8 +14191,6 @@ struct retro_core_options_v2 options_ja = {
 #define CATEGORY_SHADERS_INFO_0_KO NULL
 #define CATEGORY_SCREEN_LABEL_KO NULL
 #define CATEGORY_SCREEN_INFO_0_KO NULL
-#define CATEGORY_AUDIO_LABEL_KO NULL
-#define CATEGORY_AUDIO_INFO_0_KO NULL
 #define CATEGORY_SYSTEM_LABEL_KO NULL
 #define CATEGORY_SYSTEM_INFO_0_KO NULL
 #define CATEGORY_ADDONS_LABEL_KO NULL
@@ -14683,7 +14241,6 @@ struct retro_core_options_v2 options_ja = {
 #define OPTION_VAL_KEEP_ASPECT_KO NULL
 #define OPTION_VAL_STRETCH_KO NULL
 #define CEMU_THREAD_QUANTUM_LABEL_KO NULL
-#define CEMU_AUDIO_LATENCY_LABEL_KO NULL
 #define CEMU_EMULATE_SKYLANDER_PORTAL_LABEL_KO NULL
 #define CEMU_EMULATE_INFINITY_BASE_LABEL_KO NULL
 #define CEMU_EMULATE_DIMENSIONS_TOYPAD_LABEL_KO NULL
@@ -14730,7 +14287,6 @@ struct retro_core_option_v2_category option_cats_ko[] = {
 	{ "video", CATEGORY_VIDEO_LABEL_KO, CATEGORY_VIDEO_INFO_0_KO },
 	{ "shaders", CATEGORY_SHADERS_LABEL_KO, CATEGORY_SHADERS_INFO_0_KO },
 	{ "screen", CATEGORY_SCREEN_LABEL_KO, CATEGORY_SCREEN_INFO_0_KO },
-	{ "audio", CATEGORY_AUDIO_LABEL_KO, CATEGORY_AUDIO_INFO_0_KO },
 	// No Input category: what a port drives is a frontend device type, not
 	// a core option, and an empty submenu is worse than no submenu.
 	{ "system", CATEGORY_SYSTEM_LABEL_KO, CATEGORY_SYSTEM_INFO_0_KO },
@@ -14932,22 +14488,6 @@ struct retro_core_option_v2_definition option_defs_ko[] = {
 			{ NULL, NULL },
 		},
 		"45000"
-	},
-	{
-		"cemu_audio_latency",
-		CEMU_AUDIO_LATENCY_LABEL_KO,
-		NULL,
-		NULL,
-		NULL,
-		"audio",
-		{
-			{ "1", NULL },
-			{ "2", NULL },
-			{ "3", NULL },
-			{ "4", NULL },
-			{ NULL, NULL },
-		},
-		"2"
 	},
 	{
 		"cemu_emulate_skylander_portal",
@@ -15294,8 +14834,6 @@ struct retro_core_options_v2 options_ko = {
 #define CATEGORY_SHADERS_INFO_0_NL NULL
 #define CATEGORY_SCREEN_LABEL_NL NULL
 #define CATEGORY_SCREEN_INFO_0_NL NULL
-#define CATEGORY_AUDIO_LABEL_NL NULL
-#define CATEGORY_AUDIO_INFO_0_NL NULL
 #define CATEGORY_SYSTEM_LABEL_NL NULL
 #define CATEGORY_SYSTEM_INFO_0_NL NULL
 #define CATEGORY_ADDONS_LABEL_NL NULL
@@ -15346,7 +14884,6 @@ struct retro_core_options_v2 options_ko = {
 #define OPTION_VAL_KEEP_ASPECT_NL NULL
 #define OPTION_VAL_STRETCH_NL NULL
 #define CEMU_THREAD_QUANTUM_LABEL_NL NULL
-#define CEMU_AUDIO_LATENCY_LABEL_NL NULL
 #define CEMU_EMULATE_SKYLANDER_PORTAL_LABEL_NL NULL
 #define CEMU_EMULATE_INFINITY_BASE_LABEL_NL NULL
 #define CEMU_EMULATE_DIMENSIONS_TOYPAD_LABEL_NL NULL
@@ -15393,7 +14930,6 @@ struct retro_core_option_v2_category option_cats_nl[] = {
 	{ "video", CATEGORY_VIDEO_LABEL_NL, CATEGORY_VIDEO_INFO_0_NL },
 	{ "shaders", CATEGORY_SHADERS_LABEL_NL, CATEGORY_SHADERS_INFO_0_NL },
 	{ "screen", CATEGORY_SCREEN_LABEL_NL, CATEGORY_SCREEN_INFO_0_NL },
-	{ "audio", CATEGORY_AUDIO_LABEL_NL, CATEGORY_AUDIO_INFO_0_NL },
 	// No Input category: what a port drives is a frontend device type, not
 	// a core option, and an empty submenu is worse than no submenu.
 	{ "system", CATEGORY_SYSTEM_LABEL_NL, CATEGORY_SYSTEM_INFO_0_NL },
@@ -15595,22 +15131,6 @@ struct retro_core_option_v2_definition option_defs_nl[] = {
 			{ NULL, NULL },
 		},
 		"45000"
-	},
-	{
-		"cemu_audio_latency",
-		CEMU_AUDIO_LATENCY_LABEL_NL,
-		NULL,
-		NULL,
-		NULL,
-		"audio",
-		{
-			{ "1", NULL },
-			{ "2", NULL },
-			{ "3", NULL },
-			{ "4", NULL },
-			{ NULL, NULL },
-		},
-		"2"
 	},
 	{
 		"cemu_emulate_skylander_portal",
@@ -15957,8 +15477,6 @@ struct retro_core_options_v2 options_nl = {
 #define CATEGORY_SHADERS_INFO_0_NO NULL
 #define CATEGORY_SCREEN_LABEL_NO NULL
 #define CATEGORY_SCREEN_INFO_0_NO NULL
-#define CATEGORY_AUDIO_LABEL_NO NULL
-#define CATEGORY_AUDIO_INFO_0_NO NULL
 #define CATEGORY_SYSTEM_LABEL_NO NULL
 #define CATEGORY_SYSTEM_INFO_0_NO NULL
 #define CATEGORY_ADDONS_LABEL_NO NULL
@@ -16009,7 +15527,6 @@ struct retro_core_options_v2 options_nl = {
 #define OPTION_VAL_KEEP_ASPECT_NO NULL
 #define OPTION_VAL_STRETCH_NO NULL
 #define CEMU_THREAD_QUANTUM_LABEL_NO NULL
-#define CEMU_AUDIO_LATENCY_LABEL_NO NULL
 #define CEMU_EMULATE_SKYLANDER_PORTAL_LABEL_NO NULL
 #define CEMU_EMULATE_INFINITY_BASE_LABEL_NO NULL
 #define CEMU_EMULATE_DIMENSIONS_TOYPAD_LABEL_NO NULL
@@ -16056,7 +15573,6 @@ struct retro_core_option_v2_category option_cats_no[] = {
 	{ "video", CATEGORY_VIDEO_LABEL_NO, CATEGORY_VIDEO_INFO_0_NO },
 	{ "shaders", CATEGORY_SHADERS_LABEL_NO, CATEGORY_SHADERS_INFO_0_NO },
 	{ "screen", CATEGORY_SCREEN_LABEL_NO, CATEGORY_SCREEN_INFO_0_NO },
-	{ "audio", CATEGORY_AUDIO_LABEL_NO, CATEGORY_AUDIO_INFO_0_NO },
 	// No Input category: what a port drives is a frontend device type, not
 	// a core option, and an empty submenu is worse than no submenu.
 	{ "system", CATEGORY_SYSTEM_LABEL_NO, CATEGORY_SYSTEM_INFO_0_NO },
@@ -16258,22 +15774,6 @@ struct retro_core_option_v2_definition option_defs_no[] = {
 			{ NULL, NULL },
 		},
 		"45000"
-	},
-	{
-		"cemu_audio_latency",
-		CEMU_AUDIO_LATENCY_LABEL_NO,
-		NULL,
-		NULL,
-		NULL,
-		"audio",
-		{
-			{ "1", NULL },
-			{ "2", NULL },
-			{ "3", NULL },
-			{ "4", NULL },
-			{ NULL, NULL },
-		},
-		"2"
 	},
 	{
 		"cemu_emulate_skylander_portal",
@@ -16620,8 +16120,6 @@ struct retro_core_options_v2 options_no = {
 #define CATEGORY_SHADERS_INFO_0_PL NULL
 #define CATEGORY_SCREEN_LABEL_PL NULL
 #define CATEGORY_SCREEN_INFO_0_PL NULL
-#define CATEGORY_AUDIO_LABEL_PL NULL
-#define CATEGORY_AUDIO_INFO_0_PL NULL
 #define CATEGORY_SYSTEM_LABEL_PL NULL
 #define CATEGORY_SYSTEM_INFO_0_PL NULL
 #define CATEGORY_ADDONS_LABEL_PL NULL
@@ -16672,7 +16170,6 @@ struct retro_core_options_v2 options_no = {
 #define OPTION_VAL_KEEP_ASPECT_PL NULL
 #define OPTION_VAL_STRETCH_PL NULL
 #define CEMU_THREAD_QUANTUM_LABEL_PL NULL
-#define CEMU_AUDIO_LATENCY_LABEL_PL NULL
 #define CEMU_EMULATE_SKYLANDER_PORTAL_LABEL_PL NULL
 #define CEMU_EMULATE_INFINITY_BASE_LABEL_PL NULL
 #define CEMU_EMULATE_DIMENSIONS_TOYPAD_LABEL_PL NULL
@@ -16719,7 +16216,6 @@ struct retro_core_option_v2_category option_cats_pl[] = {
 	{ "video", CATEGORY_VIDEO_LABEL_PL, CATEGORY_VIDEO_INFO_0_PL },
 	{ "shaders", CATEGORY_SHADERS_LABEL_PL, CATEGORY_SHADERS_INFO_0_PL },
 	{ "screen", CATEGORY_SCREEN_LABEL_PL, CATEGORY_SCREEN_INFO_0_PL },
-	{ "audio", CATEGORY_AUDIO_LABEL_PL, CATEGORY_AUDIO_INFO_0_PL },
 	// No Input category: what a port drives is a frontend device type, not
 	// a core option, and an empty submenu is worse than no submenu.
 	{ "system", CATEGORY_SYSTEM_LABEL_PL, CATEGORY_SYSTEM_INFO_0_PL },
@@ -16921,22 +16417,6 @@ struct retro_core_option_v2_definition option_defs_pl[] = {
 			{ NULL, NULL },
 		},
 		"45000"
-	},
-	{
-		"cemu_audio_latency",
-		CEMU_AUDIO_LATENCY_LABEL_PL,
-		NULL,
-		NULL,
-		NULL,
-		"audio",
-		{
-			{ "1", NULL },
-			{ "2", NULL },
-			{ "3", NULL },
-			{ "4", NULL },
-			{ NULL, NULL },
-		},
-		"2"
 	},
 	{
 		"cemu_emulate_skylander_portal",
@@ -17283,8 +16763,6 @@ struct retro_core_options_v2 options_pl = {
 #define CATEGORY_SHADERS_INFO_0_PT_BR NULL
 #define CATEGORY_SCREEN_LABEL_PT_BR NULL
 #define CATEGORY_SCREEN_INFO_0_PT_BR NULL
-#define CATEGORY_AUDIO_LABEL_PT_BR NULL
-#define CATEGORY_AUDIO_INFO_0_PT_BR NULL
 #define CATEGORY_SYSTEM_LABEL_PT_BR NULL
 #define CATEGORY_SYSTEM_INFO_0_PT_BR NULL
 #define CATEGORY_ADDONS_LABEL_PT_BR NULL
@@ -17335,7 +16813,6 @@ struct retro_core_options_v2 options_pl = {
 #define OPTION_VAL_KEEP_ASPECT_PT_BR NULL
 #define OPTION_VAL_STRETCH_PT_BR NULL
 #define CEMU_THREAD_QUANTUM_LABEL_PT_BR NULL
-#define CEMU_AUDIO_LATENCY_LABEL_PT_BR NULL
 #define CEMU_EMULATE_SKYLANDER_PORTAL_LABEL_PT_BR NULL
 #define CEMU_EMULATE_INFINITY_BASE_LABEL_PT_BR NULL
 #define CEMU_EMULATE_DIMENSIONS_TOYPAD_LABEL_PT_BR NULL
@@ -17382,7 +16859,6 @@ struct retro_core_option_v2_category option_cats_pt_br[] = {
 	{ "video", CATEGORY_VIDEO_LABEL_PT_BR, CATEGORY_VIDEO_INFO_0_PT_BR },
 	{ "shaders", CATEGORY_SHADERS_LABEL_PT_BR, CATEGORY_SHADERS_INFO_0_PT_BR },
 	{ "screen", CATEGORY_SCREEN_LABEL_PT_BR, CATEGORY_SCREEN_INFO_0_PT_BR },
-	{ "audio", CATEGORY_AUDIO_LABEL_PT_BR, CATEGORY_AUDIO_INFO_0_PT_BR },
 	// No Input category: what a port drives is a frontend device type, not
 	// a core option, and an empty submenu is worse than no submenu.
 	{ "system", CATEGORY_SYSTEM_LABEL_PT_BR, CATEGORY_SYSTEM_INFO_0_PT_BR },
@@ -17584,22 +17060,6 @@ struct retro_core_option_v2_definition option_defs_pt_br[] = {
 			{ NULL, NULL },
 		},
 		"45000"
-	},
-	{
-		"cemu_audio_latency",
-		CEMU_AUDIO_LATENCY_LABEL_PT_BR,
-		NULL,
-		NULL,
-		NULL,
-		"audio",
-		{
-			{ "1", NULL },
-			{ "2", NULL },
-			{ "3", NULL },
-			{ "4", NULL },
-			{ NULL, NULL },
-		},
-		"2"
 	},
 	{
 		"cemu_emulate_skylander_portal",
@@ -17946,8 +17406,6 @@ struct retro_core_options_v2 options_pt_br = {
 #define CATEGORY_SHADERS_INFO_0_PT_PT NULL
 #define CATEGORY_SCREEN_LABEL_PT_PT NULL
 #define CATEGORY_SCREEN_INFO_0_PT_PT NULL
-#define CATEGORY_AUDIO_LABEL_PT_PT NULL
-#define CATEGORY_AUDIO_INFO_0_PT_PT NULL
 #define CATEGORY_SYSTEM_LABEL_PT_PT NULL
 #define CATEGORY_SYSTEM_INFO_0_PT_PT NULL
 #define CATEGORY_ADDONS_LABEL_PT_PT NULL
@@ -17998,7 +17456,6 @@ struct retro_core_options_v2 options_pt_br = {
 #define OPTION_VAL_KEEP_ASPECT_PT_PT NULL
 #define OPTION_VAL_STRETCH_PT_PT NULL
 #define CEMU_THREAD_QUANTUM_LABEL_PT_PT NULL
-#define CEMU_AUDIO_LATENCY_LABEL_PT_PT NULL
 #define CEMU_EMULATE_SKYLANDER_PORTAL_LABEL_PT_PT NULL
 #define CEMU_EMULATE_INFINITY_BASE_LABEL_PT_PT NULL
 #define CEMU_EMULATE_DIMENSIONS_TOYPAD_LABEL_PT_PT NULL
@@ -18045,7 +17502,6 @@ struct retro_core_option_v2_category option_cats_pt_pt[] = {
 	{ "video", CATEGORY_VIDEO_LABEL_PT_PT, CATEGORY_VIDEO_INFO_0_PT_PT },
 	{ "shaders", CATEGORY_SHADERS_LABEL_PT_PT, CATEGORY_SHADERS_INFO_0_PT_PT },
 	{ "screen", CATEGORY_SCREEN_LABEL_PT_PT, CATEGORY_SCREEN_INFO_0_PT_PT },
-	{ "audio", CATEGORY_AUDIO_LABEL_PT_PT, CATEGORY_AUDIO_INFO_0_PT_PT },
 	// No Input category: what a port drives is a frontend device type, not
 	// a core option, and an empty submenu is worse than no submenu.
 	{ "system", CATEGORY_SYSTEM_LABEL_PT_PT, CATEGORY_SYSTEM_INFO_0_PT_PT },
@@ -18247,22 +17703,6 @@ struct retro_core_option_v2_definition option_defs_pt_pt[] = {
 			{ NULL, NULL },
 		},
 		"45000"
-	},
-	{
-		"cemu_audio_latency",
-		CEMU_AUDIO_LATENCY_LABEL_PT_PT,
-		NULL,
-		NULL,
-		NULL,
-		"audio",
-		{
-			{ "1", NULL },
-			{ "2", NULL },
-			{ "3", NULL },
-			{ "4", NULL },
-			{ NULL, NULL },
-		},
-		"2"
 	},
 	{
 		"cemu_emulate_skylander_portal",
@@ -18609,8 +18049,6 @@ struct retro_core_options_v2 options_pt_pt = {
 #define CATEGORY_SHADERS_INFO_0_RU NULL
 #define CATEGORY_SCREEN_LABEL_RU NULL
 #define CATEGORY_SCREEN_INFO_0_RU NULL
-#define CATEGORY_AUDIO_LABEL_RU NULL
-#define CATEGORY_AUDIO_INFO_0_RU NULL
 #define CATEGORY_SYSTEM_LABEL_RU NULL
 #define CATEGORY_SYSTEM_INFO_0_RU NULL
 #define CATEGORY_ADDONS_LABEL_RU NULL
@@ -18661,7 +18099,6 @@ struct retro_core_options_v2 options_pt_pt = {
 #define OPTION_VAL_KEEP_ASPECT_RU NULL
 #define OPTION_VAL_STRETCH_RU NULL
 #define CEMU_THREAD_QUANTUM_LABEL_RU NULL
-#define CEMU_AUDIO_LATENCY_LABEL_RU NULL
 #define CEMU_EMULATE_SKYLANDER_PORTAL_LABEL_RU NULL
 #define CEMU_EMULATE_INFINITY_BASE_LABEL_RU NULL
 #define CEMU_EMULATE_DIMENSIONS_TOYPAD_LABEL_RU NULL
@@ -18708,7 +18145,6 @@ struct retro_core_option_v2_category option_cats_ru[] = {
 	{ "video", CATEGORY_VIDEO_LABEL_RU, CATEGORY_VIDEO_INFO_0_RU },
 	{ "shaders", CATEGORY_SHADERS_LABEL_RU, CATEGORY_SHADERS_INFO_0_RU },
 	{ "screen", CATEGORY_SCREEN_LABEL_RU, CATEGORY_SCREEN_INFO_0_RU },
-	{ "audio", CATEGORY_AUDIO_LABEL_RU, CATEGORY_AUDIO_INFO_0_RU },
 	// No Input category: what a port drives is a frontend device type, not
 	// a core option, and an empty submenu is worse than no submenu.
 	{ "system", CATEGORY_SYSTEM_LABEL_RU, CATEGORY_SYSTEM_INFO_0_RU },
@@ -18910,22 +18346,6 @@ struct retro_core_option_v2_definition option_defs_ru[] = {
 			{ NULL, NULL },
 		},
 		"45000"
-	},
-	{
-		"cemu_audio_latency",
-		CEMU_AUDIO_LATENCY_LABEL_RU,
-		NULL,
-		NULL,
-		NULL,
-		"audio",
-		{
-			{ "1", NULL },
-			{ "2", NULL },
-			{ "3", NULL },
-			{ "4", NULL },
-			{ NULL, NULL },
-		},
-		"2"
 	},
 	{
 		"cemu_emulate_skylander_portal",
@@ -19272,8 +18692,6 @@ struct retro_core_options_v2 options_ru = {
 #define CATEGORY_SHADERS_INFO_0_SK NULL
 #define CATEGORY_SCREEN_LABEL_SK NULL
 #define CATEGORY_SCREEN_INFO_0_SK NULL
-#define CATEGORY_AUDIO_LABEL_SK NULL
-#define CATEGORY_AUDIO_INFO_0_SK NULL
 #define CATEGORY_SYSTEM_LABEL_SK NULL
 #define CATEGORY_SYSTEM_INFO_0_SK NULL
 #define CATEGORY_ADDONS_LABEL_SK NULL
@@ -19324,7 +18742,6 @@ struct retro_core_options_v2 options_ru = {
 #define OPTION_VAL_KEEP_ASPECT_SK NULL
 #define OPTION_VAL_STRETCH_SK NULL
 #define CEMU_THREAD_QUANTUM_LABEL_SK NULL
-#define CEMU_AUDIO_LATENCY_LABEL_SK NULL
 #define CEMU_EMULATE_SKYLANDER_PORTAL_LABEL_SK NULL
 #define CEMU_EMULATE_INFINITY_BASE_LABEL_SK NULL
 #define CEMU_EMULATE_DIMENSIONS_TOYPAD_LABEL_SK NULL
@@ -19371,7 +18788,6 @@ struct retro_core_option_v2_category option_cats_sk[] = {
 	{ "video", CATEGORY_VIDEO_LABEL_SK, CATEGORY_VIDEO_INFO_0_SK },
 	{ "shaders", CATEGORY_SHADERS_LABEL_SK, CATEGORY_SHADERS_INFO_0_SK },
 	{ "screen", CATEGORY_SCREEN_LABEL_SK, CATEGORY_SCREEN_INFO_0_SK },
-	{ "audio", CATEGORY_AUDIO_LABEL_SK, CATEGORY_AUDIO_INFO_0_SK },
 	// No Input category: what a port drives is a frontend device type, not
 	// a core option, and an empty submenu is worse than no submenu.
 	{ "system", CATEGORY_SYSTEM_LABEL_SK, CATEGORY_SYSTEM_INFO_0_SK },
@@ -19573,22 +18989,6 @@ struct retro_core_option_v2_definition option_defs_sk[] = {
 			{ NULL, NULL },
 		},
 		"45000"
-	},
-	{
-		"cemu_audio_latency",
-		CEMU_AUDIO_LATENCY_LABEL_SK,
-		NULL,
-		NULL,
-		NULL,
-		"audio",
-		{
-			{ "1", NULL },
-			{ "2", NULL },
-			{ "3", NULL },
-			{ "4", NULL },
-			{ NULL, NULL },
-		},
-		"2"
 	},
 	{
 		"cemu_emulate_skylander_portal",
@@ -19935,8 +19335,6 @@ struct retro_core_options_v2 options_sk = {
 #define CATEGORY_SHADERS_INFO_0_SV NULL
 #define CATEGORY_SCREEN_LABEL_SV NULL
 #define CATEGORY_SCREEN_INFO_0_SV NULL
-#define CATEGORY_AUDIO_LABEL_SV NULL
-#define CATEGORY_AUDIO_INFO_0_SV NULL
 #define CATEGORY_SYSTEM_LABEL_SV NULL
 #define CATEGORY_SYSTEM_INFO_0_SV NULL
 #define CATEGORY_ADDONS_LABEL_SV NULL
@@ -19987,7 +19385,6 @@ struct retro_core_options_v2 options_sk = {
 #define OPTION_VAL_KEEP_ASPECT_SV NULL
 #define OPTION_VAL_STRETCH_SV NULL
 #define CEMU_THREAD_QUANTUM_LABEL_SV NULL
-#define CEMU_AUDIO_LATENCY_LABEL_SV NULL
 #define CEMU_EMULATE_SKYLANDER_PORTAL_LABEL_SV NULL
 #define CEMU_EMULATE_INFINITY_BASE_LABEL_SV NULL
 #define CEMU_EMULATE_DIMENSIONS_TOYPAD_LABEL_SV NULL
@@ -20034,7 +19431,6 @@ struct retro_core_option_v2_category option_cats_sv[] = {
 	{ "video", CATEGORY_VIDEO_LABEL_SV, CATEGORY_VIDEO_INFO_0_SV },
 	{ "shaders", CATEGORY_SHADERS_LABEL_SV, CATEGORY_SHADERS_INFO_0_SV },
 	{ "screen", CATEGORY_SCREEN_LABEL_SV, CATEGORY_SCREEN_INFO_0_SV },
-	{ "audio", CATEGORY_AUDIO_LABEL_SV, CATEGORY_AUDIO_INFO_0_SV },
 	// No Input category: what a port drives is a frontend device type, not
 	// a core option, and an empty submenu is worse than no submenu.
 	{ "system", CATEGORY_SYSTEM_LABEL_SV, CATEGORY_SYSTEM_INFO_0_SV },
@@ -20236,22 +19632,6 @@ struct retro_core_option_v2_definition option_defs_sv[] = {
 			{ NULL, NULL },
 		},
 		"45000"
-	},
-	{
-		"cemu_audio_latency",
-		CEMU_AUDIO_LATENCY_LABEL_SV,
-		NULL,
-		NULL,
-		NULL,
-		"audio",
-		{
-			{ "1", NULL },
-			{ "2", NULL },
-			{ "3", NULL },
-			{ "4", NULL },
-			{ NULL, NULL },
-		},
-		"2"
 	},
 	{
 		"cemu_emulate_skylander_portal",
@@ -20598,8 +19978,6 @@ struct retro_core_options_v2 options_sv = {
 #define CATEGORY_SHADERS_INFO_0_TR NULL
 #define CATEGORY_SCREEN_LABEL_TR NULL
 #define CATEGORY_SCREEN_INFO_0_TR NULL
-#define CATEGORY_AUDIO_LABEL_TR NULL
-#define CATEGORY_AUDIO_INFO_0_TR NULL
 #define CATEGORY_SYSTEM_LABEL_TR NULL
 #define CATEGORY_SYSTEM_INFO_0_TR NULL
 #define CATEGORY_ADDONS_LABEL_TR NULL
@@ -20650,7 +20028,6 @@ struct retro_core_options_v2 options_sv = {
 #define OPTION_VAL_KEEP_ASPECT_TR NULL
 #define OPTION_VAL_STRETCH_TR NULL
 #define CEMU_THREAD_QUANTUM_LABEL_TR NULL
-#define CEMU_AUDIO_LATENCY_LABEL_TR NULL
 #define CEMU_EMULATE_SKYLANDER_PORTAL_LABEL_TR NULL
 #define CEMU_EMULATE_INFINITY_BASE_LABEL_TR NULL
 #define CEMU_EMULATE_DIMENSIONS_TOYPAD_LABEL_TR NULL
@@ -20697,7 +20074,6 @@ struct retro_core_option_v2_category option_cats_tr[] = {
 	{ "video", CATEGORY_VIDEO_LABEL_TR, CATEGORY_VIDEO_INFO_0_TR },
 	{ "shaders", CATEGORY_SHADERS_LABEL_TR, CATEGORY_SHADERS_INFO_0_TR },
 	{ "screen", CATEGORY_SCREEN_LABEL_TR, CATEGORY_SCREEN_INFO_0_TR },
-	{ "audio", CATEGORY_AUDIO_LABEL_TR, CATEGORY_AUDIO_INFO_0_TR },
 	// No Input category: what a port drives is a frontend device type, not
 	// a core option, and an empty submenu is worse than no submenu.
 	{ "system", CATEGORY_SYSTEM_LABEL_TR, CATEGORY_SYSTEM_INFO_0_TR },
@@ -20899,22 +20275,6 @@ struct retro_core_option_v2_definition option_defs_tr[] = {
 			{ NULL, NULL },
 		},
 		"45000"
-	},
-	{
-		"cemu_audio_latency",
-		CEMU_AUDIO_LATENCY_LABEL_TR,
-		NULL,
-		NULL,
-		NULL,
-		"audio",
-		{
-			{ "1", NULL },
-			{ "2", NULL },
-			{ "3", NULL },
-			{ "4", NULL },
-			{ NULL, NULL },
-		},
-		"2"
 	},
 	{
 		"cemu_emulate_skylander_portal",
@@ -21261,8 +20621,6 @@ struct retro_core_options_v2 options_tr = {
 #define CATEGORY_SHADERS_INFO_0_UK NULL
 #define CATEGORY_SCREEN_LABEL_UK NULL
 #define CATEGORY_SCREEN_INFO_0_UK NULL
-#define CATEGORY_AUDIO_LABEL_UK NULL
-#define CATEGORY_AUDIO_INFO_0_UK NULL
 #define CATEGORY_SYSTEM_LABEL_UK NULL
 #define CATEGORY_SYSTEM_INFO_0_UK NULL
 #define CATEGORY_ADDONS_LABEL_UK NULL
@@ -21313,7 +20671,6 @@ struct retro_core_options_v2 options_tr = {
 #define OPTION_VAL_KEEP_ASPECT_UK NULL
 #define OPTION_VAL_STRETCH_UK NULL
 #define CEMU_THREAD_QUANTUM_LABEL_UK NULL
-#define CEMU_AUDIO_LATENCY_LABEL_UK NULL
 #define CEMU_EMULATE_SKYLANDER_PORTAL_LABEL_UK NULL
 #define CEMU_EMULATE_INFINITY_BASE_LABEL_UK NULL
 #define CEMU_EMULATE_DIMENSIONS_TOYPAD_LABEL_UK NULL
@@ -21360,7 +20717,6 @@ struct retro_core_option_v2_category option_cats_uk[] = {
 	{ "video", CATEGORY_VIDEO_LABEL_UK, CATEGORY_VIDEO_INFO_0_UK },
 	{ "shaders", CATEGORY_SHADERS_LABEL_UK, CATEGORY_SHADERS_INFO_0_UK },
 	{ "screen", CATEGORY_SCREEN_LABEL_UK, CATEGORY_SCREEN_INFO_0_UK },
-	{ "audio", CATEGORY_AUDIO_LABEL_UK, CATEGORY_AUDIO_INFO_0_UK },
 	// No Input category: what a port drives is a frontend device type, not
 	// a core option, and an empty submenu is worse than no submenu.
 	{ "system", CATEGORY_SYSTEM_LABEL_UK, CATEGORY_SYSTEM_INFO_0_UK },
@@ -21562,22 +20918,6 @@ struct retro_core_option_v2_definition option_defs_uk[] = {
 			{ NULL, NULL },
 		},
 		"45000"
-	},
-	{
-		"cemu_audio_latency",
-		CEMU_AUDIO_LATENCY_LABEL_UK,
-		NULL,
-		NULL,
-		NULL,
-		"audio",
-		{
-			{ "1", NULL },
-			{ "2", NULL },
-			{ "3", NULL },
-			{ "4", NULL },
-			{ NULL, NULL },
-		},
-		"2"
 	},
 	{
 		"cemu_emulate_skylander_portal",
@@ -21924,8 +21264,6 @@ struct retro_core_options_v2 options_uk = {
 #define CATEGORY_SHADERS_INFO_0_VAL NULL
 #define CATEGORY_SCREEN_LABEL_VAL NULL
 #define CATEGORY_SCREEN_INFO_0_VAL NULL
-#define CATEGORY_AUDIO_LABEL_VAL NULL
-#define CATEGORY_AUDIO_INFO_0_VAL NULL
 #define CATEGORY_SYSTEM_LABEL_VAL NULL
 #define CATEGORY_SYSTEM_INFO_0_VAL NULL
 #define CATEGORY_ADDONS_LABEL_VAL NULL
@@ -21976,7 +21314,6 @@ struct retro_core_options_v2 options_uk = {
 #define OPTION_VAL_KEEP_ASPECT_VAL NULL
 #define OPTION_VAL_STRETCH_VAL NULL
 #define CEMU_THREAD_QUANTUM_LABEL_VAL NULL
-#define CEMU_AUDIO_LATENCY_LABEL_VAL NULL
 #define CEMU_EMULATE_SKYLANDER_PORTAL_LABEL_VAL NULL
 #define CEMU_EMULATE_INFINITY_BASE_LABEL_VAL NULL
 #define CEMU_EMULATE_DIMENSIONS_TOYPAD_LABEL_VAL NULL
@@ -22023,7 +21360,6 @@ struct retro_core_option_v2_category option_cats_val[] = {
 	{ "video", CATEGORY_VIDEO_LABEL_VAL, CATEGORY_VIDEO_INFO_0_VAL },
 	{ "shaders", CATEGORY_SHADERS_LABEL_VAL, CATEGORY_SHADERS_INFO_0_VAL },
 	{ "screen", CATEGORY_SCREEN_LABEL_VAL, CATEGORY_SCREEN_INFO_0_VAL },
-	{ "audio", CATEGORY_AUDIO_LABEL_VAL, CATEGORY_AUDIO_INFO_0_VAL },
 	// No Input category: what a port drives is a frontend device type, not
 	// a core option, and an empty submenu is worse than no submenu.
 	{ "system", CATEGORY_SYSTEM_LABEL_VAL, CATEGORY_SYSTEM_INFO_0_VAL },
@@ -22225,22 +21561,6 @@ struct retro_core_option_v2_definition option_defs_val[] = {
 			{ NULL, NULL },
 		},
 		"45000"
-	},
-	{
-		"cemu_audio_latency",
-		CEMU_AUDIO_LATENCY_LABEL_VAL,
-		NULL,
-		NULL,
-		NULL,
-		"audio",
-		{
-			{ "1", NULL },
-			{ "2", NULL },
-			{ "3", NULL },
-			{ "4", NULL },
-			{ NULL, NULL },
-		},
-		"2"
 	},
 	{
 		"cemu_emulate_skylander_portal",
@@ -22587,8 +21907,6 @@ struct retro_core_options_v2 options_val = {
 #define CATEGORY_SHADERS_INFO_0_VN NULL
 #define CATEGORY_SCREEN_LABEL_VN NULL
 #define CATEGORY_SCREEN_INFO_0_VN NULL
-#define CATEGORY_AUDIO_LABEL_VN NULL
-#define CATEGORY_AUDIO_INFO_0_VN NULL
 #define CATEGORY_SYSTEM_LABEL_VN NULL
 #define CATEGORY_SYSTEM_INFO_0_VN NULL
 #define CATEGORY_ADDONS_LABEL_VN NULL
@@ -22639,7 +21957,6 @@ struct retro_core_options_v2 options_val = {
 #define OPTION_VAL_KEEP_ASPECT_VN NULL
 #define OPTION_VAL_STRETCH_VN NULL
 #define CEMU_THREAD_QUANTUM_LABEL_VN NULL
-#define CEMU_AUDIO_LATENCY_LABEL_VN NULL
 #define CEMU_EMULATE_SKYLANDER_PORTAL_LABEL_VN NULL
 #define CEMU_EMULATE_INFINITY_BASE_LABEL_VN NULL
 #define CEMU_EMULATE_DIMENSIONS_TOYPAD_LABEL_VN NULL
@@ -22686,7 +22003,6 @@ struct retro_core_option_v2_category option_cats_vn[] = {
 	{ "video", CATEGORY_VIDEO_LABEL_VN, CATEGORY_VIDEO_INFO_0_VN },
 	{ "shaders", CATEGORY_SHADERS_LABEL_VN, CATEGORY_SHADERS_INFO_0_VN },
 	{ "screen", CATEGORY_SCREEN_LABEL_VN, CATEGORY_SCREEN_INFO_0_VN },
-	{ "audio", CATEGORY_AUDIO_LABEL_VN, CATEGORY_AUDIO_INFO_0_VN },
 	// No Input category: what a port drives is a frontend device type, not
 	// a core option, and an empty submenu is worse than no submenu.
 	{ "system", CATEGORY_SYSTEM_LABEL_VN, CATEGORY_SYSTEM_INFO_0_VN },
@@ -22888,22 +22204,6 @@ struct retro_core_option_v2_definition option_defs_vn[] = {
 			{ NULL, NULL },
 		},
 		"45000"
-	},
-	{
-		"cemu_audio_latency",
-		CEMU_AUDIO_LATENCY_LABEL_VN,
-		NULL,
-		NULL,
-		NULL,
-		"audio",
-		{
-			{ "1", NULL },
-			{ "2", NULL },
-			{ "3", NULL },
-			{ "4", NULL },
-			{ NULL, NULL },
-		},
-		"2"
 	},
 	{
 		"cemu_emulate_skylander_portal",

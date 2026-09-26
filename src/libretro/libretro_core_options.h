@@ -55,7 +55,6 @@ struct retro_core_option_v2_category option_cats_us[] = {
 	{ "video", "Video", "Resolution, scaling and frame pacing." },
 	{ "shaders", "Shaders", "Shader translation, caching and compilation." },
 	{ "screen", "Screen", "Which Wii U screen is shown, and how." },
-	{ "audio", "Audio", "Sound output." },
 	// No Input category: what a port drives is a frontend device type, not
 	// a core option, and an empty submenu is worse than no submenu.
 	{ "system", "System", "CPU, language and scheduling." },
@@ -273,22 +272,6 @@ struct retro_core_option_v2_definition option_defs_us[] = {
 			{ NULL, NULL },
 		},
 		"45000"
-	},
-	{
-		"cemu_audio_latency",
-		"Audio Latency",
-		NULL,
-		NULL,
-		NULL,
-		"audio",
-		{
-			{ "1", NULL },
-			{ "2", NULL },
-			{ "3", NULL },
-			{ "4", NULL },
-			{ NULL, NULL },
-		},
-		"2"
 	},
 	{
 		"cemu_emulate_skylander_portal",
