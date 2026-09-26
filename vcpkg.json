@@ -64,27 +64,6 @@
       "dependencies": [
         "libusb"
       ]
-    },
-    "sdl": {
-      "description": "SDL3, for the standalone's own controller support (not built by the libretro core, whose input comes from the frontend)",
-      "dependencies": [
-        {
-          "name": "sdl3",
-          "default-features": false
-        }
-      ]
-    },
-    "gui": {
-      "description": "wxWidgets desktop UI (not built by the libretro core)",
-      "dependencies": [
-        {
-          "name": "wxwidgets",
-          "default-features": false,
-          "features": [
-            "debug-support"
-          ]
-        }
-      ]
     }
   },
   "overrides": [
@@ -95,14 +74,6 @@
     {
       "name": "glslang",
       "version": "15.1.0"
-    },
-    {
-      "name": "sdl3",
-      "version": "3.4.10"
-    },
-    {
-      "name": "wxwidgets",
-      "version": "3.3.3"
     }
   ]
 }
