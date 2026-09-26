@@ -52,7 +52,6 @@ extern "C"
 
 std::atomic_bool g_isGPUInitFinished = false;
 
-std::wstring executablePath;
 
 // some implementations of _putenv dont copy the string and instead only store a pointer
 // thus we use a helper to keep a permanent copy
@@ -95,20 +94,6 @@ void reconfigureVkDrivers()
 #endif
 }
 
-void WindowsInitCwd()
-{
-	#if BOOST_OS_WINDOWS
-	executablePath.resize(4096);
-	int i = GetModuleFileNameW(NULL, executablePath.data(), executablePath.size());
-	if(i >= 0)
-		executablePath.resize(i);
-	else
-		executablePath.clear();
-	SetCurrentDirectoryW(fs::path(executablePath).parent_path().c_str());
-	// set high priority
-	SetPriorityClass(GetCurrentProcess(), ABOVE_NORMAL_PRIORITY_CLASS);
-	#endif
-}
 
 // Defined by the libretro glue. Cemu's own log is created part-way through the
 // init below, and a hard crash in the frontend's process can take the whole
@@ -130,7 +115,6 @@ void CemuCommonInit()
 	CEMU_INIT_STAGE("PPC timer");
 	PPCTimer_init();
 
-	WindowsInitCwd();
 	CEMU_INIT_STAGE("exception handler");
     ExceptionHandler_Init();
 	// read config
