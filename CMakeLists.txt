@@ -1,10 +1,10 @@
 cmake_minimum_required(VERSION 3.21.1)
 
 option(ENABLE_VCPKG "Enable the vcpkg package manager" ON)
-# Declared here as well as below because the vcpkg manifest features have to be
-# selected before project() is called.
-option(ENABLE_LIBRETRO "Build as libretro core" OFF)
-option(MACOS_BUNDLE "The executable when built on macOS will be created as an application bundle" OFF)
+# This repository builds the libretro core and nothing else - the standalone
+# wx application is gone. ENABLE_LIBRETRO stays as a variable because the rest
+# of the build, much of it shared with upstream Cemu, still asks for it.
+set(ENABLE_LIBRETRO ON)
 option(ALLOW_PORTABLE "Allow Cemu to be run in portable mode" ON)
 
 # used by CI script to set version:
@@ -94,11 +94,6 @@ if (ENABLE_VCPKG)
 		set(VCPKG_OVERLAY_PORTS "${CMAKE_CURRENT_LIST_DIR}/dependencies/vcpkg_overlay_ports_mac;${CMAKE_CURRENT_LIST_DIR}/dependencies/vcpkg_overlay_ports")
 	else()
 		set(VCPKG_OVERLAY_PORTS "${CMAKE_CURRENT_LIST_DIR}/dependencies/vcpkg_overlay_ports_win;${CMAKE_CURRENT_LIST_DIR}/dependencies/vcpkg_overlay_ports")
-	endif()
-	# The libretro core forces ENABLE_WXWIDGETS OFF, so keep wxWidgets and its
-	# gtk3/cairo/... dependency tree out of the install plan for that build.
-	if (NOT ENABLE_LIBRETRO)
-		list(APPEND VCPKG_MANIFEST_FEATURES "gui")
 	endif()
 	# libusb is a feature rather than a plain dependency because iOS and tvOS
 	# have no USB API to build it against: its Darwin backend is IOKit's USB
@@ -218,6 +213,22 @@ if (ENABLE_METAL AND NOT APPLE)
     message(FATAL_ERROR "Metal backend is only supported on Apple platforms")
 endif()
 
+# The libretro core gets its input from the frontend, through
+# LibretroControllerProvider, so the standalone's own controller backends are
+# left out of it. They were not idle there: InputManager started the DSU client
+# (a UDP socket and two threads) and the real-Wiimote provider (three threads
+# scanning HID and Bluetooth) in every core, and SDL3 was linked in whole for a
+# provider the core never starts. libusb stays - nsyshid passes real USB toy
+# portals through to the game with it, which the frontend cannot do.
+if (ENABLE_LIBRETRO)
+	set(ENABLE_SDL OFF CACHE BOOL "" FORCE)
+	set(ENABLE_HIDAPI OFF CACHE BOOL "" FORCE)
+	set(ENABLE_BLUEZ OFF CACHE BOOL "" FORCE)
+	set(ENABLE_XINPUT OFF CACHE BOOL "" FORCE)
+	set(ENABLE_DIRECTINPUT OFF CACHE BOOL "" FORCE)
+	add_compile_definitions(HAS_KEYBOARD=0 HAS_DSU=0 HAS_XINPUT=0)
+endif()
+
 # input backends
 if (WIN32)
 	option(ENABLE_XINPUT "Enables the usage of XInput" ON)
@@ -257,18 +268,12 @@ if (WIN32)
 endif()
 option(ENABLE_CUBEB "Enabled cubeb backend" ON)
 
-option(ENABLE_WXWIDGETS "Build with wxWidgets UI (Currently required)" ON)
-option(ENABLE_LIBRETRO "Build as libretro core" OFF)
-
 if (ENABLE_LIBRETRO)
-	set(ENABLE_WXWIDGETS OFF)
 	set(ENABLE_DISCORD_RPC OFF)
 	add_compile_definitions(ENABLE_LIBRETRO)
 	# All static libs must be compiled with -fPIC for shared library linking
 	set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 endif()
-
-option(ENABLE_LIBRETRO "Build Libretro core" OFF)
 
 # Disable cubeb for libretro builds (COM threading issues with WASAPI)
 if(ENABLE_LIBRETRO)
@@ -322,10 +327,6 @@ if (UNIX AND NOT APPLE AND NOT ANDROID AND NOT WEBOS)
 		target_include_directories(CemuWaylandProtocols PRIVATE ${Wayland_INCLUDE_DIRS})
 		add_compile_definitions(HAS_WAYLAND)
 	endif()
-	# Only CemuWxGui links GTK3::gtk, so a core build does not need it at all.
-	if (ENABLE_WXWIDGETS)
-		find_package(GTK3 REQUIRED)
-	endif()
 
 	if(ENABLE_BLUEZ)
 		find_package(bluez REQUIRED)
@@ -373,10 +374,6 @@ if(UNIX AND NOT APPLE)
 		add_subdirectory(dependencies/gamemode EXCLUDE_FROM_ALL)
 		target_include_directories(gamemode INTERFACE ./dependencies/gamemode/lib)
 	endif()
-endif()
-
-if (ENABLE_WXWIDGETS)
-	find_package(wxWidgets 3.3 REQUIRED COMPONENTS base core gl propgrid xrc)
 endif()
 
 if (ENABLE_CUBEB)

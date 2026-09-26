@@ -13,8 +13,9 @@ cemu_use_precompiled_header(CemuAudio)
 # XAudio 2.7 headers use MSVC-only GUID macros, and DirectSoundAPI hands
 # std::thread::native_handle() to a Win32 API expecting a HANDLE, which only
 # holds for the MSVC standard library. Neither builds with MinGW, and the
-# libretro core takes its audio from the frontend regardless.
-if(WIN32 AND MSVC)
+# libretro core takes its audio from the frontend regardless - so it leaves
+# them out on MSVC too, where they were compiled in and never started.
+if(WIN32 AND MSVC AND NOT ENABLE_LIBRETRO)
 	target_sources(CemuAudio PRIVATE
 		DirectSoundAPI.cpp
 		DirectSoundAPI.h

@@ -11,10 +11,6 @@
       "default-features": false
     },
     "rapidjson",
-    {
-      "name": "sdl3",
-      "default-features": false
-    },
     "boost-tokenizer",
     "boost-container",
     "boost-context",
@@ -68,18 +64,6 @@
       "dependencies": [
         "libusb"
       ]
-    },
-    "gui": {
-      "description": "wxWidgets desktop UI (not built by the libretro core)",
-      "dependencies": [
-        {
-          "name": "wxwidgets",
-          "default-features": false,
-          "features": [
-            "debug-support"
-          ]
-        }
-      ]
     }
   },
   "overrides": [
@@ -90,14 +74,6 @@
     {
       "name": "glslang",
       "version": "15.1.0"
-    },
-    {
-      "name": "sdl3",
-      "version": "3.4.10"
-    },
-    {
-      "name": "wxwidgets",
-      "version": "3.3.3"
     }
   ]
 }

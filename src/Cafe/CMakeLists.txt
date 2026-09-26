@@ -559,6 +559,9 @@ if(APPLE AND NOT CMAKE_SYSTEM_NAME STREQUAL "iOS" AND NOT CMAKE_SYSTEM_NAME STRE
 	    HW/Latte/Renderer/MetalView.mm
 	    HW/Latte/Renderer/MetalView.h
 	)
+	# MetalView is an NSView. AppKit used to arrive with SDL3's link interface,
+	# which the libretro core no longer has.
+	target_link_libraries(CemuCafe PRIVATE "-framework AppKit")
 	if (ENABLE_VULKAN)
 		target_sources(CemuCafe PRIVATE
 		    HW/Latte/Renderer/Vulkan/CocoaSurface.mm
@@ -618,7 +621,10 @@ if(ENABLE_METAL)
         HW/Latte/LegacyShaderDecompiler/LatteDecompilerEmitMSLHeader.hpp
     )
 
+    # Foundation for metal-cpp's NS:: side (error domains, notifications),
+    # which likewise came in through SDL3 before.
     target_link_libraries(CemuCafe PRIVATE
+        "-framework Foundation"
         "-framework Metal"
         "-framework QuartzCore"
     )

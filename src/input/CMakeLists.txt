@@ -9,16 +9,6 @@ add_library(CemuInput
 	api/ControllerState.cpp
 	api/InputAPI.h
 	api/ControllerProvider.h
-	api/DSU/DSUController.h
-	api/DSU/DSUControllerProvider.cpp
-	api/DSU/DSUController.cpp
-	api/DSU/DSUControllerProvider.h
-	api/DSU/DSUMessages.h
-	api/DSU/DSUMessages.cpp
-	api/Keyboard/KeyboardControllerProvider.h
-	api/Keyboard/KeyboardControllerProvider.cpp
-	api/Keyboard/KeyboardController.cpp
-	api/Keyboard/KeyboardController.h
 	api/Libretro/LibretroControllerProvider.h
 	api/Libretro/LibretroControllerProvider.cpp
 	api/Libretro/LibretroController.cpp
@@ -37,6 +27,23 @@ add_library(CemuInput
 	emulated/ClassicController.h
 )
 
+# The standalone's own input: a DSU (cemuhook) client and the keyboard. The
+# libretro core gets both from the frontend - see the top-level CMakeLists.
+if (NOT ENABLE_LIBRETRO)
+	target_sources(CemuInput PRIVATE
+		api/DSU/DSUController.h
+		api/DSU/DSUControllerProvider.cpp
+		api/DSU/DSUController.cpp
+		api/DSU/DSUControllerProvider.h
+		api/DSU/DSUMessages.h
+		api/DSU/DSUMessages.cpp
+		api/Keyboard/KeyboardControllerProvider.h
+		api/Keyboard/KeyboardControllerProvider.cpp
+		api/Keyboard/KeyboardController.cpp
+		api/Keyboard/KeyboardController.h
+	)
+endif()
+
 set_property(TARGET CemuInput PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
 cemu_use_precompiled_header(CemuInput)
@@ -50,7 +57,7 @@ if (ENABLE_LIBUSB)
 	)
 endif()
 
-if(WIN32)
+if(WIN32 AND NOT ENABLE_LIBRETRO)
 	# XInput
 	target_sources(CemuInput PRIVATE
 		api/XInput/XInputControllerProvider.cpp
