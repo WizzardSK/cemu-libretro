@@ -29,11 +29,6 @@
 #pragma comment(lib,"Dbghelp.lib")
 #endif
 
-#ifdef HAS_SDL
-#define SDL_MAIN_HANDLED
-#include <SDL3/SDL.h>
-#include <SDL3/SDL_main.h>
-#endif
 
 #if BOOST_OS_LINUX
 #define _putenv(__s) putenv((char*)(__s))
@@ -260,9 +255,6 @@ int wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int
 {
 	if (FAILED(CoInitializeEx(nullptr, COINIT_MULTITHREADED | COINIT_DISABLE_OLE1DDE)))
 		cemuLog_log(LogType::Force, "CoInitializeEx() failed");
-#ifdef HAS_SDL
-	SDL_SetMainReady();
-#endif
 	auto parse_rc = LaunchSettings::HandleCommandline(lpCmdLine);
 	if (parse_rc.has_value())
 		return *parse_rc;
@@ -275,9 +267,6 @@ int main(int argc, char* argv[])
 {
 	if (FAILED(CoInitializeEx(nullptr, COINIT_MULTITHREADED | COINIT_DISABLE_OLE1DDE)))
 		cemuLog_log(LogType::Force, "CoInitializeEx() failed");
-#ifdef HAS_SDL
-	SDL_SetMainReady();
-#endif
 	auto parse_rc = LaunchSettings::HandleCommandline(argc, argv);
 	if (parse_rc.has_value())
 		return *parse_rc;

@@ -9,34 +9,6 @@ set_property(TARGET CemuAudio PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CO
 
 cemu_use_precompiled_header(CemuAudio)
 
-# DirectSound and XAudio2 are written against the MSVC DirectX SDK: the bundled
-# XAudio 2.7 headers use MSVC-only GUID macros, and DirectSoundAPI hands
-# std::thread::native_handle() to a Win32 API expecting a HANDLE, which only
-# holds for the MSVC standard library. Neither builds with MinGW, and the
-# libretro core takes its audio from the frontend regardless - so it leaves
-# them out on MSVC too, where they were compiled in and never started.
-if(WIN32 AND MSVC AND NOT ENABLE_LIBRETRO)
-	target_sources(CemuAudio PRIVATE
-		DirectSoundAPI.cpp
-		DirectSoundAPI.h
-		XAudio2API.cpp
-		XAudio2API.h
-		XAudio27API.cpp
-		XAudio27API.h
-	)
-	target_compile_definitions(CemuAudio PUBLIC HAS_DIRECTX_AUDIO)
-endif()
-
-if(ENABLE_CUBEB)
-	target_sources(CemuAudio PRIVATE
-		CubebAPI.cpp
-		CubebAPI.h
-		CubebInputAPI.cpp
-		CubebInputAPI.h
-	)
-	#add_compile_definitions(HAS_CUBEB)
-endif()
-
 if(ENABLE_LIBRETRO)
 	# LibretroAudioAPI lives under src/libretro/ (alongside the libretro entry
 	# point). CemuAudio still needs RETRO_CORE so IAudioAPI knows which
@@ -51,7 +23,3 @@ target_link_libraries(CemuAudio PRIVATE
 	CemuGui
 )
 
-if(ENABLE_CUBEB)
-	# PUBLIC because cubeb.h/cubeb.h is included in CubebAPI.h
-	target_link_libraries(CemuAudio PUBLIC cubeb::cubeb)
-endif()

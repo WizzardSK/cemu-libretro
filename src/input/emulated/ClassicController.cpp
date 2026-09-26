@@ -1,9 +1,6 @@
 #include "input/emulated/ClassicController.h"
 
 #include "input/api/Controller.h"
-#ifdef HAS_SDL
-#include "input/api/SDL/SDLController.h"
-#endif
 
 ClassicController::ClassicController(size_t player_index)
 	: WPADController(player_index, kDataFormat_CLASSIC)
@@ -132,84 +129,6 @@ bool ClassicController::set_default_mapping(const std::shared_ptr<ControllerBase
 	std::vector<std::pair<uint64, uint64>> mapping;
 	switch (controller->api())
 	{
-#ifdef HAS_SDL
-	case InputAPI::SDLController: {
-		const auto sdl_controller = std::static_pointer_cast<SDLController>(controller);
-		if (sdl_controller->get_guid() == SDLController::kLeftJoyCon)
-		{
-			mapping =
-			{
-				{kButtonId_L, kButton9},
-				{kButtonId_ZL, kTriggerXP},
-
-				{kButtonId_Minus, kButton4},
-
-				{kButtonId_Up, kButton11},
-				{kButtonId_Down, kButton12},
-				{kButtonId_Left, kButton13},
-				{kButtonId_Right, kButton14},
-
-				{kButtonId_StickL_Up, kAxisYN},
-				{kButtonId_StickL_Down, kAxisYP},
-				{kButtonId_StickL_Left, kAxisXN},
-				{kButtonId_StickL_Right, kAxisXP},
-			};
-		}
-		else if (sdl_controller->get_guid() == SDLController::kRightJoyCon)
-		{
-			mapping =
-			{
-				{kButtonId_A, kButton0},
-				{kButtonId_B, kButton1},
-				{kButtonId_X, kButton2},
-				{kButtonId_Y, kButton3},
-
-				{kButtonId_R, kButton10},
-				{kButtonId_ZR, kTriggerYP},
-
-				{kButtonId_Plus, kButton6},
-
-				{kButtonId_StickR_Up, kRotationYN},
-				{kButtonId_StickR_Down, kRotationYP},
-				{kButtonId_StickR_Left, kRotationXN},
-				{kButtonId_StickR_Right, kRotationXP},
-			};
-		}
-		else
-		{
-			mapping =
-			{
-				{kButtonId_A, kButton1},
-				{kButtonId_B, kButton0},
-				{kButtonId_X, kButton3},
-				{kButtonId_Y, kButton2},
-
-				{kButtonId_L, kButton9},
-				{kButtonId_R, kButton10},
-				{kButtonId_ZL, kTriggerXP},
-				{kButtonId_ZR, kTriggerYP},
-
-				{kButtonId_Plus, kButton6},
-				{kButtonId_Minus, kButton4},
-
-				{kButtonId_Up, kButton11},
-				{kButtonId_Down, kButton12},
-				{kButtonId_Left, kButton13},
-				{kButtonId_Right, kButton14},
-
-				{kButtonId_StickL_Up, kAxisYN},
-				{kButtonId_StickL_Down, kAxisYP},
-				{kButtonId_StickL_Left, kAxisXN},
-				{kButtonId_StickL_Right, kAxisXP},
-
-				{kButtonId_StickR_Up, kRotationYN},
-				{kButtonId_StickR_Down, kRotationYP},
-				{kButtonId_StickR_Left, kRotationXN},
-				{kButtonId_StickR_Right, kRotationXP},
-			};
-		}
-	}
-#endif
 	case InputAPI::XInput:
 	{
 		mapping =

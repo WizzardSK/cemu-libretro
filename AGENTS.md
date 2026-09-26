@@ -8,6 +8,17 @@ These apply to any AI agent working in this repository (Claude Code reads them t
 - New features and experimental changes go on their own branch (for example `audio-stall`), and testers test builds of that branch. When testing is done, the related commits are squashed and merged into `libretro`, so the main branch does not collect commits that were superseded midway.
 - A fix that users of the `libretro` builds need before the branch is merged is cherry-picked into `libretro`, in a way that does not break the later merge of the branch.
 
+## Merging upstream Cemu
+
+This repository builds the libretro core and nothing else. The standalone's parts - the wx GUI, its packaging and workflows, the input backends the frontend replaces (SDL, DSU, keyboard, real Wiimotes, GameCube adapter, XInput, DirectInput), the audio backends (cubeb, XAudio2, DirectSound), Discord RPC, GameMode and upstream's contributor docs - were deleted on purpose, and must not come back with a merge. The paths are listed in `.upstream-excluded`.
+
+- Right after `git merge` of upstream, before resolving anything else, run:
+  `git rm -r -q --ignore-unmatch --pathspec-from-file=.upstream-excluded`
+  This settles the modify/delete conflicts in favour of the deletion, and it also removes files upstream newly added under those paths, which git would otherwise bring in without any conflict.
+- Never resolve a conflict on one of those paths by restoring the file.
+- When upstream changes a CMake file around one of the removed options or backends, keep them removed and take the rest of the change.
+- When something new is deleted for the same reason, add its path to `.upstream-excluded` in the same commit.
+
 ## These files
 
 - Only the developer writes to or deletes `AGENTS.md` and `CLAUDE.md`. An agent does not change them on its own; it proposes the change to the developer instead.

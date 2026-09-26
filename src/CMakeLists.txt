@@ -130,10 +130,6 @@ if(ENABLE_LIBRETRO)
 		CemuResource
 	)
 
-	if(ENABLE_SDL)
-		target_link_libraries(cemu_libretro PRIVATE SDL3::SDL3)
-	endif()
-
 	# glslang built without its 'opt' feature does not reference SPIRV-Tools at
 	# all (its own config guards find_dependency behind if(OFF)), and the vcpkg
 	# port then never installs those libraries. Only link them when present.

@@ -3,10 +3,6 @@
 	url = https://github.com/WizzardSK/ZArchive
 	shallow = true
 	branch = vfs-file-access
-[submodule "dependencies/cubeb"]
-	path = dependencies/cubeb
-	url = https://github.com/mozilla/cubeb
-	shallow = true
 [submodule "dependencies/vcpkg"]
 	path = dependencies/vcpkg
 	url = https://github.com/microsoft/vcpkg

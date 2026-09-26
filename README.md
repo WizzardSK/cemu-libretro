@@ -16,8 +16,8 @@ Build it yourself for anything else, or to test a change.
 
 ```bash
 # Install dependencies (Ubuntu/Debian)
-sudo apt install -y cmake gcc g++ ninja-build nasm libpulse-dev libgtk-3-dev \
-  libsecret-1-dev libgcrypt20-dev libsystemd-dev libbluetooth-dev freeglut3-dev
+sudo apt install -y cmake gcc g++ ninja-build nasm libpulse-dev \
+  libsecret-1-dev libgcrypt20-dev libsystemd-dev freeglut3-dev
 
 # Clone with submodules - vcpkg lives in one of them, and configure fails with
 # "Could not find toolchain file .../dependencies/vcpkg/..." without it. On an
@@ -28,12 +28,9 @@ cd cemu-libretro
 # Configure (vcpkg handles dependencies automatically)
 cmake -S . -B build -DCMAKE_BUILD_TYPE=release \
   -DCMAKE_C_COMPILER=/usr/bin/gcc -DCMAKE_CXX_COMPILER=/usr/bin/g++ \
-  -G Ninja -DENABLE_LIBRETRO=ON -DENABLE_WXWIDGETS=OFF \
-  -DENABLE_DISCORD_RPC=OFF -DENABLE_CUBEB=OFF \
-  -DCMAKE_POSITION_INDEPENDENT_CODE=ON
+  -G Ninja
 
-# Add -DENABLE_BLUEZ=OFF -DENABLE_FERAL_GAMEMODE=OFF where those dev packages
-# are missing. On arm64, vcpkg needs VCPKG_FORCE_SYSTEM_BINARIES=1, and
+# On arm64, vcpkg needs VCPKG_FORCE_SYSTEM_BINARIES=1, and
 # VCPKG_MAX_CONCURRENCY is worth capping on low-memory boards.
 
 # Build
