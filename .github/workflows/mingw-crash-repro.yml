@@ -40,7 +40,8 @@ jobs:
         timeout-minutes: 6
         run: |
           New-Item -ItemType Directory -Force run_msvc | Out-Null
-          .\harness.exe "$PWD\cores\msvc_cemu_libretro.dll" "$PWD\run_msvc"
+          Set-Content -Path "$PWD\run_msvc\game.rpx" -Value "not a real rpx"
+          .\harness.exe "$PWD\cores\msvc_cemu_libretro.dll" "$PWD\run_msvc" "$PWD\run_msvc\game.rpx"
           "exit code: $LASTEXITCODE"
 
       - name: Run the MinGW core (buildbot)
@@ -49,7 +50,8 @@ jobs:
         timeout-minutes: 6
         run: |
           New-Item -ItemType Directory -Force run_mingw | Out-Null
-          .\harness.exe "$PWD\cores\mingw_cemu_libretro.dll" "$PWD\run_mingw"
+          Set-Content -Path "$PWD\run_mingw\game.rpx" -Value "not a real rpx"
+          .\harness.exe "$PWD\cores\mingw_cemu_libretro.dll" "$PWD\run_mingw" "$PWD\run_mingw\game.rpx"
           "exit code: $LASTEXITCODE"
 
       - name: Leftovers

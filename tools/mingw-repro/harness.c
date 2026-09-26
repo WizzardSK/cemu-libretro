@@ -99,6 +99,22 @@ static bool env_cb(unsigned cmd, void *data)
 		if (vi->required_interface_version > 3) return false;
 		vi->iface = &g_vfs; return true;
 	}
+	case RETRO_ENVIRONMENT_SET_HW_RENDER:
+		printf("[env] SET_HW_RENDER context_type %d -> true (no context will be made)\n", ((struct retro_hw_render_callback *)data)->context_type); fflush(stdout);
+		return true;
+	case RETRO_ENVIRONMENT_SET_PIXEL_FORMAT:
+	case RETRO_ENVIRONMENT_SET_GEOMETRY:
+	case RETRO_ENVIRONMENT_SET_SYSTEM_AV_INFO:
+	case RETRO_ENVIRONMENT_SET_INPUT_DESCRIPTORS:
+	case RETRO_ENVIRONMENT_SET_CORE_OPTIONS_V2:
+	case RETRO_ENVIRONMENT_SET_CORE_OPTIONS_V2_INTL:
+	case RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY:
+	case RETRO_ENVIRONMENT_SET_SUPPORT_NO_GAME:
+		return true;
+	case RETRO_ENVIRONMENT_SET_MESSAGE_EXT:
+		printf("[msg] %s\n", ((struct retro_message_ext *)data)->msg); fflush(stdout); return true;
+	case RETRO_ENVIRONMENT_SET_MESSAGE:
+		printf("[msg] %s\n", ((struct retro_message *)data)->msg); fflush(stdout); return true;
 	default:
 		printf("[env] cmd 0x%X -> false\n", cmd); fflush(stdout);
 		return false;
@@ -119,6 +135,12 @@ static void describe(const char *what, EXCEPTION_POINTERS *ep)
 }
 
 // Unhandled: this is the crash. Print and end the process.
+static void video_cb(const void *d, unsigned w, unsigned h, size_t p) {}
+static size_t audio_batch_cb(const int16_t *d, size_t f) { return f; }
+static void audio_cb(int16_t l, int16_t r) {}
+static void input_poll_cb(void) {}
+static int16_t input_state_cb(unsigned port, unsigned dev, unsigned idx, unsigned id) { return 0; }
+
 static LONG WINAPI on_crash(EXCEPTION_POINTERS *ep)
 {
 	describe("CRASH", ep);
@@ -173,6 +195,30 @@ int main(int argc, char **argv)
 	init();
 	printf("stage: retro_init returned\n"); fflush(stdout);
 	list_dir("after retro_init");
+	if (argc > 3)
+	{
+		void (*svr)(retro_video_refresh_t) = (void *)GetProcAddress(core, "retro_set_video_refresh");
+		void (*sab)(retro_audio_sample_batch_t) = (void *)GetProcAddress(core, "retro_set_audio_sample_batch");
+		void (*sas)(retro_audio_sample_t) = (void *)GetProcAddress(core, "retro_set_audio_sample");
+		void (*sip)(retro_input_poll_t) = (void *)GetProcAddress(core, "retro_set_input_poll");
+		void (*sis)(retro_input_state_t) = (void *)GetProcAddress(core, "retro_set_input_state");
+		bool (*load)(const struct retro_game_info *) = (void *)GetProcAddress(core, "retro_load_game");
+		void (*run)(void) = (void *)GetProcAddress(core, "retro_run");
+		void (*unload)(void) = (void *)GetProcAddress(core, "retro_unload_game");
+		svr(video_cb); sab(audio_batch_cb); sas(audio_cb); sip(input_poll_cb); sis(input_state_cb);
+		struct retro_game_info gi = { argv[3], NULL, 0, NULL };
+		printf("stage: retro_load_game %s\n", argv[3]); fflush(stdout);
+		bool ok = load(&gi);
+		printf("stage: retro_load_game returned %d\n", ok); fflush(stdout);
+		list_dir("after retro_load_game");
+		if (ok)
+		{
+			for (int i = 0; i < 5; i++) { printf("stage: retro_run %d\n", i); fflush(stdout); run(); }
+			list_dir("after retro_run");
+			printf("stage: retro_unload_game\n"); fflush(stdout);
+			unload();
+		}
+	}
 	printf("stage: retro_deinit\n"); fflush(stdout);
 	deinit();
 	list_dir("after retro_deinit");
