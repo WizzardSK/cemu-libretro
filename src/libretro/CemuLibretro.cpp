@@ -21,6 +21,8 @@
 #include "Cafe/OS/libs/coreinit/coreinit_Thread.h"
 #include "Cafe/OS/common/OSCommon.h"
 #include "Cafe/OS/RPL/rpl_structs.h"
+#include <fstream>
+#include "Cemu/ncrypto/ncrypto.h"
 #include "Cemu/FileCache/FileCache.h"
 #include "Cafe/TitleList/TitleList.h"
 #include "Cafe/TitleList/TitleInfo.h"
@@ -1412,6 +1414,51 @@ static void libretro_show_message(unsigned level, unsigned durationMs, const std
 // settings file is read (which would otherwise overwrite it).
 static fs::path s_mlc_path;
 
+// What a Wii U has in its storage from the factory, and standalone Cemu
+// creates in mlc01 on its first run (CemuApp::CreateDefaultMLCFiles, in the wx
+// GUI this core does not have): the title folders, Mii Maker's save folders
+// and the system language and country lists. Without Mii Maker's db folders a
+// game cannot create the Mii database - "File create failed for
+// .../1004a100/user/common/db/FFL_HDB.dat" - and Mario Kart 8 crashed right
+// after its title screen (issue #26). Only what is missing is created.
+static void libretro_create_default_mlc_files(const fs::path& mlc)
+{
+	std::error_code ec;
+	const fs::path directories[] = {
+		mlc / "sys",
+		mlc / "usr",
+		mlc / "usr/title/00050000", // base
+		mlc / "usr/title/0005000c", // dlc
+		mlc / "usr/title/0005000e", // update
+		mlc / "usr/save/00050010/1004a000/user/common/db", // Mii Maker, for each region
+		mlc / "usr/save/00050010/1004a100/user/common/db",
+		mlc / "usr/save/00050010/1004a200/user/common/db",
+		mlc / "sys/title/0005001b/1005c000/content", // language and country lists
+	};
+	for (const auto& dir : directories)
+		fs::create_directories(dir, ec);
+
+	const fs::path langDir = mlc / "sys/title/0005001b/1005c000/content";
+	if (!fs::exists(langDir / "language.txt", ec))
+	{
+		std::ofstream file(langDir / "language.txt");
+		for (const char* lang : { "ja", "en", "fr", "de", "it", "es", "zh", "ko", "nl", "pt", "ru", "zh" })
+			file << fmt::format(R"("{}",)", lang) << '\n';
+	}
+	if (!fs::exists(langDir / "country.txt", ec))
+	{
+		std::ofstream file(langDir / "country.txt");
+		for (size_t i = 0; i < NCrypto::GetCountryCount(); i++)
+		{
+			const char* code = NCrypto::GetCountryAsString(i);
+			if (boost::iequals(code, "NN"))
+				file << "NULL," << '\n';
+			else
+				file << fmt::format(R"("{}",)", code) << '\n';
+		}
+	}
+}
+
 static void libretro_init_paths()
 {
 	const char* system_dir = nullptr;
@@ -2515,6 +2562,7 @@ RETRO_API void retro_init()
 	if (GetConfig().mlc_path.GetValue().empty())
 		GetConfig().SetMLCPath(s_mlc_path, false);
 	cemuLog_log(LogType::Force, "mlc01: {}", _pathToUtf8(ActiveSettings::GetMlcPath()));
+	libretro_create_default_mlc_files(ActiveSettings::GetMlcPath());
 
 	// Where updates and DLC go. Neither is content the frontend can hand over:
 	// an update mounts over the base title's /vol/content and a DLC mounts as
