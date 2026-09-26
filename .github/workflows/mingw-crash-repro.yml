@@ -1,0 +1,56 @@
+name: MinGW crash repro
+
+on:
+  push:
+    branches:
+      - mingw-crash-repro
+
+jobs:
+  repro:
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: tools/mingw-repro
+          submodules: false
+
+      - name: Fetch the buildbot core (MinGW) and ours (MSVC)
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          New-Item -ItemType Directory -Force cores | Out-Null
+          Invoke-WebRequest https://buildbot.libretro.com/nightly/windows/x86_64/latest/cemu_libretro.dll.zip -OutFile bb.zip
+          Expand-Archive bb.zip -DestinationPath bb
+          Copy-Item bb\cemu_libretro.dll cores\mingw_cemu_libretro.dll
+          gh run download 36248307993 -R ${{ github.repository }} -n cemu_libretro-windows-x64 -D msvc
+          Get-ChildItem -Recurse msvc | Select-Object FullName, Length
+          Copy-Item (Get-ChildItem -Recurse msvc -Filter cemu_libretro.dll | Select-Object -First 1).FullName cores\msvc_cemu_libretro.dll
+          Get-ChildItem cores | Select-Object Name, Length, LastWriteTime
+
+      - name: Build the harness
+        shell: cmd
+        run: |
+          call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
+          cl /nologo /O1 /Fe:harness.exe tools\mingw-repro\harness.c
+
+      - name: Run the MSVC core (control)
+        shell: pwsh
+        continue-on-error: true
+        run: |
+          New-Item -ItemType Directory -Force run_msvc | Out-Null
+          .\harness.exe "$PWD\cores\msvc_cemu_libretro.dll" "$PWD\run_msvc"
+          "exit code: $LASTEXITCODE"
+
+      - name: Run the MinGW core (buildbot)
+        shell: pwsh
+        continue-on-error: true
+        run: |
+          New-Item -ItemType Directory -Force run_mingw | Out-Null
+          .\harness.exe "$PWD\cores\mingw_cemu_libretro.dll" "$PWD\run_mingw"
+          "exit code: $LASTEXITCODE"
+
+      - name: Leftovers
+        shell: pwsh
+        run: |
+          foreach ($d in 'run_msvc','run_mingw') { "== $d"; Get-ChildItem -Recurse $d | Select-Object FullName | Format-Table -HideTableHeaders | Out-String -Width 400 }
