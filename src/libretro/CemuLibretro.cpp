@@ -4293,8 +4293,22 @@ RETRO_API void retro_unload_game()
 	// so no GPU thread ever existed to tear it down.
 	if (Renderer* renderer = g_renderer.get())
 	{
-		cemuLog_log(LogType::Force, "[libretro] destroying the renderer on unload");
-		delete renderer;
+		if (s_emu_initialized)
+		{
+			cemuLog_log(LogType::Force, "[libretro] destroying the renderer on unload");
+			delete renderer;
+		}
+		else
+		{
+			// No title ever started, so the GPU thread never ran and never
+			// initialised this renderer: its GL entry points were never loaded,
+			// and on Vulkan its command buffer was never set up. Its destructor
+			// cleans up exactly those - a call through a null pointer on
+			// OpenGL, a fault inside the driver on Vulkan - after nothing more
+			// than a content that failed to load. It holds nothing else, so it
+			// is let go; the next load builds a new one.
+			cemuLog_log(LogType::Force, "[libretro] the renderer was never initialised (no title started) - not destroying it");
+		}
 		(void)g_renderer.release();
 	}
 
