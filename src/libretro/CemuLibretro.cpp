@@ -3237,7 +3237,7 @@ static void libretro_frame_gate_rearm()
 static void libretro_prepare_and_launch_title()
 {
 	libretro_frame_gate_rearm();
-	fs::path gamePath = s_game_path;
+	fs::path gamePath = _utf8ToPath(s_game_path);
 	CafeSystem::PREPARE_STATUS_CODE status;
 
 	// Try as a title first (WUD/WUX/WUA/folder)
