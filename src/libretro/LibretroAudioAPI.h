@@ -12,9 +12,13 @@
 class LibretroAudioRingBuffer
 {
 public:
-	// ~128 ms at 48 kHz stereo. Large enough to absorb host scheduling jitter
-	// but small enough that draining everything per retro_run stays cheap.
-	static constexpr size_t kBufferFrames = 6144;
+	// ~341 ms at 48 kHz stereo. It has to hold everything AX may make between
+	// two retro_runs, and a retro_run grants up to 250 ms (see
+	// AXOut_LibretroGrantSamples). At 128 ms a slow device's frames - 8 or 9
+	// a second in sco8487's heavier Deus Ex scenes - got grants the ring could
+	// not take, and the rest was dropped. Drained every retro_run, so the
+	// size adds no latency.
+	static constexpr size_t kBufferFrames = 16384;
 	static constexpr size_t kChannels = 2;
 	static constexpr size_t kBufferSamples = kBufferFrames * kChannels;
 

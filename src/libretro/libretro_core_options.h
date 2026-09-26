@@ -195,6 +195,20 @@ struct retro_core_option_v2_definition option_defs_us[] = {
 		"linear"
 	},
 	{
+		"cemu_show_game_fps",
+		"Show Game FPS",
+		NULL,
+		"Show the frame rate the game renders at. RetroArch's own FPS counter counts how often the core runs, and that stays at 60 when the game drops frames, because every run carries a frame's worth of audio.",
+		NULL,
+		"video",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
 		"cemu_downscale_filter",
 		"Downscale Filter",
 		NULL,

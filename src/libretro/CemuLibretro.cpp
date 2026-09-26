@@ -642,9 +642,15 @@ std::atomic_bool s_frame_ready{false};
 // title. The Vulkan renderer used to store the flag on its own and did exactly
 // that, while the OpenGL path signalled properly, which is why one was half the
 // speed of the other.
+// Frames the title finished, for the Show Game FPS option. Not
+// s_prof_frames_ready, which the profiling log resets on its own schedule.
+static std::atomic<uint32_t> s_game_frames{0};
+static bool s_show_game_fps = false;
+
 void libretro_signal_frame_ready()
 {
 	s_prof_frames_ready.fetch_add(1, std::memory_order_relaxed);
+	s_game_frames.fetch_add(1, std::memory_order_relaxed);
 	{
 		std::lock_guard lock(s_frame_mutex);
 		s_frame_ready.store(true, std::memory_order_release);
@@ -2188,6 +2194,13 @@ static void libretro_apply_core_options()
 	// OSD, which is a different piece of work: forward
 	// LatteOverlay_pushNotification to SET_MESSAGE_EXT.
 	cfg.notification.position = ScreenPosition::kDisabled;
+
+	if (const char* v = libretro_get_option_value("cemu_show_game_fps"))
+	{
+		bool b;
+		if (libretro_parse_enabled_disabled(v, b))
+			s_show_game_fps = b;
+	}
 
 	// Async shader compilation
 	if (const char* v = libretro_get_option_value("cemu_async_shader_compile"))
@@ -4659,11 +4672,71 @@ extern GLuint libretro_getBackbufferRBO();
 // frontend's audio callback (see the audio grant in retro_run).
 static int64_t s_last_audio_wait_us = 0;
 
+// The game's own frame rate, once a second, as a status line on the
+// frontend's OSD. RetroArch's FPS counter cannot show it: retro_run keeps
+// coming at 60 Hz whatever the title renders at, presenting the last image
+// again when no new one is ready, so a title dropping to 40 still counts 60
+// there and only the frame time shows it (NNshi).
+static void libretro_report_game_fps(std::chrono::steady_clock::time_point now)
+{
+	static std::chrono::steady_clock::time_point s_since{};
+	static bool s_have_ext = false, s_checked_ext = false;
+	static std::string s_text;
+
+	if (!s_show_game_fps || !environ_cb)
+	{
+		s_since = {};
+		s_game_frames.store(0, std::memory_order_relaxed);
+		return;
+	}
+	if (!s_checked_ext)
+	{
+		unsigned version = 0;
+		s_have_ext = environ_cb(RETRO_ENVIRONMENT_GET_MESSAGE_INTERFACE_VERSION, &version) && version >= 1;
+		s_checked_ext = true;
+	}
+	if (s_since == std::chrono::steady_clock::time_point{})
+	{
+		s_since = now;
+		s_game_frames.store(0, std::memory_order_relaxed);
+		return;
+	}
+
+	const double seconds = std::chrono::duration<double>(now - s_since).count();
+	if (seconds < 1.0)
+		return;
+
+	const uint32_t frames = s_game_frames.exchange(0, std::memory_order_relaxed);
+	s_since = now;
+	s_text = fmt::format("Game: {:.1f} FPS", frames / seconds);
+
+	if (s_have_ext)
+	{
+		// A status message is the frontend's line for figures like this one,
+		// replaced in place rather than stacked up as notifications.
+		struct retro_message_ext message = {};
+		message.msg = s_text.c_str();
+		message.duration = 1500;
+		message.priority = 1;
+		message.level = RETRO_LOG_INFO;
+		message.target = RETRO_MESSAGE_TARGET_OSD;
+		message.type = RETRO_MESSAGE_TYPE_STATUS;
+		message.progress = -1;
+		environ_cb(RETRO_ENVIRONMENT_SET_MESSAGE_EXT, &message);
+	}
+	else
+	{
+		struct retro_message message{s_text.c_str(), 90};
+		environ_cb(RETRO_ENVIRONMENT_SET_MESSAGE, &message);
+	}
+}
+
 static void libretro_finish_run(std::chrono::steady_clock::time_point start,
 	std::chrono::steady_clock::time_point waited, bool timedOut)
 {
 	using prof_clock = std::chrono::steady_clock;
 	const auto presented = prof_clock::now();
+	libretro_report_game_fps(presented);
 
 	LibretroAudioAPI::FlushAudio();
 	s_last_audio_wait_us = std::chrono::duration_cast<std::chrono::microseconds>(prof_clock::now() - presented).count();
@@ -4895,15 +4968,35 @@ RETRO_API void retro_run()
 	// itself instead: a long wait means a smaller grant next time, the
 	// frontend's buffer has room again, and the wait goes away. Capped at
 	// 250 ms against a stall.
+	//
+	// But never less than one frame's worth. With audio sync on, waiting in
+	// the audio callback is how RetroArch holds retro_run to 60 a second, so
+	// a device that keeps up spends much of every frame there - and leaving
+	// all of it out granted a fraction of the 800 samples a 60 Hz frame
+	// needs. sco8487's phone sat in its menu at 60 fps with the frontend's
+	// buffer underrunning 70-90% of the time. 800 a frame is what any core
+	// hands over; only the time beyond it is what a slow frame adds.
+	//
+	// And never more than has played. The floor on its own gave 800 to every
+	// retro_run however soon it came after the last, so a frontend that runs
+	// them unevenly - 10 ms, then 23 ms - was granted more audio than the time
+	// that passed, and one running faster than 60 Hz more still. NNshi saw it
+	// as RetroArch blocking 20-50 % of the time on audio it had too much of.
+	// Wall time fills a bucket, capped at the same 250 ms, and a grant takes
+	// no more than the bucket holds: at 60 Hz that is 800 either way, and over
+	// any stretch of time the grants add up to at most the time itself.
 	{
 		static std::chrono::steady_clock::time_point s_last_audio_grant{};
+		static int64_t s_audio_bucket = 0; // in thousandths of a sample, so no fraction is lost
 		const auto now = std::chrono::steady_clock::now();
 		int32_t samples = 800;
 		if (s_last_audio_grant.time_since_epoch().count() != 0)
 		{
-			const int64_t us = std::chrono::duration_cast<std::chrono::microseconds>(now - s_last_audio_grant).count()
-				- s_last_audio_wait_us;
-			samples = (int32_t)std::clamp<int64_t>(us * 48 / 1000, 0, 12000);
+			const int64_t elapsed_us = std::chrono::duration_cast<std::chrono::microseconds>(now - s_last_audio_grant).count();
+			s_audio_bucket = std::min<int64_t>(s_audio_bucket + elapsed_us * 48, 12000 * 1000);
+			const int64_t us = elapsed_us - s_last_audio_wait_us;
+			samples = (int32_t)std::min<int64_t>(std::clamp<int64_t>(us * 48 / 1000, 800, 12000), s_audio_bucket / 1000);
+			s_audio_bucket -= int64_t(samples) * 1000;
 		}
 		s_last_audio_grant = now;
 		snd_core::AXOut_LibretroGrantSamples(samples);

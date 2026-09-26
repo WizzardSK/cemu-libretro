@@ -573,6 +573,28 @@ namespace snd_core
 #ifdef RETRO_CORE
 		if (s_libretro_ax_budget.load(std::memory_order_relaxed) < AX_SAMPLES_PER_3MS_48KHZ)
 			return;
+
+		// The budget says how much audio to make, not how fast. A slow device's
+		// retro_run grants 100 ms or more at once, and spent as soon as it
+		// arrived that is thirty-odd 3 ms frames back to back - with no time
+		// between them for the title's own threads, which is when a streaming
+		// voice gets its next buffer. Starved of that, the voice loops what it
+		// already has: sco8487's Deus Ex repeating a line ("stand stand
+		// stand") while the NPCs wait for it to end. The wall-clock path below
+		// keeps frames at least 1.7 ms apart for the same reason, so this one
+		// does too - fast enough to catch up on a backlog at nearly twice real
+		// time, slow enough to leave the title room between frames.
+		constexpr static auto kLibretroMinSpacing = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::microseconds(1700));
+#if BOOST_OS_WINDOWS
+		const auto libretroNow = tick_cached();
+		static auto s_libretro_last_frame = libretroNow - kLibretroMinSpacing;
+#else
+		const auto libretroNow = now_cached();
+		static auto s_libretro_last_frame = libretroNow - kLibretroMinSpacing;
+#endif
+		if ((libretroNow - s_libretro_last_frame) < kLibretroMinSpacing)
+			return;
+
 		g_ax_update_passed.fetch_add(1, std::memory_order_relaxed);
 		if (snd_core::isInitialized() && numQueuedFramesSndGeneric == snd_core::getNumProcessedFrames())
 		{
@@ -580,6 +602,7 @@ namespace snd_core
 			snd_core::AXIst_QueueFrame();
 			numQueuedFramesSndGeneric++;
 			s_libretro_ax_budget.fetch_sub(AX_SAMPLES_PER_3MS_48KHZ, std::memory_order_relaxed);
+			s_libretro_last_frame = libretroNow;
 		}
 		return;
 #endif
