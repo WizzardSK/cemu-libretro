@@ -20,15 +20,10 @@ IAudioAPI::IAudioAPI(uint32 samplerate, uint32 channels, uint32 samples_per_bloc
 
 void IAudioAPI::PrintLogging()
 {
+	// The standalone's backends are gone; TV audio goes to the frontend
+	// through LibretroAudioAPI, which ax_out creates directly.
 	cemuLog_log(LogType::Force, "------- Init Audio backend -------");
-	cemuLog_log(LogType::Force, "DirectSound: {}", s_availableApis[DirectSound] ? "available" : "not supported");
-	cemuLog_log(LogType::Force, "XAudio 2.8: {}", s_availableApis[XAudio2] ? "available" : "not supported");
-	if (!s_availableApis[XAudio2])
-	{
-		cemuLog_log(LogType::Force, "XAudio 2.7: {}", s_availableApis[XAudio27] ? "available" : "not supported");
-	}
-
-	cemuLog_log(LogType::Force, "Cubeb: {}", s_availableApis[Cubeb] ? "available" : "not supported");
+	cemuLog_log(LogType::Force, "Audio: sent to the frontend (libretro)");
 }
 
 void IAudioAPI::InitWFX(sint32 samplerate, sint32 channels, sint32 bits_per_sample)

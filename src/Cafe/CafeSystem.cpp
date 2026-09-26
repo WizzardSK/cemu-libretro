@@ -203,11 +203,9 @@ void InfoLog_TitleLoaded()
 {
 	uint64 titleId = CafeSystem::GetForegroundTitleId();
 	cemuLog_log(LogType::Force, "------- Loaded title -------");
-#ifdef RETRO_CORE
 	// The "Init" line that names the build is written before a libretro
 	// core's log.txt exists, so a log sent in never said which commit made it.
 	cemuLog_log(LogType::Force, "Build: {} (libretro)", BUILD_VERSION_WITH_NAME_STRING);
-#endif
 	cemuLog_log(LogType::Force, "TitleId: {:08x}-{:08x}", (uint32)(titleId >> 32), (uint32)(titleId & 0xFFFFFFFF));
 	cemuLog_log(LogType::Force, "TitleVersion: v{}", CafeSystem::GetForegroundTitleVersion());
 	CafeConsoleRegion region = CafeSystem::GetForegroundTitleRegion();
@@ -424,7 +422,6 @@ void cemu_initForGame()
 	debugger_handleEntryBreakpoint(_entryPoint);
 	// load graphic packs
 	cemuLog_log(LogType::Force, "------- Activate graphic packs -------");
-#ifdef RETRO_CORE
 	// In the core there is no graphic pack window to see what was found: a
 	// pack that is not there, switched off (default = 1 in its [Definition]
 	// switches it on) or for another title is otherwise silent.
@@ -438,7 +435,6 @@ void cemu_initForGame()
 			if (gp->ContainsTitleId(titleId))
 				cemuLog_log(LogType::Force, "  {}: {}", gp->GetVirtualPath(), gp->IsEnabled() ? "on" : "off");
 	}
-#endif
 	GraphicPack2::ActivateForCurrentTitle();
 	// print audio log
 	IAudioAPI::PrintLogging();
@@ -992,7 +988,6 @@ namespace CafeSystem
 		// start system
 		sSystemRunning = true;
 		WindowSystem::NotifyGameLoaded();
-#ifdef ENABLE_LIBRETRO
 		// On this thread, not a detached one. What that thread does is start the
 		// IOSU modules, scan the title for patches and bring the scheduler up -
 		// all of it reading the memory space the title was just mounted into -
@@ -1006,10 +1001,6 @@ namespace CafeSystem
 		// outlives that call now, so a stop that comes after it has nothing
 		// left to race.
 		_LaunchTitleThread();
-#else
-		std::thread t(_LaunchTitleThread);
-		t.detach();
-#endif
 	}
 
 	bool IsTitleRunning()

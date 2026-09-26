@@ -1228,11 +1228,9 @@ bool LatteTexture_GX2FormatHasStencil(bool isDepth, Latte::E_GX2SURFFMT format)
 		   format == Latte::E_GX2SURFFMT::D32_S8_FLOAT;
 }
 
-#ifdef ENABLE_LIBRETRO
 // 1.0 leaves every texture at the size the game asked for, which is what the
 // core does unless the internal resolution option says otherwise.
 float g_libretroRenderScale = 1.0f;
-#endif
 
 LatteTexture::LatteTexture(Latte::E_DIM dim, MPTR physAddress, MPTR physMipAddress, Latte::E_GX2SURFFMT format, uint32 width, uint32 height, uint32 depth, uint32 pitch, uint32 mipLevels, uint32 swizzle,
 	Latte::E_HWTILEMODE tileMode, bool isDepth)
@@ -1257,7 +1255,6 @@ LatteTexture::LatteTexture(Latte::E_DIM dim, MPTR physAddress, MPTR physMipAddre
 	this->lastUpdateEventCounter = LatteTexture_getNextUpdateEventCounter();
 	this->lastWriteEventCounter = LatteTexture_getNextUpdateEventCounter();
 
-#ifdef ENABLE_LIBRETRO
 	// A render scale without per-game rules. Cemu changes internal resolution
 	// only through graphic pack texture rules, which name a title's render
 	// target sizes outright; there is no global factor. This is the generic
@@ -1287,7 +1284,6 @@ LatteTexture::LatteTexture(Latte::E_DIM dim, MPTR physAddress, MPTR physMipAddre
 			this->overwriteInfo.depth = depth;
 		}
 	}
-#endif
 
 	// handle graphic pack overwrite rules
 	for (const auto& gp : GraphicPack2::GetActiveGraphicPacks())

@@ -24,14 +24,6 @@ public:
 
 	LibretroAudioRingBuffer() = default;
 
-	size_t GetWriteAvailableSamples() const
-	{
-		const size_t w = m_write_pos.load(std::memory_order_relaxed);
-		const size_t r = m_read_pos.load(std::memory_order_acquire);
-		const size_t used = (w >= r) ? (w - r) : (kBufferSamples - r + w);
-		return kBufferSamples - used - kChannels;
-	}
-
 	size_t GetReadAvailableSamples() const
 	{
 		const size_t w = m_write_pos.load(std::memory_order_acquire);
@@ -95,15 +87,6 @@ private:
 class LibretroAudioAPI : public IAudioAPI
 {
 public:
-	class LibretroDeviceDescription : public DeviceDescription
-	{
-	public:
-		LibretroDeviceDescription()
-			: DeviceDescription(L"Libretro Audio") {}
-
-		std::wstring GetIdentifier() const override { return L"libretro"; }
-	};
-
 	// Callback type matches retro_audio_sample_batch_t: returns frames actually accepted.
 	using AudioCallback = size_t(*)(const int16_t* data, size_t frames);
 

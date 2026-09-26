@@ -612,14 +612,12 @@ static void LatteDrawGL_doDrawQuadsAsTriangles(_INDEX_TYPE indexType, uint32 bas
 
 void LatteDrawGL_doDraw(_INDEX_TYPE indexType, uint32 baseVertex, uint32 baseInstance, uint32 instanceCount, uint32 count)
 {
-#ifdef ENABLE_LIBRETRO
 	// GL_QUADS is not available in Core Profile - convert to triangles
 	if (sGLActiveDrawMode == GL_QUADS)
 	{
 		LatteDrawGL_doDrawQuadsAsTriangles(indexType, baseVertex, baseInstance, instanceCount, count);
 		return;
 	}
-#endif
 	if (indexType == _INDEX_TYPE::U16_BE)
 	{
 		// 16bit index, big endian
@@ -1009,11 +1007,7 @@ void OpenGLRenderer::draw_genericDrawHandler(uint32 baseVertex, uint32 baseInsta
 	else if (primitiveMode == Latte::LATTE_VGT_PRIMITIVE_TYPE::E_PRIMITIVE_TYPE::LINE_LOOP)
 		sGLActiveDrawMode = GL_LINE_LOOP;
 	else if (primitiveMode == Latte::LATTE_VGT_PRIMITIVE_TYPE::E_PRIMITIVE_TYPE::QUAD_STRIP)
-#ifdef ENABLE_LIBRETRO
 		sGLActiveDrawMode = GL_TRIANGLE_STRIP; // GL_QUAD_STRIP not available in Core Profile
-#else
-		sGLActiveDrawMode = GL_QUAD_STRIP;
-#endif
 	else
 	{
 		cemu_assert_debug(false); // unsupported primitive type

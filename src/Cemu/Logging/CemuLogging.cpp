@@ -155,7 +155,6 @@ fs::path cemuLog_GetLogFilePath()
     return ActiveSettings::GetUserDataPath("log.txt");
 }
 
-#ifdef RETRO_CORE
 static std::atomic<bool> s_fileLoggingEnabled{true};
 
 void cemuLog_setFileLoggingEnabled(bool enabled)
@@ -174,16 +173,13 @@ void cemuLog_setFileLoggingEnabled(bool enabled)
 		LogContext.file_stream.close();
 	}
 }
-#endif
 
 void cemuLog_createLogFile(bool triggeredByCrash)
 {
-#ifdef RETRO_CORE
 	// A crash still writes one: the frontend's log is the first thing a report
 	// leaves out, and this is the file that says what happened.
 	if (!triggeredByCrash && !s_fileLoggingEnabled.load())
 		return;
-#endif
 	std::unique_lock lock(LogContext.log_mutex);
 	if (LogContext.file_stream.is_open())
 		return;
@@ -196,10 +192,6 @@ void cemuLog_createLogFile(bool triggeredByCrash)
 		return;
 	}
 
-#ifndef RETRO_CORE
-	LogContext.threadRunning.store(true);
-	LogContext.log_writer = std::thread(cemuLog_thread);
-#endif
 	lock.unlock();
 }
 
@@ -224,7 +216,6 @@ void cemuLog_writeLineToLog(std::string_view text, bool date, bool new_line)
 	if (new_line)
 		LogContext.text_cache.emplace_back("\n");
 
-#ifdef RETRO_CORE
 	// The core lives inside the frontend's process and dies with it. Anything
 	// still sitting in text_cache when that happens is lost, which is exactly
 	// what makes a crash report unusable - so write through instead.
@@ -238,10 +229,6 @@ void cemuLog_writeLineToLog(std::string_view text, bool date, bool new_line)
 	// ever appended to is a leak that grows for as long as the core runs.
 	LogContext.text_cache.clear();
 	lock.unlock();
-#else
-	lock.unlock();
-	LogContext.log_condition.notify_one();
-#endif
 }
 
 bool cemuLog_log(LogType type, std::string_view text)

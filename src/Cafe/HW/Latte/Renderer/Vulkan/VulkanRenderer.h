@@ -202,10 +202,8 @@ public:
 
 	static std::vector<DeviceInfo> GetDevices();
 	VulkanRenderer();
-#ifdef RETRO_CORE
 	// Constructor that uses an externally created device (for libretro Vulkan HW render)
 	VulkanRenderer(VkInstance instance, VkPhysicalDevice physDevice, VkDevice device, VkQueue queue, uint32_t queueFamilyIndex);
-#endif
 	virtual ~VulkanRenderer();
 
 	static VulkanRenderer* GetInstance();
@@ -653,7 +651,6 @@ private:
 	uint8* m_textureReadbackBufferPtr = nullptr;
 	uint32 m_textureReadbackBufferWriteIndex = 0;
 
-#ifdef RETRO_CORE
 public:
 	class LatteTextureVk* m_libretroReadbackTexture = nullptr;
 	bool m_useExternalDevice = false;
@@ -682,7 +679,6 @@ public:
 	void UpdatePresentationImageColorSpace();
 	void DestroyPresentationImage();
 private:
-#endif
 
 	// placeholder objects to simulate NULL buffers and textures
 	struct NullTexture

@@ -187,7 +187,6 @@ uint32 LatteCP_readU32Deprc()
 			return cmdWord;
 		if (Latte_GetStopSignal())
 			LatteThread_Exit();
-#ifdef ENABLE_LIBRETRO
 		// A thread waiting here for a command that is not coming is the shape
 		// of "the GPU thread did not reach the pause gate (phase: command
 		// processor)": the gate at the top of the ring buffer loop is only
@@ -196,7 +195,6 @@ uint32 LatteCP_readU32Deprc()
 		// where the waiting actually happens. It costs an atomic load when
 		// nobody is asking for a pause.
 		Latte_GpuPauseGate();
-#endif
 
 		// still no command data available, do some other tasks
 		LatteTiming_HandleTimedVsync();
@@ -1508,10 +1506,8 @@ void LatteCP_processCommandBuffer(DrawPassContext& drawPassCtx)
 
 #include <atomic>
 
-#ifdef ENABLE_LIBRETRO
 // Defined at global scope by the libretro glue (src/libretro/CemuLibretro.cpp).
 void libretro_frame_window_wait();
-#endif
 
 void LatteCP_ProcessRingbuffer()
 {
@@ -1519,7 +1515,6 @@ void LatteCP_ProcessRingbuffer()
 	uint32be tmpBuffer[128];
 	while (true)
 	{
-#ifdef ENABLE_LIBRETRO
 		// command boundary: safe place to stand still while the frontend
 		// rebuilds its graphics context, and equally while it is not asking
 		// for frames - otherwise this loop spins on a ring that the parked
@@ -1533,7 +1528,6 @@ void LatteCP_ProcessRingbuffer()
 		if (Latte_GetStopSignal())
 			LatteThread_Exit();
 		::libretro_frame_window_wait();
-#endif
 		uint32 itHeader = LatteCP_readU32Deprc();
 		uint32 itHeaderType = (itHeader >> 30) & 3;
 		if (itHeaderType == 3)

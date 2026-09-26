@@ -55,7 +55,6 @@ bool LatteTiming_getCustomVsyncFrequency(sint32& customFrequency)
 
 bool s_usingHostDrivenVSync = false;
 
-#ifdef RETRO_CORE
 static bool s_usingLibretroVSync = false;
 
 void LatteTiming_EnableLibretroVSync()
@@ -73,7 +72,6 @@ void LatteTiming_TriggerVSync()
 	if (s_usingLibretroVSync)
 		LatteTiming_signalVsync();
 }
-#endif
 
 void LatteTiming_EnableHostDrivenVSync()
 {
@@ -181,14 +179,9 @@ void LatteTiming_HandleTimedVsync()
 	uint64 currentTimer = HighResolutionTimer::now().getTick();
 	if( currentTimer >= LatteGPUState.timer_nextVSync )
 	{
-#ifdef RETRO_CORE
 		// In libretro mode, vsync is triggered by retro_run(), not by timer
 		if(!LatteTiming_IsUsingHostDrivenVSync() && !LatteTiming_IsUsingLibretroVSync())
 			LatteTiming_signalVsync();
-#else
-		if(!LatteTiming_IsUsingHostDrivenVSync())
-			LatteTiming_signalVsync();
-#endif
 		// even if vsync is delegated to the host device, we still use this virtual vsync timer to check finished states
 		LatteQuery_UpdateFinishedQueries();
 		LatteTextureReadback_UpdateFinishedTransfers(false);

@@ -121,11 +121,9 @@ void _tpRawToResolution(sint32 x, sint32 y, sint32* outX, sint32* outY, sint32 w
 }
 
 
-#ifdef ENABLE_LIBRETRO
 extern bool libretro_get_button_state(uint32_t button_id);
 extern void libretro_get_analog_state(float* lx, float* ly, float* rx, float* ry);
 extern bool libretro_get_touch_state(uint16_t* x, uint16_t* y);
-#endif
 
 namespace vpad
 {
@@ -244,7 +242,6 @@ namespace vpad
 		status->tpProcessed1.validity = VPAD_TP_VALIDITY_INVALID_XY;
 		status->tpProcessed2.validity = VPAD_TP_VALIDITY_INVALID_XY;
 
-#ifdef ENABLE_LIBRETRO
 		// In libretro mode, read input directly from libretro callbacks
 		if (channel == 0)
 		{
@@ -306,67 +303,6 @@ namespace vpad
 				status->vpadErr = -1;
 			return 0;
 		}
-#else
-		const auto controller = InputManager::instance().get_vpad_controller(channel);
-		if (!controller)
-		{
-			// most games expect the Wii U GamePad to be connected, so even if the user has not set it up we should still return empty samples for channel 0
-			if(channel != 0)
-			{
-				if (error)
-					*error = VPAD_READ_ERR_NO_CONTROLLER;
-				if (length > 0)
-					status->vpadErr = -1;
-				return 0;
-			}
-			if (error)
-				*error = VPAD_READ_ERR_NONE;
-			return 1;
-		}
-
-		const bool vpadDelayEnabled = ActiveSettings::VPADDelayEnabled();
-
-		if (isLaunchTypeELF)
-		{
-			// hacky workaround for homebrew games calling VPADRead in an infinite loop
-			PPCCore_switchToScheduler();
-		}
-
-		if (!WindowSystem::InputConfigWindowHasFocus())
-		{
-			if (channel <= 1 && vpadDelayEnabled)
-			{
-				uint64 currentTime = coreinit::OSGetTime();
-				const auto dif = currentTime - vpad::g_vpad.controller_data[channel].drcLastCallTime;
-				if (dif <= (ESPRESSO_TIMER_CLOCK / 60ull))
-				{
-					// not ready yet
-					if (error)
-						*error = VPAD_READ_ERR_NONE;
-					return 0;
-				}
-				else if (dif <= ESPRESSO_TIMER_CLOCK)
-				{
-					vpad::g_vpad.controller_data[channel].drcLastCallTime += (ESPRESSO_TIMER_CLOCK / 60ull);
-				}
-				else
-				{
-					vpad::g_vpad.controller_data[channel].drcLastCallTime = currentTime;
-				}
-			}
-			controller->VPADRead(*status, vpad::g_vpad.controller_data[channel].btn_repeat);
-			if (error)
-				*error = VPAD_READ_ERR_NONE;
-			return 1;
-		}
-		else
-		{
-			if (error)
-				*error = VPAD_READ_ERR_NONE;
-
-			return 1;
-		}
-#endif
 	}
 
 	void VPADSetBtnRepeat(sint32 channel, float delay, float pulse)

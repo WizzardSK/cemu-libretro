@@ -53,19 +53,13 @@ uint32 VulkanPipelineStableCache::BeginLoading(uint64 cacheTitleId)
 
 	for (uint32 i = 0; i < m_numCompilationThreads; i++)
 	{
-#ifdef ENABLE_LIBRETRO
 		// Kept rather than detached, so Close() can join them. See the note on
 		// m_compilerThreads. The previous title's threads were joined there, so
 		// the vector is empty by the time a new run gets here.
 		m_compilerThreads.emplace_back(&VulkanPipelineStableCache::CompilerThread, this);
-#else
-		std::thread compileThread(&VulkanPipelineStableCache::CompilerThread, this);
-		compileThread.detach();
-#endif
 	}
 
 	// open cache file or create it
-#ifdef ENABLE_LIBRETRO
 	// Close() leaves the previous title's cache behind rather than deleting it,
 	// so this is where it goes. The reason is ownership: Close() runs while the
 	// GPU thread may still be part-way through UpdateLoading, and freeing it
@@ -77,9 +71,6 @@ uint32 VulkanPipelineStableCache::BeginLoading(uint64 cacheTitleId)
 		delete s_cache;
 		s_cache = nullptr;
 	}
-#else
-	cemu_assert_debug(s_cache == nullptr);
-#endif
 	s_cache = FileCache::Open(pathCacheFile, true, LatteShaderCache_getPipelineCacheExtraVersion(cacheTitleId));
 	if (!s_cache)
 	{
@@ -98,14 +89,12 @@ bool VulkanPipelineStableCache::UpdateLoading(uint32& pipelinesLoadedTotal, uint
 {
 	pipelinesLoadedTotal = g_vkCacheState.pipelinesLoaded;
 	pipelinesMissingShaders = 0;
-#ifdef ENABLE_LIBRETRO
 	// Runs on: the GPU thread, while the title starts. Close() can take the
 	// cache file out from under it - closing content a second after opening it
 	// does exactly that. Report the loading as finished rather than reading
 	// through a pointer that is no longer there.
 	if (!s_cache)
 		return false;
-#endif
 	while (g_vkCacheState.pipelineLoadIndex <= g_vkCacheState.pipelineMaxFileIndex)
 	{
 		if (m_compilationQueue.size() >= 50)
@@ -146,15 +135,12 @@ void VulkanPipelineStableCache::EndLoading()
 	// keep cache file open for writing of new pipelines
 }
 
-#ifdef ENABLE_LIBRETRO
 // Defined below, with the writer thread that reads it.
 struct CachedPipeline;
 extern ConcurrentQueue<CachedPipeline*> g_pipelineCachingQueue;
-#endif
 
 void VulkanPipelineStableCache::Close()
 {
-#ifdef ENABLE_LIBRETRO
 	// Runs on: the GPU thread, through LatteShaderCache_Close, and while the
 	// renderer is still there - Latte_TeardownGpuState calls that before it
 	// deletes it, which is the whole point of doing this here.
@@ -188,13 +174,6 @@ void VulkanPipelineStableCache::Close()
 	m_pipelineIsCachedLock.unlock();
 	// The cache file is deliberately not freed here; BeginLoading does it for
 	// the next title. See the note there.
-#else
-    if(s_cache)
-    {
-        delete s_cache;
-        s_cache = nullptr;
-    }
-#endif
 }
 
 
@@ -389,14 +368,9 @@ void VulkanPipelineStableCache::AddCurrentStateToCache(uint64 baseHash, uint64 p
 	m_pipelineIsCached.emplace(baseHash, pipelineStateHash);
 	if (!m_pipelineCacheStoreThread)
 	{
-#ifdef ENABLE_LIBRETRO
 		// Not detached, for the reason in the header: Close() joins it.
 		m_stopCacheStoreThread = false;
 		m_pipelineCacheStoreThread = new std::thread(&VulkanPipelineStableCache::WorkerThread, this);
-#else
-		m_pipelineCacheStoreThread = new std::thread(&VulkanPipelineStableCache::WorkerThread, this);
-		m_pipelineCacheStoreThread->detach();
-#endif
 	}
 	// fill job structure with cached GPU state
 	// for each cached pipeline we store:
@@ -505,7 +479,6 @@ void VulkanPipelineStableCache::WorkerThread()
 	{
 		CachedPipeline* job;
 		g_pipelineCachingQueue.pop(job);
-#ifdef ENABLE_LIBRETRO
 		// Upstream's loop has no way out: the thread is detached and the
 		// process ends under it. Close() pushes an empty job with this set, and
 		// this is where the thread leaves so it can be joined.
@@ -514,7 +487,6 @@ void VulkanPipelineStableCache::WorkerThread()
 			delete job;
 			return;
 		}
-#endif
 		if (!s_cache)
 		{
 			delete job;

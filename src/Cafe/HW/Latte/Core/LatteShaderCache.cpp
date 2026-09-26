@@ -40,12 +40,8 @@
 #include <psapi.h>
 #endif
 
-#ifdef ENABLE_LIBRETRO
 // Defined at global scope by the libretro glue (src/libretro/CemuLibretro.cpp).
 bool libretro_gpu_context_gone();
-#else
-static bool libretro_gpu_context_gone() { return false; }
-#endif
 
 #define SHADER_CACHE_COMPILE_QUEUE_SIZE		(32)
 
@@ -458,7 +454,6 @@ void LatteShaderCache_Load()
 		}
 	};
 
-#ifdef ENABLE_LIBRETRO
 	// The pictures are only ever used by the loading screen, which draws
 	// nowhere in a libretro core (see LatteShaderCache_ShowProgress). Reading
 	// and decoding two TGAs out of the title to hand them to a GenerateTexture
@@ -466,10 +461,6 @@ void LatteShaderCache_Load()
 	g_shaderCacheLoaderState.textureTVId = nullptr;
 	g_shaderCacheLoaderState.textureDRCId = nullptr;
 	(void)loadBackgroundTexture;
-#else
-	loadBackgroundTexture(true, g_shaderCacheLoaderState.textureTVId);
-	loadBackgroundTexture(false, g_shaderCacheLoaderState.textureDRCId);
-#endif
 
 	if(GetConfig().play_boot_sound)
 		g_bootSndPlayer.StartSound();
@@ -533,8 +524,6 @@ void LatteShaderCache_Load()
 	Renderer* renderer = g_renderer.get();
 	if (!renderer || ::libretro_gpu_context_gone())
 	{
-#ifdef ENABLE_LIBRETRO
-#endif
 		return;
 	}
 	// if Vulkan or Metal then also load pipeline cache
@@ -550,34 +539,9 @@ void LatteShaderCache_Load()
 #endif
 
 
-#ifndef ENABLE_LIBRETRO
-	// The last frame of a loading screen that was never drawn, and the two
-	// textures it would have used, which were never created.
-	renderer->BeginFrame(true);
-	if (renderer->ImguiBegin(true))
-	{
-		LatteShaderCache_drawBackgroundImage(g_shaderCacheLoaderState.textureTVId, 1280, 720);
-		renderer->ImguiEnd();
-	}
-	renderer->BeginFrame(false);
-	if (renderer->ImguiBegin(false))
-	{
-		LatteShaderCache_drawBackgroundImage(g_shaderCacheLoaderState.textureDRCId, 854, 480);
-		renderer->ImguiEnd();
-	}
-
-	renderer->SwapBuffers(true, true);
-
-	if (g_shaderCacheLoaderState.textureTVId)
-		renderer->DeleteTexture(g_shaderCacheLoaderState.textureTVId);
-	if (g_shaderCacheLoaderState.textureDRCId)
-		renderer->DeleteTexture(g_shaderCacheLoaderState.textureDRCId);
-#endif
 
 	g_bootSndPlayer.FadeOutSound();
 
-#ifdef ENABLE_LIBRETRO
-#endif
 
 	if(Latte_GetStopSignal())
 		LatteThread_Exit();
@@ -602,7 +566,6 @@ void LatteShaderCache_ShowProgress(const std::function <bool(void)>& loadUpdateF
 		Renderer* renderer = g_renderer.get();
 		if (!renderer || ::libretro_gpu_context_gone())
 			break;
-#ifdef ENABLE_LIBRETRO
 		// The frontend is taking its graphics context apart and is waiting for
 		// this thread at the pause gate. There is no command boundary inside a
 		// cache load, so without this the wait is spent on a thread that cannot
@@ -613,12 +576,10 @@ void LatteShaderCache_ShowProgress(const std::function <bool(void)>& loadUpdateF
 		// close there is nothing left to load it for.
 		if (Latte_IsGpuPauseRequested())
 			break;
-#endif
 		bool r = loadUpdateFunc();
 		if (!r)
 			break;
 
-#ifdef ENABLE_LIBRETRO
 		// Everything below draws the loading screen, and in a libretro core it
 		// reaches nobody: the renderer has no swapchain of its own, so
 		// ImguiBegin fails on every pass and the whole screen - background
@@ -634,7 +595,6 @@ void LatteShaderCache_ShowProgress(const std::function <bool(void)>& loadUpdateF
 		// that would pass the numbers on is the call that is blocked here. What
 		// reaches the user is the log.
 		continue;
-#endif
 
 		// in order to slightly speed up shader loading, we don't update the display if little time passed
 		// this also avoids delayed loading in case third party software caps the framerate at 30

@@ -14,7 +14,7 @@ IAudioInputAPI::IAudioInputAPI(uint32 samplerate, uint32 channels, uint32 sample
 void IAudioInputAPI::PrintLogging()
 {
 	cemuLog_log(LogType::Force, "------- Init Audio input backend -------");
-	cemuLog_log(LogType::Force, "Cubeb: {}", s_availableApis[Cubeb] ? "available" : "not supported");
+	cemuLog_log(LogType::Force, "Audio input: none (no microphone in the core)");
 }
 
 void IAudioInputAPI::InitializeStatic()

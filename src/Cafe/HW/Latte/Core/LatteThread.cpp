@@ -13,7 +13,7 @@
 #include "Cafe/HW/Latte/Core/LatteBufferCache.h"
 
 #include "Cafe/HW/Latte/Renderer/Renderer.h"
-#if defined(ENABLE_VULKAN) && defined(ENABLE_LIBRETRO)
+#ifdef ENABLE_VULKAN
 #include "Cafe/HW/Latte/Renderer/Vulkan/VulkanRenderer.h"
 #endif
 #include "Cafe/HW/Latte/Core/LatteTexture.h"
@@ -37,7 +37,6 @@ void Latte_InitRendererState();
 
 std::atomic_bool sLatteThreadRunning = false;
 
-#ifdef ENABLE_LIBRETRO
 // Set by the GPU thread as its first act, so a caller can tell "created but not
 // running yet" from "running".
 // Cleared by the GPU thread on its way out. sLatteThreadRunning says whether a
@@ -127,9 +126,7 @@ const char* Latte_GetThreadPhase()
 {
 	return sLatteThreadPhase.load(std::memory_order_acquire);
 }
-#endif
 
-#ifdef ENABLE_LIBRETRO
 static std::atomic_bool sGpuPauseRequested{false};
 static std::atomic_bool sGpuParked{false};
 // Set when the GPU thread has reached the gate, which is before it starts
@@ -264,7 +261,6 @@ void Latte_GpuPauseGate()
 	if (!g_renderer && Latte_GetStopSignal())
 		LatteThread_Exit();
 }
-#endif
 std::atomic_bool sLatteThreadFinishedInit = false;
 
 void LatteThread_Exit();
@@ -359,9 +355,7 @@ int Latte_ThreadEntry()
 {
 	SetThreadName("LatteThread");
 	// renderer
-#ifdef ENABLE_LIBRETRO
 	LatteThread_SetPhase("renderer init");
-#endif
 	Latte_InitRendererState();
 
 	sLatteThreadFinishedInit = true;
@@ -371,9 +365,7 @@ int Latte_ThreadEntry()
 		g_renderer->EnableDebugMode();
 
 	// wait till a game is started
-#ifdef ENABLE_LIBRETRO
 	LatteThread_SetPhase("waiting for a title to start");
-#endif
 	while( true )
 	{
 		if( CafeSystem::IsTitleRunning() )
@@ -388,11 +380,9 @@ int Latte_ThreadEntry()
 	g_renderer->DrawEmptyFrame(true);
 
 	// before doing anything with game specific shaders, we need to wait for graphic packs to finish loading
-#ifdef ENABLE_LIBRETRO
 	LatteThread_SetPhase("waiting for graphic packs");
 	if (Latte_GetStopSignal())
 		LatteThread_Exit();
-#endif
 	GraphicPack2::WaitUntilReady();
 	// if legacy packs are enabled we cannot use the colorbuffer resolution optimization
 	LatteGPUState.allowFramebufferSizeOptimization = true;
@@ -412,22 +402,17 @@ int Latte_ThreadEntry()
 		}
 	}
 	// load disk shader cache
-#ifdef ENABLE_LIBRETRO
 	LatteThread_SetPhase("loading the shader cache");
 	if (Latte_GetStopSignal())
 		LatteThread_Exit();
-#endif
     LatteShaderCache_Load();
-#ifdef ENABLE_LIBRETRO
 	if (Latte_GetStopSignal())
 		LatteThread_Exit();
-#endif
 	// init registers
 	Latte_LoadInitialRegisters();
 	// let CPU thread know the GPU is done initializing
 	g_isGPUInitFinished = true;
 	// wait until CPU has called GX2Init()
-#ifdef ENABLE_LIBRETRO
 	// Same loop as upstream's, with the waiting said out loud: a title that
 	// never calls GX2Init looks exactly like a hung core from the outside, and
 	// this is the line that tells the two apart in a user's log.
@@ -451,22 +436,11 @@ int Latte_ThreadEntry()
 	}
 	cemuLog_log(LogType::Force, "LatteThread: GX2Init called, entering command processor");
 	LatteThread_SetPhase("command processor");
-#else
-	while (LatteGPUState.gx2InitCalled == 0)
-	{
-		std::this_thread::yield();
-		std::this_thread::sleep_for(std::chrono::milliseconds(1));
-		LatteThread_HandleOSScreen();
-		if (Latte_GetStopSignal())
-			LatteThread_Exit();
-	}
-#endif
 	LatteCP_ProcessRingbuffer();
 	cemu_assert_debug(false); // should never reach
 	return 0;
 }
 
-#ifdef ENABLE_LIBRETRO
 // Hands back everything this core built on the graphics context. Upstream does
 // the same work at the end of LatteThread_Exit; what this adds is an order,
 // because a core has to survive the run afterwards.
@@ -551,7 +525,6 @@ void Latte_RebuildRendererIfNeeded()
 	LatteThread_SetPhase("command processor");
 	cemuLog_log(LogType::Force, "[LatteThread] back in the command processor on the new context");
 }
-#endif
 
 // Everything the renderer has to have before a single command is read, in one
 // place because it is needed twice: once when the GPU thread starts, and once
@@ -573,9 +546,7 @@ void Latte_InitRendererState()
 	LatteStreamout_InitCache();
 
 	g_renderer->renderTarget_setViewport(0, 0, w, h, 0.0f, 1.0f);
-#ifdef ENABLE_LIBRETRO
 	sRendererStateInitialized.store(true, std::memory_order_release);
-#endif
 	
 	// enable GLSL gl_PointSize support
 	// glEnable(GL_PROGRAM_POINT_SIZE); // breaks shader caching on AMD (as of 2018)
@@ -610,9 +581,7 @@ void Latte_Start()
 	cemu_assert_debug(!sLatteThreadRunning);
 	sLatteThreadRunning = true;
 	sLatteThreadFinishedInit = false;
-#ifdef ENABLE_LIBRETRO
 	sLatteThreadAlive.store(true, std::memory_order_release);
-#endif
 	sLatteThread = std::thread(Latte_ThreadEntry);
 	// wait until initialized
 	while (!sLatteThreadFinishedInit)
@@ -626,16 +595,13 @@ void Latte_Stop()
 	std::unique_lock _lock(sLatteThreadStateMutex);
 	if (!sLatteThreadRunning)
 	{
-#ifdef ENABLE_LIBRETRO
 		// Nothing to stop, as far as this flag knows - but if a thread is still
 		// alive out there, this is the line that says nobody ever waited for it.
 		cemuLog_log(LogType::Force, "[LatteThread] Latte_Stop: the GPU thread was already marked stopped, not waiting for one");
-#endif
 		return;
 	}
 	sLatteThreadRunning = false;
 	_lock.unlock();
-#ifdef ENABLE_LIBRETRO
 	// The one thing upstream's stop does not cover. A thread parked at the
 	// pause gate is asleep on a condition variable whose predicate does check
 	// the stop signal - but only when something wakes it, and nothing did. A
@@ -646,7 +612,6 @@ void Latte_Stop()
 		std::lock_guard<std::mutex> lock(sGpuPauseMutex);
 	}
 	sGpuPauseCv.notify_all();
-#endif
 	// Nothing else: this is a wait for a thread to end, and join is how that is
 	// spelled. A bounded version of it lived here for a while, with the process
 	// ended on the timeout; what it was really guarding against was the thread
@@ -658,7 +623,6 @@ void Latte_Stop()
 
 bool Latte_GetStopSignal()
 {
-#ifdef ENABLE_LIBRETRO
 	// A thread whose renderer is gone has nothing left to do. Nearly
 	// everything this thread touches goes through g_renderer, so once the
 	// unload path has dropped it every one of those is a fault at 0x0 - which
@@ -685,12 +649,10 @@ bool Latte_GetStopSignal()
 	// the rebuild flag says which of the two nulls this is.
 	if (!g_renderer && !sRendererRebuildPending.load(std::memory_order_acquire))
 		return true;
-#endif
 	return !sLatteThreadRunning;
 }
 
 
-#ifdef ENABLE_LIBRETRO
 // For the one case Latte_Stop does not cover: a GPU thread that left through
 // its own exit rather than being stopped. Nobody joined it then, and a thread
 // object that is still joinable is a thread that may still be running - which
@@ -703,11 +665,9 @@ void Latte_JoinGpuThreadIfLeft()
 	if (sLatteThread.joinable())
 		sLatteThread.join();
 }
-#endif
 
 void LatteThread_Exit()
 {
-#ifdef ENABLE_LIBRETRO
 	LatteThread_SetPhase("exiting");
 	// In this order, and not the other way around: a frontend that finds no
 	// thread to wait for at the gate asks next whether one is handing the
@@ -719,33 +679,11 @@ void LatteThread_Exit()
 	// for a frontend to wait at the gate for, and a close that arrives while
 	// this runs should not spend its budget on one.
 	sLatteThreadAlive.store(false, std::memory_order_release);
-#endif
-#ifdef ENABLE_LIBRETRO
 	// The same teardown a lost context gets, and the only one there is. On a
 	// close the context took its contents back at the pause gate already and
 	// this finds nothing left to give; on a reset the context never went away
 	// and this is where it all happens.
 	Latte_TeardownGpuState("the title is stopping");
-#else
-	if (g_renderer)
-		g_renderer->Shutdown();
-	// clean up vertex/uniform cache
-	LatteBufferCache_UnloadAll();
-	// clean up texture cache
-	LatteTC_UnloadAllTextures();
-	// clean up runtime shader cache
-	LatteSHRC_UnloadAll();
-	// close disk cache
-	LatteShaderCache_Close();
-	RendererOutputShader::ShutdownStatic();
-	// destroy renderer but make sure that g_renderer remains valid until the destructor has finished
-	if (g_renderer)
-	{
-		Renderer* renderer = g_renderer.get();
-		delete renderer;
-		g_renderer.release();
-	}
-#endif
 	// reset GPU7 state
 	std::memset(&LatteGPUState, 0, sizeof(LatteGPUState));
 	#if BOOST_OS_WINDOWS

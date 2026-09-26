@@ -2,9 +2,7 @@
 #include "Common/FileStream.h"
 #include <cstdarg>
 
-#ifdef RETRO_CORE
 #include "libretro/libretro.h"
-#endif
 
 struct retro_vfs_interface* VFSFileStream::s_vfs_interface = nullptr;
 uint32 VFSFileStream::s_vfs_version = 0;
@@ -17,16 +15,11 @@ void VFSFileStream::SetVFSInterface(struct retro_vfs_interface* vfs_interface, u
 
 bool VFSFileStream::UsesVFS()
 {
-#ifdef RETRO_CORE
 	return s_vfs_interface && s_vfs_interface->open;
-#else
-	return false;
-#endif
 }
 
 bool VFSFileStream::IsRegularFile(const fs::path& path)
 {
-#ifdef RETRO_CORE
 	if (UsesVFS())
 	{
 		if (s_vfs_version >= 3 && s_vfs_interface->stat)
@@ -42,7 +35,6 @@ bool VFSFileStream::IsRegularFile(const fs::path& path)
 		s_vfs_interface->close(handle);
 		return true;
 	}
-#endif
 
 	std::error_code ec;
 	return fs::is_regular_file(path, ec);
@@ -50,7 +42,6 @@ bool VFSFileStream::IsRegularFile(const fs::path& path)
 
 bool VFSFileStream::IsDirectory(const fs::path& path)
 {
-#ifdef RETRO_CORE
 	if (UsesVFS() && s_vfs_version >= 3 && s_vfs_interface->stat)
 	{
 		const int32_t flags = s_vfs_interface->stat(path.string().c_str(), nullptr);
@@ -58,14 +49,12 @@ bool VFSFileStream::IsDirectory(const fs::path& path)
 	}
 	// Without stat there is no way to ask: a directory cannot be opened as a
 	// file, but neither can a path that is not there at all.
-#endif
 	std::error_code ec;
 	return fs::is_directory(path, ec);
 }
 
 std::optional<bool> VFSFileStream::IsReadOnly(const fs::path& path)
 {
-#ifdef RETRO_CORE
 	// RETRO_VFS_STAT_IS_READONLY arrived with VFS v5. Below that the frontend
 	// has no way to say, so the answer is nothing rather than "writable" - the
 	// two are different and the caller decides what to do with the silence.
@@ -75,13 +64,11 @@ std::optional<bool> VFSFileStream::IsReadOnly(const fs::path& path)
 		if ((flags & RETRO_VFS_STAT_IS_VALID) != 0)
 			return (flags & RETRO_VFS_STAT_IS_READONLY) != 0;
 	}
-#endif
 	return std::nullopt;
 }
 
 bool VFSFileStream::Exists(const fs::path& path)
 {
-#ifdef RETRO_CORE
 	if (UsesVFS())
 	{
 		if (s_vfs_version >= 3 && s_vfs_interface->stat)
@@ -98,27 +85,22 @@ bool VFSFileStream::Exists(const fs::path& path)
 		// A directory does not open as a file, so fall through and let the OS
 		// answer for the paths it can see.
 	}
-#endif
 	std::error_code ec;
 	return fs::exists(path, ec);
 }
 
 bool VFSFileStream::Remove(const fs::path& path)
 {
-#ifdef RETRO_CORE
 	if (UsesVFS() && s_vfs_interface->remove)
 		return s_vfs_interface->remove(path.string().c_str()) == 0;
-#endif
 	std::error_code ec;
 	return fs::remove(path, ec);
 }
 
 bool VFSFileStream::Rename(const fs::path& from, const fs::path& to)
 {
-#ifdef RETRO_CORE
 	if (UsesVFS() && s_vfs_interface->rename)
 		return s_vfs_interface->rename(from.string().c_str(), to.string().c_str()) == 0;
-#endif
 	std::error_code ec;
 	fs::rename(from, to, ec);
 	return !ec;
@@ -150,7 +132,6 @@ VFSFileStream* VFSFileStream::openFile(const wchar_t* path, bool allowWrite)
 
 VFSFileStream* VFSFileStream::openFile2(const fs::path& path, bool allowWrite)
 {
-#ifdef RETRO_CORE
 	if (UsesVFS())
 	{
 		// A directory is not a file. The frontend's VFS opens one read-only
@@ -175,7 +156,6 @@ VFSFileStream* VFSFileStream::openFile2(const fs::path& path, bool allowWrite)
 			return new VFSFileStream(handle);
 		return nullptr;
 	}
-#endif
 	
 	// Fallback to native FileStream
 	FileStream* fs = FileStream::openFile2(path, allowWrite);
@@ -196,7 +176,6 @@ VFSFileStream* VFSFileStream::createFile(std::string_view path)
 
 VFSFileStream* VFSFileStream::createFile2(const fs::path& path)
 {
-#ifdef RETRO_CORE
 	if (UsesVFS())
 	{
 		// No UPDATE_EXISTING here: creating a file means starting from empty,
@@ -207,7 +186,6 @@ VFSFileStream* VFSFileStream::createFile2(const fs::path& path)
 			return new VFSFileStream(handle);
 		return nullptr;
 	}
-#endif
 	
 	// Fallback to native FileStream
 	FileStream* fs = FileStream::createFile2(path);
@@ -246,13 +224,11 @@ void VFSFileStream::SetPosition(uint64 pos)
 	if (!m_isValid)
 		return;
 		
-#ifdef RETRO_CORE
 	if (m_useVFS && s_vfs_interface && s_vfs_interface->seek)
 	{
 		s_vfs_interface->seek(m_vfsHandle, (int64_t)pos, RETRO_VFS_SEEK_POSITION_START);
 		return;
 	}
-#endif
 	
 	if (m_nativeStream)
 		m_nativeStream->SetPosition(pos);
@@ -263,13 +239,11 @@ uint64 VFSFileStream::GetSize()
 	if (!m_isValid)
 		return 0;
 		
-#ifdef RETRO_CORE
 	if (m_useVFS && s_vfs_interface && s_vfs_interface->size)
 	{
 		int64_t size = s_vfs_interface->size(m_vfsHandle);
 		return size < 0 ? 0 : (uint64)size;
 	}
-#endif
 	
 	if (m_nativeStream)
 		return m_nativeStream->GetSize();
@@ -282,7 +256,6 @@ bool VFSFileStream::SetEndOfFile()
 	if (!m_isValid)
 		return false;
 		
-#ifdef RETRO_CORE
 	if (m_useVFS && s_vfs_version >= 2 && s_vfs_interface && s_vfs_interface->truncate)
 	{
 		int64_t currentPos = s_vfs_interface->tell(m_vfsHandle);
@@ -290,7 +263,6 @@ bool VFSFileStream::SetEndOfFile()
 			return false;
 		return s_vfs_interface->truncate(m_vfsHandle, currentPos) == 0;
 	}
-#endif
 	
 	if (m_nativeStream)
 		return m_nativeStream->SetEndOfFile();
@@ -311,13 +283,11 @@ void VFSFileStream::extract(std::vector<uint8>& data)
 
 void VFSFileStream::Flush()
 {
-#ifdef RETRO_CORE
 	if (m_useVFS && s_vfs_interface && s_vfs_interface->flush)
 	{
 		s_vfs_interface->flush(m_vfsHandle);
 		return;
 	}
-#endif
 	
 	// Native FileStream on Windows doesn't have flush, Unix does
 #ifndef _WIN32
@@ -331,7 +301,6 @@ uint32 VFSFileStream::readData(void* data, uint32 length)
 	if (!m_isValid)
 		return 0;
 		
-#ifdef RETRO_CORE
 	if (m_useVFS && s_vfs_interface && s_vfs_interface->read)
 	{
 		// A read is allowed to come back short - the frontend may be reading a
@@ -348,7 +317,6 @@ uint32 VFSFileStream::readData(void* data, uint32 length)
 		}
 		return total;
 	}
-#endif
 	
 	if (m_nativeStream)
 		return m_nativeStream->readData(data, length);
@@ -396,7 +364,6 @@ sint32 VFSFileStream::writeData(const void* data, sint32 length)
 	if (!m_isValid)
 		return 0;
 		
-#ifdef RETRO_CORE
 	if (m_useVFS && s_vfs_interface && s_vfs_interface->write)
 	{
 		const uint8* in = (const uint8*)data;
@@ -410,7 +377,6 @@ sint32 VFSFileStream::writeData(const void* data, sint32 length)
 		}
 		return total;
 	}
-#endif
 	
 	if (m_nativeStream)
 		return m_nativeStream->writeData(data, length);
@@ -464,13 +430,11 @@ VFSFileStream::~VFSFileStream()
 	if (!m_isValid)
 		return;
 		
-#ifdef RETRO_CORE
 	if (m_useVFS && m_vfsHandle && s_vfs_interface && s_vfs_interface->close)
 	{
 		s_vfs_interface->close(m_vfsHandle);
 		return;
 	}
-#endif
 	
 	if (m_nativeStream)
 	{

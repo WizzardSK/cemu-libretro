@@ -55,7 +55,6 @@ private:
 	void WorkerThread();  // runs on: this cache's own plCacheWriter thread
 
 	std::thread* m_pipelineCacheStoreThread;
-#ifdef ENABLE_LIBRETRO
 	// Upstream detaches both kinds of thread and never waits for them, which
 	// costs nothing in a process that is about to end. A core outlives the
 	// title: the compiler threads build pipelines that are registered with the
@@ -64,7 +63,6 @@ private:
 	// instead of waiting on a flag. The loops themselves are upstream's.
 	std::vector<std::thread> m_compilerThreads;
 	std::atomic_bool m_stopCacheStoreThread{ false };
-#endif
 
 	std::unordered_set<PipelineHash, PipelineHash::HashFunc> m_pipelineIsCached;
 	FSpinlock m_pipelineIsCachedLock;

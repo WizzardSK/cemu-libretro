@@ -251,7 +251,6 @@ static retro_environment_t environ_cb = nullptr;
 static void libretro_publish_memory_maps();
 static void libretro_clear_memory_maps();
 static retro_video_refresh_t video_cb = nullptr;
-static retro_audio_sample_t audio_cb = nullptr;
 static retro_audio_sample_batch_t audio_batch_cb = nullptr;
 static retro_input_poll_t input_poll_cb = nullptr;
 static retro_input_state_t input_state_cb = nullptr;
@@ -2476,7 +2475,9 @@ static void libretro_publish_core_options(retro_environment_t cb)
 }
 
 RETRO_API void retro_set_video_refresh(retro_video_refresh_t cb) { video_cb = cb; }
-RETRO_API void retro_set_audio_sample(retro_audio_sample_t cb) { audio_cb = cb; }
+// Audio goes out in batches only (LibretroAudioAPI::FlushAudio), so the
+// single-sample callback is not kept.
+RETRO_API void retro_set_audio_sample(retro_audio_sample_t) {}
 RETRO_API void retro_set_audio_sample_batch(retro_audio_sample_batch_t cb) { audio_batch_cb = cb; }
 RETRO_API void retro_set_input_poll(retro_input_poll_t cb) { input_poll_cb = cb; }
 RETRO_API void retro_set_input_state(retro_input_state_t cb) { input_state_cb = cb; }
@@ -4614,12 +4615,10 @@ bool libretro_get_touch_state(uint16_t* x, uint16_t* y)
 // Use function pointers to avoid conflicts with CemuGL namespace
 typedef void (*PFNGLBINDFRAMEBUFFERPROC_)(unsigned int, unsigned int);
 typedef void (*PFNGLGENFRAMEBUFFERSPROC_)(int, unsigned int*);
-typedef void (*PFNGLFRAMEBUFFERRENDERBUFFERPROC_)(unsigned int, unsigned int, unsigned int, unsigned int);
 typedef void (*PFNGLBLITFRAMEBUFFERPROC_)(int, int, int, int, int, int, int, int, unsigned int, unsigned int);
 
 static PFNGLBINDFRAMEBUFFERPROC_ s_glBindFramebuffer = nullptr;
 static PFNGLGENFRAMEBUFFERSPROC_ s_glGenFramebuffers = nullptr;
-static PFNGLFRAMEBUFFERRENDERBUFFERPROC_ s_glFramebufferRenderbuffer = nullptr;
 static PFNGLBLITFRAMEBUFFERPROC_ s_glBlitFramebuffer = nullptr;
 
 #ifdef ENABLE_OPENGL
@@ -4628,7 +4627,6 @@ static void libretro_load_blit_gl_funcs()
 	if (s_glBindFramebuffer) return;
 	s_glBindFramebuffer = (PFNGLBINDFRAMEBUFFERPROC_)cemu_gl_get_proc("glBindFramebuffer");
 	s_glGenFramebuffers = (PFNGLGENFRAMEBUFFERSPROC_)cemu_gl_get_proc("glGenFramebuffers");
-	s_glFramebufferRenderbuffer = (PFNGLFRAMEBUFFERRENDERBUFFERPROC_)cemu_gl_get_proc("glFramebufferRenderbuffer");
 	s_glBlitFramebuffer = (PFNGLBLITFRAMEBUFFERPROC_)cemu_gl_get_proc("glBlitFramebuffer");
 }
 #endif // ENABLE_OPENGL
@@ -4636,7 +4634,6 @@ static void libretro_load_blit_gl_funcs()
 #define GL_COLOR_BUFFER_BIT_ 0x00004000
 #define GL_NEAREST_ 0x2600
 #define GL_COLOR_ATTACHMENT0_ 0x8CE0
-#define GL_RENDERBUFFER_ 0x8D41
 #define GL_DRAW_FRAMEBUFFER_ 0x8CA9
 
 // Get the shared renderbuffer from the GPU thread's FBO. Only the GL path has

@@ -16,9 +16,7 @@
 #include "Cafe/OS/libs/erreula/erreula.h"
 #include "input/InputManager.h"
 #include "Cafe/OS/libs/swkbd/swkbd.h"
-#ifdef RETRO_CORE
 #include "libretro/LibretroDRC.h"
-#endif
 
 uint32 prevScissorX = 0;
 uint32 prevScissorY = 0;
@@ -1017,7 +1015,6 @@ void LatteRenderTarget_itHLECopyColorBufferToScanBuffer(MPTR colorBufferPtr, uin
 
 	bool showDRC = swkbd_hasKeyboardInputHook() == false && (isDRCPrimary ^ altScreenRequested);
 
-#ifdef RETRO_CORE
 	// In libretro composite display modes (SBS / TopBottom / PiP) both screens
 	// are presented simultaneously, so the standalone showDRC toggle-swap (which
 	// substitutes DRC for TV when the user holds Tab) must not apply — route each
@@ -1086,7 +1083,6 @@ void LatteRenderTarget_itHLECopyColorBufferToScanBuffer(MPTR colorBufferPtr, uin
 			LatteRenderTarget_copyToBackbuffer(s_cachedTvView, true);
 	}
 	else
-#endif
 	{
 		if ((renderTarget & RENDER_TARGET_DRC) && g_renderer->IsPadWindowActive())
 			LatteRenderTarget_copyToBackbuffer(texView, true);
@@ -1094,13 +1090,11 @@ void LatteRenderTarget_itHLECopyColorBufferToScanBuffer(MPTR colorBufferPtr, uin
 			LatteRenderTarget_copyToBackbuffer(texView, false);
 	}
 
-	#ifdef RETRO_CORE
 	// Libretro: Auto-mirror TV to DRC when game doesn't explicitly render to DRC.
 	// Skip in composite modes — those already route TV and DRC independently, and
 	// an unconditional mirror would clobber the DRC sub-rect with TV content.
 	if (!libretroComposite && !libretroDrcOnly && g_renderer->IsPadWindowActive() && !(renderTarget & RENDER_TARGET_DRC) && (renderTarget & RENDER_TARGET_TV))
 		LatteRenderTarget_copyToBackbuffer(texView, true);
-	#endif
 }
 
 

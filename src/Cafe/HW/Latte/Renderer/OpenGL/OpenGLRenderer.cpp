@@ -174,30 +174,7 @@ OpenGLRenderer* OpenGLRenderer::GetInstance()
 
 bool OpenGLRenderer::ImguiBegin(bool mainWindow)
 {
-#ifdef ENABLE_LIBRETRO
 	return false; // Skip ImGui in libretro mode - no GL context in GPU thread
-#else
-	if (!mainWindow)
-	{
-		GLCanvas_MakeCurrent(true);
-		m_isPadViewContext = true;
-	}
-
-	if(!Renderer::ImguiBegin(mainWindow))
-		return false;
-
-	renderstate_resetColorControl();
-	renderstate_resetDepthControl();
-	renderstate_resetStencilMask();
-
-	if (glClipControl)
-		glClipControl(GL_LOWER_LEFT, GL_NEGATIVE_ONE_TO_ONE);
-
-	ImGui_ImplOpenGL3_NewFrame();
-	ImGui_UpdateWindowInformation(mainWindow);
-	ImGui::NewFrame();
-	return true;
-#endif
 }
 
 void OpenGLRenderer::ImguiEnd()
@@ -427,17 +404,12 @@ void OpenGLRenderer::Initialize()
 
 	catchOpenGLError();
 
-#ifdef ENABLE_LIBRETRO
 	// Core profile requires a bound VAO for draw calls
 	{
 		GLuint vao;
 		glGenVertexArrays(1, &vao);
 		glBindVertexArray(vao);
 	}
-#else
-	// imgui
-	ImGui_ImplOpenGL3_Init("#version 150");
-#endif
 }
 
 bool OpenGLRenderer::IsPadWindowActive()
@@ -638,14 +610,12 @@ void OpenGLRenderer::DrawBackbufferQuad(LatteTextureView* texView, RendererOutpu
 	if (!GLCanvas_ShouldRenderScreen(padView))
 		return;
 
-#ifdef ENABLE_LIBRETRO
 	{
 		static int s_draw_count = 0;
 		if (s_draw_count++ < 5)
 			cemuLog_log(LogType::Force, "DrawBackbufferQuad: texView={} shader={} {}x{} at ({},{}) padView={} clearBg={}",
 				(void*)texView, (void*)shader, imageWidth, imageHeight, imageX, imageY, padView, clearBackground);
 	}
-#endif
 
 	catchOpenGLError();
 	GLCanvas_MakeCurrent(padView);
@@ -702,15 +672,9 @@ void OpenGLRenderer::DrawBackbufferQuad(LatteTextureView* texView, RendererOutpu
 
 	glDisable(GL_FRAMEBUFFER_SRGB);
 
-#ifdef ENABLE_LIBRETRO
 	// Core profile: use glDrawArrays (client-side index arrays not allowed)
 	glDrawArrays(GL_TRIANGLES, 0, 6);
-#else
-	uint16 indexData[6] = { 0,1,2,3,4,5 };
-	glDrawRangeElements(GL_TRIANGLES, 0, 5, 6, GL_UNSIGNED_SHORT, indexData);
-#endif
 
-#ifdef ENABLE_LIBRETRO
 	{
 		static int s_post_draw = 0;
 		if (s_post_draw++ < 3)
@@ -719,7 +683,6 @@ void OpenGLRenderer::DrawBackbufferQuad(LatteTextureView* texView, RendererOutpu
 			cemuLog_log(LogType::Force, "DrawBackbufferQuad: post-draw glError=0x{:x} prevBoundFBO={}", (uint32)err, prevBoundFBO);
 		}
 	}
-#endif
 
 	glEnable(GL_FRAMEBUFFER_SRGB);
 
@@ -807,7 +770,6 @@ void OpenGLRenderer::rendertarget_deleteCachedFBO(LatteCachedFBO* cfbo)
 
 // set active FBO
 
-#ifdef ENABLE_LIBRETRO
 // In libretro, FBO 0 has no drawable surface (shared context).
 // We create our own FBO with a color renderbuffer to serve as the "backbuffer".
 // The renderbuffer entry points come from glFunctions.h like every other modern
@@ -843,7 +805,6 @@ GLuint libretro_getBackbufferFBO(int width, int height)
 	}
 	return s_libretro_fbo;
 }
-#endif
 
 void OpenGLRenderer::rendertarget_bindFramebufferObject(LatteCachedFBO* cfbo)
 {
@@ -855,7 +816,6 @@ void OpenGLRenderer::rendertarget_bindFramebufferObject(LatteCachedFBO* cfbo)
 	}
 	else
 	{
-#ifdef ENABLE_LIBRETRO
 		// Use our own FBO instead of FBO 0 (which has no drawable in shared context)
 		int w, h;
 		WindowSystem::GetWindowPhysSize(w, h);
@@ -867,9 +827,6 @@ void OpenGLRenderer::rendertarget_bindFramebufferObject(LatteCachedFBO* cfbo)
 			if (s_bind_count++ < 5)
 				cemuLog_log(LogType::Force, "libretro: bindFramebufferObject(nullptr) -> FBO {} ({}x{})", fboid, w, h);
 		}
-#else
-		fboid = 0;
-#endif
 	}
 
 	if (prevBoundFBO != fboid)

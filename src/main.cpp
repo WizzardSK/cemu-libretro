@@ -110,16 +110,12 @@ void WindowsInitCwd()
 	#endif
 }
 
-#ifdef RETRO_CORE
 // Defined by the libretro glue. Cemu's own log is created part-way through the
 // init below, and a hard crash in the frontend's process can take the whole
 // process down before anything reaches the disk - the frontend log is the only
 // output that reliably survives, so every stage is announced there too.
 void LibretroInitProgress(const char* stage);
 #define CEMU_INIT_STAGE(stage) LibretroInitProgress(stage)
-#else
-#define CEMU_INIT_STAGE(stage) ((void)0)
-#endif
 
 void CemuCommonInit()
 {
@@ -155,16 +151,12 @@ void CemuCommonInit()
 	CafeSystem::Initialize();
 	// init title list
 	CEMU_INIT_STAGE("title list");
-#ifdef ENABLE_LIBRETRO
 	// The cache only ever holds what a scan of the configured game paths found,
 	// and the core has none: it is handed one title by path and adds that. So
 	// the file was written empty on every run and read back empty on the next.
 	// An empty path is how CafeTitleList is told not to keep one - StoreCacheFile
 	// returns early on it.
 	CafeTitleList::Initialize(fs::path());
-#else
-	CafeTitleList::Initialize(ActiveSettings::GetUserDataPath("title_list_cache.xml"));
-#endif
 	for (auto& it : GetConfig().game_paths)
 		CafeTitleList::AddScanPath(_utf8ToPath(it));
 	fs::path mlcPath = ActiveSettings::GetMlcPath();
@@ -245,57 +237,6 @@ void HandlePostUpdate()
 
 void ToolShaderCacheMerger();
 
-#ifndef ENABLE_LIBRETRO
-// Entry points are not needed for libretro core builds
-
-#if BOOST_OS_WINDOWS
-
-// entrypoint for release builds
-int wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nShowCmd)
-{
-	if (FAILED(CoInitializeEx(nullptr, COINIT_MULTITHREADED | COINIT_DISABLE_OLE1DDE)))
-		cemuLog_log(LogType::Force, "CoInitializeEx() failed");
-	auto parse_rc = LaunchSettings::HandleCommandline(lpCmdLine);
-	if (parse_rc.has_value())
-		return *parse_rc;
-	WindowSystem::Create();
-	return 0;
-}
-
-// entrypoint for debug builds with console
-int main(int argc, char* argv[])
-{
-	if (FAILED(CoInitializeEx(nullptr, COINIT_MULTITHREADED | COINIT_DISABLE_OLE1DDE)))
-		cemuLog_log(LogType::Force, "CoInitializeEx() failed");
-	auto parse_rc = LaunchSettings::HandleCommandline(argc, argv);
-	if (parse_rc.has_value())
-		return *parse_rc;
-	WindowSystem::Create();
-	return 0;
-}
-
-#else
-
-int BreathOfTheWildChildProcessMain();
-int main(int argc, char *argv[])
-{
-#if BOOST_OS_LINUX && defined(ENABLE_VULKAN)
-	if (getenv("CEMU_DETECT_RADV") != nullptr)
-		return BreathOfTheWildChildProcessMain();
-#endif
-
-#if BOOST_OS_LINUX || BOOST_OS_BSD
-    XInitThreads();
-#endif
-	auto parse_rc = LaunchSettings::HandleCommandline(argc, argv);
-  if (parse_rc.has_value())
-		return *parse_rc;
-	WindowSystem::Create();
-	return 0;
-}
-#endif
-
-#endif // ENABLE_LIBRETRO
 
 extern "C" DLLEXPORT uint64 gameMeta_getTitleId()
 {

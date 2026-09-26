@@ -2,11 +2,9 @@
 #include "Cafe/OS/libs/snd_core/ax_internal.h"
 #include "Cafe/HW/MMU/MMU.h"
 #include "audio/IAudioAPI.h"
-#ifdef RETRO_CORE
 #include "libretro/LibretroAudioAPI.h"
 
 #include <atomic>
-#endif
 //#include "ax.h"
 #include "config/CemuConfig.h"
 
@@ -167,10 +165,8 @@ namespace snd_core
 	sint16 tempDRCChannelData[AX_SAMPLES_MAX * 6 * AX_FRAMES_PER_GROUP] = {};
 	sint32 tempDRCAudioBlockCounter = 0;
 
-#ifdef RETRO_CORE
 	static bool s_drcMixBlockReady = false;
 	static sint16 s_drcMixBlock[AX_SAMPLES_MAX * AX_TV_CHANNEL_COUNT * AX_FRAMES_PER_GROUP] = {};
-#endif
 
 	void AIInitDMA(sint16* sampleData, sint32 size)
 	{
@@ -195,7 +191,6 @@ namespace snd_core
 		{
 			if (g_tvAudio)
 			{
-#ifdef RETRO_CORE
 				if (s_drcMixBlockReady)
 				{
 					constexpr size_t kChannels = 2;
@@ -209,7 +204,6 @@ namespace snd_core
 					}
 					s_drcMixBlockReady = false;
 				}
-#endif
 				g_tvAudio->FeedBlock(tempTVChannelData);
 			}
 
@@ -336,7 +330,6 @@ namespace snd_core
 
 		std::shared_lock lock(g_audioMutex);
 
-#ifdef RETRO_CORE
 		// Libretro outputs a single stereo stream. Convert DRC audio to stereo and mix into TV.
 		const uint32 channelsOut = 2;
 		const uint32 channelsIn = (uint32)AIGetChannelCount(AX_DEV_DRC);
@@ -349,29 +342,16 @@ namespace snd_core
 			outputChannel[f * 2 + 0] = l;
 			outputChannel[f * 2 + 1] = r;
 		}
-#else
-		const uint32 channels = g_padAudio ? g_padAudio->GetChannels() : AX_DRC_CHANNEL_COUNT;
-		sint16* outputChannel = tempDRCChannelData + AX_SAMPLES_PER_3MS_48KHZ * tempDRCAudioBlockCounter * channels;
-		for (sint32 i = 0; i < sampleCount; ++i)
-		{
-			outputChannel[i] = _swapEndianS16(sampleData[i]);
-		}
-#endif
 
 		tempDRCAudioBlockCounter++;
 		if (tempDRCAudioBlockCounter == AX_FRAMES_PER_GROUP)
 		{
 			{
-#ifdef RETRO_CORE
 				constexpr size_t kChannels = 2;
 				const size_t samplesToCopy = (size_t)AX_SAMPLES_PER_3MS_48KHZ * (size_t)AX_FRAMES_PER_GROUP * kChannels;
 				for (size_t i = 0; i < samplesToCopy; ++i)
 					s_drcMixBlock[i] = tempDRCChannelData[i];
 				s_drcMixBlockReady = true;
-#else
-				if (g_padAudio)
-					g_padAudio->FeedBlock(tempDRCChannelData);
-#endif
 			}
 
 			tempDRCAudioBlockCounter = 0;
@@ -456,13 +436,9 @@ namespace snd_core
 		{
 			try
 			{
-#ifdef RETRO_CORE
 				// For libretro, use LibretroAudioAPI which routes audio to RetroArch
 				g_tvAudio = std::make_unique<LibretroAudioAPI>(48000, 2, snd_core::AX_SAMPLES_PER_3MS_48KHZ * AX_FRAMES_PER_GROUP, 16);
 				cemuLog_log(LogType::Force, "Initialized LibretroAudioAPI for TV audio");
-#else
-				g_tvAudio = IAudioAPI::CreateDeviceFromConfig(IAudioAPI::AudioType::TV, 48000, snd_core::AX_SAMPLES_PER_3MS_48KHZ * AX_FRAMES_PER_GROUP, 16);
-#endif
 			}
 			catch (std::runtime_error& ex)
 			{
@@ -475,11 +451,7 @@ namespace snd_core
 		{
 			try
 			{
-#ifdef RETRO_CORE
 				g_padAudio.reset();
-#else
-				g_padAudio = IAudioAPI::CreateDeviceFromConfig(IAudioAPI::AudioType::Gamepad, 48000, snd_core::AX_SAMPLES_PER_3MS_48KHZ * AX_FRAMES_PER_GROUP, 16);
-#endif
 			}
 			catch (std::runtime_error& ex)
 			{
@@ -544,7 +516,6 @@ namespace snd_core
 	std::atomic<uint64_t> g_ax_update_calls{0};
 	std::atomic<uint64_t> g_ax_update_passed{0};
 
-#ifdef RETRO_CORE
 	// Samples the frontend has asked for and AX has not made yet. In a libretro
 	// core the audio has to follow the frames the frontend asks for, not the
 	// wall clock: RetroArch blocks in the audio callback until what it was
@@ -565,12 +536,10 @@ namespace snd_core
 		while (!s_libretro_ax_budget.compare_exchange_weak(cur, std::min(cur + samples, kCap), std::memory_order_relaxed))
 			;
 	}
-#endif
 
 	void AXOut_update()
 	{
 		g_ax_update_calls.fetch_add(1, std::memory_order_relaxed);
-#ifdef RETRO_CORE
 		if (s_libretro_ax_budget.load(std::memory_order_relaxed) < AX_SAMPLES_PER_3MS_48KHZ)
 			return;
 
@@ -606,7 +575,6 @@ namespace snd_core
 			s_libretro_last_frame = libretroNow;
 		}
 		return;
-#endif
 		constexpr static auto kTimeout = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::milliseconds(((IAudioAPI::kBlockCount * 3) / 4) * (AX_FRAMES_PER_GROUP * 3)));
 		constexpr static auto kWaitDuration = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::milliseconds(3));
 		constexpr static auto kWaitDurationFast = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::microseconds(2900));

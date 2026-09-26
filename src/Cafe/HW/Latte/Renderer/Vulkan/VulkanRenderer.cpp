@@ -1,10 +1,8 @@
 #include "Cafe/HW/Latte/Renderer/Vulkan/VulkanRenderer.h"
 #include "Common/ExceptionHandler/Breadcrumb.h"
 #include "Cafe/HW/Latte/Renderer/Vulkan/VulkanAPI.h"
-#ifdef RETRO_CORE
 #include "libretro/LibretroDRC.h"
 #include "libretro/LibretroVkQueue.h"
-#endif
 #include "Cafe/HW/Latte/Renderer/Vulkan/LatteTextureVk.h"
 #include "Cafe/HW/Latte/Renderer/Vulkan/RendererShaderVk.h"
 #include "Cafe/HW/Latte/Renderer/Vulkan/VulkanTextureReadback.h"
@@ -500,10 +498,8 @@ static void LinuxBreathOfTheWildWorkaround(VkInstance& instance, const VkInstanc
 
 #endif
 
-#ifdef ENABLE_LIBRETRO
 // Defined at global scope by the libretro glue (src/libretro/CemuLibretro.cpp).
 bool libretro_gpu_context_gone();
-#endif
 
 VulkanRenderer::VulkanRenderer() : Renderer(RendererAPI::Vulkan)
 {
@@ -866,7 +862,6 @@ VulkanRenderer::VulkanRenderer() : Renderer(RendererAPI::Vulkan)
 	PipelineCompiler::CompileThreadPool_Start(); // pipelines
 }
 
-#ifdef RETRO_CORE
 VulkanRenderer::VulkanRenderer(VkInstance instance, VkPhysicalDevice physDevice, VkDevice device, VkQueue queue, uint32_t queueFamilyIndex)
 	: Renderer(RendererAPI::Vulkan)
 {
@@ -1072,11 +1067,9 @@ void VulkanRenderer::DestroyPresentationImage()
 	if (m_presentImageMemory) { vkFreeMemory(m_logicalDevice, m_presentImageMemory, nullptr); m_presentImageMemory = VK_NULL_HANDLE; }
 	m_presentWidth = m_presentHeight = 0;
 }
-#endif
 
 VulkanRenderer::~VulkanRenderer()
 {
-#ifdef ENABLE_LIBRETRO
 	// Submitting is not allowed once the frontend has taken its context apart:
 	// the swapchain images and semaphores this command buffer refers to are
 	// gone, and the driver faults inside vkQueueSubmit rather than complaining.
@@ -1092,14 +1085,7 @@ VulkanRenderer::~VulkanRenderer()
 	{
 		WaitDeviceIdle();
 	}
-#else
-	SubmitCommandBuffer();
-	WaitDeviceIdle();
-	WaitCommandBufferFinished(GetCurrentCommandBufferId());
-#endif
-#ifdef RETRO_CORE
 	DestroyPresentationImage();
-#endif
 	// make sure compilation threads have been shut down
 	RendererShaderVk::Shutdown();
 	// shut down pipeline save thread
@@ -1192,9 +1178,7 @@ VulkanRenderer::~VulkanRenderer()
 	memoryManager.reset();
 
 	// destroy instance, devices (skip if using external device from libretro frontend)
-#ifdef RETRO_CORE
 	if (!m_useExternalDevice)
-#endif
 	{
 		if (m_instance != VK_NULL_HANDLE)
 		{
@@ -1250,14 +1234,12 @@ void VulkanRenderer::StopUsingPadAndWait()
 
 bool VulkanRenderer::IsPadWindowActive()
 {
-#ifdef RETRO_CORE
 	// Libretro has no pad-window swapchain; we composite TV+DRC into the single
 	// shared present image. Report "active" whenever the DRC layout asks for it
 	// so LatteRenderTarget routes DRC scan-out (and the auto-mirror fallback)
 	// through DrawBackbufferQuad.
 	if (g_libretroScreenLayout != LibretroScreenLayout::Tv)
 		return true;
-#endif
 	return IsSwapchainInfoValid(false);
 }
 
@@ -2090,9 +2072,7 @@ void VulkanRenderer::DeleteNullObjects()
 
 void VulkanRenderer::ImguiInit()
 {
-#ifdef RETRO_CORE
 	return;
-#endif
 	VkRenderPass prevRenderPass = m_imguiRenderPass;
 
 	VkAttachmentDescription colorAttachment = {};
@@ -2156,14 +2136,10 @@ void VulkanRenderer::Initialize()
 
 void VulkanRenderer::Shutdown()
 {
-#ifdef ENABLE_LIBRETRO
 	// Same as the destructor: with the context gone there is nothing left to
 	// submit to, and trying is a fault in the driver.
 	if (!::libretro_gpu_context_gone())
 		SubmitCommandBuffer();
-#else
-	SubmitCommandBuffer();
-#endif
 	WaitDeviceIdle();
 	// stop compilation threads
 	RendererShaderVk::Shutdown();
@@ -2441,9 +2417,7 @@ void VulkanRenderer::ImguiEnd()
 
 ImTextureID VulkanRenderer::GenerateTexture(const std::vector<uint8>& data, const Vector2i& size)
 {
-#ifdef RETRO_CORE
 	return nullptr;
-#endif
 	try
 	{
 		std::vector <uint8> tmp(size.x * size.y * 4);
@@ -2465,18 +2439,14 @@ ImTextureID VulkanRenderer::GenerateTexture(const std::vector<uint8>& data, cons
 
 void VulkanRenderer::DeleteTexture(ImTextureID id)
 {
-#ifdef RETRO_CORE
 	return;
-#endif
 	WaitDeviceIdle();
 	ImGui_ImplVulkan_DeleteTexture(id);
 }
 
 void VulkanRenderer::DeleteFontTextures()
 {
-#ifdef RETRO_CORE
 	return;
-#endif
 	WaitDeviceIdle();
 	ImGui_ImplVulkan_DestroyFontsTexture();
 }
@@ -3594,14 +3564,11 @@ void VulkanBenchmarkPrintResults();
 
 void VulkanRenderer::SwapBuffers(bool swapTV, bool swapDRC)
 {
-#ifdef RETRO_CORE
 	// In libretro HW render mode, frame_ready is set in DrawBackbufferQuad
 	// No swapchain presentation needed
-#endif
 
 	SubmitCommandBuffer();
 
-#ifdef RETRO_CORE
 	// The work is submitted and the frame is the frontend's; park here until it
 	// asks for the next one. After the submit, so nothing is held open while we
 	// wait, and only for the TV frame - the DRC swap is part of the same frame.
@@ -3610,15 +3577,7 @@ void VulkanRenderer::SwapBuffers(bool swapTV, bool swapDRC)
 		extern void libretro_frame_gate_wait();
 		libretro_frame_gate_wait();
 	}
-#endif
 
-#ifndef RETRO_CORE
-	if (swapTV && IsSwapchainInfoValid(true))
-		SwapBuffer(true);
-
-	if (swapDRC && IsSwapchainInfoValid(false))
-		SwapBuffer(false);
-#endif
 
 	if(swapTV)
 		VulkanBenchmarkPrintResults();
@@ -3704,7 +3663,6 @@ void VulkanRenderer::ClearColorImage(LatteTextureVk* vkTexture, uint32 sliceInde
 
 void VulkanRenderer::DrawBackbufferQuad(LatteTextureView* texView, RendererOutputShader* shader, bool useLinearTexFilter, sint32 imageX, sint32 imageY, sint32 imageWidth, sint32 imageHeight, bool padView, bool clearBackground)
 {
-#ifdef RETRO_CORE
 	// Skip screens the DRC layout says we don't present (Disabled mode skips
 	// DRC, Toggle mode skips the un-selected screen).
 	if (!LibretroDRC_ShouldRenderScreen(padView))
@@ -3839,7 +3797,6 @@ void VulkanRenderer::DrawBackbufferQuad(LatteTextureView* texView, RendererOutpu
 		libretro_signal_frame_ready();
 	}
 	return;
-#endif
 
 	if(!AcquireNextSwapchainImage(!padView))
 		return;

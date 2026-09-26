@@ -3,11 +3,7 @@
 #include "input/api/ControllerProvider.h"
 
 #ifndef HAS_LIBRETRO
-#ifdef ENABLE_LIBRETRO
 #define HAS_LIBRETRO 1
-#else
-#define HAS_LIBRETRO 0
-#endif
 #endif
 
 // Libretro pads are not enumerated - the frontend always exposes a fixed number

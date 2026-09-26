@@ -4,7 +4,6 @@
 // point (CemuLibretroLinux.cpp) and the renderers that present into the
 // libretro window FBO / shared Vulkan image. Defined in CemuLibretroLinux.cpp.
 
-#ifdef RETRO_CORE
 
 #include "Common/precompiled.h"
 
@@ -32,4 +31,3 @@ void LibretroDRC_ComputeViewport(bool padView,
 	int dstWidth, int dstHeight,
 	int& outX, int& outY, int& outWidth, int& outHeight);
 
-#endif // RETRO_CORE
