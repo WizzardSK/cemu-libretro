@@ -541,7 +541,7 @@ bool match_any_of(T1&& value, Types&&... others)
 	clock_gettime(CLOCK_MONOTONIC_RAW, &tp);
 	return std::chrono::steady_clock::time_point(
 		std::chrono::seconds(tp.tv_sec) + std::chrono::nanoseconds(tp.tv_nsec));
-#elif BOOST_OS_MACOS
+#elif BOOST_OS_MACOS || BOOST_OS_IOS
 	return std::chrono::steady_clock::time_point(
 		std::chrono::nanoseconds(clock_gettime_nsec_np(CLOCK_MONOTONIC_RAW)));
 #elif BOOST_OS_BSD

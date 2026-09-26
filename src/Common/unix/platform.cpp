@@ -7,7 +7,8 @@ uint32_t GetTickCount()
 	struct timespec ts;
 	clock_gettime(CLOCK_MONOTONIC_RAW, &ts);
 	return (1000 * ts.tv_sec + ts.tv_nsec / 1000000);
-#elif BOOST_OS_MACOS
+#elif BOOST_OS_MACOS || BOOST_OS_IOS
+	// iOS and tvOS too, or this returned no value there at all.
 	return clock_gettime_nsec_np(CLOCK_MONOTONIC_RAW) / 1000000;
 #elif BOOST_OS_BSD
 	struct timespec ts;

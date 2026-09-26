@@ -585,13 +585,14 @@ namespace snd_core
 		// does too - fast enough to catch up on a backlog at nearly twice real
 		// time, slow enough to leave the title room between frames.
 		constexpr static auto kLibretroMinSpacing = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::microseconds(1700));
-#if BOOST_OS_WINDOWS
-		const auto libretroNow = tick_cached();
+		// steady_clock, on every platform: it is monotonic everywhere the core
+		// is built - QueryPerformanceCounter on Windows with MSVC and MinGW
+		// alike, CLOCK_MONOTONIC with libstdc++, the monotonic clocks with
+		// libc++. now_cached() is not: with libstdc++ (Linux, webOS, BSD) it is
+		// CLOCK_REALTIME, and a system clock stepped back would have held AX
+		// until it caught up with where it had been.
+		const auto libretroNow = std::chrono::steady_clock::now();
 		static auto s_libretro_last_frame = libretroNow - kLibretroMinSpacing;
-#else
-		const auto libretroNow = now_cached();
-		static auto s_libretro_last_frame = libretroNow - kLibretroMinSpacing;
-#endif
 		if ((libretroNow - s_libretro_last_frame) < kLibretroMinSpacing)
 			return;
 
