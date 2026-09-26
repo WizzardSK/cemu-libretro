@@ -28,16 +28,28 @@ jobs:
           Copy-Item (Get-ChildItem -Recurse msvc -Filter cemu_libretro.dll | Select-Object -First 1).FullName cores\msvc_cemu_libretro.dll
           Get-ChildItem cores | Select-Object Name, Length, LastWriteTime
 
+      - name: Fetch Mesa (llvmpipe OpenGL 4.5)
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release download -R pal1000/mesa-dist-win -p "mesa3d-*-release-msvc.7z" -O mesa.7z
+          7z x mesa.7z -omesa | Out-Null
+          Copy-Item mesa\x64\*.dll .
+          Get-ChildItem *.dll | Select-Object Name, Length
+
       - name: Build the harness
         shell: cmd
         run: |
           call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
-          cl /nologo /O1 /Fe:harness.exe tools\mingw-repro\harness.c
+          cl /nologo /O1 /Fe:harness.exe tools\mingw-repro\harness.c user32.lib gdi32.lib opengl32.lib
 
       - name: Run the MSVC core (control)
         shell: pwsh
         continue-on-error: true
-        timeout-minutes: 6
+        timeout-minutes: 8
+        env:
+          GALLIUM_DRIVER: llvmpipe
         run: |
           New-Item -ItemType Directory -Force run_msvc | Out-Null
           Set-Content -Path "$PWD\run_msvc\game.rpx" -Value "not a real rpx"
@@ -47,7 +59,9 @@ jobs:
       - name: Run the MinGW core (buildbot)
         shell: pwsh
         continue-on-error: true
-        timeout-minutes: 6
+        timeout-minutes: 8
+        env:
+          GALLIUM_DRIVER: llvmpipe
         run: |
           New-Item -ItemType Directory -Force run_mingw | Out-Null
           Set-Content -Path "$PWD\run_mingw\game.rpx" -Value "not a real rpx"
