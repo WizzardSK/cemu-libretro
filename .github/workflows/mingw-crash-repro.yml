@@ -37,6 +37,7 @@ jobs:
       - name: Run the MSVC core (control)
         shell: pwsh
         continue-on-error: true
+        timeout-minutes: 6
         run: |
           New-Item -ItemType Directory -Force run_msvc | Out-Null
           .\harness.exe "$PWD\cores\msvc_cemu_libretro.dll" "$PWD\run_msvc"
@@ -45,6 +46,7 @@ jobs:
       - name: Run the MinGW core (buildbot)
         shell: pwsh
         continue-on-error: true
+        timeout-minutes: 6
         run: |
           New-Item -ItemType Directory -Force run_mingw | Out-Null
           .\harness.exe "$PWD\cores\mingw_cemu_libretro.dll" "$PWD\run_mingw"

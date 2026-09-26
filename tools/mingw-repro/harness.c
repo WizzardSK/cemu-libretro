@@ -32,18 +32,36 @@ static bool env_cb(unsigned cmd, void *data)
 	}
 }
 
-static LONG WINAPI on_crash(EXCEPTION_POINTERS *ep)
+static void describe(const char *what, EXCEPTION_POINTERS *ep)
 {
 	void *addr = ep->ExceptionRecord->ExceptionAddress;
 	HMODULE mod = NULL; char name[MAX_PATH] = "?";
 	GetModuleHandleExA(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT, (LPCSTR)addr, &mod);
 	if (mod) GetModuleFileNameA(mod, name, sizeof(name));
-	printf("CRASH code 0x%08lX at %p = %s + 0x%llX\n", ep->ExceptionRecord->ExceptionCode, addr, name,
+	printf("%s code 0x%08lX at %p = %s + 0x%llX\n", what, ep->ExceptionRecord->ExceptionCode, addr, name,
 		(unsigned long long)((char *)addr - (char *)mod));
 	for (DWORD i = 0; i < ep->ExceptionRecord->NumberParameters; i++)
 		printf("  param %lu: 0x%llX\n", i, (unsigned long long)ep->ExceptionRecord->ExceptionInformation[i]);
 	fflush(stdout);
+}
+
+// Unhandled: this is the crash. Print and end the process.
+static LONG WINAPI on_crash(EXCEPTION_POINTERS *ep)
+{
+	describe("CRASH", ep);
+	ExitProcess(3);
 	return EXCEPTION_EXECUTE_HANDLER;
+}
+
+// First chance: log hardware faults as they happen (the core may catch C++
+// exceptions itself, so those - MSVC 0xE06D7363, GCC 0x20474343 - are skipped)
+// and let normal handling go on.
+static LONG WINAPI on_first_chance(EXCEPTION_POINTERS *ep)
+{
+	DWORD c = ep->ExceptionRecord->ExceptionCode;
+	if (c != 0xE06D7363 && c != 0x20474343 && c != 0x406D1388 && c != DBG_PRINTEXCEPTION_C && c != 0x4001000A)
+		describe("first-chance", ep);
+	return EXCEPTION_CONTINUE_SEARCH;
 }
 
 static void list_dir(const char *label)
@@ -64,7 +82,8 @@ int main(int argc, char **argv)
 {
 	if (argc < 3) { fprintf(stderr, "usage: harness core.dll root [game]\n"); return 2; }
 	SetUnhandledExceptionFilter(on_crash);
-	AddVectoredExceptionHandler(1, on_crash);
+	AddVectoredExceptionHandler(1, on_first_chance);
+	SetErrorMode(SEM_FAILCRITICALERRORS | SEM_NOGPFAULTERRORBOX | SEM_NOOPENFILEERRORBOX);
 	snprintf(g_sys, sizeof g_sys, "%s\\system", argv[2]);
 	snprintf(g_save, sizeof g_save, "%s\\saves", argv[2]);
 	CreateDirectoryA(g_sys, NULL); CreateDirectoryA(g_save, NULL);
