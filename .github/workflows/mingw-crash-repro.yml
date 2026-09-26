@@ -42,7 +42,7 @@ jobs:
         shell: cmd
         run: |
           call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
-          cl /nologo /O1 /Fe:harness.exe tools\mingw-repro\harness.c user32.lib gdi32.lib opengl32.lib
+          cl /nologo /O1 /Fe:harness.exe tools\mingw-repro\harness.c user32.lib gdi32.lib opengl32.lib dbghelp.lib
 
       - name: Run the MSVC core (control)
         shell: pwsh
@@ -65,7 +65,7 @@ jobs:
         run: |
           New-Item -ItemType Directory -Force run_mingw | Out-Null
           Set-Content -Path "$PWD\run_mingw\game.rpx" -Value "not a real rpx"
-          .\harness.exe "$PWD\cores\mingw_cemu_libretro.dll" "$PWD\run_mingw" "$PWD\run_mingw\game.rpx"
+          .\harness.exe "$PWD\cores\mingw_cemu_libretro.dll" "$PWD\run_mingw"
           "exit code: $LASTEXITCODE"
 
       - name: Leftovers

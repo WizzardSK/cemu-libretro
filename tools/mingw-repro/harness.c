@@ -183,6 +183,56 @@ static void input_poll_cb(void) {}
 static int16_t input_state_cb(unsigned port, unsigned dev, unsigned idx, unsigned id) { return 0; }
 
 
+#include <dbghelp.h>
+#include <tlhelp32.h>
+// Prints every other thread's stack: module + offset for each frame, and the
+// symbol where one is known (Windows DLLs, via the Microsoft symbol server).
+static void dump_all_stacks(DWORD skip_tid)
+{
+	HANDLE proc = GetCurrentProcess();
+	SymSetOptions(SYMOPT_UNDNAME | SYMOPT_DEFERRED_LOADS);
+	SymInitialize(proc, "srv*C:\\symcache*https://msdl.microsoft.com/download/symbols", TRUE);
+	HANDLE snap = CreateToolhelp32Snapshot(TH32CS_SNAPTHREAD, 0);
+	THREADENTRY32 te = { sizeof te };
+	for (BOOL ok = Thread32First(snap, &te); ok; ok = Thread32Next(snap, &te))
+	{
+		if (te.th32OwnerProcessID != GetCurrentProcessId() || te.th32ThreadID == GetCurrentThreadId() || te.th32ThreadID == skip_tid)
+			continue;
+		HANDLE th = OpenThread(THREAD_ALL_ACCESS, FALSE, te.th32ThreadID);
+		if (!th) continue;
+		SuspendThread(th);
+		CONTEXT ctx; ctx.ContextFlags = CONTEXT_FULL;
+		GetThreadContext(th, &ctx);
+		printf("=== thread %lu\n", te.th32ThreadID);
+		STACKFRAME64 f = {0};
+		f.AddrPC.Offset = ctx.Rip; f.AddrPC.Mode = AddrModeFlat;
+		f.AddrFrame.Offset = ctx.Rbp; f.AddrFrame.Mode = AddrModeFlat;
+		f.AddrStack.Offset = ctx.Rsp; f.AddrStack.Mode = AddrModeFlat;
+		for (int i = 0; i < 40; i++)
+		{
+			if (!StackWalk64(IMAGE_FILE_MACHINE_AMD64, proc, th, &f, &ctx, NULL, SymFunctionTableAccess64, SymGetModuleBase64, NULL) || !f.AddrPC.Offset)
+				break;
+			DWORD64 addr = f.AddrPC.Offset;
+			HMODULE mod = NULL; char mname[MAX_PATH] = "?";
+			GetModuleHandleExA(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT, (LPCSTR)addr, &mod);
+			if (mod) GetModuleFileNameA(mod, mname, sizeof mname);
+			const char *base = strrchr(mname, '\\'); base = base ? base + 1 : mname;
+			char symbuf[sizeof(SYMBOL_INFO) + 256]; SYMBOL_INFO *sym = (SYMBOL_INFO *)symbuf;
+			sym->SizeOfStruct = sizeof(SYMBOL_INFO); sym->MaxNameLen = 255;
+			DWORD64 disp = 0;
+			if (SymFromAddr(proc, addr, &disp, sym))
+				printf("  %s+0x%llX  %s+0x%llX\n", base, (unsigned long long)(addr - (DWORD64)mod), sym->Name, (unsigned long long)disp);
+			else
+				printf("  %s+0x%llX\n", base, (unsigned long long)(addr - (DWORD64)mod));
+		}
+		fflush(stdout);
+	}
+	CloseHandle(snap);
+}
+
+static void (*g_deinit)(void);
+static DWORD WINAPI deinit_thread(LPVOID unused) { g_deinit(); return 0; }
+
 static LONG WINAPI on_crash(EXCEPTION_POINTERS *ep)
 {
 	describe("CRASH", ep);
@@ -266,7 +316,15 @@ int main(int argc, char **argv)
 		}
 	}
 	printf("stage: retro_deinit\n"); fflush(stdout);
-	deinit();
+	g_deinit = deinit;
+	DWORD tid; HANDLE dt = CreateThread(NULL, 0, deinit_thread, NULL, 0, &tid);
+	if (WaitForSingleObject(dt, 30000) == WAIT_TIMEOUT)
+	{
+		printf("retro_deinit did not return within 30 s - stacks of all threads:\n"); fflush(stdout);
+		dump_all_stacks(0);
+		ExitProcess(4);
+	}
+	printf("stage: retro_deinit returned\n"); fflush(stdout);
 	list_dir("after retro_deinit");
 	printf("done\n");
 	return 0;
