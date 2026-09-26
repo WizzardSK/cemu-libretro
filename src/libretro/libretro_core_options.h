@@ -61,6 +61,7 @@ struct retro_core_option_v2_category option_cats_us[] = {
 	{ "system", "System", "CPU, language and scheduling." },
 	{ "addons", "Add-ons", "Skylanders, Infinity and Dimensions portals." },
 	{ "logging", "Logging", "Extra log output, for diagnosing problems." },
+	{ "install", "Install Updates and DLC", "Install the updates and DLC in system/Cemu/titles into the emulated console's storage." },
 	{ "convert", "Convert to WUA", "Write the loaded title out as a .wua archive." },
 	{ NULL, NULL, NULL },
 };
@@ -584,6 +585,38 @@ struct retro_core_option_v2_definition option_defs_us[] = {
 		"OpenGL"
 	},
 #endif
+	{
+		"cemu_install_remove_source",
+		"After Installing",
+		NULL,
+		"What happens to the files in system/Cemu/titles once they are installed. "
+		"The update or DLC of the title that is running now is kept either way, because it is in use.",
+		NULL,
+		"install",
+		{
+			{ "keep", "Keep them" },
+			{ "remove", "Remove them" },
+			{ NULL, NULL },
+		},
+		"keep"
+	},
+	{
+		"cemu_install_titles",
+		"Start Installing",
+		NULL,
+		"Installs every update and DLC in system/Cemu/titles into mlc01, the emulated console's storage, "
+		"the way Cemu's File > Install game update or DLC does. NUS downloads (.app files with title.tmd and title.tik) "
+		"are decrypted on the way. A version already installed that is the same or newer is left alone. "
+		"The title keeps running while this happens.",
+		NULL,
+		"install",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
 	{
 		"cemu_wua_output_dir",
 		"Output Directory",

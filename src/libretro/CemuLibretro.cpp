@@ -1906,6 +1906,7 @@ static bool libretro_stop_title();
 static void libretro_prepare_and_launch_title();
 static void libretro_create_renderer();
 static void libretro_set_convert_status(std::string text, int progress = -1);
+static void libretro_request_install();
 
 // What the conversion has to read, in bytes: the base title plus whatever
 // update and DLC go into the same archive. A .wua ends up smaller than that -
@@ -2030,6 +2031,19 @@ static void libretro_apply_profile_options()
 
 static void libretro_apply_core_options()
 {
+	// Installing is a request too, handled the same way as the conversion
+	// below: the switch goes straight back off and the work starts on its own
+	// thread. The two share that thread and its progress message, so one waits
+	// for the other.
+	if (const char* v = libretro_get_option_value("cemu_install_titles"); v && libretro_iequals(v, "enabled"))
+	{
+		libretro_set_option_value("cemu_install_titles", "disabled");
+		if (s_convert_mode.load())
+			libretro_show_message(RETRO_LOG_WARN, 4000, "Not installing: a conversion or an install is still running");
+		else
+			libretro_request_install();
+	}
+
 	// The conversion switch is not a setting, it is a request, and it is acted
 	// on here rather than remembered: the conversion starts in this same process
 	// and the switch goes straight back off, so nothing about it is ever written
@@ -3215,6 +3229,163 @@ static void libretro_start_wua_conversion(TitleId baseTitleId, const fs::path& g
 		libretro_set_convert_status(ok ? fmt::format("Done: {}", _pathToUtf8(outputPath.filename()))
 									   : fmt::format("Conversion failed: {}", error));
 		cemuLog_log(LogType::Force, "Conversion {}", ok ? "finished" : fmt::format("failed: {}", error));
+		s_convert_finished = true;
+	});
+}
+
+// Installing what is in system/Cemu/titles into mlc01, the way the wx front
+// end's "Install game update or DLC" does (issue #23). Scanning that folder
+// already made updates and DLC work where they lie; this is for the user who
+// wants them in the emulated console's storage, as upstream keeps them. It
+// runs beside the title, on the conversion's thread and with its progress bar.
+static void libretro_request_install()
+{
+	s_convert_finished = false;
+	s_convert_cancel = false;
+	s_convert_mode.store(true);
+	libretro_set_convert_status("Looking for updates and DLC...");
+	libretro_update_convert_visibility();
+
+	const char* removeOption = libretro_get_option_value("cemu_install_remove_source");
+	const bool removeSource = removeOption && libretro_iequals(removeOption, "remove");
+
+	// The running title's update and DLC are mounted from where they are now,
+	// so those are never removed, whatever the option says.
+	TitleId runningBase = 0;
+	bool haveRunning = false;
+	if (s_game_loaded && !s_game_path.empty())
+	{
+		TitleInfo running{_utf8ToPath(s_game_path)};
+		if (running.IsValid())
+			haveRunning = CafeTitleList::FindBaseTitleId(running.GetAppTitleId(), runningBase);
+	}
+
+	s_convert_thread = std::thread([removeSource, haveRunning, runningBase]() {
+		SetThreadName("titleInstall");
+		const fs::path titlesDir = ActiveSettings::GetUserDataPath("titles");
+		std::string titlesPrefix = _pathToUtf8(titlesDir.lexically_normal());
+		if (!titlesPrefix.empty() && titlesPrefix.back() != (char)fs::path::preferred_separator)
+			titlesPrefix += (char)fs::path::preferred_separator;
+		const auto inTitlesDir = [&titlesPrefix](const fs::path& path) {
+			const std::string p = _pathToUtf8(path.lexically_normal());
+			return p.size() > titlesPrefix.size() && p.compare(0, titlesPrefix.size(), titlesPrefix) == 0;
+		};
+
+		// What the scan found in the titles folder: updates and DLC only, the
+		// newest version of each.
+		CafeTitleList::WaitForMandatoryScan();
+		std::vector<TitleInfo> found;
+		for (TitleInfo* title : CafeTitleList::AcquireInternalList())
+		{
+			if (!title->IsValid() || !inTitlesDir(title->GetPath()))
+				continue;
+			const auto type = TitleIdParser(title->GetAppTitleId()).GetType();
+			if (type != TitleIdParser::TITLE_TYPE::BASE_TITLE_UPDATE && type != TitleIdParser::TITLE_TYPE::AOC)
+				continue;
+			auto same = std::find_if(found.begin(), found.end(), [&](const TitleInfo& other) {
+				return other.GetAppTitleId() == title->GetAppTitleId();
+			});
+			if (same == found.end())
+				found.emplace_back(*title);
+			else if (title->GetAppTitleVersion() > same->GetAppTitleVersion())
+				*same = *title;
+		}
+		CafeTitleList::ReleaseInternalList();
+
+		if (found.empty())
+		{
+			libretro_set_convert_status(fmt::format("Nothing to install: no updates or DLC in {}", _pathToUtf8(titlesDir)));
+			s_convert_finished = true;
+			return;
+		}
+
+		uint32 installed = 0, upToDate = 0, failed = 0, kept = 0;
+		std::string lastError;
+		for (size_t i = 0; i < found.size() && !s_convert_cancel.load(); i++)
+		{
+			TitleInfo& title = found[i];
+			const bool isUpdate = TitleIdParser(title.GetAppTitleId()).GetType() == TitleIdParser::TITLE_TYPE::BASE_TITLE_UPDATE;
+			std::string name = title.ParseXmlInfo() ? title.GetMetaTitleName() : std::string();
+			if (name.empty())
+				name = fmt::format("{:016x}", title.GetAppTitleId());
+			const std::string label = fmt::format("{} {} v{}", isUpdate ? "update" : "DLC", name, title.GetAppTitleVersion());
+			const fs::path target = ActiveSettings::GetMlcPath(title.GetInstallPath());
+
+			// The same or a newer version already installed is left alone, as
+			// the wx installer does unless told to downgrade.
+			bool done = false;
+			{
+				TitleInfo existing{target};
+				if (existing.IsValid() && existing.ParseXmlInfo() && existing.GetAppTitleVersion() >= title.GetAppTitleVersion())
+				{
+					upToDate++;
+					done = true;
+					cemuLog_log(LogType::Force, "install: {} is already installed", label);
+				}
+			}
+			if (!done)
+			{
+				cemuLog_log(LogType::Force, "install: {} from {} to {}", label, _pathToUtf8(title.GetPath()), _pathToUtf8(target));
+				std::string error;
+				const size_t index = i + 1, count = found.size();
+				const bool ok = TitleConverter::InstallTitle(&title, target, s_convert_cancel,
+					[&label, index, count](const TitleConverter::Progress& p) {
+						const uint64 total = p.bytesTotal ? p.bytesTotal : 1;
+						libretro_set_convert_status(fmt::format("Installing {}/{}: {} - {}/{} MiB",
+							index, count, label, p.bytesDone / 1024 / 1024, p.bytesTotal / 1024 / 1024),
+							(int)(p.bytesDone * 100 / total));
+					},
+					error);
+				if (!ok)
+				{
+					failed++;
+					lastError = fmt::format("{}: {}", label, error);
+					cemuLog_log(LogType::Force, "install: {} failed: {}", label, error);
+					continue;
+				}
+				installed++;
+				done = true;
+			}
+
+			// Only what is in its own folder under titles, and only the forms
+			// that are nothing but this title: a .wua or a disc image can hold
+			// the base game too.
+			if (done && removeSource)
+			{
+				TitleId base = 0;
+				const bool inUse = haveRunning && CafeTitleList::FindBaseTitleId(title.GetAppTitleId(), base) && base == runningBase;
+				fs::path source = title.GetPath();
+				if (title.GetFormat() == TitleInfo::TitleDataFormat::NUS)
+					source = source.parent_path();
+				const bool removable = (title.GetFormat() == TitleInfo::TitleDataFormat::NUS ||
+					title.GetFormat() == TitleInfo::TitleDataFormat::HOST_FS) && inTitlesDir(source);
+				if (inUse || !removable)
+					kept++;
+				else
+				{
+					std::error_code ec;
+					fs::remove_all(source, ec);
+					cemuLog_log(LogType::Force, "install: removed {}{}", _pathToUtf8(source), ec ? " (" + ec.message() + ")" : "");
+				}
+			}
+		}
+
+		// So the title list knows the installed copies, without waiting for
+		// the next start.
+		CafeTitleList::Refresh();
+
+		std::string summary;
+		if (s_convert_cancel.load())
+			summary = "Install cancelled. ";
+		summary += fmt::format("Installed {}", installed);
+		if (upToDate)
+			summary += fmt::format(", {} already installed", upToDate);
+		if (kept)
+			summary += fmt::format(", {} kept in titles (in use or not removable)", kept);
+		if (failed)
+			summary += fmt::format(", {} failed - {}", failed, lastError);
+		libretro_set_convert_status(summary);
+		cemuLog_log(LogType::Force, "install: {}", summary);
 		s_convert_finished = true;
 	});
 }
