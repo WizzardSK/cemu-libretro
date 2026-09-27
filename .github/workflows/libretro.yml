@@ -177,9 +177,15 @@ jobs:
         uses: actions/upload-artifact@v6
         with:
           name: cemu_libretro-windows-x64
-          path: |
-            ./bin/cemu_libretro.dll
-            ./bin/cemu_libretro.pdb
+          path: ./bin/cemu_libretro.dll
+
+      # The symbols, for reading crash offsets, apart from the core so that
+      # downloading the core does not mean downloading them too
+      - name: "Upload symbols"
+        uses: actions/upload-artifact@v6
+        with:
+          name: cemu_libretro-windows-x64-pdb
+          path: ./bin/cemu_libretro.pdb
 
   android:
     name: android-${{ matrix.abi }}
