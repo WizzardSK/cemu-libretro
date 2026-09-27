@@ -2028,12 +2028,13 @@ static void libretro_request_conversion()
 	libretro_start_wua_conversion(baseTitleId, gamePath);
 }
 
-// The three options the game profile owns, and the reason they are not applied
+// The two options the game profile owns, and the reason they are not applied
 // with the rest.
 //
 // gameProfile_load() runs inside CafeSystem::PrepareForegroundTitle, and it
-// begins with ResetOptional(), which puts accurate shader mul, shader fast math
-// and the thread quantum back to their defaults - and then copies the quantum
+// begins with ResetOptional(), which puts accurate shader mul and the thread
+// quantum (and shader fast math, which only the Metal renderer reads) back to
+// their defaults - and then copies the quantum
 // into ppcThreadQuantum. Applying them before the launch, which is where every
 // other option is applied from, meant the profile overwrote them a moment
 // later: the option moved the value and the title ran with the default anyway.
@@ -2049,22 +2050,6 @@ static void libretro_apply_profile_options()
 		bool enabled;
 		if (libretro_parse_enabled_disabled(v, enabled) && g_current_game_profile)
 			g_current_game_profile->SetAccurateShaderMul(enabled ? AccurateShaderMulOption::True : AccurateShaderMulOption::False);
-	}
-
-	if (const char* v = libretro_get_option_value("cemu_shader_fast_math"))
-	{
-		bool enabled;
-		if (libretro_parse_enabled_disabled(v, enabled))
-		{
-#ifdef ENABLE_METAL
-			if (g_current_game_profile)
-				g_current_game_profile->SetShaderFastMath(enabled);
-#else
-			// upstream keeps shader fast math as a Metal-only game profile knob,
-			// so on every build but Apple's this option has nothing to set.
-			(void)enabled;
-#endif
-		}
 	}
 
 	// Set through the variable rather than the profile: gameProfile_load is what

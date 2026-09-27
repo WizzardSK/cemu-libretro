@@ -76,7 +76,6 @@ extern "C" {
 #define CEMU_GX2DRAWDONE_SYNC_LABEL_AR NULL
 #define CEMU_PRECOMPILED_SHADERS_LABEL_AR NULL
 #define CEMU_ACCURATE_SHADER_MUL_LABEL_AR NULL
-#define CEMU_SHADER_FAST_MATH_LABEL_AR NULL
 #define CEMU_UPSCALE_FILTER_LABEL_AR NULL
 #define OPTION_VAL_LINEAR_AR NULL
 #define OPTION_VAL_BICUBIC_AR NULL
@@ -237,20 +236,6 @@ struct retro_core_option_v2_definition option_defs_ar[] = {
 	{
 		"cemu_accurate_shader_mul",
 		CEMU_ACCURATE_SHADER_MUL_LABEL_AR,
-		NULL,
-		NULL,
-		NULL,
-		"shaders",
-		{
-			{ "enabled", NULL },
-			{ "disabled", NULL },
-			{ NULL, NULL },
-		},
-		"enabled"
-	},
-	{
-		"cemu_shader_fast_math",
-		CEMU_SHADER_FAST_MATH_LABEL_AR,
 		NULL,
 		NULL,
 		NULL,
@@ -719,7 +704,6 @@ struct retro_core_options_v2 options_ar = {
 #define CEMU_GX2DRAWDONE_SYNC_LABEL_AST NULL
 #define CEMU_PRECOMPILED_SHADERS_LABEL_AST NULL
 #define CEMU_ACCURATE_SHADER_MUL_LABEL_AST NULL
-#define CEMU_SHADER_FAST_MATH_LABEL_AST NULL
 #define CEMU_UPSCALE_FILTER_LABEL_AST NULL
 #define OPTION_VAL_LINEAR_AST NULL
 #define OPTION_VAL_BICUBIC_AST NULL
@@ -880,20 +864,6 @@ struct retro_core_option_v2_definition option_defs_ast[] = {
 	{
 		"cemu_accurate_shader_mul",
 		CEMU_ACCURATE_SHADER_MUL_LABEL_AST,
-		NULL,
-		NULL,
-		NULL,
-		"shaders",
-		{
-			{ "enabled", NULL },
-			{ "disabled", NULL },
-			{ NULL, NULL },
-		},
-		"enabled"
-	},
-	{
-		"cemu_shader_fast_math",
-		CEMU_SHADER_FAST_MATH_LABEL_AST,
 		NULL,
 		NULL,
 		NULL,
@@ -1362,7 +1332,6 @@ struct retro_core_options_v2 options_ast = {
 #define CEMU_GX2DRAWDONE_SYNC_LABEL_BE NULL
 #define CEMU_PRECOMPILED_SHADERS_LABEL_BE NULL
 #define CEMU_ACCURATE_SHADER_MUL_LABEL_BE NULL
-#define CEMU_SHADER_FAST_MATH_LABEL_BE NULL
 #define CEMU_UPSCALE_FILTER_LABEL_BE NULL
 #define OPTION_VAL_LINEAR_BE NULL
 #define OPTION_VAL_BICUBIC_BE NULL
@@ -1523,20 +1492,6 @@ struct retro_core_option_v2_definition option_defs_be[] = {
 	{
 		"cemu_accurate_shader_mul",
 		CEMU_ACCURATE_SHADER_MUL_LABEL_BE,
-		NULL,
-		NULL,
-		NULL,
-		"shaders",
-		{
-			{ "enabled", NULL },
-			{ "disabled", NULL },
-			{ NULL, NULL },
-		},
-		"enabled"
-	},
-	{
-		"cemu_shader_fast_math",
-		CEMU_SHADER_FAST_MATH_LABEL_BE,
 		NULL,
 		NULL,
 		NULL,
@@ -2005,7 +1960,6 @@ struct retro_core_options_v2 options_be = {
 #define CEMU_GX2DRAWDONE_SYNC_LABEL_CA NULL
 #define CEMU_PRECOMPILED_SHADERS_LABEL_CA NULL
 #define CEMU_ACCURATE_SHADER_MUL_LABEL_CA NULL
-#define CEMU_SHADER_FAST_MATH_LABEL_CA NULL
 #define CEMU_UPSCALE_FILTER_LABEL_CA NULL
 #define OPTION_VAL_LINEAR_CA NULL
 #define OPTION_VAL_BICUBIC_CA NULL
@@ -2166,20 +2120,6 @@ struct retro_core_option_v2_definition option_defs_ca[] = {
 	{
 		"cemu_accurate_shader_mul",
 		CEMU_ACCURATE_SHADER_MUL_LABEL_CA,
-		NULL,
-		NULL,
-		NULL,
-		"shaders",
-		{
-			{ "enabled", NULL },
-			{ "disabled", NULL },
-			{ NULL, NULL },
-		},
-		"enabled"
-	},
-	{
-		"cemu_shader_fast_math",
-		CEMU_SHADER_FAST_MATH_LABEL_CA,
 		NULL,
 		NULL,
 		NULL,
@@ -2648,7 +2588,6 @@ struct retro_core_options_v2 options_ca = {
 #define CEMU_GX2DRAWDONE_SYNC_LABEL_CHS NULL
 #define CEMU_PRECOMPILED_SHADERS_LABEL_CHS NULL
 #define CEMU_ACCURATE_SHADER_MUL_LABEL_CHS NULL
-#define CEMU_SHADER_FAST_MATH_LABEL_CHS NULL
 #define CEMU_UPSCALE_FILTER_LABEL_CHS NULL
 #define OPTION_VAL_LINEAR_CHS NULL
 #define OPTION_VAL_BICUBIC_CHS NULL
@@ -2809,20 +2748,6 @@ struct retro_core_option_v2_definition option_defs_chs[] = {
 	{
 		"cemu_accurate_shader_mul",
 		CEMU_ACCURATE_SHADER_MUL_LABEL_CHS,
-		NULL,
-		NULL,
-		NULL,
-		"shaders",
-		{
-			{ "enabled", NULL },
-			{ "disabled", NULL },
-			{ NULL, NULL },
-		},
-		"enabled"
-	},
-	{
-		"cemu_shader_fast_math",
-		CEMU_SHADER_FAST_MATH_LABEL_CHS,
 		NULL,
 		NULL,
 		NULL,
@@ -3291,7 +3216,6 @@ struct retro_core_options_v2 options_chs = {
 #define CEMU_GX2DRAWDONE_SYNC_LABEL_CHT NULL
 #define CEMU_PRECOMPILED_SHADERS_LABEL_CHT NULL
 #define CEMU_ACCURATE_SHADER_MUL_LABEL_CHT NULL
-#define CEMU_SHADER_FAST_MATH_LABEL_CHT NULL
 #define CEMU_UPSCALE_FILTER_LABEL_CHT NULL
 #define OPTION_VAL_LINEAR_CHT NULL
 #define OPTION_VAL_BICUBIC_CHT NULL
@@ -3452,20 +3376,6 @@ struct retro_core_option_v2_definition option_defs_cht[] = {
 	{
 		"cemu_accurate_shader_mul",
 		CEMU_ACCURATE_SHADER_MUL_LABEL_CHT,
-		NULL,
-		NULL,
-		NULL,
-		"shaders",
-		{
-			{ "enabled", NULL },
-			{ "disabled", NULL },
-			{ NULL, NULL },
-		},
-		"enabled"
-	},
-	{
-		"cemu_shader_fast_math",
-		CEMU_SHADER_FAST_MATH_LABEL_CHT,
 		NULL,
 		NULL,
 		NULL,
@@ -3934,7 +3844,6 @@ struct retro_core_options_v2 options_cht = {
 #define CEMU_GX2DRAWDONE_SYNC_LABEL_CS NULL
 #define CEMU_PRECOMPILED_SHADERS_LABEL_CS NULL
 #define CEMU_ACCURATE_SHADER_MUL_LABEL_CS NULL
-#define CEMU_SHADER_FAST_MATH_LABEL_CS NULL
 #define CEMU_UPSCALE_FILTER_LABEL_CS NULL
 #define OPTION_VAL_LINEAR_CS NULL
 #define OPTION_VAL_BICUBIC_CS NULL
@@ -4095,20 +4004,6 @@ struct retro_core_option_v2_definition option_defs_cs[] = {
 	{
 		"cemu_accurate_shader_mul",
 		CEMU_ACCURATE_SHADER_MUL_LABEL_CS,
-		NULL,
-		NULL,
-		NULL,
-		"shaders",
-		{
-			{ "enabled", NULL },
-			{ "disabled", NULL },
-			{ NULL, NULL },
-		},
-		"enabled"
-	},
-	{
-		"cemu_shader_fast_math",
-		CEMU_SHADER_FAST_MATH_LABEL_CS,
 		NULL,
 		NULL,
 		NULL,
@@ -4577,7 +4472,6 @@ struct retro_core_options_v2 options_cs = {
 #define CEMU_GX2DRAWDONE_SYNC_LABEL_DE NULL
 #define CEMU_PRECOMPILED_SHADERS_LABEL_DE NULL
 #define CEMU_ACCURATE_SHADER_MUL_LABEL_DE NULL
-#define CEMU_SHADER_FAST_MATH_LABEL_DE NULL
 #define CEMU_UPSCALE_FILTER_LABEL_DE NULL
 #define OPTION_VAL_LINEAR_DE NULL
 #define OPTION_VAL_BICUBIC_DE NULL
@@ -4738,20 +4632,6 @@ struct retro_core_option_v2_definition option_defs_de[] = {
 	{
 		"cemu_accurate_shader_mul",
 		CEMU_ACCURATE_SHADER_MUL_LABEL_DE,
-		NULL,
-		NULL,
-		NULL,
-		"shaders",
-		{
-			{ "enabled", NULL },
-			{ "disabled", NULL },
-			{ NULL, NULL },
-		},
-		"enabled"
-	},
-	{
-		"cemu_shader_fast_math",
-		CEMU_SHADER_FAST_MATH_LABEL_DE,
 		NULL,
 		NULL,
 		NULL,
@@ -5220,7 +5100,6 @@ struct retro_core_options_v2 options_de = {
 #define CEMU_GX2DRAWDONE_SYNC_LABEL_EL NULL
 #define CEMU_PRECOMPILED_SHADERS_LABEL_EL NULL
 #define CEMU_ACCURATE_SHADER_MUL_LABEL_EL NULL
-#define CEMU_SHADER_FAST_MATH_LABEL_EL NULL
 #define CEMU_UPSCALE_FILTER_LABEL_EL NULL
 #define OPTION_VAL_LINEAR_EL NULL
 #define OPTION_VAL_BICUBIC_EL NULL
@@ -5381,20 +5260,6 @@ struct retro_core_option_v2_definition option_defs_el[] = {
 	{
 		"cemu_accurate_shader_mul",
 		CEMU_ACCURATE_SHADER_MUL_LABEL_EL,
-		NULL,
-		NULL,
-		NULL,
-		"shaders",
-		{
-			{ "enabled", NULL },
-			{ "disabled", NULL },
-			{ NULL, NULL },
-		},
-		"enabled"
-	},
-	{
-		"cemu_shader_fast_math",
-		CEMU_SHADER_FAST_MATH_LABEL_EL,
 		NULL,
 		NULL,
 		NULL,
@@ -5863,7 +5728,6 @@ struct retro_core_options_v2 options_el = {
 #define CEMU_GX2DRAWDONE_SYNC_LABEL_EN NULL
 #define CEMU_PRECOMPILED_SHADERS_LABEL_EN NULL
 #define CEMU_ACCURATE_SHADER_MUL_LABEL_EN NULL
-#define CEMU_SHADER_FAST_MATH_LABEL_EN NULL
 #define CEMU_UPSCALE_FILTER_LABEL_EN NULL
 #define OPTION_VAL_LINEAR_EN NULL
 #define OPTION_VAL_BICUBIC_EN NULL
@@ -6024,20 +5888,6 @@ struct retro_core_option_v2_definition option_defs_en[] = {
 	{
 		"cemu_accurate_shader_mul",
 		CEMU_ACCURATE_SHADER_MUL_LABEL_EN,
-		NULL,
-		NULL,
-		NULL,
-		"shaders",
-		{
-			{ "enabled", NULL },
-			{ "disabled", NULL },
-			{ NULL, NULL },
-		},
-		"enabled"
-	},
-	{
-		"cemu_shader_fast_math",
-		CEMU_SHADER_FAST_MATH_LABEL_EN,
 		NULL,
 		NULL,
 		NULL,
@@ -6506,7 +6356,6 @@ struct retro_core_options_v2 options_en = {
 #define CEMU_GX2DRAWDONE_SYNC_LABEL_EO NULL
 #define CEMU_PRECOMPILED_SHADERS_LABEL_EO NULL
 #define CEMU_ACCURATE_SHADER_MUL_LABEL_EO NULL
-#define CEMU_SHADER_FAST_MATH_LABEL_EO NULL
 #define CEMU_UPSCALE_FILTER_LABEL_EO NULL
 #define OPTION_VAL_LINEAR_EO NULL
 #define OPTION_VAL_BICUBIC_EO NULL
@@ -6667,20 +6516,6 @@ struct retro_core_option_v2_definition option_defs_eo[] = {
 	{
 		"cemu_accurate_shader_mul",
 		CEMU_ACCURATE_SHADER_MUL_LABEL_EO,
-		NULL,
-		NULL,
-		NULL,
-		"shaders",
-		{
-			{ "enabled", NULL },
-			{ "disabled", NULL },
-			{ NULL, NULL },
-		},
-		"enabled"
-	},
-	{
-		"cemu_shader_fast_math",
-		CEMU_SHADER_FAST_MATH_LABEL_EO,
 		NULL,
 		NULL,
 		NULL,
@@ -7149,7 +6984,6 @@ struct retro_core_options_v2 options_eo = {
 #define CEMU_GX2DRAWDONE_SYNC_LABEL_ES NULL
 #define CEMU_PRECOMPILED_SHADERS_LABEL_ES NULL
 #define CEMU_ACCURATE_SHADER_MUL_LABEL_ES NULL
-#define CEMU_SHADER_FAST_MATH_LABEL_ES NULL
 #define CEMU_UPSCALE_FILTER_LABEL_ES NULL
 #define OPTION_VAL_LINEAR_ES NULL
 #define OPTION_VAL_BICUBIC_ES NULL
@@ -7310,20 +7144,6 @@ struct retro_core_option_v2_definition option_defs_es[] = {
 	{
 		"cemu_accurate_shader_mul",
 		CEMU_ACCURATE_SHADER_MUL_LABEL_ES,
-		NULL,
-		NULL,
-		NULL,
-		"shaders",
-		{
-			{ "enabled", NULL },
-			{ "disabled", NULL },
-			{ NULL, NULL },
-		},
-		"enabled"
-	},
-	{
-		"cemu_shader_fast_math",
-		CEMU_SHADER_FAST_MATH_LABEL_ES,
 		NULL,
 		NULL,
 		NULL,
@@ -7792,7 +7612,6 @@ struct retro_core_options_v2 options_es = {
 #define CEMU_GX2DRAWDONE_SYNC_LABEL_FA NULL
 #define CEMU_PRECOMPILED_SHADERS_LABEL_FA NULL
 #define CEMU_ACCURATE_SHADER_MUL_LABEL_FA NULL
-#define CEMU_SHADER_FAST_MATH_LABEL_FA NULL
 #define CEMU_UPSCALE_FILTER_LABEL_FA NULL
 #define OPTION_VAL_LINEAR_FA NULL
 #define OPTION_VAL_BICUBIC_FA NULL
@@ -7953,20 +7772,6 @@ struct retro_core_option_v2_definition option_defs_fa[] = {
 	{
 		"cemu_accurate_shader_mul",
 		CEMU_ACCURATE_SHADER_MUL_LABEL_FA,
-		NULL,
-		NULL,
-		NULL,
-		"shaders",
-		{
-			{ "enabled", NULL },
-			{ "disabled", NULL },
-			{ NULL, NULL },
-		},
-		"enabled"
-	},
-	{
-		"cemu_shader_fast_math",
-		CEMU_SHADER_FAST_MATH_LABEL_FA,
 		NULL,
 		NULL,
 		NULL,
@@ -8435,7 +8240,6 @@ struct retro_core_options_v2 options_fa = {
 #define CEMU_GX2DRAWDONE_SYNC_LABEL_FI NULL
 #define CEMU_PRECOMPILED_SHADERS_LABEL_FI NULL
 #define CEMU_ACCURATE_SHADER_MUL_LABEL_FI NULL
-#define CEMU_SHADER_FAST_MATH_LABEL_FI NULL
 #define CEMU_UPSCALE_FILTER_LABEL_FI NULL
 #define OPTION_VAL_LINEAR_FI NULL
 #define OPTION_VAL_BICUBIC_FI NULL
@@ -8596,20 +8400,6 @@ struct retro_core_option_v2_definition option_defs_fi[] = {
 	{
 		"cemu_accurate_shader_mul",
 		CEMU_ACCURATE_SHADER_MUL_LABEL_FI,
-		NULL,
-		NULL,
-		NULL,
-		"shaders",
-		{
-			{ "enabled", NULL },
-			{ "disabled", NULL },
-			{ NULL, NULL },
-		},
-		"enabled"
-	},
-	{
-		"cemu_shader_fast_math",
-		CEMU_SHADER_FAST_MATH_LABEL_FI,
 		NULL,
 		NULL,
 		NULL,
@@ -9078,7 +8868,6 @@ struct retro_core_options_v2 options_fi = {
 #define CEMU_GX2DRAWDONE_SYNC_LABEL_FR NULL
 #define CEMU_PRECOMPILED_SHADERS_LABEL_FR NULL
 #define CEMU_ACCURATE_SHADER_MUL_LABEL_FR NULL
-#define CEMU_SHADER_FAST_MATH_LABEL_FR NULL
 #define CEMU_UPSCALE_FILTER_LABEL_FR NULL
 #define OPTION_VAL_LINEAR_FR NULL
 #define OPTION_VAL_BICUBIC_FR NULL
@@ -9239,20 +9028,6 @@ struct retro_core_option_v2_definition option_defs_fr[] = {
 	{
 		"cemu_accurate_shader_mul",
 		CEMU_ACCURATE_SHADER_MUL_LABEL_FR,
-		NULL,
-		NULL,
-		NULL,
-		"shaders",
-		{
-			{ "enabled", NULL },
-			{ "disabled", NULL },
-			{ NULL, NULL },
-		},
-		"enabled"
-	},
-	{
-		"cemu_shader_fast_math",
-		CEMU_SHADER_FAST_MATH_LABEL_FR,
 		NULL,
 		NULL,
 		NULL,
@@ -9721,7 +9496,6 @@ struct retro_core_options_v2 options_fr = {
 #define CEMU_GX2DRAWDONE_SYNC_LABEL_GA NULL
 #define CEMU_PRECOMPILED_SHADERS_LABEL_GA NULL
 #define CEMU_ACCURATE_SHADER_MUL_LABEL_GA NULL
-#define CEMU_SHADER_FAST_MATH_LABEL_GA NULL
 #define CEMU_UPSCALE_FILTER_LABEL_GA NULL
 #define OPTION_VAL_LINEAR_GA NULL
 #define OPTION_VAL_BICUBIC_GA NULL
@@ -9882,20 +9656,6 @@ struct retro_core_option_v2_definition option_defs_ga[] = {
 	{
 		"cemu_accurate_shader_mul",
 		CEMU_ACCURATE_SHADER_MUL_LABEL_GA,
-		NULL,
-		NULL,
-		NULL,
-		"shaders",
-		{
-			{ "enabled", NULL },
-			{ "disabled", NULL },
-			{ NULL, NULL },
-		},
-		"enabled"
-	},
-	{
-		"cemu_shader_fast_math",
-		CEMU_SHADER_FAST_MATH_LABEL_GA,
 		NULL,
 		NULL,
 		NULL,
@@ -10364,7 +10124,6 @@ struct retro_core_options_v2 options_ga = {
 #define CEMU_GX2DRAWDONE_SYNC_LABEL_GL NULL
 #define CEMU_PRECOMPILED_SHADERS_LABEL_GL NULL
 #define CEMU_ACCURATE_SHADER_MUL_LABEL_GL NULL
-#define CEMU_SHADER_FAST_MATH_LABEL_GL NULL
 #define CEMU_UPSCALE_FILTER_LABEL_GL NULL
 #define OPTION_VAL_LINEAR_GL NULL
 #define OPTION_VAL_BICUBIC_GL NULL
@@ -10525,20 +10284,6 @@ struct retro_core_option_v2_definition option_defs_gl[] = {
 	{
 		"cemu_accurate_shader_mul",
 		CEMU_ACCURATE_SHADER_MUL_LABEL_GL,
-		NULL,
-		NULL,
-		NULL,
-		"shaders",
-		{
-			{ "enabled", NULL },
-			{ "disabled", NULL },
-			{ NULL, NULL },
-		},
-		"enabled"
-	},
-	{
-		"cemu_shader_fast_math",
-		CEMU_SHADER_FAST_MATH_LABEL_GL,
 		NULL,
 		NULL,
 		NULL,
@@ -11007,7 +10752,6 @@ struct retro_core_options_v2 options_gl = {
 #define CEMU_GX2DRAWDONE_SYNC_LABEL_HE NULL
 #define CEMU_PRECOMPILED_SHADERS_LABEL_HE NULL
 #define CEMU_ACCURATE_SHADER_MUL_LABEL_HE NULL
-#define CEMU_SHADER_FAST_MATH_LABEL_HE NULL
 #define CEMU_UPSCALE_FILTER_LABEL_HE NULL
 #define OPTION_VAL_LINEAR_HE NULL
 #define OPTION_VAL_BICUBIC_HE NULL
@@ -11168,20 +10912,6 @@ struct retro_core_option_v2_definition option_defs_he[] = {
 	{
 		"cemu_accurate_shader_mul",
 		CEMU_ACCURATE_SHADER_MUL_LABEL_HE,
-		NULL,
-		NULL,
-		NULL,
-		"shaders",
-		{
-			{ "enabled", NULL },
-			{ "disabled", NULL },
-			{ NULL, NULL },
-		},
-		"enabled"
-	},
-	{
-		"cemu_shader_fast_math",
-		CEMU_SHADER_FAST_MATH_LABEL_HE,
 		NULL,
 		NULL,
 		NULL,
@@ -11650,7 +11380,6 @@ struct retro_core_options_v2 options_he = {
 #define CEMU_GX2DRAWDONE_SYNC_LABEL_HU NULL
 #define CEMU_PRECOMPILED_SHADERS_LABEL_HU NULL
 #define CEMU_ACCURATE_SHADER_MUL_LABEL_HU NULL
-#define CEMU_SHADER_FAST_MATH_LABEL_HU NULL
 #define CEMU_UPSCALE_FILTER_LABEL_HU NULL
 #define OPTION_VAL_LINEAR_HU NULL
 #define OPTION_VAL_BICUBIC_HU NULL
@@ -11811,20 +11540,6 @@ struct retro_core_option_v2_definition option_defs_hu[] = {
 	{
 		"cemu_accurate_shader_mul",
 		CEMU_ACCURATE_SHADER_MUL_LABEL_HU,
-		NULL,
-		NULL,
-		NULL,
-		"shaders",
-		{
-			{ "enabled", NULL },
-			{ "disabled", NULL },
-			{ NULL, NULL },
-		},
-		"enabled"
-	},
-	{
-		"cemu_shader_fast_math",
-		CEMU_SHADER_FAST_MATH_LABEL_HU,
 		NULL,
 		NULL,
 		NULL,
@@ -12293,7 +12008,6 @@ struct retro_core_options_v2 options_hu = {
 #define CEMU_GX2DRAWDONE_SYNC_LABEL_ID NULL
 #define CEMU_PRECOMPILED_SHADERS_LABEL_ID NULL
 #define CEMU_ACCURATE_SHADER_MUL_LABEL_ID NULL
-#define CEMU_SHADER_FAST_MATH_LABEL_ID NULL
 #define CEMU_UPSCALE_FILTER_LABEL_ID NULL
 #define OPTION_VAL_LINEAR_ID NULL
 #define OPTION_VAL_BICUBIC_ID NULL
@@ -12454,20 +12168,6 @@ struct retro_core_option_v2_definition option_defs_id[] = {
 	{
 		"cemu_accurate_shader_mul",
 		CEMU_ACCURATE_SHADER_MUL_LABEL_ID,
-		NULL,
-		NULL,
-		NULL,
-		"shaders",
-		{
-			{ "enabled", NULL },
-			{ "disabled", NULL },
-			{ NULL, NULL },
-		},
-		"enabled"
-	},
-	{
-		"cemu_shader_fast_math",
-		CEMU_SHADER_FAST_MATH_LABEL_ID,
 		NULL,
 		NULL,
 		NULL,
@@ -12936,7 +12636,6 @@ struct retro_core_options_v2 options_id = {
 #define CEMU_GX2DRAWDONE_SYNC_LABEL_IT NULL
 #define CEMU_PRECOMPILED_SHADERS_LABEL_IT NULL
 #define CEMU_ACCURATE_SHADER_MUL_LABEL_IT NULL
-#define CEMU_SHADER_FAST_MATH_LABEL_IT NULL
 #define CEMU_UPSCALE_FILTER_LABEL_IT NULL
 #define OPTION_VAL_LINEAR_IT NULL
 #define OPTION_VAL_BICUBIC_IT NULL
@@ -13097,20 +12796,6 @@ struct retro_core_option_v2_definition option_defs_it[] = {
 	{
 		"cemu_accurate_shader_mul",
 		CEMU_ACCURATE_SHADER_MUL_LABEL_IT,
-		NULL,
-		NULL,
-		NULL,
-		"shaders",
-		{
-			{ "enabled", NULL },
-			{ "disabled", NULL },
-			{ NULL, NULL },
-		},
-		"enabled"
-	},
-	{
-		"cemu_shader_fast_math",
-		CEMU_SHADER_FAST_MATH_LABEL_IT,
 		NULL,
 		NULL,
 		NULL,
@@ -13579,7 +13264,6 @@ struct retro_core_options_v2 options_it = {
 #define CEMU_GX2DRAWDONE_SYNC_LABEL_JA NULL
 #define CEMU_PRECOMPILED_SHADERS_LABEL_JA NULL
 #define CEMU_ACCURATE_SHADER_MUL_LABEL_JA NULL
-#define CEMU_SHADER_FAST_MATH_LABEL_JA NULL
 #define CEMU_UPSCALE_FILTER_LABEL_JA NULL
 #define OPTION_VAL_LINEAR_JA NULL
 #define OPTION_VAL_BICUBIC_JA NULL
@@ -13740,20 +13424,6 @@ struct retro_core_option_v2_definition option_defs_ja[] = {
 	{
 		"cemu_accurate_shader_mul",
 		CEMU_ACCURATE_SHADER_MUL_LABEL_JA,
-		NULL,
-		NULL,
-		NULL,
-		"shaders",
-		{
-			{ "enabled", NULL },
-			{ "disabled", NULL },
-			{ NULL, NULL },
-		},
-		"enabled"
-	},
-	{
-		"cemu_shader_fast_math",
-		CEMU_SHADER_FAST_MATH_LABEL_JA,
 		NULL,
 		NULL,
 		NULL,
@@ -14222,7 +13892,6 @@ struct retro_core_options_v2 options_ja = {
 #define CEMU_GX2DRAWDONE_SYNC_LABEL_KO NULL
 #define CEMU_PRECOMPILED_SHADERS_LABEL_KO NULL
 #define CEMU_ACCURATE_SHADER_MUL_LABEL_KO NULL
-#define CEMU_SHADER_FAST_MATH_LABEL_KO NULL
 #define CEMU_UPSCALE_FILTER_LABEL_KO NULL
 #define OPTION_VAL_LINEAR_KO NULL
 #define OPTION_VAL_BICUBIC_KO NULL
@@ -14383,20 +14052,6 @@ struct retro_core_option_v2_definition option_defs_ko[] = {
 	{
 		"cemu_accurate_shader_mul",
 		CEMU_ACCURATE_SHADER_MUL_LABEL_KO,
-		NULL,
-		NULL,
-		NULL,
-		"shaders",
-		{
-			{ "enabled", NULL },
-			{ "disabled", NULL },
-			{ NULL, NULL },
-		},
-		"enabled"
-	},
-	{
-		"cemu_shader_fast_math",
-		CEMU_SHADER_FAST_MATH_LABEL_KO,
 		NULL,
 		NULL,
 		NULL,
@@ -14865,7 +14520,6 @@ struct retro_core_options_v2 options_ko = {
 #define CEMU_GX2DRAWDONE_SYNC_LABEL_NL NULL
 #define CEMU_PRECOMPILED_SHADERS_LABEL_NL NULL
 #define CEMU_ACCURATE_SHADER_MUL_LABEL_NL NULL
-#define CEMU_SHADER_FAST_MATH_LABEL_NL NULL
 #define CEMU_UPSCALE_FILTER_LABEL_NL NULL
 #define OPTION_VAL_LINEAR_NL NULL
 #define OPTION_VAL_BICUBIC_NL NULL
@@ -15026,20 +14680,6 @@ struct retro_core_option_v2_definition option_defs_nl[] = {
 	{
 		"cemu_accurate_shader_mul",
 		CEMU_ACCURATE_SHADER_MUL_LABEL_NL,
-		NULL,
-		NULL,
-		NULL,
-		"shaders",
-		{
-			{ "enabled", NULL },
-			{ "disabled", NULL },
-			{ NULL, NULL },
-		},
-		"enabled"
-	},
-	{
-		"cemu_shader_fast_math",
-		CEMU_SHADER_FAST_MATH_LABEL_NL,
 		NULL,
 		NULL,
 		NULL,
@@ -15508,7 +15148,6 @@ struct retro_core_options_v2 options_nl = {
 #define CEMU_GX2DRAWDONE_SYNC_LABEL_NO NULL
 #define CEMU_PRECOMPILED_SHADERS_LABEL_NO NULL
 #define CEMU_ACCURATE_SHADER_MUL_LABEL_NO NULL
-#define CEMU_SHADER_FAST_MATH_LABEL_NO NULL
 #define CEMU_UPSCALE_FILTER_LABEL_NO NULL
 #define OPTION_VAL_LINEAR_NO NULL
 #define OPTION_VAL_BICUBIC_NO NULL
@@ -15669,20 +15308,6 @@ struct retro_core_option_v2_definition option_defs_no[] = {
 	{
 		"cemu_accurate_shader_mul",
 		CEMU_ACCURATE_SHADER_MUL_LABEL_NO,
-		NULL,
-		NULL,
-		NULL,
-		"shaders",
-		{
-			{ "enabled", NULL },
-			{ "disabled", NULL },
-			{ NULL, NULL },
-		},
-		"enabled"
-	},
-	{
-		"cemu_shader_fast_math",
-		CEMU_SHADER_FAST_MATH_LABEL_NO,
 		NULL,
 		NULL,
 		NULL,
@@ -16151,7 +15776,6 @@ struct retro_core_options_v2 options_no = {
 #define CEMU_GX2DRAWDONE_SYNC_LABEL_PL NULL
 #define CEMU_PRECOMPILED_SHADERS_LABEL_PL NULL
 #define CEMU_ACCURATE_SHADER_MUL_LABEL_PL NULL
-#define CEMU_SHADER_FAST_MATH_LABEL_PL NULL
 #define CEMU_UPSCALE_FILTER_LABEL_PL NULL
 #define OPTION_VAL_LINEAR_PL NULL
 #define OPTION_VAL_BICUBIC_PL NULL
@@ -16312,20 +15936,6 @@ struct retro_core_option_v2_definition option_defs_pl[] = {
 	{
 		"cemu_accurate_shader_mul",
 		CEMU_ACCURATE_SHADER_MUL_LABEL_PL,
-		NULL,
-		NULL,
-		NULL,
-		"shaders",
-		{
-			{ "enabled", NULL },
-			{ "disabled", NULL },
-			{ NULL, NULL },
-		},
-		"enabled"
-	},
-	{
-		"cemu_shader_fast_math",
-		CEMU_SHADER_FAST_MATH_LABEL_PL,
 		NULL,
 		NULL,
 		NULL,
@@ -16794,7 +16404,6 @@ struct retro_core_options_v2 options_pl = {
 #define CEMU_GX2DRAWDONE_SYNC_LABEL_PT_BR NULL
 #define CEMU_PRECOMPILED_SHADERS_LABEL_PT_BR NULL
 #define CEMU_ACCURATE_SHADER_MUL_LABEL_PT_BR NULL
-#define CEMU_SHADER_FAST_MATH_LABEL_PT_BR NULL
 #define CEMU_UPSCALE_FILTER_LABEL_PT_BR NULL
 #define OPTION_VAL_LINEAR_PT_BR NULL
 #define OPTION_VAL_BICUBIC_PT_BR NULL
@@ -16955,20 +16564,6 @@ struct retro_core_option_v2_definition option_defs_pt_br[] = {
 	{
 		"cemu_accurate_shader_mul",
 		CEMU_ACCURATE_SHADER_MUL_LABEL_PT_BR,
-		NULL,
-		NULL,
-		NULL,
-		"shaders",
-		{
-			{ "enabled", NULL },
-			{ "disabled", NULL },
-			{ NULL, NULL },
-		},
-		"enabled"
-	},
-	{
-		"cemu_shader_fast_math",
-		CEMU_SHADER_FAST_MATH_LABEL_PT_BR,
 		NULL,
 		NULL,
 		NULL,
@@ -17437,7 +17032,6 @@ struct retro_core_options_v2 options_pt_br = {
 #define CEMU_GX2DRAWDONE_SYNC_LABEL_PT_PT NULL
 #define CEMU_PRECOMPILED_SHADERS_LABEL_PT_PT NULL
 #define CEMU_ACCURATE_SHADER_MUL_LABEL_PT_PT NULL
-#define CEMU_SHADER_FAST_MATH_LABEL_PT_PT NULL
 #define CEMU_UPSCALE_FILTER_LABEL_PT_PT NULL
 #define OPTION_VAL_LINEAR_PT_PT NULL
 #define OPTION_VAL_BICUBIC_PT_PT NULL
@@ -17598,20 +17192,6 @@ struct retro_core_option_v2_definition option_defs_pt_pt[] = {
 	{
 		"cemu_accurate_shader_mul",
 		CEMU_ACCURATE_SHADER_MUL_LABEL_PT_PT,
-		NULL,
-		NULL,
-		NULL,
-		"shaders",
-		{
-			{ "enabled", NULL },
-			{ "disabled", NULL },
-			{ NULL, NULL },
-		},
-		"enabled"
-	},
-	{
-		"cemu_shader_fast_math",
-		CEMU_SHADER_FAST_MATH_LABEL_PT_PT,
 		NULL,
 		NULL,
 		NULL,
@@ -18080,7 +17660,6 @@ struct retro_core_options_v2 options_pt_pt = {
 #define CEMU_GX2DRAWDONE_SYNC_LABEL_RU NULL
 #define CEMU_PRECOMPILED_SHADERS_LABEL_RU NULL
 #define CEMU_ACCURATE_SHADER_MUL_LABEL_RU NULL
-#define CEMU_SHADER_FAST_MATH_LABEL_RU NULL
 #define CEMU_UPSCALE_FILTER_LABEL_RU NULL
 #define OPTION_VAL_LINEAR_RU NULL
 #define OPTION_VAL_BICUBIC_RU NULL
@@ -18241,20 +17820,6 @@ struct retro_core_option_v2_definition option_defs_ru[] = {
 	{
 		"cemu_accurate_shader_mul",
 		CEMU_ACCURATE_SHADER_MUL_LABEL_RU,
-		NULL,
-		NULL,
-		NULL,
-		"shaders",
-		{
-			{ "enabled", NULL },
-			{ "disabled", NULL },
-			{ NULL, NULL },
-		},
-		"enabled"
-	},
-	{
-		"cemu_shader_fast_math",
-		CEMU_SHADER_FAST_MATH_LABEL_RU,
 		NULL,
 		NULL,
 		NULL,
@@ -18723,7 +18288,6 @@ struct retro_core_options_v2 options_ru = {
 #define CEMU_GX2DRAWDONE_SYNC_LABEL_SK NULL
 #define CEMU_PRECOMPILED_SHADERS_LABEL_SK NULL
 #define CEMU_ACCURATE_SHADER_MUL_LABEL_SK NULL
-#define CEMU_SHADER_FAST_MATH_LABEL_SK NULL
 #define CEMU_UPSCALE_FILTER_LABEL_SK NULL
 #define OPTION_VAL_LINEAR_SK NULL
 #define OPTION_VAL_BICUBIC_SK NULL
@@ -18884,20 +18448,6 @@ struct retro_core_option_v2_definition option_defs_sk[] = {
 	{
 		"cemu_accurate_shader_mul",
 		CEMU_ACCURATE_SHADER_MUL_LABEL_SK,
-		NULL,
-		NULL,
-		NULL,
-		"shaders",
-		{
-			{ "enabled", NULL },
-			{ "disabled", NULL },
-			{ NULL, NULL },
-		},
-		"enabled"
-	},
-	{
-		"cemu_shader_fast_math",
-		CEMU_SHADER_FAST_MATH_LABEL_SK,
 		NULL,
 		NULL,
 		NULL,
@@ -19366,7 +18916,6 @@ struct retro_core_options_v2 options_sk = {
 #define CEMU_GX2DRAWDONE_SYNC_LABEL_SV NULL
 #define CEMU_PRECOMPILED_SHADERS_LABEL_SV NULL
 #define CEMU_ACCURATE_SHADER_MUL_LABEL_SV NULL
-#define CEMU_SHADER_FAST_MATH_LABEL_SV NULL
 #define CEMU_UPSCALE_FILTER_LABEL_SV NULL
 #define OPTION_VAL_LINEAR_SV NULL
 #define OPTION_VAL_BICUBIC_SV NULL
@@ -19527,20 +19076,6 @@ struct retro_core_option_v2_definition option_defs_sv[] = {
 	{
 		"cemu_accurate_shader_mul",
 		CEMU_ACCURATE_SHADER_MUL_LABEL_SV,
-		NULL,
-		NULL,
-		NULL,
-		"shaders",
-		{
-			{ "enabled", NULL },
-			{ "disabled", NULL },
-			{ NULL, NULL },
-		},
-		"enabled"
-	},
-	{
-		"cemu_shader_fast_math",
-		CEMU_SHADER_FAST_MATH_LABEL_SV,
 		NULL,
 		NULL,
 		NULL,
@@ -20009,7 +19544,6 @@ struct retro_core_options_v2 options_sv = {
 #define CEMU_GX2DRAWDONE_SYNC_LABEL_TR NULL
 #define CEMU_PRECOMPILED_SHADERS_LABEL_TR NULL
 #define CEMU_ACCURATE_SHADER_MUL_LABEL_TR NULL
-#define CEMU_SHADER_FAST_MATH_LABEL_TR NULL
 #define CEMU_UPSCALE_FILTER_LABEL_TR NULL
 #define OPTION_VAL_LINEAR_TR NULL
 #define OPTION_VAL_BICUBIC_TR NULL
@@ -20170,20 +19704,6 @@ struct retro_core_option_v2_definition option_defs_tr[] = {
 	{
 		"cemu_accurate_shader_mul",
 		CEMU_ACCURATE_SHADER_MUL_LABEL_TR,
-		NULL,
-		NULL,
-		NULL,
-		"shaders",
-		{
-			{ "enabled", NULL },
-			{ "disabled", NULL },
-			{ NULL, NULL },
-		},
-		"enabled"
-	},
-	{
-		"cemu_shader_fast_math",
-		CEMU_SHADER_FAST_MATH_LABEL_TR,
 		NULL,
 		NULL,
 		NULL,
@@ -20652,7 +20172,6 @@ struct retro_core_options_v2 options_tr = {
 #define CEMU_GX2DRAWDONE_SYNC_LABEL_UK NULL
 #define CEMU_PRECOMPILED_SHADERS_LABEL_UK NULL
 #define CEMU_ACCURATE_SHADER_MUL_LABEL_UK NULL
-#define CEMU_SHADER_FAST_MATH_LABEL_UK NULL
 #define CEMU_UPSCALE_FILTER_LABEL_UK NULL
 #define OPTION_VAL_LINEAR_UK NULL
 #define OPTION_VAL_BICUBIC_UK NULL
@@ -20813,20 +20332,6 @@ struct retro_core_option_v2_definition option_defs_uk[] = {
 	{
 		"cemu_accurate_shader_mul",
 		CEMU_ACCURATE_SHADER_MUL_LABEL_UK,
-		NULL,
-		NULL,
-		NULL,
-		"shaders",
-		{
-			{ "enabled", NULL },
-			{ "disabled", NULL },
-			{ NULL, NULL },
-		},
-		"enabled"
-	},
-	{
-		"cemu_shader_fast_math",
-		CEMU_SHADER_FAST_MATH_LABEL_UK,
 		NULL,
 		NULL,
 		NULL,
@@ -21295,7 +20800,6 @@ struct retro_core_options_v2 options_uk = {
 #define CEMU_GX2DRAWDONE_SYNC_LABEL_VAL NULL
 #define CEMU_PRECOMPILED_SHADERS_LABEL_VAL NULL
 #define CEMU_ACCURATE_SHADER_MUL_LABEL_VAL NULL
-#define CEMU_SHADER_FAST_MATH_LABEL_VAL NULL
 #define CEMU_UPSCALE_FILTER_LABEL_VAL NULL
 #define OPTION_VAL_LINEAR_VAL NULL
 #define OPTION_VAL_BICUBIC_VAL NULL
@@ -21456,20 +20960,6 @@ struct retro_core_option_v2_definition option_defs_val[] = {
 	{
 		"cemu_accurate_shader_mul",
 		CEMU_ACCURATE_SHADER_MUL_LABEL_VAL,
-		NULL,
-		NULL,
-		NULL,
-		"shaders",
-		{
-			{ "enabled", NULL },
-			{ "disabled", NULL },
-			{ NULL, NULL },
-		},
-		"enabled"
-	},
-	{
-		"cemu_shader_fast_math",
-		CEMU_SHADER_FAST_MATH_LABEL_VAL,
 		NULL,
 		NULL,
 		NULL,
@@ -21938,7 +21428,6 @@ struct retro_core_options_v2 options_val = {
 #define CEMU_GX2DRAWDONE_SYNC_LABEL_VN NULL
 #define CEMU_PRECOMPILED_SHADERS_LABEL_VN NULL
 #define CEMU_ACCURATE_SHADER_MUL_LABEL_VN NULL
-#define CEMU_SHADER_FAST_MATH_LABEL_VN NULL
 #define CEMU_UPSCALE_FILTER_LABEL_VN NULL
 #define OPTION_VAL_LINEAR_VN NULL
 #define OPTION_VAL_BICUBIC_VN NULL
@@ -22099,20 +21588,6 @@ struct retro_core_option_v2_definition option_defs_vn[] = {
 	{
 		"cemu_accurate_shader_mul",
 		CEMU_ACCURATE_SHADER_MUL_LABEL_VN,
-		NULL,
-		NULL,
-		NULL,
-		"shaders",
-		{
-			{ "enabled", NULL },
-			{ "disabled", NULL },
-			{ NULL, NULL },
-		},
-		"enabled"
-	},
-	{
-		"cemu_shader_fast_math",
-		CEMU_SHADER_FAST_MATH_LABEL_VN,
 		NULL,
 		NULL,
 		NULL,

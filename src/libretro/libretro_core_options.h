@@ -164,20 +164,6 @@ struct retro_core_option_v2_definition option_defs_us[] = {
 		"enabled"
 	},
 	{
-		"cemu_shader_fast_math",
-		"Shader Fast Math",
-		NULL,
-		NULL,
-		NULL,
-		"shaders",
-		{
-			{ "enabled", NULL },
-			{ "disabled", NULL },
-			{ NULL, NULL },
-		},
-		"enabled"
-	},
-	{
 		"cemu_upscale_filter",
 		"Upscale Filter",
 		NULL,
