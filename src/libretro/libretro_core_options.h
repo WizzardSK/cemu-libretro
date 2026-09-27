@@ -214,7 +214,9 @@ struct retro_core_option_v2_definition option_defs_us[] = {
 		"Internal Resolution",
 		NULL,
 		"What the console renders at, before it is scaled to the output. "
-		"640x360 draws a quarter of the pixels of 720p.",
+		"640x360 draws a quarter of the pixels of 720p. A game's resolution graphic pack, when one is enabled, "
+		"sets this instead, and is the more reliable choice where the game has one: this option resizes every "
+		"screen-shaped render target, and some games use one for something that breaks when resized.",
 		NULL,
 		"video",
 		{

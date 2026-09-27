@@ -1232,6 +1232,20 @@ bool LatteTexture_GX2FormatHasStencil(bool isDepth, Latte::E_GX2SURFFMT format)
 // core does unless the internal resolution option says otherwise.
 float g_libretroRenderScale = 1.0f;
 
+// Whether an active graphic pack resizes textures, i.e. a resolution pack.
+static bool LatteTexture_graphicPackSetsResolution()
+{
+	for (const auto& gp : GraphicPack2::GetActiveGraphicPacks())
+	{
+		for (const auto& rule : gp->GetTextureRules())
+		{
+			if (rule.overwrite_settings.width != -1 || rule.overwrite_settings.height != -1)
+				return true;
+		}
+	}
+	return false;
+}
+
 LatteTexture::LatteTexture(Latte::E_DIM dim, MPTR physAddress, MPTR physMipAddress, Latte::E_GX2SURFFMT format, uint32 width, uint32 height, uint32 depth, uint32 pitch, uint32 mipLevels, uint32 swizzle,
 	Latte::E_HWTILEMODE tileMode, bool isDepth)
 {
@@ -1268,11 +1282,13 @@ LatteTexture::LatteTexture(Latte::E_DIM dim, MPTR physAddress, MPTR physMipAddre
 	// fills from memory - a decoded movie frame, say - is linear or 1D tiled.
 	// Scaling one of those leaves it with nothing to fill it, which is the
 	// flat green where an intro movie should be. A game that renders
-	// to something else is left alone, and so is one whose graphic pack
-	// already set a size below, since a pack that names the title beats a
-	// guess that does not.
+	// to something else is left alone, and so is a game with a resolution
+	// pack active: a pack that names the title's targets beats a guess that
+	// does not. Scaling alongside one used to resize the 16:9 targets the pack
+	// leaves alone too, which is where Fast Racing Neo's menu lost its car
+	// pictures at anything but 720p (NNshi).
 	if (g_libretroRenderScale != 1.0f && width >= 256 && height >= 256 && width * 9 == height * 16 &&
-		tileMode >= Latte::E_HWTILEMODE::TM_2D_TILED_THIN1)
+		tileMode >= Latte::E_HWTILEMODE::TM_2D_TILED_THIN1 && !LatteTexture_graphicPackSetsResolution())
 	{
 		const uint32 scaledWidth = std::max<uint32>(4, ((uint32)(width * g_libretroRenderScale) + 3) & ~3u);
 		const uint32 scaledHeight = std::max<uint32>(4, ((uint32)(height * g_libretroRenderScale) + 3) & ~3u);
