@@ -82,6 +82,7 @@ if(ENABLE_LIBRETRO)
 		libretro/CemuLibretro.cpp
 		libretro/LibretroAudioAPI.cpp
 		libretro/LibretroWindowSystem.cpp
+		libretro/LibretroGraphicPacks.cpp
 	)
 
 	target_include_directories(cemu_libretro PRIVATE
@@ -119,6 +120,8 @@ if(ENABLE_LIBRETRO)
 	)
 
 	target_link_libraries(cemu_libretro PRIVATE
+		CURL::libcurl
+		libzip::zip
 		CemuAudio
 		CemuCafe
 		CemuCommon

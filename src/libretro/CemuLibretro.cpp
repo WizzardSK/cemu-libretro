@@ -743,6 +743,7 @@ static void libretro_report_out_size()
 
 // DRC layout state is shared with VulkanRenderer via LibretroDRC.h.
 #include "LibretroDRC.h"
+#include "LibretroGraphicPacks.h"
 LibretroScreenLayout g_libretroScreenLayout = LibretroScreenLayout::Tv;
 bool g_libretroDRCPositionSwapped = false;
 
@@ -3412,6 +3413,8 @@ static void libretro_launch_game()
 		bool exists = fs::exists(gpPath, ec);
 		cemuLog_log(LogType::Force, "Graphic packs directory exists: {}", exists);
 	}
+	if (const char* v = libretro_get_option_value("cemu_download_graphic_packs"); v && strcmp(v, "enabled") == 0)
+		LibretroGraphicPacks_Update();
 	GraphicPack2::LoadAll();
 	// Enable all graphic packs that have default=1 (workarounds etc.)
 	for (auto& gp : GraphicPack2::GetGraphicPacks())
