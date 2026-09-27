@@ -135,22 +135,6 @@ struct retro_core_option_v2_definition option_defs_us[] = {
 		"enabled"
 	},
 	{
-		"cemu_download_graphic_packs",
-		"Download Graphic Packs",
-		NULL,
-		"Keep the community graphic packs (resolution packs, fixes, mods) up to date: when content is loaded, "
-		"at most once a day, the core looks for a newer release of cemu-project/cemu_graphic_packs and installs it "
-		"into system/Cemu/graphicPacks/downloadedGraphicPacks, like standalone Cemu's graphic pack download.",
-		NULL,
-		"video",
-		{
-			{ "enabled", NULL },
-			{ "disabled", NULL },
-			{ NULL, NULL },
-		},
-		"enabled"
-	},
-	{
 		"cemu_precompiled_shaders",
 		"Precompiled Shaders",
 		NULL,
