@@ -1233,7 +1233,7 @@ bool LatteTexture_GX2FormatHasStencil(bool isDepth, Latte::E_GX2SURFFMT format)
 float g_libretroRenderScale = 1.0f;
 
 // Whether an active graphic pack resizes textures, i.e. a resolution pack.
-static bool LatteTexture_graphicPackSetsResolution()
+bool LatteTexture_graphicPackSetsResolution()
 {
 	for (const auto& gp : GraphicPack2::GetActiveGraphicPacks())
 	{

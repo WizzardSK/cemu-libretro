@@ -1057,7 +1057,49 @@ void VulkanRenderer::UpdatePresentationImageColorSpace()
 	cemuLog_log(LogType::Force, "[Vulkan-LR] the scan buffer changed colour space; rebuilding the presentation image");
 	const uint32 width = m_presentWidth;
 	const uint32 height = m_presentHeight;
+	RetirePresentationImage();
 	CreatePresentationImage(width, height);
+}
+
+void VulkanRenderer::UpdatePresentationImageSize(uint32 tvWidth, uint32 tvHeight)
+{
+	// The frontend was told it may get up to four times 1280x720
+	constexpr uint32 maxWidth = 1280 * 4, maxHeight = 720 * 4;
+	if (m_presentImage == VK_NULL_HANDLE || !LatteTexture_graphicPackSetsResolution())
+		return;
+	if (tvWidth < 16 || tvHeight < 16 || tvWidth > maxWidth || tvHeight > maxHeight)
+		return;
+	if (tvWidth == m_presentWidth && tvHeight == m_presentHeight)
+		return;
+
+	cemuLog_log(LogType::Force, "[Vulkan-LR] the resolution pack renders the TV picture at {}x{}; presenting at that size", tvWidth, tvHeight);
+	RetirePresentationImage();
+	CreatePresentationImage(tvWidth, tvHeight);
+}
+
+// The frontend is handed the image by retro_run and draws from it after that
+// returns, while this thread carries on. Destroying a replaced image straight
+// away would pull it out from under a frame the frontend is still drawing.
+void VulkanRenderer::RetirePresentationImage()
+{
+	if (m_presentImage == VK_NULL_HANDLE)
+		return;
+	m_retiredPresentImages.push_back({m_presentImage, m_presentImageView, m_presentImageMemory, LatteGPUState.frameCounter});
+	m_presentImage = VK_NULL_HANDLE;
+	m_presentImageView = VK_NULL_HANDLE;
+	m_presentImageMemory = VK_NULL_HANDLE;
+}
+
+void VulkanRenderer::FreeRetiredPresentationImages(bool all)
+{
+	std::erase_if(m_retiredPresentImages, [&](const RetiredPresentImage& r) {
+		if (!all && LatteGPUState.frameCounter - r.frame < 4)
+			return false;
+		vkDestroyImageView(m_logicalDevice, r.view, nullptr);
+		vkDestroyImage(m_logicalDevice, r.image, nullptr);
+		vkFreeMemory(m_logicalDevice, r.memory, nullptr);
+		return true;
+	});
 }
 
 void VulkanRenderer::DestroyPresentationImage()
@@ -1086,6 +1128,7 @@ VulkanRenderer::~VulkanRenderer()
 		WaitDeviceIdle();
 	}
 	DestroyPresentationImage();
+	FreeRetiredPresentationImages(true);
 	// make sure compilation threads have been shut down
 	RendererShaderVk::Shutdown();
 	// shut down pipeline save thread
@@ -3682,6 +3725,13 @@ void VulkanRenderer::DrawBackbufferQuad(LatteTextureView* texView, RendererOutpu
 			// deterministic regardless of TV/DRC order. Subsequent blits in
 			// the same frame preserve prior content (SHADER_READ_ONLY → TRANSFER_DST).
 			UpdatePresentationImageColorSpace();
+			FreeRetiredPresentationImages(false);
+			if (!padView)
+			{
+				sint32 tvWidth, tvHeight;
+				baseTexture->GetEffectiveSize(tvWidth, tvHeight, 0);
+				UpdatePresentationImageSize((uint32)tvWidth, (uint32)tvHeight);
+			}
 
 			m_presentImageHasContent = true;
 			const uint32 currentFrame = LatteGPUState.frameCounter;

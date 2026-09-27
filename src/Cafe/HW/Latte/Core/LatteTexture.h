@@ -1,4 +1,7 @@
 #pragma once
+
+// Whether an active graphic pack resizes textures, i.e. a resolution pack.
+bool LatteTexture_graphicPackSetsResolution();
 #include "Cafe/HW/Latte/Core/LatteConst.h"
 
 struct LatteSamplerState

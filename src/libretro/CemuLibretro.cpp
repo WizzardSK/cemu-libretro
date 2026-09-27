@@ -694,16 +694,51 @@ static uint32_t s_wanted_out_width = SCREEN_WIDTH, s_wanted_out_height = SCREEN_
 
 // Before the presentation image exists - retro_get_system_av_info comes first -
 // the size is the one the option asks for.
+static uint32_t libretro_out_width();
+static uint32_t libretro_out_height();
+
+// Once the presentation image exists, its size is the output size: the
+// renderer resizes it to what a resolution graphic pack renders the TV picture
+// at (VulkanRenderer::UpdatePresentationImageSize).
 static uint32_t libretro_out_width()
 {
 	if (s_graphics_api != SelectedGraphicsAPI::Vulkan) return SCREEN_WIDTH;
+#ifdef ENABLE_VULKAN
+	if (auto* vk = g_renderer && g_renderer->GetType() == RendererAPI::Vulkan ? VulkanRenderer::GetInstance() : nullptr; vk && vk->m_presentWidth)
+		return vk->m_presentWidth;
+#endif
 	return s_out_size_taken ? s_out_width : s_wanted_out_width;
 }
 
 static uint32_t libretro_out_height()
 {
 	if (s_graphics_api != SelectedGraphicsAPI::Vulkan) return SCREEN_HEIGHT;
+#ifdef ENABLE_VULKAN
+	if (auto* vk = g_renderer && g_renderer->GetType() == RendererAPI::Vulkan ? VulkanRenderer::GetInstance() : nullptr; vk && vk->m_presentHeight)
+		return vk->m_presentHeight;
+#endif
 	return s_out_size_taken ? s_out_height : s_wanted_out_height;
+}
+
+// Tells the frontend when the output size changes, e.g. when a resolution
+// pack's size takes over from the core option's.
+static uint32_t s_reported_out_width = 0, s_reported_out_height = 0; // what the frontend was last told
+
+static void libretro_report_out_size()
+{
+	const uint32_t width = libretro_out_width(), height = libretro_out_height();
+	if (width == s_reported_out_width && height == s_reported_out_height)
+		return;
+	s_reported_out_width = width;
+	s_reported_out_height = height;
+	retro_game_geometry geometry{};
+	geometry.base_width = width;
+	geometry.base_height = height;
+	geometry.max_width = SCREEN_WIDTH * 4;
+	geometry.max_height = SCREEN_HEIGHT * 4;
+	geometry.aspect_ratio = 16.0f / 9.0f;
+	environ_cb(RETRO_ENVIRONMENT_SET_GEOMETRY, &geometry);
+	libretro_log(RETRO_LOG_INFO, "output is now %ux%u\n", width, height);
 }
 
 // DRC layout state is shared with VulkanRenderer via LibretroDRC.h.
@@ -2652,8 +2687,8 @@ RETRO_API void retro_get_system_av_info(struct retro_system_av_info* info)
 				s_wanted_out_height = h;
 			}
 		}
-	info->geometry.base_width = libretro_out_width();
-	info->geometry.base_height = libretro_out_height();
+	info->geometry.base_width = s_reported_out_width = libretro_out_width();
+	info->geometry.base_height = s_reported_out_height = libretro_out_height();
 	info->geometry.max_width = SCREEN_WIDTH * 4;
 	info->geometry.max_height = SCREEN_HEIGHT * 4;
 	info->geometry.aspect_ratio = 16.0f / 9.0f;
@@ -5100,6 +5135,7 @@ RETRO_API void retro_run()
 					0, nullptr, VK_QUEUE_FAMILY_IGNORED);
 			}
 		}
+		libretro_report_out_size();
 		video_cb(RETRO_HW_FRAME_BUFFER_VALID, libretro_out_width(), libretro_out_height(), 0);
 		libretro_finish_run(profStart, profWaited, profTimedOut);
 		return;
