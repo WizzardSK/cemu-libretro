@@ -2570,17 +2570,12 @@ RETRO_API void retro_init()
 	libretro_log(RETRO_LOG_INFO, "retro_init: resolving paths\n");
 	libretro_init_paths();
 
-	// Configure settings
-	libretro_log(RETRO_LOG_INFO, "retro_init: loading settings.xml\n");
-	GetConfigHandle().SetFilename(ActiveSettings::GetConfigPath("settings.xml").generic_wstring());
-	if (fs::exists(ActiveSettings::GetConfigPath("settings.xml")))
-		GetConfigHandle().Load();
-
-	// After the load, not before: CemuConfig::Load assigns mlc_path from the
-	// file and would undo this. An mlc path the user put in settings.xml wins;
-	// otherwise point it at the directory chosen above.
-	if (GetConfig().mlc_path.GetValue().empty())
-		GetConfig().SetMLCPath(s_mlc_path, false);
+	// settings.xml is not read: the core starts from Cemu's defaults, and what
+	// the user sets comes from the core options (the .opt file) alone. Reading
+	// it let a standalone install's settings.xml, or one left over from an
+	// older build of the core, decide things no option showed and contradict
+	// the ones that did. Nothing saves it either.
+	GetConfig().SetMLCPath(s_mlc_path, false);
 	cemuLog_log(LogType::Force, "mlc01: {}", _pathToUtf8(ActiveSettings::GetMlcPath()));
 	libretro_create_default_mlc_files(ActiveSettings::GetMlcPath());
 
