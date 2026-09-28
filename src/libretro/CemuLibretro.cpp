@@ -26,6 +26,7 @@
 #include "Cemu/FileCache/FileCache.h"
 #include "Cafe/TitleList/TitleList.h"
 #include "Cafe/TitleList/TitleInfo.h"
+#include "Cafe/Filesystem/fsc.h"
 #include "Cafe/TitleList/SaveList.h"
 #include "Cafe/TitleList/TitleConverter.h"
 #include "Cafe/TitleList/GameInfo.h"
@@ -1898,6 +1899,8 @@ static void libretro_update_screen_layout_visibility()
 // above the configured count have to disappear. Pushing SET_CORE_OPTIONS_DISPLAY
 // when the count changes is not enough on its own: the menu is built from what
 // the frontend knows at the time it builds it.
+static void libretro_update_resolution_visibility();
+
 static bool RETRO_CALLCONV libretro_update_options_display()
 {
 	if (const char* v = libretro_get_option_value("cemu_number_of_screen_layouts"))
@@ -1917,6 +1920,7 @@ static bool RETRO_CALLCONV libretro_update_options_display()
 	if (!s_convert_mode.load())
 		libretro_collect_wua_destinations();
 	libretro_update_convert_visibility();
+	libretro_update_resolution_visibility();
 	return true;
 }
 
@@ -2487,6 +2491,276 @@ RETRO_API void retro_set_environment(retro_environment_t cb)
 // translations - is generated next to. libretro_set_core_options there picks
 // the frontend's language and falls back to v1 or the flat v0 list for a
 // frontend that does not speak v2.
+// Graphic packs as core options, the way FBNeo lists a game's DIP switches:
+// when content is loaded, the packs for that title become options in their
+// own category - one per preset group, the first carrying Disabled for the
+// pack as a whole, or Enabled/Disabled for a pack without presets. Cemu
+// activates packs when a title starts, so a change applies at the next load.
+//
+// The choices live in the .opt file only. RetroArch rewrites it keeping keys
+// the loaded content does not declare, so what was picked for a game is still
+// there when it is loaded again after another one; settings.xml is not used.
+struct LibretroPackOption
+{
+	std::string key;
+	std::string folder;      // the pack's folder under graphicPacks, which a replacement in customGraphicPacks shares
+	std::string category;    // preset group, empty for packs with a single one
+	bool controlsEnable;     // the pack's first option, which can disable it
+	std::vector<std::string> presets;
+	bool setsResolution;     // the pack resizes the game's render targets
+};
+static std::vector<LibretroPackOption> s_pack_options;
+static std::deque<std::string> s_pack_option_strings;
+static std::vector<retro_core_option_v2_definition> s_pack_option_defs;
+
+// The packs the core offers: the ones compiled into it, unpacked into
+// graphicPacks, and the user's own in customGraphicPacks. A folder with a
+// rules.txt in customGraphicPacks takes the place of the one at the same path
+// in graphicPacks - nothing of that one is loaded - so a pack developer's
+// changes to a game survive the bundled set being replaced by a core update.
+// Graphic pack entries in settings.xml, from standalone Cemu, play no part.
+static void libretro_load_graphic_packs()
+{
+	GraphicPack2::ClearGraphicPacks();
+	GetConfigHandle().data().graphic_pack_entries.clear();
+
+	const auto packFolders = [](const fs::path& base) {
+		std::vector<fs::path> folders;
+		std::error_code ec;
+		for (fs::recursive_directory_iterator it(base, fs::directory_options::follow_directory_symlink | fs::directory_options::skip_permission_denied, ec), end;
+			!ec && it != end; it.increment(ec))
+		{
+			if (!it->is_directory(ec) || !fs::exists(it->path() / "rules.txt", ec))
+				continue;
+			folders.push_back(it->path());
+			it.disable_recursion_pending(); // a pack's own subfolders are not packs
+		}
+		return folders;
+	};
+
+	const fs::path bundledBase = ActiveSettings::GetUserDataPath("graphicPacks");
+	const fs::path customBase = ActiveSettings::GetUserDataPath("customGraphicPacks");
+	const std::vector<fs::path> custom = packFolders(customBase);
+	std::set<std::string> customPaths;
+	for (const fs::path& folder : custom)
+		customPaths.insert(_pathToUtf8(folder.lexically_relative(customBase).lexically_normal()));
+
+	for (const fs::path& folder : packFolders(bundledBase))
+	{
+		const std::string relative = _pathToUtf8(folder.lexically_relative(bundledBase).lexically_normal());
+		if (customPaths.count(relative))
+		{
+			// Also to the frontend's log: this runs before the title starts, and
+			// log.txt only keeps what comes after that
+			cemuLog_log(LogType::Force, "graphic packs: customGraphicPacks/{} replaces the bundled pack", relative);
+			libretro_log(RETRO_LOG_INFO, "graphic packs: customGraphicPacks/%s replaces the bundled pack\n", relative.c_str());
+			continue;
+		}
+		GraphicPack2::LoadGraphicPack(folder);
+	}
+	for (const fs::path& folder : custom)
+		GraphicPack2::LoadGraphicPack(folder);
+}
+
+// A pack is identified by its folder relative to graphicPacks or
+// customGraphicPacks, not by the path = line in its rules.txt: a replacement in
+// customGraphicPacks sits at the same relative folder, and so takes over the
+// bundled pack's options whatever its rules.txt says.
+static std::string libretro_pack_folder(const GraphicPack2& gp)
+{
+	const fs::path folder = gp.GetRulesPath().parent_path().lexically_normal();
+	for (const char* base : {"customGraphicPacks", "graphicPacks"})
+	{
+		const fs::path relative = folder.lexically_relative(ActiveSettings::GetUserDataPath(base).lexically_normal());
+		if (!relative.empty() && *relative.begin() != "..")
+			return _pathToUtf8(relative.generic_string());
+	}
+	return _pathToUtf8(folder.generic_string());
+}
+
+static std::string libretro_pack_option_key(const std::string& folder, const std::string& category)
+{
+	uint64 hash = 0xcbf29ce484222325ULL; // FNV-1a
+	for (const char c : folder + '\x1f' + category)
+	{
+		hash ^= (uint8)c;
+		hash *= 0x100000001b3ULL;
+	}
+	return fmt::format("cemu_gp_{:016x}", hash);
+}
+
+static void libretro_collect_pack_options(const std::string& gamePath)
+{
+	s_pack_options.clear();
+	s_pack_option_strings.clear();
+	s_pack_option_defs.clear();
+
+	// Reading the title decrypts it, and the crypto is set up by CemuCommonInit
+	// only in the first retro_run; both calls are idempotent
+	KeyCache_Prepare();
+	AES128_init();
+	// and it mounts the title, in the emulator's file system that
+	// CafeSystem::Initialize sets up at the first launch in this process
+	if (!s_cafe_system_initialized)
+		fsc_init();
+	TitleInfo title{_utf8ToPath(gamePath)};
+	if (!title.IsValid())
+		return;
+	const TitleId titleId = TitleIdParser::MakeBaseTitleId(title.GetAppTitleId());
+
+	libretro_load_graphic_packs();
+
+	auto keep = [](std::string value) -> const char* {
+		s_pack_option_strings.push_back(std::move(value));
+		return s_pack_option_strings.back().c_str();
+	};
+
+	for (const auto& gp : GraphicPack2::GetGraphicPacks())
+	{
+		if (gp->IsUniversal() || !gp->ContainsTitleId(titleId))
+			continue;
+		const std::string folder = libretro_pack_folder(*gp);
+
+		std::vector<std::string> order;
+		auto categorized = gp->GetCategorizedPresets(order);
+		const bool enabled = gp->IsDefaultEnabled(); // workarounds enable themselves
+
+		// Texture rules are only parsed when a pack is activated, so a
+		// resolution pack is told apart by what its rules.txt redefines
+		bool setsResolution = false;
+		{
+			if (const auto text = FileStream::LoadIntoMemory(gp->GetRulesPath()))
+			{
+				std::string lower(text->begin(), text->end());
+				std::transform(lower.begin(), lower.end(), lower.begin(), [](unsigned char c) { return (char)std::tolower(c); });
+				setsResolution = lower.find("overwritewidth") != std::string::npos;
+			}
+		}
+
+		auto addOption = [&](const std::string& category, bool controlsEnable, std::vector<std::string> presets) {
+			LibretroPackOption option{libretro_pack_option_key(folder, category), folder, category, controlsEnable, std::move(presets), setsResolution};
+
+			retro_core_option_v2_definition def{};
+			def.key = keep(option.key);
+			const std::string name = category.empty() ? gp->GetVirtualPath() : fmt::format("{}: {}", gp->GetVirtualPath(), category);
+			def.desc = keep(name);
+			def.desc_categorized = def.desc;
+			def.info = gp->GetDescription().empty() ? nullptr : keep(gp->GetDescription());
+			def.category_key = "graphic_packs";
+
+			size_t n = 0;
+			if (controlsEnable)
+				def.values[n++] = {"disabled", "Disabled"};
+			if (option.presets.empty())
+				def.values[n++] = {"enabled", "Enabled"};
+			for (const std::string& preset : option.presets)
+			{
+				if (n + 1 >= RETRO_NUM_CORE_OPTION_VALUES_MAX)
+					break;
+				def.values[n].value = keep(preset);
+				def.values[n].label = nullptr;
+				n++;
+			}
+			def.values[n] = {nullptr, nullptr};
+
+			if (controlsEnable && !enabled)
+				def.default_value = "disabled";
+			else if (option.presets.empty())
+				def.default_value = "enabled";
+			else
+			{
+				const std::string active = gp->GetActivePreset(category);
+				const bool known = std::find(option.presets.begin(), option.presets.end(), active) != option.presets.end();
+				def.default_value = keep(known ? active : option.presets.front());
+			}
+
+			s_pack_options.push_back(std::move(option));
+			s_pack_option_defs.push_back(def);
+		};
+
+		if (order.empty())
+		{
+			addOption("", true, {});
+			continue;
+		}
+		for (size_t i = 0; i < order.size(); i++)
+		{
+			std::vector<std::string> names;
+			for (const auto& preset : categorized[order[i]])
+				if (std::find(names.begin(), names.end(), preset->name) == names.end())
+					names.push_back(preset->name);
+			addOption(order[i], i == 0, std::move(names));
+		}
+	}
+	libretro_log(RETRO_LOG_INFO, "%u graphic pack options for title %016llx\n", (unsigned)s_pack_options.size(), (unsigned long long)titleId);
+}
+
+// The generic Internal Resolution option is a fallback for games without a
+// resolution pack; with one enabled the pack decides, so the option goes.
+static void libretro_update_resolution_visibility()
+{
+	if (!environ_cb)
+		return;
+	bool packSetsResolution = false;
+	for (const LibretroPackOption& option : s_pack_options)
+	{
+		if (!option.controlsEnable || !option.setsResolution)
+			continue;
+		const char* value = libretro_get_option_value(option.key.c_str());
+		if (value && strcmp(value, "disabled") != 0)
+			packSetsResolution = true;
+	}
+	struct retro_core_option_display display{"cemu_internal_resolution", !packSetsResolution};
+	environ_cb(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &display);
+}
+
+// Sets each of the title's packs the way its options say.
+static void libretro_apply_pack_options()
+{
+	if (s_pack_options.empty())
+		return;
+
+	for (const LibretroPackOption& option : s_pack_options)
+	{
+		const char* value = libretro_get_option_value(option.key.c_str());
+		if (!value)
+			continue;
+		const bool disable = option.controlsEnable && strcmp(value, "disabled") == 0;
+
+		for (const auto& gp : GraphicPack2::GetGraphicPacks())
+		{
+			if (libretro_pack_folder(*gp) != option.folder)
+				continue;
+			if (option.controlsEnable)
+				gp->SetEnabled(!disable);
+			if (!disable && !option.presets.empty())
+				gp->SetActivePreset(option.category, value);
+		}
+	}
+
+	for (const auto& gp : GraphicPack2::GetGraphicPacks())
+	{
+		gp->UpdatePresetVisibility();
+		gp->ValidatePresetSelections();
+	}
+}
+
+// Loads the packs and sets them up for the title about to start: the ones
+// that enable themselves (workarounds), then the title's pack options. Run at
+// launch and again at a reset, so a pack changed in the options applies on
+// Reset as well as on the next load.
+static void libretro_setup_graphic_packs()
+{
+	libretro_load_graphic_packs();
+	for (auto& gp : GraphicPack2::GetGraphicPacks())
+	{
+		if (gp->IsDefaultEnabled() && !gp->IsEnabled())
+			gp->SetEnabled(true);
+	}
+	libretro_apply_pack_options();
+	libretro_log(RETRO_LOG_INFO, "Loaded %d graphic packs\n", (int)GraphicPack2::GetGraphicPacks().size());
+}
+
 static void libretro_publish_core_options(retro_environment_t cb)
 {
 	// Only the conversion pair is decided here, and option_defs_us outlives
@@ -2537,6 +2811,19 @@ static void libretro_publish_core_options(retro_environment_t cb)
 		def.default_value = def.values[0].value;
 		break;
 	}
+
+	// The fixed options, then the loaded title's graphic packs
+	static std::vector<struct retro_core_option_v2_definition> all;
+	all.clear();
+	for (const struct retro_core_option_v2_definition& def : option_defs_us)
+	{
+		if (!def.key)
+			break;
+		all.push_back(def);
+	}
+	all.insert(all.end(), s_pack_option_defs.begin(), s_pack_option_defs.end());
+	all.push_back({});
+	options_us.definitions = all.data();
 
 	bool categories_supported = false;
 	libretro_set_core_options(cb, &categories_supported);
@@ -3407,14 +3694,7 @@ static void libretro_launch_game()
 		bool exists = fs::exists(gpPath, ec);
 		cemuLog_log(LogType::Force, "Graphic packs directory exists: {}", exists);
 	}
-	GraphicPack2::LoadAll();
-	// Enable all graphic packs that have default=1 (workarounds etc.)
-	for (auto& gp : GraphicPack2::GetGraphicPacks())
-	{
-		if (gp->IsDefaultEnabled() && !gp->IsEnabled())
-			gp->SetEnabled(true);
-	}
-	libretro_log(RETRO_LOG_INFO, "Loaded %d graphic packs\n", (int)GraphicPack2::GetGraphicPacks().size());
+	libretro_setup_graphic_packs();
 	// Apply core options before launch
 	libretro_apply_core_options();
 
@@ -4171,9 +4451,11 @@ RETRO_API bool retro_load_game(const struct retro_game_info* game)
 	// whether "beside the content" is offered at all - and the previous one in
 	// this process will have left its own behind.
 	libretro_collect_wua_destinations(true);
+	libretro_collect_pack_options(s_game_path);
 	if (environ_cb)
 		libretro_publish_core_options(environ_cb);
 	libretro_update_convert_visibility();
+	libretro_update_resolution_visibility();
 
 	// Vulkan: context_reset is called by RetroArch after RETRO_HW_CONTEXT_VULKAN is set up
 
@@ -4941,6 +5223,7 @@ RETRO_API void retro_run()
 		if (libretro_reset_stop_title())
 		{
 			libretro_create_renderer();
+			libretro_setup_graphic_packs(); // pack options changed since are taken now
 			libretro_prepare_and_launch_title();
 		}
 		video_cb(NULL, libretro_out_width(), libretro_out_height(), 0);

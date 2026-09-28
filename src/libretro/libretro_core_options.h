@@ -61,6 +61,7 @@ struct retro_core_option_v2_category option_cats_us[] = {
 	{ "addons", "Add-ons", "Skylanders, Infinity and Dimensions portals." },
 	{ "logging", "Logging", "Extra log output, for diagnosing problems." },
 	{ "convert", "Convert to WUA", "Write the loaded title out as a .wua archive." },
+	{ "graphic_packs", "Graphic Packs", "The loaded game's graphic packs and their presets. Changes apply the next time the game is loaded." },
 	{ NULL, NULL, NULL },
 };
 
@@ -213,10 +214,9 @@ struct retro_core_option_v2_definition option_defs_us[] = {
 		"cemu_internal_resolution",
 		"Internal Resolution",
 		NULL,
-		"What the console renders at, before it is scaled to the output. "
-		"640x360 draws a quarter of the pixels of 720p. A game's resolution graphic pack, when one is enabled, "
-		"sets this instead, and is the more reliable choice where the game has one: this option resizes every "
-		"screen-shaped render target, and some games use one for something that breaks when resized.",
+		"A generic fallback for games without a resolution graphic pack: resizes every screen-shaped render target, "
+		"which some games use for things that break when resized. 640x360 draws a quarter of the pixels of 720p. "
+		"When a resolution pack is enabled for the loaded game (Graphic Packs), the pack sets the resolution and this option is hidden.",
 		NULL,
 		"video",
 		{
