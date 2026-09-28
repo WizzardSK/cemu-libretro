@@ -76,12 +76,17 @@ if(ENABLE_LIBRETRO)
 	# ========================================
 	# Libretro core shared library
 	# ========================================
+	include(${CMAKE_CURRENT_SOURCE_DIR}/libretro/embed_graphic_packs.cmake)
+	libretro_embed_graphic_packs(${CMAKE_CURRENT_BINARY_DIR}/libretro_graphic_packs.cpp)
+
 	add_library(cemu_libretro SHARED
 		main.cpp
 		mainLLE.cpp
 		libretro/CemuLibretro.cpp
 		libretro/LibretroAudioAPI.cpp
 		libretro/LibretroWindowSystem.cpp
+		libretro/LibretroGraphicPacks.cpp
+		${CMAKE_CURRENT_BINARY_DIR}/libretro_graphic_packs.cpp
 	)
 
 	target_include_directories(cemu_libretro PRIVATE
@@ -119,6 +124,7 @@ if(ENABLE_LIBRETRO)
 	)
 
 	target_link_libraries(cemu_libretro PRIVATE
+		libzip::zip
 		CemuAudio
 		CemuCafe
 		CemuCommon

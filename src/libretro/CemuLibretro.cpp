@@ -744,6 +744,7 @@ static void libretro_report_out_size()
 
 // DRC layout state is shared with VulkanRenderer via LibretroDRC.h.
 #include "LibretroDRC.h"
+#include "LibretroGraphicPacks.h"
 LibretroScreenLayout g_libretroScreenLayout = LibretroScreenLayout::Tv;
 bool g_libretroDRCPositionSwapped = false;
 
@@ -4451,6 +4452,7 @@ RETRO_API bool retro_load_game(const struct retro_game_info* game)
 	// whether "beside the content" is offered at all - and the previous one in
 	// this process will have left its own behind.
 	libretro_collect_wua_destinations(true);
+	LibretroGraphicPacks_InstallBundled();
 	libretro_collect_pack_options(s_game_path);
 	if (environ_cb)
 		libretro_publish_core_options(environ_cb);
