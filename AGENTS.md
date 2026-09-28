@@ -29,6 +29,7 @@ This repository builds the libretro core and nothing else. The standalone's part
 - Look at the big picture, not just the function being changed. For example, resetting the content and closing it have to release the game's resources through the same path; a reset is an unload and a load.
 - Stop and join threads the way upstream Cemu does, not with methods made up for the libretro port. The ad-hoc ones are what caused most of the shutdown and reset bugs.
 - Every core option has to be connected to something. Do not add an option the core does not read, and remove one that turns out to do nothing.
+- `settings.xml` is not used by this core. If you need a setting, use the current `.opt` file (a core option) instead of Cemu's `settings.xml`.
 
 ## Testing
 
