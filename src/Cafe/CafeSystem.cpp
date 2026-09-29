@@ -431,9 +431,25 @@ void cemu_initForGame()
 		for (auto& gp : GraphicPack2::GetGraphicPacks())
 			forTitle += gp->ContainsTitleId(titleId) ? 1 : 0;
 		cemuLog_log(LogType::Force, "Graphic packs found: {}, {} for this title", GraphicPack2::GetGraphicPacks().size(), forTitle);
+		// and which of them are the user's own, in customGraphicPacks - either
+		// in place of the bundled pack in the same folder, or new
+		const fs::path customBase = ActiveSettings::GetUserDataPath("customGraphicPacks").lexically_normal();
+		const fs::path bundledBase = ActiveSettings::GetUserDataPath("graphicPacks");
 		for (auto& gp : GraphicPack2::GetGraphicPacks())
-			if (gp->ContainsTitleId(titleId))
-				cemuLog_log(LogType::Force, "  {}: {}", gp->GetVirtualPath(), gp->IsEnabled() ? "on" : "off");
+		{
+			if (!gp->ContainsTitleId(titleId))
+				continue;
+			const fs::path relative = gp->GetRulesPath().parent_path().lexically_normal().lexically_relative(customBase);
+			std::string origin;
+			if (!relative.empty() && *relative.begin() != "..")
+			{
+				std::error_code ec;
+				origin = fs::exists(bundledBase / relative / "rules.txt", ec)
+					? fmt::format(" (customGraphicPacks/{}, replaces the bundled pack)", _pathToUtf8(relative.generic_string()))
+					: fmt::format(" (customGraphicPacks/{}, not in the bundled set)", _pathToUtf8(relative.generic_string()));
+			}
+			cemuLog_log(LogType::Force, "  {}: {}{}", gp->GetVirtualPath(), gp->IsEnabled() ? "on" : "off", origin);
+		}
 	}
 	GraphicPack2::ActivateForCurrentTitle();
 	// print audio log

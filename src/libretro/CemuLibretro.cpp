@@ -1901,6 +1901,7 @@ static void libretro_update_screen_layout_visibility()
 // when the count changes is not enough on its own: the menu is built from what
 // the frontend knows at the time it builds it.
 static void libretro_update_resolution_visibility();
+static void libretro_update_pack_visibility();
 
 static bool RETRO_CALLCONV libretro_update_options_display()
 {
@@ -1922,6 +1923,7 @@ static bool RETRO_CALLCONV libretro_update_options_display()
 		libretro_collect_wua_destinations();
 	libretro_update_convert_visibility();
 	libretro_update_resolution_visibility();
+	libretro_update_pack_visibility();
 	return true;
 }
 
@@ -2384,7 +2386,7 @@ static void libretro_apply_core_options()
 	}
 }
 
-static void libretro_publish_core_options(retro_environment_t cb);
+static void libretro_publish_core_options(retro_environment_t cb, bool withReplacements = true);
 
 RETRO_API void retro_set_environment(retro_environment_t cb)
 {
@@ -2501,10 +2503,21 @@ RETRO_API void retro_set_environment(retro_environment_t cb)
 // The choices live in the .opt file only. RetroArch rewrites it keeping keys
 // the loaded content does not declare, so what was picked for a game is still
 // there when it is loaded again after another one; settings.xml is not used.
+// The keys start with cemu_zgp_ because RetroArch writes the .opt file sorted
+// by key, and this puts the part that grows with every game after the rest.
+//
+// A pack in customGraphicPacks that replaces a bundled one has keys of its
+// own: it may have other presets than the pack it replaces. The replaced
+// pack's options are still declared, hidden, so what was picked for it stays
+// in the .opt file and comes back if the replacement is removed; a replacement
+// seen for the first time starts from those values where it has them.
 struct LibretroPackOption
 {
 	std::string key;
-	std::string folder;      // the pack's folder under graphicPacks, which a replacement in customGraphicPacks shares
+	std::string folder;      // the pack's folder under graphicPacks or customGraphicPacks
+	bool custom;             // the pack is in customGraphicPacks
+	bool replaced;           // a bundled pack a custom one replaces: declared, hidden, not loaded
+	std::string originalKey; // for a replacement, the same option of the pack it replaces
 	std::string category;    // preset group, empty for packs with a single one
 	bool controlsEnable;     // the pack's first option, which can disable it
 	std::vector<std::string> presets;
@@ -2519,8 +2532,10 @@ static std::vector<retro_core_option_v2_definition> s_pack_option_defs;
 // rules.txt in customGraphicPacks takes the place of the one at the same path
 // in graphicPacks - nothing of that one is loaded - so a pack developer's
 // changes to a game survive the bundled set being replaced by a core update.
+// withReplaced loads the replaced ones as well, only so that their options
+// can be declared (see LibretroPackOption).
 // Graphic pack entries in settings.xml, from standalone Cemu, play no part.
-static void libretro_load_graphic_packs()
+static void libretro_load_graphic_packs(bool withReplaced = false)
 {
 	GraphicPack2::ClearGraphicPacks();
 	GetConfigHandle().data().graphic_pack_entries.clear();
@@ -2549,7 +2564,7 @@ static void libretro_load_graphic_packs()
 	for (const fs::path& folder : packFolders(bundledBase))
 	{
 		const std::string relative = _pathToUtf8(folder.lexically_relative(bundledBase).lexically_normal());
-		if (customPaths.count(relative))
+		if (customPaths.count(relative) && !withReplaced)
 		{
 			// Also to the frontend's log: this runs before the title starts, and
 			// log.txt only keeps what comes after that
@@ -2564,30 +2579,37 @@ static void libretro_load_graphic_packs()
 }
 
 // A pack is identified by its folder relative to graphicPacks or
-// customGraphicPacks, not by the path = line in its rules.txt: a replacement in
-// customGraphicPacks sits at the same relative folder, and so takes over the
-// bundled pack's options whatever its rules.txt says.
-static std::string libretro_pack_folder(const GraphicPack2& gp)
+// customGraphicPacks, as upstream Cemu identifies it in settings.xml by the
+// path of its rules.txt. The path = line in rules.txt is not an identity: it
+// is where the pack sits in the graphic pack window's tree. A replacement in
+// customGraphicPacks sits at the same relative folder as the pack it replaces.
+static std::string libretro_pack_folder(const GraphicPack2& gp, bool* custom = nullptr)
 {
 	const fs::path folder = gp.GetRulesPath().parent_path().lexically_normal();
 	for (const char* base : {"customGraphicPacks", "graphicPacks"})
 	{
 		const fs::path relative = folder.lexically_relative(ActiveSettings::GetUserDataPath(base).lexically_normal());
 		if (!relative.empty() && *relative.begin() != "..")
+		{
+			if (custom)
+				*custom = strcmp(base, "customGraphicPacks") == 0;
 			return _pathToUtf8(relative.generic_string());
+		}
 	}
+	if (custom)
+		*custom = false;
 	return _pathToUtf8(folder.generic_string());
 }
 
-static std::string libretro_pack_option_key(const std::string& folder, const std::string& category)
+static std::string libretro_pack_option_key(const std::string& folder, const std::string& category, bool custom)
 {
 	uint64 hash = 0xcbf29ce484222325ULL; // FNV-1a
-	for (const char c : folder + '\x1f' + category)
+	for (const char c : std::string(custom ? "custom\x1f" : "") + folder + '\x1f' + category)
 	{
 		hash ^= (uint8)c;
 		hash *= 0x100000001b3ULL;
 	}
-	return fmt::format("cemu_gp_{:016x}", hash);
+	return fmt::format("cemu_zgp_{:016x}", hash);
 }
 
 static void libretro_collect_pack_options(const std::string& gamePath)
@@ -2609,18 +2631,30 @@ static void libretro_collect_pack_options(const std::string& gamePath)
 		return;
 	const TitleId titleId = TitleIdParser::MakeBaseTitleId(title.GetAppTitleId());
 
-	libretro_load_graphic_packs();
+	libretro_load_graphic_packs(true);
 
 	auto keep = [](std::string value) -> const char* {
 		s_pack_option_strings.push_back(std::move(value));
 		return s_pack_option_strings.back().c_str();
 	};
 
+	std::set<std::string> customFolders;
+	for (const auto& gp : GraphicPack2::GetGraphicPacks())
+	{
+		bool custom = false;
+		const std::string folder = libretro_pack_folder(*gp, &custom);
+		if (custom)
+			customFolders.insert(folder);
+	}
+
 	for (const auto& gp : GraphicPack2::GetGraphicPacks())
 	{
 		if (gp->IsUniversal() || !gp->ContainsTitleId(titleId))
 			continue;
-		const std::string folder = libretro_pack_folder(*gp);
+		bool custom = false;
+		const std::string folder = libretro_pack_folder(*gp, &custom);
+		const bool replaced = !custom && customFolders.count(folder);
+		const bool replacement = custom && fs::exists(ActiveSettings::GetUserDataPath("graphicPacks") / _utf8ToPath(folder) / "rules.txt");
 
 		std::vector<std::string> order;
 		auto categorized = gp->GetCategorizedPresets(order);
@@ -2639,11 +2673,15 @@ static void libretro_collect_pack_options(const std::string& gamePath)
 		}
 
 		auto addOption = [&](const std::string& category, bool controlsEnable, std::vector<std::string> presets) {
-			LibretroPackOption option{libretro_pack_option_key(folder, category), folder, category, controlsEnable, std::move(presets), setsResolution};
+			LibretroPackOption option{libretro_pack_option_key(folder, category, custom), folder, custom, replaced,
+				replacement ? libretro_pack_option_key(folder, category, false) : std::string(),
+				category, controlsEnable, std::move(presets), setsResolution};
 
 			retro_core_option_v2_definition def{};
 			def.key = keep(option.key);
-			const std::string name = category.empty() ? gp->GetVirtualPath() : fmt::format("{}: {}", gp->GetVirtualPath(), category);
+			// The name from the pack's [Definition]: the options are the loaded
+			// game's already, so the game in the path adds nothing
+			const std::string name = category.empty() ? gp->GetName() : fmt::format("{}: {}", gp->GetName(), category);
 			def.desc = keep(name);
 			def.desc_categorized = def.desc;
 			def.info = gp->GetDescription().empty() ? nullptr : keep(gp->GetDescription());
@@ -2694,6 +2732,51 @@ static void libretro_collect_pack_options(const std::string& gamePath)
 		}
 	}
 	libretro_log(RETRO_LOG_INFO, "%u graphic pack options for title %016llx\n", (unsigned)s_pack_options.size(), (unsigned long long)titleId);
+
+	// What collecting needed the replaced packs for is done
+	libretro_load_graphic_packs();
+}
+
+// A replacement seen for the first time starts from what was picked for the
+// pack it replaces, where it has that value, and disabled otherwise. The
+// frontend only answers for declared keys, and it saves every declared key
+// the moment the options are declared again, so this runs between a first
+// declaration without the replacements and the one with them.
+static void libretro_default_replacements_to_originals()
+{
+	for (size_t i = 0; i < s_pack_options.size(); i++)
+	{
+		const LibretroPackOption& option = s_pack_options[i];
+		if (option.originalKey.empty())
+			continue;
+		retro_core_option_v2_definition& def = s_pack_option_defs[i];
+		const char* original = libretro_get_option_value(option.originalKey.c_str());
+		bool known = false;
+		for (size_t v = 0; original && def.values[v].value; v++)
+		{
+			if (strcmp(def.values[v].value, original) == 0)
+			{
+				def.default_value = def.values[v].value;
+				known = true;
+				break;
+			}
+		}
+		if (!known && option.controlsEnable)
+			def.default_value = "disabled";
+	}
+}
+
+static void libretro_update_pack_visibility()
+{
+	if (!environ_cb)
+		return;
+	for (const LibretroPackOption& option : s_pack_options)
+	{
+		if (!option.replaced)
+			continue;
+		struct retro_core_option_display display{option.key.c_str(), false};
+		environ_cb(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &display);
+	}
 }
 
 // The generic Internal Resolution option is a fallback for games without a
@@ -2705,7 +2788,7 @@ static void libretro_update_resolution_visibility()
 	bool packSetsResolution = false;
 	for (const LibretroPackOption& option : s_pack_options)
 	{
-		if (!option.controlsEnable || !option.setsResolution)
+		if (!option.controlsEnable || !option.setsResolution || option.replaced)
 			continue;
 		const char* value = libretro_get_option_value(option.key.c_str());
 		if (value && strcmp(value, "disabled") != 0)
@@ -2723,6 +2806,8 @@ static void libretro_apply_pack_options()
 
 	for (const LibretroPackOption& option : s_pack_options)
 	{
+		if (option.replaced)
+			continue; // not loaded; its replacement has options of its own
 		const char* value = libretro_get_option_value(option.key.c_str());
 		if (!value)
 			continue;
@@ -2730,7 +2815,8 @@ static void libretro_apply_pack_options()
 
 		for (const auto& gp : GraphicPack2::GetGraphicPacks())
 		{
-			if (libretro_pack_folder(*gp) != option.folder)
+			bool custom = false;
+			if (libretro_pack_folder(*gp, &custom) != option.folder || custom != option.custom)
 				continue;
 			if (option.controlsEnable)
 				gp->SetEnabled(!disable);
@@ -2762,7 +2848,7 @@ static void libretro_setup_graphic_packs()
 	libretro_log(RETRO_LOG_INFO, "Loaded %d graphic packs\n", (int)GraphicPack2::GetGraphicPacks().size());
 }
 
-static void libretro_publish_core_options(retro_environment_t cb)
+static void libretro_publish_core_options(retro_environment_t cb, bool withReplacements)
 {
 	// Only the conversion pair is decided here, and option_defs_us outlives
 	// this call, so every call starts from the array as written: a key dropped
@@ -2822,7 +2908,9 @@ static void libretro_publish_core_options(retro_environment_t cb)
 			break;
 		all.push_back(def);
 	}
-	all.insert(all.end(), s_pack_option_defs.begin(), s_pack_option_defs.end());
+	for (size_t i = 0; i < s_pack_option_defs.size(); i++)
+		if (withReplacements || s_pack_options[i].originalKey.empty())
+			all.push_back(s_pack_option_defs[i]);
 	all.push_back({});
 	options_us.definitions = all.data();
 
@@ -4455,9 +4543,19 @@ RETRO_API bool retro_load_game(const struct retro_game_info* game)
 	LibretroGraphicPacks_InstallBundled();
 	libretro_collect_pack_options(s_game_path);
 	if (environ_cb)
+	{
+		const bool hasReplacements = std::any_of(s_pack_options.begin(), s_pack_options.end(),
+			[](const LibretroPackOption& option) { return !option.originalKey.empty(); });
+		if (hasReplacements)
+		{
+			libretro_publish_core_options(environ_cb, false);
+			libretro_default_replacements_to_originals();
+		}
 		libretro_publish_core_options(environ_cb);
+	}
 	libretro_update_convert_visibility();
 	libretro_update_resolution_visibility();
+	libretro_update_pack_visibility();
 
 	// Vulkan: context_reset is called by RetroArch after RETRO_HW_CONTEXT_VULKAN is set up
 
