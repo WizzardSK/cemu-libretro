@@ -56,6 +56,7 @@ extern "C" {
 #define CATEGORY_GRAPHIC_PACKS_LABEL_AR NULL
 #define CATEGORY_GRAPHIC_PACKS_INFO_0_AR NULL
 #define CEMU_CPU_MODE_LABEL_AR NULL
+#define CEMU_CPU_MODE_INFO_0_AR NULL
 #define OPTION_VAL_AUTO_AR "تلقائي"
 #define OPTION_VAL_SINGLECORE_INTERPRETER_AR NULL
 #define OPTION_VAL_SINGLECORE_RECOMPILER_AR NULL
@@ -133,6 +134,7 @@ extern "C" {
 #define CEMU_BC1_16BIT_LABEL_AR NULL
 #define CEMU_BC1_16BIT_INFO_0_AR NULL
 #define CEMU_GPU_API_LABEL_AR NULL
+#define CEMU_GPU_API_INFO_0_AR NULL
 #define OPTION_VAL_OPENGL_AR NULL
 #define OPTION_VAL_VULKAN_AR NULL
 #define CEMU_WUA_OUTPUT_DIR_LABEL_AR NULL
@@ -158,7 +160,7 @@ struct retro_core_option_v2_definition option_defs_ar[] = {
 		"cemu_cpu_mode",
 		CEMU_CPU_MODE_LABEL_AR,
 		NULL,
-		NULL,
+		CEMU_CPU_MODE_INFO_0_AR,
 		NULL,
 		"system",
 		{
@@ -639,7 +641,7 @@ struct retro_core_option_v2_definition option_defs_ar[] = {
 		"cemu_gpu_api",
 		CEMU_GPU_API_LABEL_AR,
 		NULL,
-		NULL,
+		CEMU_GPU_API_INFO_0_AR,
 		NULL,
 		"video",
 		{
@@ -703,6 +705,7 @@ struct retro_core_options_v2 options_ar = {
 #define CATEGORY_GRAPHIC_PACKS_LABEL_AST NULL
 #define CATEGORY_GRAPHIC_PACKS_INFO_0_AST NULL
 #define CEMU_CPU_MODE_LABEL_AST NULL
+#define CEMU_CPU_MODE_INFO_0_AST NULL
 #define OPTION_VAL_AUTO_AST NULL
 #define OPTION_VAL_SINGLECORE_INTERPRETER_AST NULL
 #define OPTION_VAL_SINGLECORE_RECOMPILER_AST NULL
@@ -780,6 +783,7 @@ struct retro_core_options_v2 options_ar = {
 #define CEMU_BC1_16BIT_LABEL_AST NULL
 #define CEMU_BC1_16BIT_INFO_0_AST NULL
 #define CEMU_GPU_API_LABEL_AST NULL
+#define CEMU_GPU_API_INFO_0_AST NULL
 #define OPTION_VAL_OPENGL_AST NULL
 #define OPTION_VAL_VULKAN_AST NULL
 #define CEMU_WUA_OUTPUT_DIR_LABEL_AST NULL
@@ -805,7 +809,7 @@ struct retro_core_option_v2_definition option_defs_ast[] = {
 		"cemu_cpu_mode",
 		CEMU_CPU_MODE_LABEL_AST,
 		NULL,
-		NULL,
+		CEMU_CPU_MODE_INFO_0_AST,
 		NULL,
 		"system",
 		{
@@ -1286,7 +1290,7 @@ struct retro_core_option_v2_definition option_defs_ast[] = {
 		"cemu_gpu_api",
 		CEMU_GPU_API_LABEL_AST,
 		NULL,
-		NULL,
+		CEMU_GPU_API_INFO_0_AST,
 		NULL,
 		"video",
 		{
@@ -1350,6 +1354,7 @@ struct retro_core_options_v2 options_ast = {
 #define CATEGORY_GRAPHIC_PACKS_LABEL_BE NULL
 #define CATEGORY_GRAPHIC_PACKS_INFO_0_BE NULL
 #define CEMU_CPU_MODE_LABEL_BE NULL
+#define CEMU_CPU_MODE_INFO_0_BE NULL
 #define OPTION_VAL_AUTO_BE "Аўта"
 #define OPTION_VAL_SINGLECORE_INTERPRETER_BE NULL
 #define OPTION_VAL_SINGLECORE_RECOMPILER_BE NULL
@@ -1427,6 +1432,7 @@ struct retro_core_options_v2 options_ast = {
 #define CEMU_BC1_16BIT_LABEL_BE NULL
 #define CEMU_BC1_16BIT_INFO_0_BE NULL
 #define CEMU_GPU_API_LABEL_BE NULL
+#define CEMU_GPU_API_INFO_0_BE NULL
 #define OPTION_VAL_OPENGL_BE NULL
 #define OPTION_VAL_VULKAN_BE NULL
 #define CEMU_WUA_OUTPUT_DIR_LABEL_BE NULL
@@ -1452,7 +1458,7 @@ struct retro_core_option_v2_definition option_defs_be[] = {
 		"cemu_cpu_mode",
 		CEMU_CPU_MODE_LABEL_BE,
 		NULL,
-		NULL,
+		CEMU_CPU_MODE_INFO_0_BE,
 		NULL,
 		"system",
 		{
@@ -1933,7 +1939,7 @@ struct retro_core_option_v2_definition option_defs_be[] = {
 		"cemu_gpu_api",
 		CEMU_GPU_API_LABEL_BE,
 		NULL,
-		NULL,
+		CEMU_GPU_API_INFO_0_BE,
 		NULL,
 		"video",
 		{
@@ -1997,6 +2003,7 @@ struct retro_core_options_v2 options_be = {
 #define CATEGORY_GRAPHIC_PACKS_LABEL_BG NULL
 #define CATEGORY_GRAPHIC_PACKS_INFO_0_BG NULL
 #define CEMU_CPU_MODE_LABEL_BG NULL
+#define CEMU_CPU_MODE_INFO_0_BG NULL
 #define OPTION_VAL_AUTO_BG NULL
 #define OPTION_VAL_SINGLECORE_INTERPRETER_BG NULL
 #define OPTION_VAL_SINGLECORE_RECOMPILER_BG NULL
@@ -2074,6 +2081,7 @@ struct retro_core_options_v2 options_be = {
 #define CEMU_BC1_16BIT_LABEL_BG NULL
 #define CEMU_BC1_16BIT_INFO_0_BG NULL
 #define CEMU_GPU_API_LABEL_BG NULL
+#define CEMU_GPU_API_INFO_0_BG NULL
 #define OPTION_VAL_OPENGL_BG NULL
 #define OPTION_VAL_VULKAN_BG NULL
 #define CEMU_WUA_OUTPUT_DIR_LABEL_BG NULL
@@ -2099,7 +2107,7 @@ struct retro_core_option_v2_definition option_defs_bg[] = {
 		"cemu_cpu_mode",
 		CEMU_CPU_MODE_LABEL_BG,
 		NULL,
-		NULL,
+		CEMU_CPU_MODE_INFO_0_BG,
 		NULL,
 		"system",
 		{
@@ -2580,7 +2588,7 @@ struct retro_core_option_v2_definition option_defs_bg[] = {
 		"cemu_gpu_api",
 		CEMU_GPU_API_LABEL_BG,
 		NULL,
-		NULL,
+		CEMU_GPU_API_INFO_0_BG,
 		NULL,
 		"video",
 		{
@@ -2644,6 +2652,7 @@ struct retro_core_options_v2 options_bg = {
 #define CATEGORY_GRAPHIC_PACKS_LABEL_CA NULL
 #define CATEGORY_GRAPHIC_PACKS_INFO_0_CA NULL
 #define CEMU_CPU_MODE_LABEL_CA NULL
+#define CEMU_CPU_MODE_INFO_0_CA NULL
 #define OPTION_VAL_AUTO_CA "Automàtic"
 #define OPTION_VAL_SINGLECORE_INTERPRETER_CA NULL
 #define OPTION_VAL_SINGLECORE_RECOMPILER_CA NULL
@@ -2721,6 +2730,7 @@ struct retro_core_options_v2 options_bg = {
 #define CEMU_BC1_16BIT_LABEL_CA NULL
 #define CEMU_BC1_16BIT_INFO_0_CA NULL
 #define CEMU_GPU_API_LABEL_CA NULL
+#define CEMU_GPU_API_INFO_0_CA NULL
 #define OPTION_VAL_OPENGL_CA NULL
 #define OPTION_VAL_VULKAN_CA NULL
 #define CEMU_WUA_OUTPUT_DIR_LABEL_CA NULL
@@ -2746,7 +2756,7 @@ struct retro_core_option_v2_definition option_defs_ca[] = {
 		"cemu_cpu_mode",
 		CEMU_CPU_MODE_LABEL_CA,
 		NULL,
-		NULL,
+		CEMU_CPU_MODE_INFO_0_CA,
 		NULL,
 		"system",
 		{
@@ -3227,7 +3237,7 @@ struct retro_core_option_v2_definition option_defs_ca[] = {
 		"cemu_gpu_api",
 		CEMU_GPU_API_LABEL_CA,
 		NULL,
-		NULL,
+		CEMU_GPU_API_INFO_0_CA,
 		NULL,
 		"video",
 		{
@@ -3291,6 +3301,7 @@ struct retro_core_options_v2 options_ca = {
 #define CATEGORY_GRAPHIC_PACKS_LABEL_CHS NULL
 #define CATEGORY_GRAPHIC_PACKS_INFO_0_CHS NULL
 #define CEMU_CPU_MODE_LABEL_CHS NULL
+#define CEMU_CPU_MODE_INFO_0_CHS NULL
 #define OPTION_VAL_AUTO_CHS "自动"
 #define OPTION_VAL_SINGLECORE_INTERPRETER_CHS NULL
 #define OPTION_VAL_SINGLECORE_RECOMPILER_CHS NULL
@@ -3368,6 +3379,7 @@ struct retro_core_options_v2 options_ca = {
 #define CEMU_BC1_16BIT_LABEL_CHS NULL
 #define CEMU_BC1_16BIT_INFO_0_CHS NULL
 #define CEMU_GPU_API_LABEL_CHS NULL
+#define CEMU_GPU_API_INFO_0_CHS NULL
 #define OPTION_VAL_OPENGL_CHS NULL
 #define OPTION_VAL_VULKAN_CHS NULL
 #define CEMU_WUA_OUTPUT_DIR_LABEL_CHS NULL
@@ -3393,7 +3405,7 @@ struct retro_core_option_v2_definition option_defs_chs[] = {
 		"cemu_cpu_mode",
 		CEMU_CPU_MODE_LABEL_CHS,
 		NULL,
-		NULL,
+		CEMU_CPU_MODE_INFO_0_CHS,
 		NULL,
 		"system",
 		{
@@ -3874,7 +3886,7 @@ struct retro_core_option_v2_definition option_defs_chs[] = {
 		"cemu_gpu_api",
 		CEMU_GPU_API_LABEL_CHS,
 		NULL,
-		NULL,
+		CEMU_GPU_API_INFO_0_CHS,
 		NULL,
 		"video",
 		{
@@ -3938,6 +3950,7 @@ struct retro_core_options_v2 options_chs = {
 #define CATEGORY_GRAPHIC_PACKS_LABEL_CHT NULL
 #define CATEGORY_GRAPHIC_PACKS_INFO_0_CHT NULL
 #define CEMU_CPU_MODE_LABEL_CHT NULL
+#define CEMU_CPU_MODE_INFO_0_CHT NULL
 #define OPTION_VAL_AUTO_CHT "自動"
 #define OPTION_VAL_SINGLECORE_INTERPRETER_CHT NULL
 #define OPTION_VAL_SINGLECORE_RECOMPILER_CHT NULL
@@ -4015,6 +4028,7 @@ struct retro_core_options_v2 options_chs = {
 #define CEMU_BC1_16BIT_LABEL_CHT NULL
 #define CEMU_BC1_16BIT_INFO_0_CHT NULL
 #define CEMU_GPU_API_LABEL_CHT NULL
+#define CEMU_GPU_API_INFO_0_CHT NULL
 #define OPTION_VAL_OPENGL_CHT NULL
 #define OPTION_VAL_VULKAN_CHT NULL
 #define CEMU_WUA_OUTPUT_DIR_LABEL_CHT NULL
@@ -4040,7 +4054,7 @@ struct retro_core_option_v2_definition option_defs_cht[] = {
 		"cemu_cpu_mode",
 		CEMU_CPU_MODE_LABEL_CHT,
 		NULL,
-		NULL,
+		CEMU_CPU_MODE_INFO_0_CHT,
 		NULL,
 		"system",
 		{
@@ -4521,7 +4535,7 @@ struct retro_core_option_v2_definition option_defs_cht[] = {
 		"cemu_gpu_api",
 		CEMU_GPU_API_LABEL_CHT,
 		NULL,
-		NULL,
+		CEMU_GPU_API_INFO_0_CHT,
 		NULL,
 		"video",
 		{
@@ -4585,6 +4599,7 @@ struct retro_core_options_v2 options_cht = {
 #define CATEGORY_GRAPHIC_PACKS_LABEL_CS NULL
 #define CATEGORY_GRAPHIC_PACKS_INFO_0_CS NULL
 #define CEMU_CPU_MODE_LABEL_CS NULL
+#define CEMU_CPU_MODE_INFO_0_CS NULL
 #define OPTION_VAL_AUTO_CS NULL
 #define OPTION_VAL_SINGLECORE_INTERPRETER_CS NULL
 #define OPTION_VAL_SINGLECORE_RECOMPILER_CS NULL
@@ -4662,6 +4677,7 @@ struct retro_core_options_v2 options_cht = {
 #define CEMU_BC1_16BIT_LABEL_CS NULL
 #define CEMU_BC1_16BIT_INFO_0_CS NULL
 #define CEMU_GPU_API_LABEL_CS NULL
+#define CEMU_GPU_API_INFO_0_CS NULL
 #define OPTION_VAL_OPENGL_CS NULL
 #define OPTION_VAL_VULKAN_CS NULL
 #define CEMU_WUA_OUTPUT_DIR_LABEL_CS NULL
@@ -4687,7 +4703,7 @@ struct retro_core_option_v2_definition option_defs_cs[] = {
 		"cemu_cpu_mode",
 		CEMU_CPU_MODE_LABEL_CS,
 		NULL,
-		NULL,
+		CEMU_CPU_MODE_INFO_0_CS,
 		NULL,
 		"system",
 		{
@@ -5168,7 +5184,7 @@ struct retro_core_option_v2_definition option_defs_cs[] = {
 		"cemu_gpu_api",
 		CEMU_GPU_API_LABEL_CS,
 		NULL,
-		NULL,
+		CEMU_GPU_API_INFO_0_CS,
 		NULL,
 		"video",
 		{
@@ -5232,6 +5248,7 @@ struct retro_core_options_v2 options_cs = {
 #define CATEGORY_GRAPHIC_PACKS_LABEL_CY NULL
 #define CATEGORY_GRAPHIC_PACKS_INFO_0_CY NULL
 #define CEMU_CPU_MODE_LABEL_CY NULL
+#define CEMU_CPU_MODE_INFO_0_CY NULL
 #define OPTION_VAL_AUTO_CY NULL
 #define OPTION_VAL_SINGLECORE_INTERPRETER_CY NULL
 #define OPTION_VAL_SINGLECORE_RECOMPILER_CY NULL
@@ -5309,6 +5326,7 @@ struct retro_core_options_v2 options_cs = {
 #define CEMU_BC1_16BIT_LABEL_CY NULL
 #define CEMU_BC1_16BIT_INFO_0_CY NULL
 #define CEMU_GPU_API_LABEL_CY NULL
+#define CEMU_GPU_API_INFO_0_CY NULL
 #define OPTION_VAL_OPENGL_CY NULL
 #define OPTION_VAL_VULKAN_CY NULL
 #define CEMU_WUA_OUTPUT_DIR_LABEL_CY NULL
@@ -5334,7 +5352,7 @@ struct retro_core_option_v2_definition option_defs_cy[] = {
 		"cemu_cpu_mode",
 		CEMU_CPU_MODE_LABEL_CY,
 		NULL,
-		NULL,
+		CEMU_CPU_MODE_INFO_0_CY,
 		NULL,
 		"system",
 		{
@@ -5815,7 +5833,7 @@ struct retro_core_option_v2_definition option_defs_cy[] = {
 		"cemu_gpu_api",
 		CEMU_GPU_API_LABEL_CY,
 		NULL,
-		NULL,
+		CEMU_GPU_API_INFO_0_CY,
 		NULL,
 		"video",
 		{
@@ -5879,6 +5897,7 @@ struct retro_core_options_v2 options_cy = {
 #define CATEGORY_GRAPHIC_PACKS_LABEL_DA NULL
 #define CATEGORY_GRAPHIC_PACKS_INFO_0_DA NULL
 #define CEMU_CPU_MODE_LABEL_DA NULL
+#define CEMU_CPU_MODE_INFO_0_DA NULL
 #define OPTION_VAL_AUTO_DA NULL
 #define OPTION_VAL_SINGLECORE_INTERPRETER_DA NULL
 #define OPTION_VAL_SINGLECORE_RECOMPILER_DA NULL
@@ -5956,6 +5975,7 @@ struct retro_core_options_v2 options_cy = {
 #define CEMU_BC1_16BIT_LABEL_DA NULL
 #define CEMU_BC1_16BIT_INFO_0_DA NULL
 #define CEMU_GPU_API_LABEL_DA NULL
+#define CEMU_GPU_API_INFO_0_DA NULL
 #define OPTION_VAL_OPENGL_DA NULL
 #define OPTION_VAL_VULKAN_DA NULL
 #define CEMU_WUA_OUTPUT_DIR_LABEL_DA NULL
@@ -5981,7 +6001,7 @@ struct retro_core_option_v2_definition option_defs_da[] = {
 		"cemu_cpu_mode",
 		CEMU_CPU_MODE_LABEL_DA,
 		NULL,
-		NULL,
+		CEMU_CPU_MODE_INFO_0_DA,
 		NULL,
 		"system",
 		{
@@ -6462,7 +6482,7 @@ struct retro_core_option_v2_definition option_defs_da[] = {
 		"cemu_gpu_api",
 		CEMU_GPU_API_LABEL_DA,
 		NULL,
-		NULL,
+		CEMU_GPU_API_INFO_0_DA,
 		NULL,
 		"video",
 		{
@@ -6526,6 +6546,7 @@ struct retro_core_options_v2 options_da = {
 #define CATEGORY_GRAPHIC_PACKS_LABEL_DE NULL
 #define CATEGORY_GRAPHIC_PACKS_INFO_0_DE NULL
 #define CEMU_CPU_MODE_LABEL_DE NULL
+#define CEMU_CPU_MODE_INFO_0_DE NULL
 #define OPTION_VAL_AUTO_DE NULL
 #define OPTION_VAL_SINGLECORE_INTERPRETER_DE NULL
 #define OPTION_VAL_SINGLECORE_RECOMPILER_DE NULL
@@ -6603,6 +6624,7 @@ struct retro_core_options_v2 options_da = {
 #define CEMU_BC1_16BIT_LABEL_DE NULL
 #define CEMU_BC1_16BIT_INFO_0_DE NULL
 #define CEMU_GPU_API_LABEL_DE NULL
+#define CEMU_GPU_API_INFO_0_DE NULL
 #define OPTION_VAL_OPENGL_DE NULL
 #define OPTION_VAL_VULKAN_DE NULL
 #define CEMU_WUA_OUTPUT_DIR_LABEL_DE NULL
@@ -6628,7 +6650,7 @@ struct retro_core_option_v2_definition option_defs_de[] = {
 		"cemu_cpu_mode",
 		CEMU_CPU_MODE_LABEL_DE,
 		NULL,
-		NULL,
+		CEMU_CPU_MODE_INFO_0_DE,
 		NULL,
 		"system",
 		{
@@ -7109,7 +7131,7 @@ struct retro_core_option_v2_definition option_defs_de[] = {
 		"cemu_gpu_api",
 		CEMU_GPU_API_LABEL_DE,
 		NULL,
-		NULL,
+		CEMU_GPU_API_INFO_0_DE,
 		NULL,
 		"video",
 		{
@@ -7173,6 +7195,7 @@ struct retro_core_options_v2 options_de = {
 #define CATEGORY_GRAPHIC_PACKS_LABEL_EL NULL
 #define CATEGORY_GRAPHIC_PACKS_INFO_0_EL NULL
 #define CEMU_CPU_MODE_LABEL_EL NULL
+#define CEMU_CPU_MODE_INFO_0_EL NULL
 #define OPTION_VAL_AUTO_EL "Αυτόματο"
 #define OPTION_VAL_SINGLECORE_INTERPRETER_EL NULL
 #define OPTION_VAL_SINGLECORE_RECOMPILER_EL NULL
@@ -7250,6 +7273,7 @@ struct retro_core_options_v2 options_de = {
 #define CEMU_BC1_16BIT_LABEL_EL NULL
 #define CEMU_BC1_16BIT_INFO_0_EL NULL
 #define CEMU_GPU_API_LABEL_EL NULL
+#define CEMU_GPU_API_INFO_0_EL NULL
 #define OPTION_VAL_OPENGL_EL NULL
 #define OPTION_VAL_VULKAN_EL NULL
 #define CEMU_WUA_OUTPUT_DIR_LABEL_EL NULL
@@ -7275,7 +7299,7 @@ struct retro_core_option_v2_definition option_defs_el[] = {
 		"cemu_cpu_mode",
 		CEMU_CPU_MODE_LABEL_EL,
 		NULL,
-		NULL,
+		CEMU_CPU_MODE_INFO_0_EL,
 		NULL,
 		"system",
 		{
@@ -7756,7 +7780,7 @@ struct retro_core_option_v2_definition option_defs_el[] = {
 		"cemu_gpu_api",
 		CEMU_GPU_API_LABEL_EL,
 		NULL,
-		NULL,
+		CEMU_GPU_API_INFO_0_EL,
 		NULL,
 		"video",
 		{
@@ -7820,6 +7844,7 @@ struct retro_core_options_v2 options_el = {
 #define CATEGORY_GRAPHIC_PACKS_LABEL_EN NULL
 #define CATEGORY_GRAPHIC_PACKS_INFO_0_EN NULL
 #define CEMU_CPU_MODE_LABEL_EN NULL
+#define CEMU_CPU_MODE_INFO_0_EN NULL
 #define OPTION_VAL_AUTO_EN NULL
 #define OPTION_VAL_SINGLECORE_INTERPRETER_EN NULL
 #define OPTION_VAL_SINGLECORE_RECOMPILER_EN NULL
@@ -7897,6 +7922,7 @@ struct retro_core_options_v2 options_el = {
 #define CEMU_BC1_16BIT_LABEL_EN NULL
 #define CEMU_BC1_16BIT_INFO_0_EN NULL
 #define CEMU_GPU_API_LABEL_EN NULL
+#define CEMU_GPU_API_INFO_0_EN NULL
 #define OPTION_VAL_OPENGL_EN NULL
 #define OPTION_VAL_VULKAN_EN NULL
 #define CEMU_WUA_OUTPUT_DIR_LABEL_EN NULL
@@ -7922,7 +7948,7 @@ struct retro_core_option_v2_definition option_defs_en[] = {
 		"cemu_cpu_mode",
 		CEMU_CPU_MODE_LABEL_EN,
 		NULL,
-		NULL,
+		CEMU_CPU_MODE_INFO_0_EN,
 		NULL,
 		"system",
 		{
@@ -8403,7 +8429,7 @@ struct retro_core_option_v2_definition option_defs_en[] = {
 		"cemu_gpu_api",
 		CEMU_GPU_API_LABEL_EN,
 		NULL,
-		NULL,
+		CEMU_GPU_API_INFO_0_EN,
 		NULL,
 		"video",
 		{
@@ -8467,6 +8493,7 @@ struct retro_core_options_v2 options_en = {
 #define CATEGORY_GRAPHIC_PACKS_LABEL_EO NULL
 #define CATEGORY_GRAPHIC_PACKS_INFO_0_EO NULL
 #define CEMU_CPU_MODE_LABEL_EO NULL
+#define CEMU_CPU_MODE_INFO_0_EO NULL
 #define OPTION_VAL_AUTO_EO "Aŭtomata"
 #define OPTION_VAL_SINGLECORE_INTERPRETER_EO NULL
 #define OPTION_VAL_SINGLECORE_RECOMPILER_EO NULL
@@ -8544,6 +8571,7 @@ struct retro_core_options_v2 options_en = {
 #define CEMU_BC1_16BIT_LABEL_EO NULL
 #define CEMU_BC1_16BIT_INFO_0_EO NULL
 #define CEMU_GPU_API_LABEL_EO NULL
+#define CEMU_GPU_API_INFO_0_EO NULL
 #define OPTION_VAL_OPENGL_EO NULL
 #define OPTION_VAL_VULKAN_EO NULL
 #define CEMU_WUA_OUTPUT_DIR_LABEL_EO NULL
@@ -8569,7 +8597,7 @@ struct retro_core_option_v2_definition option_defs_eo[] = {
 		"cemu_cpu_mode",
 		CEMU_CPU_MODE_LABEL_EO,
 		NULL,
-		NULL,
+		CEMU_CPU_MODE_INFO_0_EO,
 		NULL,
 		"system",
 		{
@@ -9050,7 +9078,7 @@ struct retro_core_option_v2_definition option_defs_eo[] = {
 		"cemu_gpu_api",
 		CEMU_GPU_API_LABEL_EO,
 		NULL,
-		NULL,
+		CEMU_GPU_API_INFO_0_EO,
 		NULL,
 		"video",
 		{
@@ -9113,7 +9141,8 @@ struct retro_core_options_v2 options_eo = {
 #define CATEGORY_CONVERT_INFO_0_ES "Guarda el título cargado a un archivo .wua."
 #define CATEGORY_GRAPHIC_PACKS_LABEL_ES "Paquetes de gráficos"
 #define CATEGORY_GRAPHIC_PACKS_INFO_0_ES "Selecciona los paquetes de gráficos del juego cargado y sus preajustes. Los cambios se aplicarán la próxima vez que se cargue el juego."
-#define CEMU_CPU_MODE_LABEL_ES "Modo de CPU (es necesario reiniciar)"
+#define CEMU_CPU_MODE_LABEL_ES NULL
+#define CEMU_CPU_MODE_INFO_0_ES NULL
 #define OPTION_VAL_AUTO_ES "Valor automático"
 #define OPTION_VAL_SINGLECORE_INTERPRETER_ES "Intérprete mononúcleo"
 #define OPTION_VAL_SINGLECORE_RECOMPILER_ES "Recompilador mononúcleo"
@@ -9145,7 +9174,7 @@ struct retro_core_options_v2 options_eo = {
 #define CEMU_SHOW_GAME_FPS_INFO_0_ES "Muestra la velocidad de fotogramas a la que se renderiza el juego. El contador de FPS de RetroArch cuenta la frecuencia con la que se ejecuta el núcleo y su número se mantiene en 60 cuando el juego falla al renderizar fotogramas, porque cada ejecución incluye el audio de un fotograma."
 #define CEMU_DOWNSCALE_FILTER_LABEL_ES "Filtro de reducción de escala"
 #define CEMU_INTERNAL_RESOLUTION_LABEL_ES "Resolución interna"
-#define CEMU_INTERNAL_RESOLUTION_INFO_0_ES "Una alternativa genérica para aquellos juegos que no tengan paquetes de gráficos para resoluciones: reescala todos los objetivos de renderizado con forma de pantalla, usados por algunos juegos en cosas que fallan al ser reescaladas. 640 × 360 dibuja una cuarta parte de los píxeles mostrados a 720p.Cuando se active un paquete de resolución para el juego cargado (un paquete de gráficos), el paquete establecerá una resolución concreta y esta opción quedará oculta."
+#define CEMU_INTERNAL_RESOLUTION_INFO_0_ES NULL
 #define OPTION_VAL_640X360_ES "640 × 360"
 #define OPTION_VAL_960X540_ES "960 × 540"
 #define OPTION_VAL_1280X720_ES "1280 × 720"
@@ -9183,20 +9212,21 @@ struct retro_core_options_v2 options_eo = {
 #define CEMU_LOG_THREAD_SYNC_LABEL_ES "Registrar sincronización de hilos de CPU (depuración)"
 #define CEMU_LOG_SYSTEM_API_LABEL_ES "Registrar llamadas a API del sistema (depuración)"
 #define CEMU_LOG_TEXTURE_MEMORY_LABEL_ES "Registrar memoria de texturas (depuración)"
-#define CEMU_LOG_TEXTURE_MEMORY_INFO_0_ES "Informa la cantidad de memoria de texturas en formato BC que ha tenido que ser descomprimida porque la GPU no puede leer sus muestras."
+#define CEMU_LOG_TEXTURE_MEMORY_INFO_0_ES NULL
 #define CEMU_LOG_INPUT_API_LABEL_ES "Registrar llamadas a API de mando (depuración)"
-#define CEMU_LOG_INPUT_API_INFO_0_ES "Registra todas las llamadas que hace un título a los mandos: qué mandos ha sondeado y qué ha recibido de vuelta. Es muy molesto; se muestra durante varios segundos."
+#define CEMU_LOG_INPUT_API_INFO_0_ES NULL
 #define CEMU_LOG_AUDIO_LABEL_ES "Registrar ritmo de audio (depuración)"
-#define CEMU_LOG_AUDIO_INFO_0_ES "Registra una vez por segundo cuántas muestras ha producido el AX, cuantas pérdidas ha sufrido el anillo y cuántas ha sufrido el front-end. Sirve para identificar en qué parte de esa cadena desaparecen fragmentos de audio."
+#define CEMU_LOG_AUDIO_INFO_0_ES NULL
 #define CEMU_BC1_16BIT_LABEL_ES "Reducir memoria de texturas BC1"
-#define CEMU_BC1_16BIT_INFO_0_ES "Reduce a la mitad el coste de las texturas BC1 en aquellas GPU que no puedan leer el formato BC a costa de ver algo de verde. Esta opción no surtirá efecto si el formato BC es compatible."
-#define CEMU_GPU_API_LABEL_ES "API de gráficos (es necesario reiniciar)"
+#define CEMU_BC1_16BIT_INFO_0_ES NULL
+#define CEMU_GPU_API_LABEL_ES NULL
+#define CEMU_GPU_API_INFO_0_ES NULL
 #define OPTION_VAL_OPENGL_ES NULL
 #define OPTION_VAL_VULKAN_ES NULL
 #define CEMU_WUA_OUTPUT_DIR_LABEL_ES "Directorio de salida"
 #define CEMU_WUA_OUTPUT_DIR_INFO_0_ES "Indica dónde se escribirá el archivo .wua. Es necesario que haya espacio suficiente en memoria."
 #define CEMU_CONVERT_TO_WUA_LABEL_ES "Iniciar conversión a WUA"
-#define CEMU_CONVERT_TO_WUA_INFO_0_ES "Escribe el título en el directorio de salida en formato .wua. El emulador seguirá ejecutándose durante el proceso."
+#define CEMU_CONVERT_TO_WUA_INFO_0_ES NULL
 
 struct retro_core_option_v2_category option_cats_es[] = {
 	{ "video", CATEGORY_VIDEO_LABEL_ES, CATEGORY_VIDEO_INFO_0_ES },
@@ -9216,7 +9246,7 @@ struct retro_core_option_v2_definition option_defs_es[] = {
 		"cemu_cpu_mode",
 		CEMU_CPU_MODE_LABEL_ES,
 		NULL,
-		NULL,
+		CEMU_CPU_MODE_INFO_0_ES,
 		NULL,
 		"system",
 		{
@@ -9697,7 +9727,7 @@ struct retro_core_option_v2_definition option_defs_es[] = {
 		"cemu_gpu_api",
 		CEMU_GPU_API_LABEL_ES,
 		NULL,
-		NULL,
+		CEMU_GPU_API_INFO_0_ES,
 		NULL,
 		"video",
 		{
@@ -9761,6 +9791,7 @@ struct retro_core_options_v2 options_es = {
 #define CATEGORY_GRAPHIC_PACKS_LABEL_FA NULL
 #define CATEGORY_GRAPHIC_PACKS_INFO_0_FA NULL
 #define CEMU_CPU_MODE_LABEL_FA NULL
+#define CEMU_CPU_MODE_INFO_0_FA NULL
 #define OPTION_VAL_AUTO_FA "خودکار"
 #define OPTION_VAL_SINGLECORE_INTERPRETER_FA NULL
 #define OPTION_VAL_SINGLECORE_RECOMPILER_FA NULL
@@ -9838,6 +9869,7 @@ struct retro_core_options_v2 options_es = {
 #define CEMU_BC1_16BIT_LABEL_FA NULL
 #define CEMU_BC1_16BIT_INFO_0_FA NULL
 #define CEMU_GPU_API_LABEL_FA NULL
+#define CEMU_GPU_API_INFO_0_FA NULL
 #define OPTION_VAL_OPENGL_FA NULL
 #define OPTION_VAL_VULKAN_FA NULL
 #define CEMU_WUA_OUTPUT_DIR_LABEL_FA NULL
@@ -9863,7 +9895,7 @@ struct retro_core_option_v2_definition option_defs_fa[] = {
 		"cemu_cpu_mode",
 		CEMU_CPU_MODE_LABEL_FA,
 		NULL,
-		NULL,
+		CEMU_CPU_MODE_INFO_0_FA,
 		NULL,
 		"system",
 		{
@@ -10344,7 +10376,7 @@ struct retro_core_option_v2_definition option_defs_fa[] = {
 		"cemu_gpu_api",
 		CEMU_GPU_API_LABEL_FA,
 		NULL,
-		NULL,
+		CEMU_GPU_API_INFO_0_FA,
 		NULL,
 		"video",
 		{
@@ -10408,6 +10440,7 @@ struct retro_core_options_v2 options_fa = {
 #define CATEGORY_GRAPHIC_PACKS_LABEL_FI NULL
 #define CATEGORY_GRAPHIC_PACKS_INFO_0_FI NULL
 #define CEMU_CPU_MODE_LABEL_FI NULL
+#define CEMU_CPU_MODE_INFO_0_FI NULL
 #define OPTION_VAL_AUTO_FI "Automaattinen"
 #define OPTION_VAL_SINGLECORE_INTERPRETER_FI NULL
 #define OPTION_VAL_SINGLECORE_RECOMPILER_FI NULL
@@ -10485,6 +10518,7 @@ struct retro_core_options_v2 options_fa = {
 #define CEMU_BC1_16BIT_LABEL_FI NULL
 #define CEMU_BC1_16BIT_INFO_0_FI NULL
 #define CEMU_GPU_API_LABEL_FI NULL
+#define CEMU_GPU_API_INFO_0_FI NULL
 #define OPTION_VAL_OPENGL_FI NULL
 #define OPTION_VAL_VULKAN_FI NULL
 #define CEMU_WUA_OUTPUT_DIR_LABEL_FI NULL
@@ -10510,7 +10544,7 @@ struct retro_core_option_v2_definition option_defs_fi[] = {
 		"cemu_cpu_mode",
 		CEMU_CPU_MODE_LABEL_FI,
 		NULL,
-		NULL,
+		CEMU_CPU_MODE_INFO_0_FI,
 		NULL,
 		"system",
 		{
@@ -10991,7 +11025,7 @@ struct retro_core_option_v2_definition option_defs_fi[] = {
 		"cemu_gpu_api",
 		CEMU_GPU_API_LABEL_FI,
 		NULL,
-		NULL,
+		CEMU_GPU_API_INFO_0_FI,
 		NULL,
 		"video",
 		{
@@ -11054,7 +11088,8 @@ struct retro_core_options_v2 options_fi = {
 #define CATEGORY_CONVERT_INFO_0_FR "Enregistrer le titre chargé sous forme d'archive .wua."
 #define CATEGORY_GRAPHIC_PACKS_LABEL_FR "Packs graphiques"
 #define CATEGORY_GRAPHIC_PACKS_INFO_0_FR "Les packs graphiques du jeu chargé et leurs préréglages. Les modifications prennent effet au prochain chargement du jeu."
-#define CEMU_CPU_MODE_LABEL_FR "Mode du processeur (redémarrage)"
+#define CEMU_CPU_MODE_LABEL_FR NULL
+#define CEMU_CPU_MODE_INFO_0_FR NULL
 #define OPTION_VAL_AUTO_FR NULL
 #define OPTION_VAL_SINGLECORE_INTERPRETER_FR "Interpréteur monocœur"
 #define OPTION_VAL_SINGLECORE_RECOMPILER_FR "Recompilateur monocœur"
@@ -11086,13 +11121,13 @@ struct retro_core_options_v2 options_fi = {
 #define CEMU_SHOW_GAME_FPS_INFO_0_FR "Afficher la fréquence d'images à laquelle le jeu est rendu. Le propre compteur d'images/s de RetroArch compte la fréquence à laquelle le cœur s'exécute, et il reste à 60 lorsque le jeu perd des images, car chaque exécution contient l'équivalent d'une image audio."
 #define CEMU_DOWNSCALE_FILTER_LABEL_FR "Filtre de réduction d'échelle"
 #define CEMU_INTERNAL_RESOLUTION_LABEL_FR "Résolution interne"
-#define CEMU_INTERNAL_RESOLUTION_INFO_0_FR "Une solution de repli générique pour les jeux ne disposant pas de pack graphique de résolution : elle redimensionne \toutes les cibles de rendu qui sont au format de l'écran, ce qui peut poser problème lors du redimensionnement \pour certains jeux utilisant ces cibles. 640x360 affiche un quart des pixels du 720p. Lorsqu'un pack de résolution \est activé pour le jeu chargé (packs graphiques), c'est ce pack qui définit la résolution et cette option est masquée."
+#define CEMU_INTERNAL_RESOLUTION_INFO_0_FR NULL
 #define OPTION_VAL_640X360_FR "640 x 360"
 #define OPTION_VAL_960X540_FR "960 x 540"
-#define OPTION_VAL_1280X720_FR NULL
-#define OPTION_VAL_1920X1080_FR NULL
-#define OPTION_VAL_2560X1440_FR NULL
-#define OPTION_VAL_3840X2160_FR NULL
+#define OPTION_VAL_1280X720_FR "1280 x 720"
+#define OPTION_VAL_1920X1080_FR "1920 x 1080"
+#define OPTION_VAL_2560X1440_FR "2560 x 1440"
+#define OPTION_VAL_3840X2160_FR "3840 x 2160"
 #define CEMU_FULLSCREEN_SCALING_LABEL_FR "Mise à l'échelle en plein écran"
 #define OPTION_VAL_KEEP_ASPECT_FR "Conserver l'aspect"
 #define OPTION_VAL_STRETCH_FR "Étirer"
@@ -11124,20 +11159,21 @@ struct retro_core_options_v2 options_fi = {
 #define CEMU_LOG_THREAD_SYNC_LABEL_FR "Journaliser la synchronisation des fils d'exécution (débogage)"
 #define CEMU_LOG_SYSTEM_API_LABEL_FR "Journaliser les appels API système (débogage)"
 #define CEMU_LOG_TEXTURE_MEMORY_LABEL_FR "Journaliser la mémoire de texture (débogage)"
-#define CEMU_LOG_TEXTURE_MEMORY_INFO_0_FR "Indique la quantité de mémoire de texture BC qui a dû être \décompressée car ce processeur graphique ne peut pas l'échantillonner."
+#define CEMU_LOG_TEXTURE_MEMORY_INFO_0_FR NULL
 #define CEMU_LOG_INPUT_API_LABEL_FR "Journaliser les appels API du contrôleur (débogage)"
-#define CEMU_LOG_INPUT_API_INFO_0_FR "Enregistre tous les appels au contrôleur effectués par un titre — les \entrées (pads) interrogées et les commandes envoyées. Génère beaucoup \de données, mais seulement pendant quelques secondes à la fois."
+#define CEMU_LOG_INPUT_API_INFO_0_FR NULL
 #define CEMU_LOG_AUDIO_LABEL_FR "Journaliser le rythme audio (débogage)"
-#define CEMU_LOG_AUDIO_INFO_0_FR "Une fois par seconde, combien d'échantillons AX a produits, combien \la mémoire tampon circulaire (ring) a dû en rejeter et combien l'interface \graphique en a récupérés. Sert à déterminer à quel stade de la chaîne \le signal audio est perdu."
+#define CEMU_LOG_AUDIO_INFO_0_FR NULL
 #define CEMU_BC1_16BIT_LABEL_FR "Réduire la mémoire de texture BC1"
-#define CEMU_BC1_16BIT_INFO_0_FR "Réduit de moitié le coût des textures BC1 sur un processeur \graphique qui ne peut pas échantillonner BC, au prix d'un peu \de vert. Aucun effet là où BC est pris en charge."
-#define CEMU_GPU_API_LABEL_FR "API graphique (redémarrage)"
+#define CEMU_BC1_16BIT_INFO_0_FR NULL
+#define CEMU_GPU_API_LABEL_FR NULL
+#define CEMU_GPU_API_INFO_0_FR NULL
 #define OPTION_VAL_OPENGL_FR NULL
 #define OPTION_VAL_VULKAN_FR NULL
 #define CEMU_WUA_OUTPUT_DIR_LABEL_FR "Dossier de sortie"
 #define CEMU_WUA_OUTPUT_DIR_INFO_0_FR "L'emplacement où le fichier .wua est écrit. Il faut prévoir de l'espace pour celui-ci."
 #define CEMU_CONVERT_TO_WUA_LABEL_FR "Lancer la conversion vers WUA"
-#define CEMU_CONVERT_TO_WUA_INFO_0_FR "Écrit le titre dans le dossier de sortie au format .wua. \Il continue de fonctionner pendant que cela se produit."
+#define CEMU_CONVERT_TO_WUA_INFO_0_FR NULL
 
 struct retro_core_option_v2_category option_cats_fr[] = {
 	{ "video", CATEGORY_VIDEO_LABEL_FR, CATEGORY_VIDEO_INFO_0_FR },
@@ -11157,7 +11193,7 @@ struct retro_core_option_v2_definition option_defs_fr[] = {
 		"cemu_cpu_mode",
 		CEMU_CPU_MODE_LABEL_FR,
 		NULL,
-		NULL,
+		CEMU_CPU_MODE_INFO_0_FR,
 		NULL,
 		"system",
 		{
@@ -11638,7 +11674,7 @@ struct retro_core_option_v2_definition option_defs_fr[] = {
 		"cemu_gpu_api",
 		CEMU_GPU_API_LABEL_FR,
 		NULL,
-		NULL,
+		CEMU_GPU_API_INFO_0_FR,
 		NULL,
 		"video",
 		{
@@ -11702,6 +11738,7 @@ struct retro_core_options_v2 options_fr = {
 #define CATEGORY_GRAPHIC_PACKS_LABEL_GA NULL
 #define CATEGORY_GRAPHIC_PACKS_INFO_0_GA NULL
 #define CEMU_CPU_MODE_LABEL_GA NULL
+#define CEMU_CPU_MODE_INFO_0_GA NULL
 #define OPTION_VAL_AUTO_GA "Uathoibríoch"
 #define OPTION_VAL_SINGLECORE_INTERPRETER_GA NULL
 #define OPTION_VAL_SINGLECORE_RECOMPILER_GA NULL
@@ -11779,6 +11816,7 @@ struct retro_core_options_v2 options_fr = {
 #define CEMU_BC1_16BIT_LABEL_GA NULL
 #define CEMU_BC1_16BIT_INFO_0_GA NULL
 #define CEMU_GPU_API_LABEL_GA NULL
+#define CEMU_GPU_API_INFO_0_GA NULL
 #define OPTION_VAL_OPENGL_GA NULL
 #define OPTION_VAL_VULKAN_GA NULL
 #define CEMU_WUA_OUTPUT_DIR_LABEL_GA NULL
@@ -11804,7 +11842,7 @@ struct retro_core_option_v2_definition option_defs_ga[] = {
 		"cemu_cpu_mode",
 		CEMU_CPU_MODE_LABEL_GA,
 		NULL,
-		NULL,
+		CEMU_CPU_MODE_INFO_0_GA,
 		NULL,
 		"system",
 		{
@@ -12285,7 +12323,7 @@ struct retro_core_option_v2_definition option_defs_ga[] = {
 		"cemu_gpu_api",
 		CEMU_GPU_API_LABEL_GA,
 		NULL,
-		NULL,
+		CEMU_GPU_API_INFO_0_GA,
 		NULL,
 		"video",
 		{
@@ -12349,6 +12387,7 @@ struct retro_core_options_v2 options_ga = {
 #define CATEGORY_GRAPHIC_PACKS_LABEL_GL NULL
 #define CATEGORY_GRAPHIC_PACKS_INFO_0_GL NULL
 #define CEMU_CPU_MODE_LABEL_GL NULL
+#define CEMU_CPU_MODE_INFO_0_GL NULL
 #define OPTION_VAL_AUTO_GL NULL
 #define OPTION_VAL_SINGLECORE_INTERPRETER_GL NULL
 #define OPTION_VAL_SINGLECORE_RECOMPILER_GL NULL
@@ -12426,6 +12465,7 @@ struct retro_core_options_v2 options_ga = {
 #define CEMU_BC1_16BIT_LABEL_GL NULL
 #define CEMU_BC1_16BIT_INFO_0_GL NULL
 #define CEMU_GPU_API_LABEL_GL NULL
+#define CEMU_GPU_API_INFO_0_GL NULL
 #define OPTION_VAL_OPENGL_GL NULL
 #define OPTION_VAL_VULKAN_GL NULL
 #define CEMU_WUA_OUTPUT_DIR_LABEL_GL NULL
@@ -12451,7 +12491,7 @@ struct retro_core_option_v2_definition option_defs_gl[] = {
 		"cemu_cpu_mode",
 		CEMU_CPU_MODE_LABEL_GL,
 		NULL,
-		NULL,
+		CEMU_CPU_MODE_INFO_0_GL,
 		NULL,
 		"system",
 		{
@@ -12932,7 +12972,7 @@ struct retro_core_option_v2_definition option_defs_gl[] = {
 		"cemu_gpu_api",
 		CEMU_GPU_API_LABEL_GL,
 		NULL,
-		NULL,
+		CEMU_GPU_API_INFO_0_GL,
 		NULL,
 		"video",
 		{
@@ -12996,6 +13036,7 @@ struct retro_core_options_v2 options_gl = {
 #define CATEGORY_GRAPHIC_PACKS_LABEL_HE NULL
 #define CATEGORY_GRAPHIC_PACKS_INFO_0_HE NULL
 #define CEMU_CPU_MODE_LABEL_HE NULL
+#define CEMU_CPU_MODE_INFO_0_HE NULL
 #define OPTION_VAL_AUTO_HE NULL
 #define OPTION_VAL_SINGLECORE_INTERPRETER_HE NULL
 #define OPTION_VAL_SINGLECORE_RECOMPILER_HE NULL
@@ -13073,6 +13114,7 @@ struct retro_core_options_v2 options_gl = {
 #define CEMU_BC1_16BIT_LABEL_HE NULL
 #define CEMU_BC1_16BIT_INFO_0_HE NULL
 #define CEMU_GPU_API_LABEL_HE NULL
+#define CEMU_GPU_API_INFO_0_HE NULL
 #define OPTION_VAL_OPENGL_HE NULL
 #define OPTION_VAL_VULKAN_HE NULL
 #define CEMU_WUA_OUTPUT_DIR_LABEL_HE NULL
@@ -13098,7 +13140,7 @@ struct retro_core_option_v2_definition option_defs_he[] = {
 		"cemu_cpu_mode",
 		CEMU_CPU_MODE_LABEL_HE,
 		NULL,
-		NULL,
+		CEMU_CPU_MODE_INFO_0_HE,
 		NULL,
 		"system",
 		{
@@ -13579,7 +13621,7 @@ struct retro_core_option_v2_definition option_defs_he[] = {
 		"cemu_gpu_api",
 		CEMU_GPU_API_LABEL_HE,
 		NULL,
-		NULL,
+		CEMU_GPU_API_INFO_0_HE,
 		NULL,
 		"video",
 		{
@@ -13643,6 +13685,7 @@ struct retro_core_options_v2 options_he = {
 #define CATEGORY_GRAPHIC_PACKS_LABEL_HR NULL
 #define CATEGORY_GRAPHIC_PACKS_INFO_0_HR NULL
 #define CEMU_CPU_MODE_LABEL_HR NULL
+#define CEMU_CPU_MODE_INFO_0_HR NULL
 #define OPTION_VAL_AUTO_HR NULL
 #define OPTION_VAL_SINGLECORE_INTERPRETER_HR NULL
 #define OPTION_VAL_SINGLECORE_RECOMPILER_HR NULL
@@ -13720,6 +13763,7 @@ struct retro_core_options_v2 options_he = {
 #define CEMU_BC1_16BIT_LABEL_HR NULL
 #define CEMU_BC1_16BIT_INFO_0_HR NULL
 #define CEMU_GPU_API_LABEL_HR NULL
+#define CEMU_GPU_API_INFO_0_HR NULL
 #define OPTION_VAL_OPENGL_HR NULL
 #define OPTION_VAL_VULKAN_HR NULL
 #define CEMU_WUA_OUTPUT_DIR_LABEL_HR NULL
@@ -13745,7 +13789,7 @@ struct retro_core_option_v2_definition option_defs_hr[] = {
 		"cemu_cpu_mode",
 		CEMU_CPU_MODE_LABEL_HR,
 		NULL,
-		NULL,
+		CEMU_CPU_MODE_INFO_0_HR,
 		NULL,
 		"system",
 		{
@@ -14226,7 +14270,7 @@ struct retro_core_option_v2_definition option_defs_hr[] = {
 		"cemu_gpu_api",
 		CEMU_GPU_API_LABEL_HR,
 		NULL,
-		NULL,
+		CEMU_GPU_API_INFO_0_HR,
 		NULL,
 		"video",
 		{
@@ -14290,6 +14334,7 @@ struct retro_core_options_v2 options_hr = {
 #define CATEGORY_GRAPHIC_PACKS_LABEL_HU NULL
 #define CATEGORY_GRAPHIC_PACKS_INFO_0_HU NULL
 #define CEMU_CPU_MODE_LABEL_HU NULL
+#define CEMU_CPU_MODE_INFO_0_HU NULL
 #define OPTION_VAL_AUTO_HU "Automatikus"
 #define OPTION_VAL_SINGLECORE_INTERPRETER_HU NULL
 #define OPTION_VAL_SINGLECORE_RECOMPILER_HU NULL
@@ -14367,6 +14412,7 @@ struct retro_core_options_v2 options_hr = {
 #define CEMU_BC1_16BIT_LABEL_HU NULL
 #define CEMU_BC1_16BIT_INFO_0_HU NULL
 #define CEMU_GPU_API_LABEL_HU NULL
+#define CEMU_GPU_API_INFO_0_HU NULL
 #define OPTION_VAL_OPENGL_HU NULL
 #define OPTION_VAL_VULKAN_HU NULL
 #define CEMU_WUA_OUTPUT_DIR_LABEL_HU NULL
@@ -14392,7 +14438,7 @@ struct retro_core_option_v2_definition option_defs_hu[] = {
 		"cemu_cpu_mode",
 		CEMU_CPU_MODE_LABEL_HU,
 		NULL,
-		NULL,
+		CEMU_CPU_MODE_INFO_0_HU,
 		NULL,
 		"system",
 		{
@@ -14873,7 +14919,7 @@ struct retro_core_option_v2_definition option_defs_hu[] = {
 		"cemu_gpu_api",
 		CEMU_GPU_API_LABEL_HU,
 		NULL,
-		NULL,
+		CEMU_GPU_API_INFO_0_HU,
 		NULL,
 		"video",
 		{
@@ -14937,6 +14983,7 @@ struct retro_core_options_v2 options_hu = {
 #define CATEGORY_GRAPHIC_PACKS_LABEL_ID NULL
 #define CATEGORY_GRAPHIC_PACKS_INFO_0_ID NULL
 #define CEMU_CPU_MODE_LABEL_ID NULL
+#define CEMU_CPU_MODE_INFO_0_ID NULL
 #define OPTION_VAL_AUTO_ID "Otomatis"
 #define OPTION_VAL_SINGLECORE_INTERPRETER_ID NULL
 #define OPTION_VAL_SINGLECORE_RECOMPILER_ID NULL
@@ -15014,6 +15061,7 @@ struct retro_core_options_v2 options_hu = {
 #define CEMU_BC1_16BIT_LABEL_ID NULL
 #define CEMU_BC1_16BIT_INFO_0_ID NULL
 #define CEMU_GPU_API_LABEL_ID NULL
+#define CEMU_GPU_API_INFO_0_ID NULL
 #define OPTION_VAL_OPENGL_ID NULL
 #define OPTION_VAL_VULKAN_ID NULL
 #define CEMU_WUA_OUTPUT_DIR_LABEL_ID NULL
@@ -15039,7 +15087,7 @@ struct retro_core_option_v2_definition option_defs_id[] = {
 		"cemu_cpu_mode",
 		CEMU_CPU_MODE_LABEL_ID,
 		NULL,
-		NULL,
+		CEMU_CPU_MODE_INFO_0_ID,
 		NULL,
 		"system",
 		{
@@ -15520,7 +15568,7 @@ struct retro_core_option_v2_definition option_defs_id[] = {
 		"cemu_gpu_api",
 		CEMU_GPU_API_LABEL_ID,
 		NULL,
-		NULL,
+		CEMU_GPU_API_INFO_0_ID,
 		NULL,
 		"video",
 		{
@@ -15584,6 +15632,7 @@ struct retro_core_options_v2 options_id = {
 #define CATEGORY_GRAPHIC_PACKS_LABEL_IT NULL
 #define CATEGORY_GRAPHIC_PACKS_INFO_0_IT NULL
 #define CEMU_CPU_MODE_LABEL_IT NULL
+#define CEMU_CPU_MODE_INFO_0_IT NULL
 #define OPTION_VAL_AUTO_IT NULL
 #define OPTION_VAL_SINGLECORE_INTERPRETER_IT NULL
 #define OPTION_VAL_SINGLECORE_RECOMPILER_IT NULL
@@ -15661,6 +15710,7 @@ struct retro_core_options_v2 options_id = {
 #define CEMU_BC1_16BIT_LABEL_IT NULL
 #define CEMU_BC1_16BIT_INFO_0_IT NULL
 #define CEMU_GPU_API_LABEL_IT NULL
+#define CEMU_GPU_API_INFO_0_IT NULL
 #define OPTION_VAL_OPENGL_IT NULL
 #define OPTION_VAL_VULKAN_IT NULL
 #define CEMU_WUA_OUTPUT_DIR_LABEL_IT NULL
@@ -15686,7 +15736,7 @@ struct retro_core_option_v2_definition option_defs_it[] = {
 		"cemu_cpu_mode",
 		CEMU_CPU_MODE_LABEL_IT,
 		NULL,
-		NULL,
+		CEMU_CPU_MODE_INFO_0_IT,
 		NULL,
 		"system",
 		{
@@ -16167,7 +16217,7 @@ struct retro_core_option_v2_definition option_defs_it[] = {
 		"cemu_gpu_api",
 		CEMU_GPU_API_LABEL_IT,
 		NULL,
-		NULL,
+		CEMU_GPU_API_INFO_0_IT,
 		NULL,
 		"video",
 		{
@@ -16231,6 +16281,7 @@ struct retro_core_options_v2 options_it = {
 #define CATEGORY_GRAPHIC_PACKS_LABEL_JA NULL
 #define CATEGORY_GRAPHIC_PACKS_INFO_0_JA NULL
 #define CEMU_CPU_MODE_LABEL_JA NULL
+#define CEMU_CPU_MODE_INFO_0_JA NULL
 #define OPTION_VAL_AUTO_JA "自動"
 #define OPTION_VAL_SINGLECORE_INTERPRETER_JA NULL
 #define OPTION_VAL_SINGLECORE_RECOMPILER_JA NULL
@@ -16308,6 +16359,7 @@ struct retro_core_options_v2 options_it = {
 #define CEMU_BC1_16BIT_LABEL_JA NULL
 #define CEMU_BC1_16BIT_INFO_0_JA NULL
 #define CEMU_GPU_API_LABEL_JA NULL
+#define CEMU_GPU_API_INFO_0_JA NULL
 #define OPTION_VAL_OPENGL_JA NULL
 #define OPTION_VAL_VULKAN_JA NULL
 #define CEMU_WUA_OUTPUT_DIR_LABEL_JA NULL
@@ -16333,7 +16385,7 @@ struct retro_core_option_v2_definition option_defs_ja[] = {
 		"cemu_cpu_mode",
 		CEMU_CPU_MODE_LABEL_JA,
 		NULL,
-		NULL,
+		CEMU_CPU_MODE_INFO_0_JA,
 		NULL,
 		"system",
 		{
@@ -16814,7 +16866,7 @@ struct retro_core_option_v2_definition option_defs_ja[] = {
 		"cemu_gpu_api",
 		CEMU_GPU_API_LABEL_JA,
 		NULL,
-		NULL,
+		CEMU_GPU_API_INFO_0_JA,
 		NULL,
 		"video",
 		{
@@ -16878,6 +16930,7 @@ struct retro_core_options_v2 options_ja = {
 #define CATEGORY_GRAPHIC_PACKS_LABEL_KO NULL
 #define CATEGORY_GRAPHIC_PACKS_INFO_0_KO NULL
 #define CEMU_CPU_MODE_LABEL_KO NULL
+#define CEMU_CPU_MODE_INFO_0_KO NULL
 #define OPTION_VAL_AUTO_KO "자동"
 #define OPTION_VAL_SINGLECORE_INTERPRETER_KO NULL
 #define OPTION_VAL_SINGLECORE_RECOMPILER_KO NULL
@@ -16955,6 +17008,7 @@ struct retro_core_options_v2 options_ja = {
 #define CEMU_BC1_16BIT_LABEL_KO NULL
 #define CEMU_BC1_16BIT_INFO_0_KO NULL
 #define CEMU_GPU_API_LABEL_KO NULL
+#define CEMU_GPU_API_INFO_0_KO NULL
 #define OPTION_VAL_OPENGL_KO NULL
 #define OPTION_VAL_VULKAN_KO NULL
 #define CEMU_WUA_OUTPUT_DIR_LABEL_KO NULL
@@ -16980,7 +17034,7 @@ struct retro_core_option_v2_definition option_defs_ko[] = {
 		"cemu_cpu_mode",
 		CEMU_CPU_MODE_LABEL_KO,
 		NULL,
-		NULL,
+		CEMU_CPU_MODE_INFO_0_KO,
 		NULL,
 		"system",
 		{
@@ -17461,7 +17515,7 @@ struct retro_core_option_v2_definition option_defs_ko[] = {
 		"cemu_gpu_api",
 		CEMU_GPU_API_LABEL_KO,
 		NULL,
-		NULL,
+		CEMU_GPU_API_INFO_0_KO,
 		NULL,
 		"video",
 		{
@@ -17525,6 +17579,7 @@ struct retro_core_options_v2 options_ko = {
 #define CATEGORY_GRAPHIC_PACKS_LABEL_NL NULL
 #define CATEGORY_GRAPHIC_PACKS_INFO_0_NL NULL
 #define CEMU_CPU_MODE_LABEL_NL NULL
+#define CEMU_CPU_MODE_INFO_0_NL NULL
 #define OPTION_VAL_AUTO_NL "Automatisch"
 #define OPTION_VAL_SINGLECORE_INTERPRETER_NL NULL
 #define OPTION_VAL_SINGLECORE_RECOMPILER_NL NULL
@@ -17602,6 +17657,7 @@ struct retro_core_options_v2 options_ko = {
 #define CEMU_BC1_16BIT_LABEL_NL NULL
 #define CEMU_BC1_16BIT_INFO_0_NL NULL
 #define CEMU_GPU_API_LABEL_NL NULL
+#define CEMU_GPU_API_INFO_0_NL NULL
 #define OPTION_VAL_OPENGL_NL NULL
 #define OPTION_VAL_VULKAN_NL NULL
 #define CEMU_WUA_OUTPUT_DIR_LABEL_NL NULL
@@ -17627,7 +17683,7 @@ struct retro_core_option_v2_definition option_defs_nl[] = {
 		"cemu_cpu_mode",
 		CEMU_CPU_MODE_LABEL_NL,
 		NULL,
-		NULL,
+		CEMU_CPU_MODE_INFO_0_NL,
 		NULL,
 		"system",
 		{
@@ -18108,7 +18164,7 @@ struct retro_core_option_v2_definition option_defs_nl[] = {
 		"cemu_gpu_api",
 		CEMU_GPU_API_LABEL_NL,
 		NULL,
-		NULL,
+		CEMU_GPU_API_INFO_0_NL,
 		NULL,
 		"video",
 		{
@@ -18172,6 +18228,7 @@ struct retro_core_options_v2 options_nl = {
 #define CATEGORY_GRAPHIC_PACKS_LABEL_NO NULL
 #define CATEGORY_GRAPHIC_PACKS_INFO_0_NO NULL
 #define CEMU_CPU_MODE_LABEL_NO NULL
+#define CEMU_CPU_MODE_INFO_0_NO NULL
 #define OPTION_VAL_AUTO_NO NULL
 #define OPTION_VAL_SINGLECORE_INTERPRETER_NO NULL
 #define OPTION_VAL_SINGLECORE_RECOMPILER_NO NULL
@@ -18249,6 +18306,7 @@ struct retro_core_options_v2 options_nl = {
 #define CEMU_BC1_16BIT_LABEL_NO NULL
 #define CEMU_BC1_16BIT_INFO_0_NO NULL
 #define CEMU_GPU_API_LABEL_NO NULL
+#define CEMU_GPU_API_INFO_0_NO NULL
 #define OPTION_VAL_OPENGL_NO NULL
 #define OPTION_VAL_VULKAN_NO NULL
 #define CEMU_WUA_OUTPUT_DIR_LABEL_NO NULL
@@ -18274,7 +18332,7 @@ struct retro_core_option_v2_definition option_defs_no[] = {
 		"cemu_cpu_mode",
 		CEMU_CPU_MODE_LABEL_NO,
 		NULL,
-		NULL,
+		CEMU_CPU_MODE_INFO_0_NO,
 		NULL,
 		"system",
 		{
@@ -18755,7 +18813,7 @@ struct retro_core_option_v2_definition option_defs_no[] = {
 		"cemu_gpu_api",
 		CEMU_GPU_API_LABEL_NO,
 		NULL,
-		NULL,
+		CEMU_GPU_API_INFO_0_NO,
 		NULL,
 		"video",
 		{
@@ -18819,6 +18877,7 @@ struct retro_core_options_v2 options_no = {
 #define CATEGORY_GRAPHIC_PACKS_LABEL_OR NULL
 #define CATEGORY_GRAPHIC_PACKS_INFO_0_OR NULL
 #define CEMU_CPU_MODE_LABEL_OR NULL
+#define CEMU_CPU_MODE_INFO_0_OR NULL
 #define OPTION_VAL_AUTO_OR NULL
 #define OPTION_VAL_SINGLECORE_INTERPRETER_OR NULL
 #define OPTION_VAL_SINGLECORE_RECOMPILER_OR NULL
@@ -18896,6 +18955,7 @@ struct retro_core_options_v2 options_no = {
 #define CEMU_BC1_16BIT_LABEL_OR NULL
 #define CEMU_BC1_16BIT_INFO_0_OR NULL
 #define CEMU_GPU_API_LABEL_OR NULL
+#define CEMU_GPU_API_INFO_0_OR NULL
 #define OPTION_VAL_OPENGL_OR NULL
 #define OPTION_VAL_VULKAN_OR NULL
 #define CEMU_WUA_OUTPUT_DIR_LABEL_OR NULL
@@ -18921,7 +18981,7 @@ struct retro_core_option_v2_definition option_defs_or[] = {
 		"cemu_cpu_mode",
 		CEMU_CPU_MODE_LABEL_OR,
 		NULL,
-		NULL,
+		CEMU_CPU_MODE_INFO_0_OR,
 		NULL,
 		"system",
 		{
@@ -19402,7 +19462,7 @@ struct retro_core_option_v2_definition option_defs_or[] = {
 		"cemu_gpu_api",
 		CEMU_GPU_API_LABEL_OR,
 		NULL,
-		NULL,
+		CEMU_GPU_API_INFO_0_OR,
 		NULL,
 		"video",
 		{
@@ -19466,6 +19526,7 @@ struct retro_core_options_v2 options_or = {
 #define CATEGORY_GRAPHIC_PACKS_LABEL_PL NULL
 #define CATEGORY_GRAPHIC_PACKS_INFO_0_PL NULL
 #define CEMU_CPU_MODE_LABEL_PL NULL
+#define CEMU_CPU_MODE_INFO_0_PL NULL
 #define OPTION_VAL_AUTO_PL "Automatyczny"
 #define OPTION_VAL_SINGLECORE_INTERPRETER_PL NULL
 #define OPTION_VAL_SINGLECORE_RECOMPILER_PL NULL
@@ -19543,6 +19604,7 @@ struct retro_core_options_v2 options_or = {
 #define CEMU_BC1_16BIT_LABEL_PL NULL
 #define CEMU_BC1_16BIT_INFO_0_PL NULL
 #define CEMU_GPU_API_LABEL_PL NULL
+#define CEMU_GPU_API_INFO_0_PL NULL
 #define OPTION_VAL_OPENGL_PL NULL
 #define OPTION_VAL_VULKAN_PL NULL
 #define CEMU_WUA_OUTPUT_DIR_LABEL_PL NULL
@@ -19568,7 +19630,7 @@ struct retro_core_option_v2_definition option_defs_pl[] = {
 		"cemu_cpu_mode",
 		CEMU_CPU_MODE_LABEL_PL,
 		NULL,
-		NULL,
+		CEMU_CPU_MODE_INFO_0_PL,
 		NULL,
 		"system",
 		{
@@ -20049,7 +20111,7 @@ struct retro_core_option_v2_definition option_defs_pl[] = {
 		"cemu_gpu_api",
 		CEMU_GPU_API_LABEL_PL,
 		NULL,
-		NULL,
+		CEMU_GPU_API_INFO_0_PL,
 		NULL,
 		"video",
 		{
@@ -20113,6 +20175,7 @@ struct retro_core_options_v2 options_pl = {
 #define CATEGORY_GRAPHIC_PACKS_LABEL_PT_BR NULL
 #define CATEGORY_GRAPHIC_PACKS_INFO_0_PT_BR NULL
 #define CEMU_CPU_MODE_LABEL_PT_BR NULL
+#define CEMU_CPU_MODE_INFO_0_PT_BR NULL
 #define OPTION_VAL_AUTO_PT_BR "Automático"
 #define OPTION_VAL_SINGLECORE_INTERPRETER_PT_BR NULL
 #define OPTION_VAL_SINGLECORE_RECOMPILER_PT_BR NULL
@@ -20190,6 +20253,7 @@ struct retro_core_options_v2 options_pl = {
 #define CEMU_BC1_16BIT_LABEL_PT_BR NULL
 #define CEMU_BC1_16BIT_INFO_0_PT_BR NULL
 #define CEMU_GPU_API_LABEL_PT_BR NULL
+#define CEMU_GPU_API_INFO_0_PT_BR NULL
 #define OPTION_VAL_OPENGL_PT_BR NULL
 #define OPTION_VAL_VULKAN_PT_BR NULL
 #define CEMU_WUA_OUTPUT_DIR_LABEL_PT_BR NULL
@@ -20215,7 +20279,7 @@ struct retro_core_option_v2_definition option_defs_pt_br[] = {
 		"cemu_cpu_mode",
 		CEMU_CPU_MODE_LABEL_PT_BR,
 		NULL,
-		NULL,
+		CEMU_CPU_MODE_INFO_0_PT_BR,
 		NULL,
 		"system",
 		{
@@ -20696,7 +20760,7 @@ struct retro_core_option_v2_definition option_defs_pt_br[] = {
 		"cemu_gpu_api",
 		CEMU_GPU_API_LABEL_PT_BR,
 		NULL,
-		NULL,
+		CEMU_GPU_API_INFO_0_PT_BR,
 		NULL,
 		"video",
 		{
@@ -20760,6 +20824,7 @@ struct retro_core_options_v2 options_pt_br = {
 #define CATEGORY_GRAPHIC_PACKS_LABEL_PT_PT NULL
 #define CATEGORY_GRAPHIC_PACKS_INFO_0_PT_PT NULL
 #define CEMU_CPU_MODE_LABEL_PT_PT NULL
+#define CEMU_CPU_MODE_INFO_0_PT_PT NULL
 #define OPTION_VAL_AUTO_PT_PT "Automático"
 #define OPTION_VAL_SINGLECORE_INTERPRETER_PT_PT NULL
 #define OPTION_VAL_SINGLECORE_RECOMPILER_PT_PT NULL
@@ -20837,6 +20902,7 @@ struct retro_core_options_v2 options_pt_br = {
 #define CEMU_BC1_16BIT_LABEL_PT_PT NULL
 #define CEMU_BC1_16BIT_INFO_0_PT_PT NULL
 #define CEMU_GPU_API_LABEL_PT_PT NULL
+#define CEMU_GPU_API_INFO_0_PT_PT NULL
 #define OPTION_VAL_OPENGL_PT_PT NULL
 #define OPTION_VAL_VULKAN_PT_PT NULL
 #define CEMU_WUA_OUTPUT_DIR_LABEL_PT_PT NULL
@@ -20862,7 +20928,7 @@ struct retro_core_option_v2_definition option_defs_pt_pt[] = {
 		"cemu_cpu_mode",
 		CEMU_CPU_MODE_LABEL_PT_PT,
 		NULL,
-		NULL,
+		CEMU_CPU_MODE_INFO_0_PT_PT,
 		NULL,
 		"system",
 		{
@@ -21343,7 +21409,7 @@ struct retro_core_option_v2_definition option_defs_pt_pt[] = {
 		"cemu_gpu_api",
 		CEMU_GPU_API_LABEL_PT_PT,
 		NULL,
-		NULL,
+		CEMU_GPU_API_INFO_0_PT_PT,
 		NULL,
 		"video",
 		{
@@ -21407,6 +21473,7 @@ struct retro_core_options_v2 options_pt_pt = {
 #define CATEGORY_GRAPHIC_PACKS_LABEL_RU NULL
 #define CATEGORY_GRAPHIC_PACKS_INFO_0_RU NULL
 #define CEMU_CPU_MODE_LABEL_RU NULL
+#define CEMU_CPU_MODE_INFO_0_RU NULL
 #define OPTION_VAL_AUTO_RU "Автоматически"
 #define OPTION_VAL_SINGLECORE_INTERPRETER_RU NULL
 #define OPTION_VAL_SINGLECORE_RECOMPILER_RU NULL
@@ -21484,6 +21551,7 @@ struct retro_core_options_v2 options_pt_pt = {
 #define CEMU_BC1_16BIT_LABEL_RU NULL
 #define CEMU_BC1_16BIT_INFO_0_RU NULL
 #define CEMU_GPU_API_LABEL_RU NULL
+#define CEMU_GPU_API_INFO_0_RU NULL
 #define OPTION_VAL_OPENGL_RU NULL
 #define OPTION_VAL_VULKAN_RU NULL
 #define CEMU_WUA_OUTPUT_DIR_LABEL_RU NULL
@@ -21509,7 +21577,7 @@ struct retro_core_option_v2_definition option_defs_ru[] = {
 		"cemu_cpu_mode",
 		CEMU_CPU_MODE_LABEL_RU,
 		NULL,
-		NULL,
+		CEMU_CPU_MODE_INFO_0_RU,
 		NULL,
 		"system",
 		{
@@ -21990,7 +22058,7 @@ struct retro_core_option_v2_definition option_defs_ru[] = {
 		"cemu_gpu_api",
 		CEMU_GPU_API_LABEL_RU,
 		NULL,
-		NULL,
+		CEMU_GPU_API_INFO_0_RU,
 		NULL,
 		"video",
 		{
@@ -22053,7 +22121,8 @@ struct retro_core_options_v2 options_ru = {
 #define CATEGORY_CONVERT_INFO_0_SK "Zapíše načítaný titul ako archív .wua."
 #define CATEGORY_GRAPHIC_PACKS_LABEL_SK "Grafické balíky"
 #define CATEGORY_GRAPHIC_PACKS_INFO_0_SK "Grafické balíky načítanej hry a ich predvoľby. Zmeny sa prejavia pri ďalšom načítaní hry."
-#define CEMU_CPU_MODE_LABEL_SK "Režim CPU (reštart)"
+#define CEMU_CPU_MODE_LABEL_SK "Režim CPU"
+#define CEMU_CPU_MODE_INFO_0_SK "Ako sa emulujú jadrá PowerPC konzoly Wii U. Auto zvolí viacjadrový rekompilátor na CPU so štyrmi alebo viac fyzickými jadrami, inak jednojadrový. Interpretery sú oveľa pomalšie a sú určené na ladenie. (Vyžaduje reštart)"
 #define OPTION_VAL_AUTO_SK NULL
 #define OPTION_VAL_SINGLECORE_INTERPRETER_SK "Jednojadrový interpreter"
 #define OPTION_VAL_SINGLECORE_RECOMPILER_SK "Jednojadrový rekompilátor"
@@ -22085,7 +22154,7 @@ struct retro_core_options_v2 options_ru = {
 #define CEMU_SHOW_GAME_FPS_INFO_0_SK "Zobrazí snímkovú frekvenciu, v ktorej hra vykresľuje. Vlastné počítadlo FPS v RetroArchu počíta, ako často beží jadro, a to ostáva na 60 aj vtedy, keď hra stráca snímky, pretože každý beh nesie zvuk za jednu snímku."
 #define CEMU_DOWNSCALE_FILTER_LABEL_SK "Filter zmenšenia"
 #define CEMU_INTERNAL_RESOLUTION_LABEL_SK "Vnútorné rozlíšenie"
-#define CEMU_INTERNAL_RESOLUTION_INFO_0_SK "Všeobecná náhrada pre hry bez grafického balíka rozlíšenia: mení veľkosť každého cieľa vykresľovania v tvare obrazovky, \čo niektoré hry používajú na veci, ktoré sa pri zmene veľkosti pokazia. 640x360 kreslí štvrtinu pixelov oproti 720p. \Keď je pre načítanú hru zapnutý balík rozlíšenia (Grafické balíky), rozlíšenie určuje balík a táto voľba sa skryje."
+#define CEMU_INTERNAL_RESOLUTION_INFO_0_SK "Všeobecná náhrada pre hry bez grafického balíka s rozlíšením: zmení veľkosť každého cieľa vykresľovania v tvare obrazovky, čo niektoré hry používajú na veci, ktoré sa pri zmene veľkosti pokazia. 640x360 vykresľuje štvrtinu pixelov 720p. Keď je pre načítanú hru zapnutý balík s rozlíšením (Grafické balíky), rozlíšenie určuje balík a táto voľba je skrytá."
 #define OPTION_VAL_640X360_SK NULL
 #define OPTION_VAL_960X540_SK NULL
 #define OPTION_VAL_1280X720_SK NULL
@@ -22123,20 +22192,21 @@ struct retro_core_options_v2 options_ru = {
 #define CEMU_LOG_THREAD_SYNC_LABEL_SK "Zaznamenávať synchronizáciu vlákien (ladenie)"
 #define CEMU_LOG_SYSTEM_API_LABEL_SK "Zaznamenávať volania systémového API (ladenie)"
 #define CEMU_LOG_TEXTURE_MEMORY_LABEL_SK "Zaznamenávať pamäť textúr (ladenie)"
-#define CEMU_LOG_TEXTURE_MEMORY_INFO_0_SK "Hlási, koľko pamäte textúr tvoria textúry BC, \ktoré sa museli dekomprimovať, pretože tento GPU ich nevie vzorkovať."
+#define CEMU_LOG_TEXTURE_MEMORY_INFO_0_SK "Hlási, koľko pamäte textúr tvoria textúry BC, ktoré bolo treba dekomprimovať, lebo ich táto GPU nevie vzorkovať."
 #define CEMU_LOG_INPUT_API_LABEL_SK "Zaznamenávať volania API ovládačov (ladenie)"
-#define CEMU_LOG_INPUT_API_INFO_0_SK "Zaznamenáva každé volanie ovládača, ktoré titul urobí – ktoré \ovládače hľadal a čo sa dozvedel. Veľa výstupu; zapínajte len na pár sekúnd."
+#define CEMU_LOG_INPUT_API_INFO_0_SK "Zaznamená každé volanie ovládača, ktoré titul urobí – ktoré gamepady hľadal a čo sa dozvedel. Veľa záznamov; zapínajte na pár sekúnd."
 #define CEMU_LOG_AUDIO_LABEL_SK "Zaznamenávať časovanie zvuku (ladenie)"
-#define CEMU_LOG_AUDIO_INFO_0_SK "Raz za sekundu zapíše, koľko vzoriek vytvoril AX, koľko \ich musel kruhový buffer zahodiť a koľko si ich zobral frontend. Pomáha zistiť, \na ktorom konci tohto reťazca sa zvuk stráca."
+#define CEMU_LOG_AUDIO_INFO_0_SK "Raz za sekundu: koľko vzoriek vytvoril AX, koľko ich musel kruhový buffer zahodiť a koľko si ich vzal frontend. Na zistenie, na ktorom konci tohto reťazca sa zvuk stráca."
 #define CEMU_BC1_16BIT_LABEL_SK "Znížiť pamäť textúr BC1"
-#define CEMU_BC1_16BIT_INFO_0_SK "Zníži na polovicu pamäť, ktorú zaberajú textúry BC1 na GPU, ktorý nevie vzorkovať BC, \za cenu jedného bitu zelenej. Tam, kde je BC podporované, nemá vplyv."
-#define CEMU_GPU_API_LABEL_SK "Grafické API (reštart)"
+#define CEMU_BC1_16BIT_INFO_0_SK "Zníži na polovicu pamäť, ktorú zaberajú textúry BC1 na GPU, ktorá nevie vzorkovať BC, za cenu jedného bitu zelenej. Kde je BC podporované, nemá žiadny účinok."
+#define CEMU_GPU_API_LABEL_SK "Grafické API"
+#define CEMU_GPU_API_INFO_0_SK "Grafické API, cez ktoré Cemu vykresľuje. (Vyžaduje reštart)"
 #define OPTION_VAL_OPENGL_SK NULL
 #define OPTION_VAL_VULKAN_SK NULL
 #define CEMU_WUA_OUTPUT_DIR_LABEL_SK "Výstupný priečinok"
 #define CEMU_WUA_OUTPUT_DIR_INFO_0_SK "Kam sa zapíše súbor .wua. Musí mať preň dosť miesta."
 #define CEMU_CONVERT_TO_WUA_LABEL_SK "Spustiť konverziu do WUA"
-#define CEMU_CONVERT_TO_WUA_INFO_0_SK "Zapíše titul do výstupného priečinka ako súbor .wua. \Titul počas toho beží ďalej."
+#define CEMU_CONVERT_TO_WUA_INFO_0_SK "Zapíše titul do výstupného priečinka ako .wua. Počas toho beží ďalej."
 
 struct retro_core_option_v2_category option_cats_sk[] = {
 	{ "video", CATEGORY_VIDEO_LABEL_SK, CATEGORY_VIDEO_INFO_0_SK },
@@ -22156,7 +22226,7 @@ struct retro_core_option_v2_definition option_defs_sk[] = {
 		"cemu_cpu_mode",
 		CEMU_CPU_MODE_LABEL_SK,
 		NULL,
-		NULL,
+		CEMU_CPU_MODE_INFO_0_SK,
 		NULL,
 		"system",
 		{
@@ -22637,7 +22707,7 @@ struct retro_core_option_v2_definition option_defs_sk[] = {
 		"cemu_gpu_api",
 		CEMU_GPU_API_LABEL_SK,
 		NULL,
-		NULL,
+		CEMU_GPU_API_INFO_0_SK,
 		NULL,
 		"video",
 		{
@@ -22701,6 +22771,7 @@ struct retro_core_options_v2 options_sk = {
 #define CATEGORY_GRAPHIC_PACKS_LABEL_SR NULL
 #define CATEGORY_GRAPHIC_PACKS_INFO_0_SR NULL
 #define CEMU_CPU_MODE_LABEL_SR NULL
+#define CEMU_CPU_MODE_INFO_0_SR NULL
 #define OPTION_VAL_AUTO_SR NULL
 #define OPTION_VAL_SINGLECORE_INTERPRETER_SR NULL
 #define OPTION_VAL_SINGLECORE_RECOMPILER_SR NULL
@@ -22778,6 +22849,7 @@ struct retro_core_options_v2 options_sk = {
 #define CEMU_BC1_16BIT_LABEL_SR NULL
 #define CEMU_BC1_16BIT_INFO_0_SR NULL
 #define CEMU_GPU_API_LABEL_SR NULL
+#define CEMU_GPU_API_INFO_0_SR NULL
 #define OPTION_VAL_OPENGL_SR NULL
 #define OPTION_VAL_VULKAN_SR NULL
 #define CEMU_WUA_OUTPUT_DIR_LABEL_SR NULL
@@ -22803,7 +22875,7 @@ struct retro_core_option_v2_definition option_defs_sr[] = {
 		"cemu_cpu_mode",
 		CEMU_CPU_MODE_LABEL_SR,
 		NULL,
-		NULL,
+		CEMU_CPU_MODE_INFO_0_SR,
 		NULL,
 		"system",
 		{
@@ -23284,7 +23356,7 @@ struct retro_core_option_v2_definition option_defs_sr[] = {
 		"cemu_gpu_api",
 		CEMU_GPU_API_LABEL_SR,
 		NULL,
-		NULL,
+		CEMU_GPU_API_INFO_0_SR,
 		NULL,
 		"video",
 		{
@@ -23348,6 +23420,7 @@ struct retro_core_options_v2 options_sr = {
 #define CATEGORY_GRAPHIC_PACKS_LABEL_SV NULL
 #define CATEGORY_GRAPHIC_PACKS_INFO_0_SV NULL
 #define CEMU_CPU_MODE_LABEL_SV NULL
+#define CEMU_CPU_MODE_INFO_0_SV NULL
 #define OPTION_VAL_AUTO_SV NULL
 #define OPTION_VAL_SINGLECORE_INTERPRETER_SV NULL
 #define OPTION_VAL_SINGLECORE_RECOMPILER_SV NULL
@@ -23425,6 +23498,7 @@ struct retro_core_options_v2 options_sr = {
 #define CEMU_BC1_16BIT_LABEL_SV NULL
 #define CEMU_BC1_16BIT_INFO_0_SV NULL
 #define CEMU_GPU_API_LABEL_SV NULL
+#define CEMU_GPU_API_INFO_0_SV NULL
 #define OPTION_VAL_OPENGL_SV NULL
 #define OPTION_VAL_VULKAN_SV NULL
 #define CEMU_WUA_OUTPUT_DIR_LABEL_SV NULL
@@ -23450,7 +23524,7 @@ struct retro_core_option_v2_definition option_defs_sv[] = {
 		"cemu_cpu_mode",
 		CEMU_CPU_MODE_LABEL_SV,
 		NULL,
-		NULL,
+		CEMU_CPU_MODE_INFO_0_SV,
 		NULL,
 		"system",
 		{
@@ -23931,7 +24005,7 @@ struct retro_core_option_v2_definition option_defs_sv[] = {
 		"cemu_gpu_api",
 		CEMU_GPU_API_LABEL_SV,
 		NULL,
-		NULL,
+		CEMU_GPU_API_INFO_0_SV,
 		NULL,
 		"video",
 		{
@@ -23995,6 +24069,7 @@ struct retro_core_options_v2 options_sv = {
 #define CATEGORY_GRAPHIC_PACKS_LABEL_TH NULL
 #define CATEGORY_GRAPHIC_PACKS_INFO_0_TH NULL
 #define CEMU_CPU_MODE_LABEL_TH NULL
+#define CEMU_CPU_MODE_INFO_0_TH NULL
 #define OPTION_VAL_AUTO_TH "อัตโนมัติ"
 #define OPTION_VAL_SINGLECORE_INTERPRETER_TH NULL
 #define OPTION_VAL_SINGLECORE_RECOMPILER_TH NULL
@@ -24072,6 +24147,7 @@ struct retro_core_options_v2 options_sv = {
 #define CEMU_BC1_16BIT_LABEL_TH NULL
 #define CEMU_BC1_16BIT_INFO_0_TH NULL
 #define CEMU_GPU_API_LABEL_TH NULL
+#define CEMU_GPU_API_INFO_0_TH NULL
 #define OPTION_VAL_OPENGL_TH NULL
 #define OPTION_VAL_VULKAN_TH NULL
 #define CEMU_WUA_OUTPUT_DIR_LABEL_TH NULL
@@ -24097,7 +24173,7 @@ struct retro_core_option_v2_definition option_defs_th[] = {
 		"cemu_cpu_mode",
 		CEMU_CPU_MODE_LABEL_TH,
 		NULL,
-		NULL,
+		CEMU_CPU_MODE_INFO_0_TH,
 		NULL,
 		"system",
 		{
@@ -24578,7 +24654,7 @@ struct retro_core_option_v2_definition option_defs_th[] = {
 		"cemu_gpu_api",
 		CEMU_GPU_API_LABEL_TH,
 		NULL,
-		NULL,
+		CEMU_GPU_API_INFO_0_TH,
 		NULL,
 		"video",
 		{
@@ -24642,6 +24718,7 @@ struct retro_core_options_v2 options_th = {
 #define CATEGORY_GRAPHIC_PACKS_LABEL_TR NULL
 #define CATEGORY_GRAPHIC_PACKS_INFO_0_TR NULL
 #define CEMU_CPU_MODE_LABEL_TR NULL
+#define CEMU_CPU_MODE_INFO_0_TR NULL
 #define OPTION_VAL_AUTO_TR "Otomatik"
 #define OPTION_VAL_SINGLECORE_INTERPRETER_TR NULL
 #define OPTION_VAL_SINGLECORE_RECOMPILER_TR NULL
@@ -24719,6 +24796,7 @@ struct retro_core_options_v2 options_th = {
 #define CEMU_BC1_16BIT_LABEL_TR NULL
 #define CEMU_BC1_16BIT_INFO_0_TR NULL
 #define CEMU_GPU_API_LABEL_TR NULL
+#define CEMU_GPU_API_INFO_0_TR NULL
 #define OPTION_VAL_OPENGL_TR NULL
 #define OPTION_VAL_VULKAN_TR NULL
 #define CEMU_WUA_OUTPUT_DIR_LABEL_TR NULL
@@ -24744,7 +24822,7 @@ struct retro_core_option_v2_definition option_defs_tr[] = {
 		"cemu_cpu_mode",
 		CEMU_CPU_MODE_LABEL_TR,
 		NULL,
-		NULL,
+		CEMU_CPU_MODE_INFO_0_TR,
 		NULL,
 		"system",
 		{
@@ -25225,7 +25303,7 @@ struct retro_core_option_v2_definition option_defs_tr[] = {
 		"cemu_gpu_api",
 		CEMU_GPU_API_LABEL_TR,
 		NULL,
-		NULL,
+		CEMU_GPU_API_INFO_0_TR,
 		NULL,
 		"video",
 		{
@@ -25289,6 +25367,7 @@ struct retro_core_options_v2 options_tr = {
 #define CATEGORY_GRAPHIC_PACKS_LABEL_TT NULL
 #define CATEGORY_GRAPHIC_PACKS_INFO_0_TT NULL
 #define CEMU_CPU_MODE_LABEL_TT NULL
+#define CEMU_CPU_MODE_INFO_0_TT NULL
 #define OPTION_VAL_AUTO_TT NULL
 #define OPTION_VAL_SINGLECORE_INTERPRETER_TT NULL
 #define OPTION_VAL_SINGLECORE_RECOMPILER_TT NULL
@@ -25366,6 +25445,7 @@ struct retro_core_options_v2 options_tr = {
 #define CEMU_BC1_16BIT_LABEL_TT NULL
 #define CEMU_BC1_16BIT_INFO_0_TT NULL
 #define CEMU_GPU_API_LABEL_TT NULL
+#define CEMU_GPU_API_INFO_0_TT NULL
 #define OPTION_VAL_OPENGL_TT NULL
 #define OPTION_VAL_VULKAN_TT NULL
 #define CEMU_WUA_OUTPUT_DIR_LABEL_TT NULL
@@ -25391,7 +25471,7 @@ struct retro_core_option_v2_definition option_defs_tt[] = {
 		"cemu_cpu_mode",
 		CEMU_CPU_MODE_LABEL_TT,
 		NULL,
-		NULL,
+		CEMU_CPU_MODE_INFO_0_TT,
 		NULL,
 		"system",
 		{
@@ -25872,7 +25952,7 @@ struct retro_core_option_v2_definition option_defs_tt[] = {
 		"cemu_gpu_api",
 		CEMU_GPU_API_LABEL_TT,
 		NULL,
-		NULL,
+		CEMU_GPU_API_INFO_0_TT,
 		NULL,
 		"video",
 		{
@@ -25936,6 +26016,7 @@ struct retro_core_options_v2 options_tt = {
 #define CATEGORY_GRAPHIC_PACKS_LABEL_UK NULL
 #define CATEGORY_GRAPHIC_PACKS_INFO_0_UK NULL
 #define CEMU_CPU_MODE_LABEL_UK NULL
+#define CEMU_CPU_MODE_INFO_0_UK NULL
 #define OPTION_VAL_AUTO_UK "Автоматично"
 #define OPTION_VAL_SINGLECORE_INTERPRETER_UK NULL
 #define OPTION_VAL_SINGLECORE_RECOMPILER_UK NULL
@@ -26013,6 +26094,7 @@ struct retro_core_options_v2 options_tt = {
 #define CEMU_BC1_16BIT_LABEL_UK NULL
 #define CEMU_BC1_16BIT_INFO_0_UK NULL
 #define CEMU_GPU_API_LABEL_UK NULL
+#define CEMU_GPU_API_INFO_0_UK NULL
 #define OPTION_VAL_OPENGL_UK NULL
 #define OPTION_VAL_VULKAN_UK NULL
 #define CEMU_WUA_OUTPUT_DIR_LABEL_UK NULL
@@ -26038,7 +26120,7 @@ struct retro_core_option_v2_definition option_defs_uk[] = {
 		"cemu_cpu_mode",
 		CEMU_CPU_MODE_LABEL_UK,
 		NULL,
-		NULL,
+		CEMU_CPU_MODE_INFO_0_UK,
 		NULL,
 		"system",
 		{
@@ -26519,7 +26601,7 @@ struct retro_core_option_v2_definition option_defs_uk[] = {
 		"cemu_gpu_api",
 		CEMU_GPU_API_LABEL_UK,
 		NULL,
-		NULL,
+		CEMU_GPU_API_INFO_0_UK,
 		NULL,
 		"video",
 		{
@@ -26583,6 +26665,7 @@ struct retro_core_options_v2 options_uk = {
 #define CATEGORY_GRAPHIC_PACKS_LABEL_VAL NULL
 #define CATEGORY_GRAPHIC_PACKS_INFO_0_VAL NULL
 #define CEMU_CPU_MODE_LABEL_VAL NULL
+#define CEMU_CPU_MODE_INFO_0_VAL NULL
 #define OPTION_VAL_AUTO_VAL "Selecció automàtica"
 #define OPTION_VAL_SINGLECORE_INTERPRETER_VAL NULL
 #define OPTION_VAL_SINGLECORE_RECOMPILER_VAL NULL
@@ -26660,6 +26743,7 @@ struct retro_core_options_v2 options_uk = {
 #define CEMU_BC1_16BIT_LABEL_VAL NULL
 #define CEMU_BC1_16BIT_INFO_0_VAL NULL
 #define CEMU_GPU_API_LABEL_VAL NULL
+#define CEMU_GPU_API_INFO_0_VAL NULL
 #define OPTION_VAL_OPENGL_VAL NULL
 #define OPTION_VAL_VULKAN_VAL NULL
 #define CEMU_WUA_OUTPUT_DIR_LABEL_VAL NULL
@@ -26685,7 +26769,7 @@ struct retro_core_option_v2_definition option_defs_val[] = {
 		"cemu_cpu_mode",
 		CEMU_CPU_MODE_LABEL_VAL,
 		NULL,
-		NULL,
+		CEMU_CPU_MODE_INFO_0_VAL,
 		NULL,
 		"system",
 		{
@@ -27166,7 +27250,7 @@ struct retro_core_option_v2_definition option_defs_val[] = {
 		"cemu_gpu_api",
 		CEMU_GPU_API_LABEL_VAL,
 		NULL,
-		NULL,
+		CEMU_GPU_API_INFO_0_VAL,
 		NULL,
 		"video",
 		{
@@ -27229,7 +27313,8 @@ struct retro_core_options_v2 options_val = {
 #define CATEGORY_CONVERT_INFO_0_VN "Ghi tựa game đang được tải thành tệp lưu trữ .wua."
 #define CATEGORY_GRAPHIC_PACKS_LABEL_VN "Gói đồ họa"
 #define CATEGORY_GRAPHIC_PACKS_INFO_0_VN "Các gói đồ họa và thiết lập có sẵn của trò chơi đang được tải. Thay đổi sẽ có hiệu lực vào lần tiếp theo trò chơi được tải."
-#define CEMU_CPU_MODE_LABEL_VN "Chế độ CPU (khởi động lại)"
+#define CEMU_CPU_MODE_LABEL_VN NULL
+#define CEMU_CPU_MODE_INFO_0_VN NULL
 #define OPTION_VAL_AUTO_VN "Tự động"
 #define OPTION_VAL_SINGLECORE_INTERPRETER_VN "Trình thông dịch đơn luồng"
 #define OPTION_VAL_SINGLECORE_RECOMPILER_VN "Trình biên dịch lại đơn luồng"
@@ -27261,7 +27346,7 @@ struct retro_core_options_v2 options_val = {
 #define CEMU_SHOW_GAME_FPS_INFO_0_VN "Hiển thị tốc độ khung hình mà trò chơi đang kết xuất. Bộ đếm FPS của RetroArch tính số lần lõi được chạy, và con số này vẫn ở mức 60 khi trò chơi bị giảm khung hình, vì mỗi lần chạy đều xử lý lượng âm thanh tương ứng với một khung hình."
 #define CEMU_DOWNSCALE_FILTER_LABEL_VN "Bộ lọc giảm độ phân giải"
 #define CEMU_INTERNAL_RESOLUTION_LABEL_VN "Độ phân giải nội bộ"
-#define CEMU_INTERNAL_RESOLUTION_INFO_0_VN "Tùy chọn dự phòng chung cho các trò chơi không có gói đồ họa độ phân giải: thay đổi kích thước mọi vùng kết xuất có hình dạng giống màn hình, \mà một số trò chơi sử dụng cho những nội dung sẽ bị lỗi khi thay đổi kích thước. 640x360 chỉ kết xuất một phần tư số điểm ảnh so với 720p. \Khi gói độ phân giải được bật cho trò chơi đang tải (Gói đồ họa), gói này sẽ thiết lập độ phân giải và tùy chọn này sẽ bị ẩn."
+#define CEMU_INTERNAL_RESOLUTION_INFO_0_VN NULL
 #define OPTION_VAL_640X360_VN NULL
 #define OPTION_VAL_960X540_VN NULL
 #define OPTION_VAL_1280X720_VN NULL
@@ -27299,20 +27384,21 @@ struct retro_core_options_v2 options_val = {
 #define CEMU_LOG_THREAD_SYNC_LABEL_VN "Ghi đồng bộ hóa luồng vào tệp nhật ký (gỡ lỗi)"
 #define CEMU_LOG_SYSTEM_API_LABEL_VN "Ghi các lệnh gọi API hệ thống vào tệp nhật ký (gỡ lỗi)"
 #define CEMU_LOG_TEXTURE_MEMORY_LABEL_VN "Ghi bộ nhớ kết cấu vào tệp nhật ký (gỡ lỗi)"
-#define CEMU_LOG_TEXTURE_MEMORY_INFO_0_VN "Báo cáo lượng bộ nhớ kết cấu ở dạng BC \đã phải giải nén vì GPU này không thể lấy mẫu trực tiếp."
+#define CEMU_LOG_TEXTURE_MEMORY_INFO_0_VN NULL
 #define CEMU_LOG_INPUT_API_LABEL_VN "Ghi các lệnh gọi API tay cầm vào tệp nhật ký (gỡ lỗi)"
-#define CEMU_LOG_INPUT_API_INFO_0_VN "Ghi lại mọi lệnh gọi tay cầm mà trò chơi thực hiện - bao gồm \những tay cầm mà trò chơi kiểm tra và thông tin mà hệ thống trả về. Tạo rất nhiều dữ liệu; chỉ nên bật trong vài giây mỗi lần."
+#define CEMU_LOG_INPUT_API_INFO_0_VN NULL
 #define CEMU_LOG_AUDIO_LABEL_VN "Ghi nhịp xử lý âm thanh vào tệp nhật ký (gỡ lỗi)"
-#define CEMU_LOG_AUDIO_INFO_0_VN "Mỗi giây ghi lại số mẫu âm thanh mà AX tạo ra, số mẫu \phải loại bỏ khỏi bộ đệm vòng và số mẫu mà giao diện chính nhận được. Dùng để xác địnhâm thanh bị mất ở khâu nào trong chuỗi xử lý."
+#define CEMU_LOG_AUDIO_INFO_0_VN NULL
 #define CEMU_BC1_16BIT_LABEL_VN "Giảm bộ nhớ kết cấu BC1"
-#define CEMU_BC1_16BIT_INFO_0_VN "Giảm một nửa dung lượng bộ nhớ mà kết cấu BC1 sử dụng trên GPU không thể lấy mẫu BC,đổi lại mất đi một bit màu xanh lá. Không có tác dụng trên GPU hỗ trợ BC."
-#define CEMU_GPU_API_LABEL_VN "API đồ họa (khởi động lại)"
+#define CEMU_BC1_16BIT_INFO_0_VN NULL
+#define CEMU_GPU_API_LABEL_VN NULL
+#define CEMU_GPU_API_INFO_0_VN NULL
 #define OPTION_VAL_OPENGL_VN NULL
 #define OPTION_VAL_VULKAN_VN NULL
 #define CEMU_WUA_OUTPUT_DIR_LABEL_VN "Thư mục đầu ra"
 #define CEMU_WUA_OUTPUT_DIR_INFO_0_VN "Nơi tệp .wua được ghi. Cần đủ dung lượng để chứa tệp này."
 #define CEMU_CONVERT_TO_WUA_LABEL_VN "Bắt đầu chuyển đổi sang WUA"
-#define CEMU_CONVERT_TO_WUA_INFO_0_VN "Ghi tựa game vào thư mục đầu ra dưới dạng tệp .wua. \ Quá trình vẫn tiếp tục chạy trong khi thực hiện việc này."
+#define CEMU_CONVERT_TO_WUA_INFO_0_VN NULL
 
 struct retro_core_option_v2_category option_cats_vn[] = {
 	{ "video", CATEGORY_VIDEO_LABEL_VN, CATEGORY_VIDEO_INFO_0_VN },
@@ -27332,7 +27418,7 @@ struct retro_core_option_v2_definition option_defs_vn[] = {
 		"cemu_cpu_mode",
 		CEMU_CPU_MODE_LABEL_VN,
 		NULL,
-		NULL,
+		CEMU_CPU_MODE_INFO_0_VN,
 		NULL,
 		"system",
 		{
@@ -27813,7 +27899,7 @@ struct retro_core_option_v2_definition option_defs_vn[] = {
 		"cemu_gpu_api",
 		CEMU_GPU_API_LABEL_VN,
 		NULL,
-		NULL,
+		CEMU_GPU_API_INFO_0_VN,
 		NULL,
 		"video",
 		{
