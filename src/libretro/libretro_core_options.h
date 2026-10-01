@@ -68,9 +68,9 @@ struct retro_core_option_v2_category option_cats_us[] = {
 struct retro_core_option_v2_definition option_defs_us[] = {
 	{
 		"cemu_cpu_mode",
-		"CPU Mode (Restart required)",
+		"CPU Mode",
 		NULL,
-		NULL,
+		"How the Wii U's PowerPC cores are emulated. Auto takes the multicore recompiler on a CPU with four or more physical cores and the single-core one otherwise. The interpreters are far slower and are meant for debugging. (Restart required)",
 		NULL,
 		"system",
 		{
@@ -549,9 +549,9 @@ struct retro_core_option_v2_definition option_defs_us[] = {
 #if defined(ENABLE_VULKAN) && defined(ENABLE_OPENGL)
 	{
 		"cemu_gpu_api",
-		"Graphics API (Restart required)",
+		"Graphics API",
 		NULL,
-		NULL,
+		"The graphics API Cemu renders with. (Restart required)",
 		NULL,
 		"video",
 		{
