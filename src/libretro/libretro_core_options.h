@@ -68,7 +68,7 @@ struct retro_core_option_v2_category option_cats_us[] = {
 struct retro_core_option_v2_definition option_defs_us[] = {
 	{
 		"cemu_cpu_mode",
-		"CPU Mode (restart)",
+		"CPU Mode (Restart required)",
 		NULL,
 		NULL,
 		NULL,
@@ -214,9 +214,7 @@ struct retro_core_option_v2_definition option_defs_us[] = {
 		"cemu_internal_resolution",
 		"Internal Resolution",
 		NULL,
-		"A generic fallback for games without a resolution graphic pack: resizes every screen-shaped render target, "
-		"which some games use for things that break when resized. 640x360 draws a quarter of the pixels of 720p. "
-		"When a resolution pack is enabled for the loaded game (Graphic Packs), the pack sets the resolution and this option is hidden.",
+		"A generic fallback for games without a resolution graphic pack: resizes every screen-shaped render target, which some games use for things that break when resized. 640x360 draws a quarter of the pixels of 720p. When a resolution pack is enabled for the loaded game (Graphic Packs), the pack sets the resolution and this option is hidden.",
 		NULL,
 		"video",
 		{
@@ -496,8 +494,7 @@ struct retro_core_option_v2_definition option_defs_us[] = {
 		"cemu_log_texture_memory",
 		"Log Texture Memory (debugging)",
 		NULL,
-		"Reports how much of the texture memory is BC "
-		"that had to be decompressed because this GPU cannot sample it.",
+		"Reports how much of the texture memory is BC that had to be decompressed because this GPU cannot sample it.",
 		NULL,
 		"logging",
 		{
@@ -511,8 +508,7 @@ struct retro_core_option_v2_definition option_defs_us[] = {
 		"cemu_log_input_api",
 		"Log Controller API Calls (debugging)",
 		NULL,
-		"Logs every controller call a title makes - which "
-		"pads it probed for and what it was told. Noisy; for a few seconds at a time.",
+		"Logs every controller call a title makes - which pads it probed for and what it was told. Noisy; for a few seconds at a time.",
 		NULL,
 		"logging",
 		{
@@ -526,9 +522,7 @@ struct retro_core_option_v2_definition option_defs_us[] = {
 		"cemu_log_audio",
 		"Log Audio Pacing (debugging)",
 		NULL,
-		"Once a second, how many samples AX produced, how many "
-		"the ring had to drop, and how many the frontend took. For working out "
-		"which end of that chain audio is going missing at.",
+		"Once a second, how many samples AX produced, how many the ring had to drop, and how many the frontend took. For working out which end of that chain audio is going missing at.",
 		NULL,
 		"logging",
 		{
@@ -542,8 +536,7 @@ struct retro_core_option_v2_definition option_defs_us[] = {
 		"cemu_bc1_16bit",
 		"Reduce BC1 Texture Memory",
 		NULL,
-		"Halves what BC1 textures cost on a GPU that cannot sample BC, "
-		"at the price of one bit of green. No effect where BC is supported.",
+		"Halves what BC1 textures cost on a GPU that cannot sample BC, at the price of one bit of green. No effect where BC is supported.",
 		NULL,
 		"video",
 		{
@@ -556,7 +549,7 @@ struct retro_core_option_v2_definition option_defs_us[] = {
 #if defined(ENABLE_VULKAN) && defined(ENABLE_OPENGL)
 	{
 		"cemu_gpu_api",
-		"Graphics API (restart)",
+		"Graphics API (Restart required)",
 		NULL,
 		NULL,
 		NULL,
@@ -586,8 +579,7 @@ struct retro_core_option_v2_definition option_defs_us[] = {
 		"cemu_convert_to_wua",
 		"Start Conversion to WUA",
 		NULL,
-		"Writes the title to the output directory as a .wua. "
-		"It keeps running while this happens.",
+		"Writes the title to the output directory as a .wua. It keeps running while this happens.",
 		NULL,
 		"convert",
 		{
