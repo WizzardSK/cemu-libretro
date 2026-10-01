@@ -39,33 +39,35 @@ extern "C" {
 */
 /* RETRO_LANGUAGE_AR */
 
-#define CATEGORY_VIDEO_LABEL_AR NULL
+#define CATEGORY_VIDEO_LABEL_AR "الفيديو"
 #define CATEGORY_VIDEO_INFO_0_AR NULL
-#define CATEGORY_SHADERS_LABEL_AR NULL
+#define CATEGORY_SHADERS_LABEL_AR "الظلال"
 #define CATEGORY_SHADERS_INFO_0_AR NULL
 #define CATEGORY_SCREEN_LABEL_AR NULL
 #define CATEGORY_SCREEN_INFO_0_AR NULL
-#define CATEGORY_SYSTEM_LABEL_AR NULL
+#define CATEGORY_SYSTEM_LABEL_AR "نظام"
 #define CATEGORY_SYSTEM_INFO_0_AR NULL
 #define CATEGORY_ADDONS_LABEL_AR NULL
 #define CATEGORY_ADDONS_INFO_0_AR NULL
-#define CATEGORY_LOGGING_LABEL_AR NULL
+#define CATEGORY_LOGGING_LABEL_AR "تسجيل الدخول"
 #define CATEGORY_LOGGING_INFO_0_AR NULL
 #define CATEGORY_CONVERT_LABEL_AR NULL
 #define CATEGORY_CONVERT_INFO_0_AR NULL
+#define CATEGORY_GRAPHIC_PACKS_LABEL_AR NULL
+#define CATEGORY_GRAPHIC_PACKS_INFO_0_AR NULL
 #define CEMU_CPU_MODE_LABEL_AR NULL
-#define OPTION_VAL_AUTO_AR NULL
+#define OPTION_VAL_AUTO_AR "تلقائي"
 #define OPTION_VAL_SINGLECORE_INTERPRETER_AR NULL
 #define OPTION_VAL_SINGLECORE_RECOMPILER_AR NULL
 #define OPTION_VAL_MULTICORE_RECOMPILER_AR NULL
 #define OPTION_VAL_MULTICORE_INTERPRETER_AR NULL
 #define CEMU_CONSOLE_LANGUAGE_LABEL_AR NULL
 #define OPTION_VAL_ENGLISH_AR NULL
-#define OPTION_VAL_JAPANESE_AR NULL
-#define OPTION_VAL_FRENCH_AR NULL
-#define OPTION_VAL_GERMAN_AR NULL
-#define OPTION_VAL_ITALIAN_AR NULL
-#define OPTION_VAL_SPANISH_AR NULL
+#define OPTION_VAL_JAPANESE_AR "Japanese - 日本語"
+#define OPTION_VAL_FRENCH_AR "French - Français"
+#define OPTION_VAL_GERMAN_AR "German - Deutsch"
+#define OPTION_VAL_ITALIAN_AR "Italian - Italiano"
+#define OPTION_VAL_SPANISH_AR "Spanish - Español"
 #define OPTION_VAL_CHINESE_AR NULL
 #define OPTION_VAL_KOREAN_AR NULL
 #define OPTION_VAL_DUTCH_AR NULL
@@ -77,10 +79,12 @@ extern "C" {
 #define CEMU_PRECOMPILED_SHADERS_LABEL_AR NULL
 #define CEMU_ACCURATE_SHADER_MUL_LABEL_AR NULL
 #define CEMU_UPSCALE_FILTER_LABEL_AR NULL
-#define OPTION_VAL_LINEAR_AR NULL
-#define OPTION_VAL_BICUBIC_AR NULL
+#define OPTION_VAL_LINEAR_AR "خطي"
+#define OPTION_VAL_BICUBIC_AR "ثنائي تكعيبي"
 #define OPTION_VAL_BICUBIC_HERMITE_AR NULL
-#define OPTION_VAL_NEAREST_AR NULL
+#define OPTION_VAL_NEAREST_AR "أقرب"
+#define CEMU_SHOW_GAME_FPS_LABEL_AR NULL
+#define CEMU_SHOW_GAME_FPS_INFO_0_AR NULL
 #define CEMU_DOWNSCALE_FILTER_LABEL_AR NULL
 #define CEMU_INTERNAL_RESOLUTION_LABEL_AR NULL
 #define CEMU_INTERNAL_RESOLUTION_INFO_0_AR NULL
@@ -114,7 +118,7 @@ extern "C" {
 #define OPTION_VAL_SELECT_R3_AR NULL
 #define OPTION_VAL_TAB_AR NULL
 #define CEMU_DRC_POSITION_LABEL_AR NULL
-#define OPTION_VAL_NORMAL_AR NULL
+#define OPTION_VAL_NORMAL_AR "عادي"
 #define OPTION_VAL_SWAPPED_AR NULL
 #define CEMU_LOG_TO_FILE_LABEL_AR NULL
 #define CEMU_LOG_FILESYSTEM_LABEL_AR NULL
@@ -146,6 +150,7 @@ struct retro_core_option_v2_category option_cats_ar[] = {
 	{ "addons", CATEGORY_ADDONS_LABEL_AR, CATEGORY_ADDONS_INFO_0_AR },
 	{ "logging", CATEGORY_LOGGING_LABEL_AR, CATEGORY_LOGGING_INFO_0_AR },
 	{ "convert", CATEGORY_CONVERT_LABEL_AR, CATEGORY_CONVERT_INFO_0_AR },
+	{ "graphic_packs", CATEGORY_GRAPHIC_PACKS_LABEL_AR, CATEGORY_GRAPHIC_PACKS_INFO_0_AR },
 	{ NULL, NULL, NULL },
 };
 struct retro_core_option_v2_definition option_defs_ar[] = {
@@ -262,6 +267,20 @@ struct retro_core_option_v2_definition option_defs_ar[] = {
 			{ NULL, NULL },
 		},
 		"linear"
+	},
+	{
+		"cemu_show_game_fps",
+		CEMU_SHOW_GAME_FPS_LABEL_AR,
+		NULL,
+		CEMU_SHOW_GAME_FPS_INFO_0_AR,
+		NULL,
+		"video",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
 	},
 	{
 		"cemu_downscale_filter",
@@ -667,20 +686,22 @@ struct retro_core_options_v2 options_ar = {
 
 /* RETRO_LANGUAGE_AST */
 
-#define CATEGORY_VIDEO_LABEL_AST NULL
+#define CATEGORY_VIDEO_LABEL_AST "Videu"
 #define CATEGORY_VIDEO_INFO_0_AST NULL
-#define CATEGORY_SHADERS_LABEL_AST NULL
+#define CATEGORY_SHADERS_LABEL_AST "Asolombradores"
 #define CATEGORY_SHADERS_INFO_0_AST NULL
 #define CATEGORY_SCREEN_LABEL_AST NULL
 #define CATEGORY_SCREEN_INFO_0_AST NULL
-#define CATEGORY_SYSTEM_LABEL_AST NULL
+#define CATEGORY_SYSTEM_LABEL_AST "Sistema"
 #define CATEGORY_SYSTEM_INFO_0_AST NULL
 #define CATEGORY_ADDONS_LABEL_AST NULL
 #define CATEGORY_ADDONS_INFO_0_AST NULL
-#define CATEGORY_LOGGING_LABEL_AST NULL
+#define CATEGORY_LOGGING_LABEL_AST "Rexistru"
 #define CATEGORY_LOGGING_INFO_0_AST NULL
 #define CATEGORY_CONVERT_LABEL_AST NULL
 #define CATEGORY_CONVERT_INFO_0_AST NULL
+#define CATEGORY_GRAPHIC_PACKS_LABEL_AST NULL
+#define CATEGORY_GRAPHIC_PACKS_INFO_0_AST NULL
 #define CEMU_CPU_MODE_LABEL_AST NULL
 #define OPTION_VAL_AUTO_AST NULL
 #define OPTION_VAL_SINGLECORE_INTERPRETER_AST NULL
@@ -688,12 +709,12 @@ struct retro_core_options_v2 options_ar = {
 #define OPTION_VAL_MULTICORE_RECOMPILER_AST NULL
 #define OPTION_VAL_MULTICORE_INTERPRETER_AST NULL
 #define CEMU_CONSOLE_LANGUAGE_LABEL_AST NULL
-#define OPTION_VAL_ENGLISH_AST NULL
-#define OPTION_VAL_JAPANESE_AST NULL
-#define OPTION_VAL_FRENCH_AST NULL
-#define OPTION_VAL_GERMAN_AST NULL
-#define OPTION_VAL_ITALIAN_AST NULL
-#define OPTION_VAL_SPANISH_AST NULL
+#define OPTION_VAL_ENGLISH_AST "Inglés"
+#define OPTION_VAL_JAPANESE_AST "Xaponés"
+#define OPTION_VAL_FRENCH_AST "Francés"
+#define OPTION_VAL_GERMAN_AST "Alemán"
+#define OPTION_VAL_ITALIAN_AST "Italianu"
+#define OPTION_VAL_SPANISH_AST "Castellán"
 #define OPTION_VAL_CHINESE_AST NULL
 #define OPTION_VAL_KOREAN_AST NULL
 #define OPTION_VAL_DUTCH_AST NULL
@@ -706,11 +727,13 @@ struct retro_core_options_v2 options_ar = {
 #define CEMU_ACCURATE_SHADER_MUL_LABEL_AST NULL
 #define CEMU_UPSCALE_FILTER_LABEL_AST NULL
 #define OPTION_VAL_LINEAR_AST NULL
-#define OPTION_VAL_BICUBIC_AST NULL
+#define OPTION_VAL_BICUBIC_AST "Bicúbicu"
 #define OPTION_VAL_BICUBIC_HERMITE_AST NULL
 #define OPTION_VAL_NEAREST_AST NULL
+#define CEMU_SHOW_GAME_FPS_LABEL_AST NULL
+#define CEMU_SHOW_GAME_FPS_INFO_0_AST NULL
 #define CEMU_DOWNSCALE_FILTER_LABEL_AST NULL
-#define CEMU_INTERNAL_RESOLUTION_LABEL_AST NULL
+#define CEMU_INTERNAL_RESOLUTION_LABEL_AST "Resolución interna"
 #define CEMU_INTERNAL_RESOLUTION_INFO_0_AST NULL
 #define OPTION_VAL_640X360_AST NULL
 #define OPTION_VAL_960X540_AST NULL
@@ -774,6 +797,7 @@ struct retro_core_option_v2_category option_cats_ast[] = {
 	{ "addons", CATEGORY_ADDONS_LABEL_AST, CATEGORY_ADDONS_INFO_0_AST },
 	{ "logging", CATEGORY_LOGGING_LABEL_AST, CATEGORY_LOGGING_INFO_0_AST },
 	{ "convert", CATEGORY_CONVERT_LABEL_AST, CATEGORY_CONVERT_INFO_0_AST },
+	{ "graphic_packs", CATEGORY_GRAPHIC_PACKS_LABEL_AST, CATEGORY_GRAPHIC_PACKS_INFO_0_AST },
 	{ NULL, NULL, NULL },
 };
 struct retro_core_option_v2_definition option_defs_ast[] = {
@@ -890,6 +914,20 @@ struct retro_core_option_v2_definition option_defs_ast[] = {
 			{ NULL, NULL },
 		},
 		"linear"
+	},
+	{
+		"cemu_show_game_fps",
+		CEMU_SHOW_GAME_FPS_LABEL_AST,
+		NULL,
+		CEMU_SHOW_GAME_FPS_INFO_0_AST,
+		NULL,
+		"video",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
 	},
 	{
 		"cemu_downscale_filter",
@@ -1295,33 +1333,35 @@ struct retro_core_options_v2 options_ast = {
 
 /* RETRO_LANGUAGE_BE */
 
-#define CATEGORY_VIDEO_LABEL_BE NULL
+#define CATEGORY_VIDEO_LABEL_BE "Відэа"
 #define CATEGORY_VIDEO_INFO_0_BE NULL
-#define CATEGORY_SHADERS_LABEL_BE NULL
+#define CATEGORY_SHADERS_LABEL_BE "Шэйдары"
 #define CATEGORY_SHADERS_INFO_0_BE NULL
 #define CATEGORY_SCREEN_LABEL_BE NULL
 #define CATEGORY_SCREEN_INFO_0_BE NULL
-#define CATEGORY_SYSTEM_LABEL_BE NULL
+#define CATEGORY_SYSTEM_LABEL_BE "Сістэма"
 #define CATEGORY_SYSTEM_INFO_0_BE NULL
 #define CATEGORY_ADDONS_LABEL_BE NULL
 #define CATEGORY_ADDONS_INFO_0_BE NULL
-#define CATEGORY_LOGGING_LABEL_BE NULL
+#define CATEGORY_LOGGING_LABEL_BE "Вядзенне журнала"
 #define CATEGORY_LOGGING_INFO_0_BE NULL
 #define CATEGORY_CONVERT_LABEL_BE NULL
 #define CATEGORY_CONVERT_INFO_0_BE NULL
+#define CATEGORY_GRAPHIC_PACKS_LABEL_BE NULL
+#define CATEGORY_GRAPHIC_PACKS_INFO_0_BE NULL
 #define CEMU_CPU_MODE_LABEL_BE NULL
-#define OPTION_VAL_AUTO_BE NULL
+#define OPTION_VAL_AUTO_BE "Аўта"
 #define OPTION_VAL_SINGLECORE_INTERPRETER_BE NULL
 #define OPTION_VAL_SINGLECORE_RECOMPILER_BE NULL
 #define OPTION_VAL_MULTICORE_RECOMPILER_BE NULL
 #define OPTION_VAL_MULTICORE_INTERPRETER_BE NULL
 #define CEMU_CONSOLE_LANGUAGE_LABEL_BE NULL
-#define OPTION_VAL_ENGLISH_BE NULL
-#define OPTION_VAL_JAPANESE_BE NULL
-#define OPTION_VAL_FRENCH_BE NULL
-#define OPTION_VAL_GERMAN_BE NULL
-#define OPTION_VAL_ITALIAN_BE NULL
-#define OPTION_VAL_SPANISH_BE NULL
+#define OPTION_VAL_ENGLISH_BE "Англійская"
+#define OPTION_VAL_JAPANESE_BE "Японскі"
+#define OPTION_VAL_FRENCH_BE "Французская"
+#define OPTION_VAL_GERMAN_BE "Нямецкая"
+#define OPTION_VAL_ITALIAN_BE "Італьянская"
+#define OPTION_VAL_SPANISH_BE "Іспанская"
 #define OPTION_VAL_CHINESE_BE NULL
 #define OPTION_VAL_KOREAN_BE NULL
 #define OPTION_VAL_DUTCH_BE NULL
@@ -1333,12 +1373,14 @@ struct retro_core_options_v2 options_ast = {
 #define CEMU_PRECOMPILED_SHADERS_LABEL_BE NULL
 #define CEMU_ACCURATE_SHADER_MUL_LABEL_BE NULL
 #define CEMU_UPSCALE_FILTER_LABEL_BE NULL
-#define OPTION_VAL_LINEAR_BE NULL
-#define OPTION_VAL_BICUBIC_BE NULL
+#define OPTION_VAL_LINEAR_BE "Лінейны"
+#define OPTION_VAL_BICUBIC_BE "Бікубічная"
 #define OPTION_VAL_BICUBIC_HERMITE_BE NULL
-#define OPTION_VAL_NEAREST_BE NULL
+#define OPTION_VAL_NEAREST_BE "Бліжэйшы"
+#define CEMU_SHOW_GAME_FPS_LABEL_BE NULL
+#define CEMU_SHOW_GAME_FPS_INFO_0_BE NULL
 #define CEMU_DOWNSCALE_FILTER_LABEL_BE NULL
-#define CEMU_INTERNAL_RESOLUTION_LABEL_BE NULL
+#define CEMU_INTERNAL_RESOLUTION_LABEL_BE "Унутраная раздзяляльнасць"
 #define CEMU_INTERNAL_RESOLUTION_INFO_0_BE NULL
 #define OPTION_VAL_640X360_BE NULL
 #define OPTION_VAL_960X540_BE NULL
@@ -1370,7 +1412,7 @@ struct retro_core_options_v2 options_ast = {
 #define OPTION_VAL_SELECT_R3_BE NULL
 #define OPTION_VAL_TAB_BE NULL
 #define CEMU_DRC_POSITION_LABEL_BE NULL
-#define OPTION_VAL_NORMAL_BE NULL
+#define OPTION_VAL_NORMAL_BE "Звычайна"
 #define OPTION_VAL_SWAPPED_BE NULL
 #define CEMU_LOG_TO_FILE_LABEL_BE NULL
 #define CEMU_LOG_FILESYSTEM_LABEL_BE NULL
@@ -1402,6 +1444,7 @@ struct retro_core_option_v2_category option_cats_be[] = {
 	{ "addons", CATEGORY_ADDONS_LABEL_BE, CATEGORY_ADDONS_INFO_0_BE },
 	{ "logging", CATEGORY_LOGGING_LABEL_BE, CATEGORY_LOGGING_INFO_0_BE },
 	{ "convert", CATEGORY_CONVERT_LABEL_BE, CATEGORY_CONVERT_INFO_0_BE },
+	{ "graphic_packs", CATEGORY_GRAPHIC_PACKS_LABEL_BE, CATEGORY_GRAPHIC_PACKS_INFO_0_BE },
 	{ NULL, NULL, NULL },
 };
 struct retro_core_option_v2_definition option_defs_be[] = {
@@ -1518,6 +1561,20 @@ struct retro_core_option_v2_definition option_defs_be[] = {
 			{ NULL, NULL },
 		},
 		"linear"
+	},
+	{
+		"cemu_show_game_fps",
+		CEMU_SHOW_GAME_FPS_LABEL_BE,
+		NULL,
+		CEMU_SHOW_GAME_FPS_INFO_0_BE,
+		NULL,
+		"video",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
 	},
 	{
 		"cemu_downscale_filter",
@@ -1921,35 +1978,684 @@ struct retro_core_options_v2 options_be = {
    option_defs_be
 };
 
+/* RETRO_LANGUAGE_BG */
+
+#define CATEGORY_VIDEO_LABEL_BG "Видео"
+#define CATEGORY_VIDEO_INFO_0_BG NULL
+#define CATEGORY_SHADERS_LABEL_BG NULL
+#define CATEGORY_SHADERS_INFO_0_BG NULL
+#define CATEGORY_SCREEN_LABEL_BG NULL
+#define CATEGORY_SCREEN_INFO_0_BG NULL
+#define CATEGORY_SYSTEM_LABEL_BG NULL
+#define CATEGORY_SYSTEM_INFO_0_BG NULL
+#define CATEGORY_ADDONS_LABEL_BG NULL
+#define CATEGORY_ADDONS_INFO_0_BG NULL
+#define CATEGORY_LOGGING_LABEL_BG NULL
+#define CATEGORY_LOGGING_INFO_0_BG NULL
+#define CATEGORY_CONVERT_LABEL_BG NULL
+#define CATEGORY_CONVERT_INFO_0_BG NULL
+#define CATEGORY_GRAPHIC_PACKS_LABEL_BG NULL
+#define CATEGORY_GRAPHIC_PACKS_INFO_0_BG NULL
+#define CEMU_CPU_MODE_LABEL_BG NULL
+#define OPTION_VAL_AUTO_BG NULL
+#define OPTION_VAL_SINGLECORE_INTERPRETER_BG NULL
+#define OPTION_VAL_SINGLECORE_RECOMPILER_BG NULL
+#define OPTION_VAL_MULTICORE_RECOMPILER_BG NULL
+#define OPTION_VAL_MULTICORE_INTERPRETER_BG NULL
+#define CEMU_CONSOLE_LANGUAGE_LABEL_BG NULL
+#define OPTION_VAL_ENGLISH_BG NULL
+#define OPTION_VAL_JAPANESE_BG NULL
+#define OPTION_VAL_FRENCH_BG NULL
+#define OPTION_VAL_GERMAN_BG NULL
+#define OPTION_VAL_ITALIAN_BG NULL
+#define OPTION_VAL_SPANISH_BG NULL
+#define OPTION_VAL_CHINESE_BG NULL
+#define OPTION_VAL_KOREAN_BG NULL
+#define OPTION_VAL_DUTCH_BG NULL
+#define OPTION_VAL_PORTUGUESE_BG NULL
+#define OPTION_VAL_RUSSIAN_BG NULL
+#define OPTION_VAL_TAIWANESE_BG NULL
+#define CEMU_ASYNC_SHADER_COMPILE_LABEL_BG NULL
+#define CEMU_GX2DRAWDONE_SYNC_LABEL_BG NULL
+#define CEMU_PRECOMPILED_SHADERS_LABEL_BG NULL
+#define CEMU_ACCURATE_SHADER_MUL_LABEL_BG NULL
+#define CEMU_UPSCALE_FILTER_LABEL_BG NULL
+#define OPTION_VAL_LINEAR_BG NULL
+#define OPTION_VAL_BICUBIC_BG NULL
+#define OPTION_VAL_BICUBIC_HERMITE_BG NULL
+#define OPTION_VAL_NEAREST_BG NULL
+#define CEMU_SHOW_GAME_FPS_LABEL_BG NULL
+#define CEMU_SHOW_GAME_FPS_INFO_0_BG NULL
+#define CEMU_DOWNSCALE_FILTER_LABEL_BG NULL
+#define CEMU_INTERNAL_RESOLUTION_LABEL_BG NULL
+#define CEMU_INTERNAL_RESOLUTION_INFO_0_BG NULL
+#define OPTION_VAL_640X360_BG NULL
+#define OPTION_VAL_960X540_BG NULL
+#define OPTION_VAL_1280X720_BG NULL
+#define OPTION_VAL_1920X1080_BG NULL
+#define OPTION_VAL_2560X1440_BG NULL
+#define OPTION_VAL_3840X2160_BG NULL
+#define CEMU_FULLSCREEN_SCALING_LABEL_BG NULL
+#define OPTION_VAL_KEEP_ASPECT_BG NULL
+#define OPTION_VAL_STRETCH_BG NULL
+#define CEMU_THREAD_QUANTUM_LABEL_BG NULL
+#define CEMU_EMULATE_SKYLANDER_PORTAL_LABEL_BG NULL
+#define CEMU_EMULATE_INFINITY_BASE_LABEL_BG NULL
+#define CEMU_EMULATE_DIMENSIONS_TOYPAD_LABEL_BG NULL
+#define CEMU_NUMBER_OF_SCREEN_LAYOUTS_LABEL_BG NULL
+#define CEMU_SCREEN_LAYOUT1_LABEL_BG NULL
+#define OPTION_VAL_DEFAULT_SCREEN_BG NULL
+#define OPTION_VAL_GAMEPAD_SCREEN_BG NULL
+#define OPTION_VAL_SIDE_BY_SIDE_BG NULL
+#define OPTION_VAL_TOP_BOTTOM_BG NULL
+#define OPTION_VAL_PICTURE_IN_PICTURE_BG NULL
+#define CEMU_SCREEN_LAYOUT2_LABEL_BG NULL
+#define CEMU_SCREEN_LAYOUT3_LABEL_BG NULL
+#define CEMU_SCREEN_LAYOUT4_LABEL_BG NULL
+#define CEMU_SCREEN_LAYOUT5_LABEL_BG NULL
+#define CEMU_NEXT_SCREEN_LAYOUT_BUTTON_LABEL_BG NULL
+#define OPTION_VAL_L_R_L2_R2_L3_R3_BG NULL
+#define OPTION_VAL_SELECT_L3_BG NULL
+#define OPTION_VAL_SELECT_R3_BG NULL
+#define OPTION_VAL_TAB_BG NULL
+#define CEMU_DRC_POSITION_LABEL_BG NULL
+#define OPTION_VAL_NORMAL_BG NULL
+#define OPTION_VAL_SWAPPED_BG NULL
+#define CEMU_LOG_TO_FILE_LABEL_BG NULL
+#define CEMU_LOG_FILESYSTEM_LABEL_BG NULL
+#define CEMU_LOG_THREAD_SYNC_LABEL_BG NULL
+#define CEMU_LOG_SYSTEM_API_LABEL_BG NULL
+#define CEMU_LOG_TEXTURE_MEMORY_LABEL_BG NULL
+#define CEMU_LOG_TEXTURE_MEMORY_INFO_0_BG NULL
+#define CEMU_LOG_INPUT_API_LABEL_BG NULL
+#define CEMU_LOG_INPUT_API_INFO_0_BG NULL
+#define CEMU_LOG_AUDIO_LABEL_BG NULL
+#define CEMU_LOG_AUDIO_INFO_0_BG NULL
+#define CEMU_BC1_16BIT_LABEL_BG NULL
+#define CEMU_BC1_16BIT_INFO_0_BG NULL
+#define CEMU_GPU_API_LABEL_BG NULL
+#define OPTION_VAL_OPENGL_BG NULL
+#define OPTION_VAL_VULKAN_BG NULL
+#define CEMU_WUA_OUTPUT_DIR_LABEL_BG NULL
+#define CEMU_WUA_OUTPUT_DIR_INFO_0_BG NULL
+#define CEMU_CONVERT_TO_WUA_LABEL_BG NULL
+#define CEMU_CONVERT_TO_WUA_INFO_0_BG NULL
+
+struct retro_core_option_v2_category option_cats_bg[] = {
+	{ "video", CATEGORY_VIDEO_LABEL_BG, CATEGORY_VIDEO_INFO_0_BG },
+	{ "shaders", CATEGORY_SHADERS_LABEL_BG, CATEGORY_SHADERS_INFO_0_BG },
+	{ "screen", CATEGORY_SCREEN_LABEL_BG, CATEGORY_SCREEN_INFO_0_BG },
+	// No Input category: what a port drives is a frontend device type, not
+	// a core option, and an empty submenu is worse than no submenu.
+	{ "system", CATEGORY_SYSTEM_LABEL_BG, CATEGORY_SYSTEM_INFO_0_BG },
+	{ "addons", CATEGORY_ADDONS_LABEL_BG, CATEGORY_ADDONS_INFO_0_BG },
+	{ "logging", CATEGORY_LOGGING_LABEL_BG, CATEGORY_LOGGING_INFO_0_BG },
+	{ "convert", CATEGORY_CONVERT_LABEL_BG, CATEGORY_CONVERT_INFO_0_BG },
+	{ "graphic_packs", CATEGORY_GRAPHIC_PACKS_LABEL_BG, CATEGORY_GRAPHIC_PACKS_INFO_0_BG },
+	{ NULL, NULL, NULL },
+};
+struct retro_core_option_v2_definition option_defs_bg[] = {
+	{
+		"cemu_cpu_mode",
+		CEMU_CPU_MODE_LABEL_BG,
+		NULL,
+		NULL,
+		NULL,
+		"system",
+		{
+			{ "auto", OPTION_VAL_AUTO_BG },
+			{ "singlecore_interpreter", OPTION_VAL_SINGLECORE_INTERPRETER_BG },
+			{ "singlecore_recompiler", OPTION_VAL_SINGLECORE_RECOMPILER_BG },
+			{ "multicore_recompiler", OPTION_VAL_MULTICORE_RECOMPILER_BG },
+			{ "multicore_interpreter", OPTION_VAL_MULTICORE_INTERPRETER_BG },
+			{ NULL, NULL },
+		},
+		"auto"
+	},
+	{
+		"cemu_console_language",
+		CEMU_CONSOLE_LANGUAGE_LABEL_BG,
+		NULL,
+		NULL,
+		NULL,
+		"system",
+		{
+			{ "English", OPTION_VAL_ENGLISH_BG },
+			{ "Japanese", OPTION_VAL_JAPANESE_BG },
+			{ "French", OPTION_VAL_FRENCH_BG },
+			{ "German", OPTION_VAL_GERMAN_BG },
+			{ "Italian", OPTION_VAL_ITALIAN_BG },
+			{ "Spanish", OPTION_VAL_SPANISH_BG },
+			{ "Chinese", OPTION_VAL_CHINESE_BG },
+			{ "Korean", OPTION_VAL_KOREAN_BG },
+			{ "Dutch", OPTION_VAL_DUTCH_BG },
+			{ "Portuguese", OPTION_VAL_PORTUGUESE_BG },
+			{ "Russian", OPTION_VAL_RUSSIAN_BG },
+			{ "Taiwanese", OPTION_VAL_TAIWANESE_BG },
+			{ NULL, NULL },
+		},
+		"English"
+	},
+	{
+		"cemu_async_shader_compile",
+		CEMU_ASYNC_SHADER_COMPILE_LABEL_BG,
+		NULL,
+		NULL,
+		NULL,
+		"shaders",
+		{
+			{ "enabled", NULL },
+			{ "disabled", NULL },
+			{ NULL, NULL },
+		},
+		"enabled"
+	},
+	{
+		"cemu_gx2drawdone_sync",
+		CEMU_GX2DRAWDONE_SYNC_LABEL_BG,
+		NULL,
+		NULL,
+		NULL,
+		"shaders",
+		{
+			{ "enabled", NULL },
+			{ "disabled", NULL },
+			{ NULL, NULL },
+		},
+		"enabled"
+	},
+	{
+		"cemu_precompiled_shaders",
+		CEMU_PRECOMPILED_SHADERS_LABEL_BG,
+		NULL,
+		NULL,
+		NULL,
+		"shaders",
+		{
+			{ "auto", OPTION_VAL_AUTO_BG },
+			{ "enabled", NULL },
+			{ "disabled", NULL },
+			{ NULL, NULL },
+		},
+		"auto"
+	},
+	{
+		"cemu_accurate_shader_mul",
+		CEMU_ACCURATE_SHADER_MUL_LABEL_BG,
+		NULL,
+		NULL,
+		NULL,
+		"shaders",
+		{
+			{ "enabled", NULL },
+			{ "disabled", NULL },
+			{ NULL, NULL },
+		},
+		"enabled"
+	},
+	{
+		"cemu_upscale_filter",
+		CEMU_UPSCALE_FILTER_LABEL_BG,
+		NULL,
+		NULL,
+		NULL,
+		"video",
+		{
+			{ "linear", OPTION_VAL_LINEAR_BG },
+			{ "bicubic", OPTION_VAL_BICUBIC_BG },
+			{ "bicubic_hermite", OPTION_VAL_BICUBIC_HERMITE_BG },
+			{ "nearest", OPTION_VAL_NEAREST_BG },
+			{ NULL, NULL },
+		},
+		"linear"
+	},
+	{
+		"cemu_show_game_fps",
+		CEMU_SHOW_GAME_FPS_LABEL_BG,
+		NULL,
+		CEMU_SHOW_GAME_FPS_INFO_0_BG,
+		NULL,
+		"video",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_downscale_filter",
+		CEMU_DOWNSCALE_FILTER_LABEL_BG,
+		NULL,
+		NULL,
+		NULL,
+		"video",
+		{
+			{ "linear", OPTION_VAL_LINEAR_BG },
+			{ "bicubic", OPTION_VAL_BICUBIC_BG },
+			{ "bicubic_hermite", OPTION_VAL_BICUBIC_HERMITE_BG },
+			{ "nearest", OPTION_VAL_NEAREST_BG },
+			{ NULL, NULL },
+		},
+		"linear"
+	},
+	{
+		"cemu_internal_resolution",
+		CEMU_INTERNAL_RESOLUTION_LABEL_BG,
+		NULL,
+		CEMU_INTERNAL_RESOLUTION_INFO_0_BG,
+		NULL,
+		"video",
+		{
+			{ "640x360", OPTION_VAL_640X360_BG },
+			{ "960x540", OPTION_VAL_960X540_BG },
+			{ "1280x720", OPTION_VAL_1280X720_BG },
+			{ "1920x1080", OPTION_VAL_1920X1080_BG },
+			{ "2560x1440", OPTION_VAL_2560X1440_BG },
+			{ "3840x2160", OPTION_VAL_3840X2160_BG },
+			{ NULL, NULL },
+		},
+		"1280x720"
+	},
+	{
+		"cemu_fullscreen_scaling",
+		CEMU_FULLSCREEN_SCALING_LABEL_BG,
+		NULL,
+		NULL,
+		NULL,
+		"video",
+		{
+			{ "keep_aspect", OPTION_VAL_KEEP_ASPECT_BG },
+			{ "stretch", OPTION_VAL_STRETCH_BG },
+			{ NULL, NULL },
+		},
+		"keep_aspect"
+	},
+	{
+		"cemu_thread_quantum",
+		CEMU_THREAD_QUANTUM_LABEL_BG,
+		NULL,
+		NULL,
+		NULL,
+		"system",
+		{
+			{ "20000", NULL },
+			{ "45000", NULL },
+			{ "60000", NULL },
+			{ "80000", NULL },
+			{ "100000", NULL },
+			{ NULL, NULL },
+		},
+		"45000"
+	},
+	{
+		"cemu_emulate_skylander_portal",
+		CEMU_EMULATE_SKYLANDER_PORTAL_LABEL_BG,
+		NULL,
+		NULL,
+		NULL,
+		"addons",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_emulate_infinity_base",
+		CEMU_EMULATE_INFINITY_BASE_LABEL_BG,
+		NULL,
+		NULL,
+		NULL,
+		"addons",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_emulate_dimensions_toypad",
+		CEMU_EMULATE_DIMENSIONS_TOYPAD_LABEL_BG,
+		NULL,
+		NULL,
+		NULL,
+		"addons",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_number_of_screen_layouts",
+		CEMU_NUMBER_OF_SCREEN_LAYOUTS_LABEL_BG,
+		NULL,
+		NULL,
+		NULL,
+		"screen",
+		{
+			{ "1", NULL },
+			{ "2", NULL },
+			{ "3", NULL },
+			{ "4", NULL },
+			{ "5", NULL },
+			{ NULL, NULL },
+		},
+		"2"
+	},
+	{
+		"cemu_screen_layout1",
+		CEMU_SCREEN_LAYOUT1_LABEL_BG,
+		NULL,
+		NULL,
+		NULL,
+		"screen",
+		{
+			{ "Default Screen", OPTION_VAL_DEFAULT_SCREEN_BG },
+			{ "GamePad Screen", OPTION_VAL_GAMEPAD_SCREEN_BG },
+			{ "Side by Side", OPTION_VAL_SIDE_BY_SIDE_BG },
+			{ "Top Bottom", OPTION_VAL_TOP_BOTTOM_BG },
+			{ "Picture in Picture", OPTION_VAL_PICTURE_IN_PICTURE_BG },
+			{ NULL, NULL },
+		},
+		"Default Screen"
+	},
+	{
+		"cemu_screen_layout2",
+		CEMU_SCREEN_LAYOUT2_LABEL_BG,
+		NULL,
+		NULL,
+		NULL,
+		"screen",
+		{
+			{ "Default Screen", OPTION_VAL_DEFAULT_SCREEN_BG },
+			{ "GamePad Screen", OPTION_VAL_GAMEPAD_SCREEN_BG },
+			{ "Side by Side", OPTION_VAL_SIDE_BY_SIDE_BG },
+			{ "Top Bottom", OPTION_VAL_TOP_BOTTOM_BG },
+			{ "Picture in Picture", OPTION_VAL_PICTURE_IN_PICTURE_BG },
+			{ NULL, NULL },
+		},
+		"GamePad Screen"
+	},
+	{
+		"cemu_screen_layout3",
+		CEMU_SCREEN_LAYOUT3_LABEL_BG,
+		NULL,
+		NULL,
+		NULL,
+		"screen",
+		{
+			{ "Default Screen", OPTION_VAL_DEFAULT_SCREEN_BG },
+			{ "GamePad Screen", OPTION_VAL_GAMEPAD_SCREEN_BG },
+			{ "Side by Side", OPTION_VAL_SIDE_BY_SIDE_BG },
+			{ "Top Bottom", OPTION_VAL_TOP_BOTTOM_BG },
+			{ "Picture in Picture", OPTION_VAL_PICTURE_IN_PICTURE_BG },
+			{ NULL, NULL },
+		},
+		"Side by Side"
+	},
+	{
+		"cemu_screen_layout4",
+		CEMU_SCREEN_LAYOUT4_LABEL_BG,
+		NULL,
+		NULL,
+		NULL,
+		"screen",
+		{
+			{ "Default Screen", OPTION_VAL_DEFAULT_SCREEN_BG },
+			{ "GamePad Screen", OPTION_VAL_GAMEPAD_SCREEN_BG },
+			{ "Side by Side", OPTION_VAL_SIDE_BY_SIDE_BG },
+			{ "Top Bottom", OPTION_VAL_TOP_BOTTOM_BG },
+			{ "Picture in Picture", OPTION_VAL_PICTURE_IN_PICTURE_BG },
+			{ NULL, NULL },
+		},
+		"Top Bottom"
+	},
+	{
+		"cemu_screen_layout5",
+		CEMU_SCREEN_LAYOUT5_LABEL_BG,
+		NULL,
+		NULL,
+		NULL,
+		"screen",
+		{
+			{ "Default Screen", OPTION_VAL_DEFAULT_SCREEN_BG },
+			{ "GamePad Screen", OPTION_VAL_GAMEPAD_SCREEN_BG },
+			{ "Side by Side", OPTION_VAL_SIDE_BY_SIDE_BG },
+			{ "Top Bottom", OPTION_VAL_TOP_BOTTOM_BG },
+			{ "Picture in Picture", OPTION_VAL_PICTURE_IN_PICTURE_BG },
+			{ NULL, NULL },
+		},
+		"Picture in Picture"
+	},
+	{
+		"cemu_next_screen_layout_button",
+		CEMU_NEXT_SCREEN_LAYOUT_BUTTON_LABEL_BG,
+		NULL,
+		NULL,
+		NULL,
+		"screen",
+		{
+			{ "Disabled", NULL },
+			{ "L + R + L2 + R2 + L3 + R3", OPTION_VAL_L_R_L2_R2_L3_R3_BG },
+			{ "Select + L3", OPTION_VAL_SELECT_L3_BG },
+			{ "Select + R3", OPTION_VAL_SELECT_R3_BG },
+			{ "Tab", OPTION_VAL_TAB_BG },
+			{ NULL, NULL },
+		},
+		"L + R + L2 + R2 + L3 + R3"
+	},
+	{
+		"cemu_drc_position",
+		CEMU_DRC_POSITION_LABEL_BG,
+		NULL,
+		NULL,
+		NULL,
+		"screen",
+		{
+			{ "normal", OPTION_VAL_NORMAL_BG },
+			{ "swapped", OPTION_VAL_SWAPPED_BG },
+			{ NULL, NULL },
+		},
+		"normal"
+	},
+	{
+		"cemu_log_to_file",
+		CEMU_LOG_TO_FILE_LABEL_BG,
+		NULL,
+		NULL,
+		NULL,
+		"logging",
+		{
+			{ "enabled", NULL },
+			{ "disabled", NULL },
+			{ NULL, NULL },
+		},
+		"enabled"
+	},
+	{
+		"cemu_log_filesystem",
+		CEMU_LOG_FILESYSTEM_LABEL_BG,
+		NULL,
+		NULL,
+		NULL,
+		"logging",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_log_thread_sync",
+		CEMU_LOG_THREAD_SYNC_LABEL_BG,
+		NULL,
+		NULL,
+		NULL,
+		"logging",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_log_system_api",
+		CEMU_LOG_SYSTEM_API_LABEL_BG,
+		NULL,
+		NULL,
+		NULL,
+		"logging",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_log_texture_memory",
+		CEMU_LOG_TEXTURE_MEMORY_LABEL_BG,
+		NULL,
+		CEMU_LOG_TEXTURE_MEMORY_INFO_0_BG,
+		NULL,
+		"logging",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_log_input_api",
+		CEMU_LOG_INPUT_API_LABEL_BG,
+		NULL,
+		CEMU_LOG_INPUT_API_INFO_0_BG,
+		NULL,
+		"logging",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_log_audio",
+		CEMU_LOG_AUDIO_LABEL_BG,
+		NULL,
+		CEMU_LOG_AUDIO_INFO_0_BG,
+		NULL,
+		"logging",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_bc1_16bit",
+		CEMU_BC1_16BIT_LABEL_BG,
+		NULL,
+		CEMU_BC1_16BIT_INFO_0_BG,
+		NULL,
+		"video",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+#if defined(ENABLE_VULKAN) && defined(ENABLE_OPENGL)
+	{
+		"cemu_gpu_api",
+		CEMU_GPU_API_LABEL_BG,
+		NULL,
+		NULL,
+		NULL,
+		"video",
+		{
+			{ "OpenGL", OPTION_VAL_OPENGL_BG },
+			{ "Vulkan", OPTION_VAL_VULKAN_BG },
+			{ NULL, NULL },
+		},
+		"OpenGL"
+	},
+#endif
+	{
+		"cemu_wua_output_dir",
+		CEMU_WUA_OUTPUT_DIR_LABEL_BG,
+		NULL,
+		CEMU_WUA_OUTPUT_DIR_INFO_0_BG,
+		NULL,
+		"convert",
+		{
+			// Filled in at run time with wherever the frontend lets the core write.
+			{ NULL, NULL },
+		},
+		NULL
+	},
+	{
+		"cemu_convert_to_wua",
+		CEMU_CONVERT_TO_WUA_LABEL_BG,
+		NULL,
+		CEMU_CONVERT_TO_WUA_INFO_0_BG,
+		NULL,
+		"convert",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{ NULL, NULL, NULL, NULL, NULL, NULL, {{0}}, NULL },
+};
+struct retro_core_options_v2 options_bg = {
+   option_cats_bg,
+   option_defs_bg
+};
+
 /* RETRO_LANGUAGE_CA */
 
-#define CATEGORY_VIDEO_LABEL_CA NULL
+#define CATEGORY_VIDEO_LABEL_CA "Vídeo"
 #define CATEGORY_VIDEO_INFO_0_CA NULL
 #define CATEGORY_SHADERS_LABEL_CA NULL
 #define CATEGORY_SHADERS_INFO_0_CA NULL
 #define CATEGORY_SCREEN_LABEL_CA NULL
 #define CATEGORY_SCREEN_INFO_0_CA NULL
-#define CATEGORY_SYSTEM_LABEL_CA NULL
+#define CATEGORY_SYSTEM_LABEL_CA "Sistema"
 #define CATEGORY_SYSTEM_INFO_0_CA NULL
 #define CATEGORY_ADDONS_LABEL_CA NULL
 #define CATEGORY_ADDONS_INFO_0_CA NULL
-#define CATEGORY_LOGGING_LABEL_CA NULL
+#define CATEGORY_LOGGING_LABEL_CA "Registres"
 #define CATEGORY_LOGGING_INFO_0_CA NULL
 #define CATEGORY_CONVERT_LABEL_CA NULL
 #define CATEGORY_CONVERT_INFO_0_CA NULL
+#define CATEGORY_GRAPHIC_PACKS_LABEL_CA NULL
+#define CATEGORY_GRAPHIC_PACKS_INFO_0_CA NULL
 #define CEMU_CPU_MODE_LABEL_CA NULL
-#define OPTION_VAL_AUTO_CA NULL
+#define OPTION_VAL_AUTO_CA "Automàtic"
 #define OPTION_VAL_SINGLECORE_INTERPRETER_CA NULL
 #define OPTION_VAL_SINGLECORE_RECOMPILER_CA NULL
 #define OPTION_VAL_MULTICORE_RECOMPILER_CA NULL
 #define OPTION_VAL_MULTICORE_INTERPRETER_CA NULL
 #define CEMU_CONSOLE_LANGUAGE_LABEL_CA NULL
-#define OPTION_VAL_ENGLISH_CA NULL
-#define OPTION_VAL_JAPANESE_CA NULL
-#define OPTION_VAL_FRENCH_CA NULL
-#define OPTION_VAL_GERMAN_CA NULL
-#define OPTION_VAL_ITALIAN_CA NULL
-#define OPTION_VAL_SPANISH_CA NULL
+#define OPTION_VAL_ENGLISH_CA "Anglès"
+#define OPTION_VAL_JAPANESE_CA "Japonès"
+#define OPTION_VAL_FRENCH_CA "Francès"
+#define OPTION_VAL_GERMAN_CA "Alemany"
+#define OPTION_VAL_ITALIAN_CA "Italià"
+#define OPTION_VAL_SPANISH_CA "Espanyol"
 #define OPTION_VAL_CHINESE_CA NULL
 #define OPTION_VAL_KOREAN_CA NULL
 #define OPTION_VAL_DUTCH_CA NULL
@@ -1961,19 +2667,21 @@ struct retro_core_options_v2 options_be = {
 #define CEMU_PRECOMPILED_SHADERS_LABEL_CA NULL
 #define CEMU_ACCURATE_SHADER_MUL_LABEL_CA NULL
 #define CEMU_UPSCALE_FILTER_LABEL_CA NULL
-#define OPTION_VAL_LINEAR_CA NULL
-#define OPTION_VAL_BICUBIC_CA NULL
+#define OPTION_VAL_LINEAR_CA "Lineal"
+#define OPTION_VAL_BICUBIC_CA "Bicúbica"
 #define OPTION_VAL_BICUBIC_HERMITE_CA NULL
-#define OPTION_VAL_NEAREST_CA NULL
+#define OPTION_VAL_NEAREST_CA "Més proper"
+#define CEMU_SHOW_GAME_FPS_LABEL_CA NULL
+#define CEMU_SHOW_GAME_FPS_INFO_0_CA NULL
 #define CEMU_DOWNSCALE_FILTER_LABEL_CA NULL
-#define CEMU_INTERNAL_RESOLUTION_LABEL_CA NULL
+#define CEMU_INTERNAL_RESOLUTION_LABEL_CA "Resolució Interna"
 #define CEMU_INTERNAL_RESOLUTION_INFO_0_CA NULL
 #define OPTION_VAL_640X360_CA NULL
 #define OPTION_VAL_960X540_CA NULL
-#define OPTION_VAL_1280X720_CA NULL
-#define OPTION_VAL_1920X1080_CA NULL
-#define OPTION_VAL_2560X1440_CA NULL
-#define OPTION_VAL_3840X2160_CA NULL
+#define OPTION_VAL_1280X720_CA "1280×720"
+#define OPTION_VAL_1920X1080_CA "1920×1080"
+#define OPTION_VAL_2560X1440_CA "2560×1440"
+#define OPTION_VAL_3840X2160_CA "3840×2160"
 #define CEMU_FULLSCREEN_SCALING_LABEL_CA NULL
 #define OPTION_VAL_KEEP_ASPECT_CA NULL
 #define OPTION_VAL_STRETCH_CA NULL
@@ -2030,6 +2738,7 @@ struct retro_core_option_v2_category option_cats_ca[] = {
 	{ "addons", CATEGORY_ADDONS_LABEL_CA, CATEGORY_ADDONS_INFO_0_CA },
 	{ "logging", CATEGORY_LOGGING_LABEL_CA, CATEGORY_LOGGING_INFO_0_CA },
 	{ "convert", CATEGORY_CONVERT_LABEL_CA, CATEGORY_CONVERT_INFO_0_CA },
+	{ "graphic_packs", CATEGORY_GRAPHIC_PACKS_LABEL_CA, CATEGORY_GRAPHIC_PACKS_INFO_0_CA },
 	{ NULL, NULL, NULL },
 };
 struct retro_core_option_v2_definition option_defs_ca[] = {
@@ -2146,6 +2855,20 @@ struct retro_core_option_v2_definition option_defs_ca[] = {
 			{ NULL, NULL },
 		},
 		"linear"
+	},
+	{
+		"cemu_show_game_fps",
+		CEMU_SHOW_GAME_FPS_LABEL_CA,
+		NULL,
+		CEMU_SHOW_GAME_FPS_INFO_0_CA,
+		NULL,
+		"video",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
 	},
 	{
 		"cemu_downscale_filter",
@@ -2551,33 +3274,35 @@ struct retro_core_options_v2 options_ca = {
 
 /* RETRO_LANGUAGE_CHS */
 
-#define CATEGORY_VIDEO_LABEL_CHS NULL
+#define CATEGORY_VIDEO_LABEL_CHS "视频"
 #define CATEGORY_VIDEO_INFO_0_CHS NULL
-#define CATEGORY_SHADERS_LABEL_CHS NULL
+#define CATEGORY_SHADERS_LABEL_CHS "着色器"
 #define CATEGORY_SHADERS_INFO_0_CHS NULL
 #define CATEGORY_SCREEN_LABEL_CHS NULL
 #define CATEGORY_SCREEN_INFO_0_CHS NULL
-#define CATEGORY_SYSTEM_LABEL_CHS NULL
+#define CATEGORY_SYSTEM_LABEL_CHS "系统"
 #define CATEGORY_SYSTEM_INFO_0_CHS NULL
 #define CATEGORY_ADDONS_LABEL_CHS NULL
 #define CATEGORY_ADDONS_INFO_0_CHS NULL
-#define CATEGORY_LOGGING_LABEL_CHS NULL
+#define CATEGORY_LOGGING_LABEL_CHS "日志"
 #define CATEGORY_LOGGING_INFO_0_CHS NULL
 #define CATEGORY_CONVERT_LABEL_CHS NULL
 #define CATEGORY_CONVERT_INFO_0_CHS NULL
+#define CATEGORY_GRAPHIC_PACKS_LABEL_CHS NULL
+#define CATEGORY_GRAPHIC_PACKS_INFO_0_CHS NULL
 #define CEMU_CPU_MODE_LABEL_CHS NULL
-#define OPTION_VAL_AUTO_CHS NULL
+#define OPTION_VAL_AUTO_CHS "自动"
 #define OPTION_VAL_SINGLECORE_INTERPRETER_CHS NULL
 #define OPTION_VAL_SINGLECORE_RECOMPILER_CHS NULL
 #define OPTION_VAL_MULTICORE_RECOMPILER_CHS NULL
 #define OPTION_VAL_MULTICORE_INTERPRETER_CHS NULL
 #define CEMU_CONSOLE_LANGUAGE_LABEL_CHS NULL
-#define OPTION_VAL_ENGLISH_CHS NULL
-#define OPTION_VAL_JAPANESE_CHS NULL
-#define OPTION_VAL_FRENCH_CHS NULL
-#define OPTION_VAL_GERMAN_CHS NULL
-#define OPTION_VAL_ITALIAN_CHS NULL
-#define OPTION_VAL_SPANISH_CHS NULL
+#define OPTION_VAL_ENGLISH_CHS "英语"
+#define OPTION_VAL_JAPANESE_CHS "日语"
+#define OPTION_VAL_FRENCH_CHS "法语"
+#define OPTION_VAL_GERMAN_CHS "德语"
+#define OPTION_VAL_ITALIAN_CHS "意大利语"
+#define OPTION_VAL_SPANISH_CHS "西班牙语"
 #define OPTION_VAL_CHINESE_CHS NULL
 #define OPTION_VAL_KOREAN_CHS NULL
 #define OPTION_VAL_DUTCH_CHS NULL
@@ -2589,12 +3314,14 @@ struct retro_core_options_v2 options_ca = {
 #define CEMU_PRECOMPILED_SHADERS_LABEL_CHS NULL
 #define CEMU_ACCURATE_SHADER_MUL_LABEL_CHS NULL
 #define CEMU_UPSCALE_FILTER_LABEL_CHS NULL
-#define OPTION_VAL_LINEAR_CHS NULL
-#define OPTION_VAL_BICUBIC_CHS NULL
+#define OPTION_VAL_LINEAR_CHS "线性"
+#define OPTION_VAL_BICUBIC_CHS "双立方"
 #define OPTION_VAL_BICUBIC_HERMITE_CHS NULL
-#define OPTION_VAL_NEAREST_CHS NULL
+#define OPTION_VAL_NEAREST_CHS "最邻"
+#define CEMU_SHOW_GAME_FPS_LABEL_CHS NULL
+#define CEMU_SHOW_GAME_FPS_INFO_0_CHS NULL
 #define CEMU_DOWNSCALE_FILTER_LABEL_CHS NULL
-#define CEMU_INTERNAL_RESOLUTION_LABEL_CHS NULL
+#define CEMU_INTERNAL_RESOLUTION_LABEL_CHS "内部分辨率"
 #define CEMU_INTERNAL_RESOLUTION_INFO_0_CHS NULL
 #define OPTION_VAL_640X360_CHS NULL
 #define OPTION_VAL_960X540_CHS NULL
@@ -2626,7 +3353,7 @@ struct retro_core_options_v2 options_ca = {
 #define OPTION_VAL_SELECT_R3_CHS NULL
 #define OPTION_VAL_TAB_CHS NULL
 #define CEMU_DRC_POSITION_LABEL_CHS NULL
-#define OPTION_VAL_NORMAL_CHS NULL
+#define OPTION_VAL_NORMAL_CHS "普通"
 #define OPTION_VAL_SWAPPED_CHS NULL
 #define CEMU_LOG_TO_FILE_LABEL_CHS NULL
 #define CEMU_LOG_FILESYSTEM_LABEL_CHS NULL
@@ -2658,6 +3385,7 @@ struct retro_core_option_v2_category option_cats_chs[] = {
 	{ "addons", CATEGORY_ADDONS_LABEL_CHS, CATEGORY_ADDONS_INFO_0_CHS },
 	{ "logging", CATEGORY_LOGGING_LABEL_CHS, CATEGORY_LOGGING_INFO_0_CHS },
 	{ "convert", CATEGORY_CONVERT_LABEL_CHS, CATEGORY_CONVERT_INFO_0_CHS },
+	{ "graphic_packs", CATEGORY_GRAPHIC_PACKS_LABEL_CHS, CATEGORY_GRAPHIC_PACKS_INFO_0_CHS },
 	{ NULL, NULL, NULL },
 };
 struct retro_core_option_v2_definition option_defs_chs[] = {
@@ -2774,6 +3502,20 @@ struct retro_core_option_v2_definition option_defs_chs[] = {
 			{ NULL, NULL },
 		},
 		"linear"
+	},
+	{
+		"cemu_show_game_fps",
+		CEMU_SHOW_GAME_FPS_LABEL_CHS,
+		NULL,
+		CEMU_SHOW_GAME_FPS_INFO_0_CHS,
+		NULL,
+		"video",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
 	},
 	{
 		"cemu_downscale_filter",
@@ -3179,33 +3921,35 @@ struct retro_core_options_v2 options_chs = {
 
 /* RETRO_LANGUAGE_CHT */
 
-#define CATEGORY_VIDEO_LABEL_CHT NULL
+#define CATEGORY_VIDEO_LABEL_CHT "顯示"
 #define CATEGORY_VIDEO_INFO_0_CHT NULL
-#define CATEGORY_SHADERS_LABEL_CHT NULL
+#define CATEGORY_SHADERS_LABEL_CHT "著色器"
 #define CATEGORY_SHADERS_INFO_0_CHT NULL
 #define CATEGORY_SCREEN_LABEL_CHT NULL
 #define CATEGORY_SCREEN_INFO_0_CHT NULL
-#define CATEGORY_SYSTEM_LABEL_CHT NULL
+#define CATEGORY_SYSTEM_LABEL_CHT "系統"
 #define CATEGORY_SYSTEM_INFO_0_CHT NULL
 #define CATEGORY_ADDONS_LABEL_CHT NULL
 #define CATEGORY_ADDONS_INFO_0_CHT NULL
-#define CATEGORY_LOGGING_LABEL_CHT NULL
+#define CATEGORY_LOGGING_LABEL_CHT "系統日誌"
 #define CATEGORY_LOGGING_INFO_0_CHT NULL
 #define CATEGORY_CONVERT_LABEL_CHT NULL
 #define CATEGORY_CONVERT_INFO_0_CHT NULL
+#define CATEGORY_GRAPHIC_PACKS_LABEL_CHT NULL
+#define CATEGORY_GRAPHIC_PACKS_INFO_0_CHT NULL
 #define CEMU_CPU_MODE_LABEL_CHT NULL
-#define OPTION_VAL_AUTO_CHT NULL
+#define OPTION_VAL_AUTO_CHT "自動"
 #define OPTION_VAL_SINGLECORE_INTERPRETER_CHT NULL
 #define OPTION_VAL_SINGLECORE_RECOMPILER_CHT NULL
 #define OPTION_VAL_MULTICORE_RECOMPILER_CHT NULL
 #define OPTION_VAL_MULTICORE_INTERPRETER_CHT NULL
 #define CEMU_CONSOLE_LANGUAGE_LABEL_CHT NULL
-#define OPTION_VAL_ENGLISH_CHT NULL
-#define OPTION_VAL_JAPANESE_CHT NULL
-#define OPTION_VAL_FRENCH_CHT NULL
-#define OPTION_VAL_GERMAN_CHT NULL
-#define OPTION_VAL_ITALIAN_CHT NULL
-#define OPTION_VAL_SPANISH_CHT NULL
+#define OPTION_VAL_ENGLISH_CHT "英語"
+#define OPTION_VAL_JAPANESE_CHT "日語"
+#define OPTION_VAL_FRENCH_CHT "法語"
+#define OPTION_VAL_GERMAN_CHT "德語"
+#define OPTION_VAL_ITALIAN_CHT "意大利語"
+#define OPTION_VAL_SPANISH_CHT "西班牙語"
 #define OPTION_VAL_CHINESE_CHT NULL
 #define OPTION_VAL_KOREAN_CHT NULL
 #define OPTION_VAL_DUTCH_CHT NULL
@@ -3217,12 +3961,14 @@ struct retro_core_options_v2 options_chs = {
 #define CEMU_PRECOMPILED_SHADERS_LABEL_CHT NULL
 #define CEMU_ACCURATE_SHADER_MUL_LABEL_CHT NULL
 #define CEMU_UPSCALE_FILTER_LABEL_CHT NULL
-#define OPTION_VAL_LINEAR_CHT NULL
-#define OPTION_VAL_BICUBIC_CHT NULL
+#define OPTION_VAL_LINEAR_CHT "線性"
+#define OPTION_VAL_BICUBIC_CHT "雙三次"
 #define OPTION_VAL_BICUBIC_HERMITE_CHT NULL
-#define OPTION_VAL_NEAREST_CHT NULL
+#define OPTION_VAL_NEAREST_CHT "最近"
+#define CEMU_SHOW_GAME_FPS_LABEL_CHT NULL
+#define CEMU_SHOW_GAME_FPS_INFO_0_CHT NULL
 #define CEMU_DOWNSCALE_FILTER_LABEL_CHT NULL
-#define CEMU_INTERNAL_RESOLUTION_LABEL_CHT NULL
+#define CEMU_INTERNAL_RESOLUTION_LABEL_CHT "內部解析度"
 #define CEMU_INTERNAL_RESOLUTION_INFO_0_CHT NULL
 #define OPTION_VAL_640X360_CHT NULL
 #define OPTION_VAL_960X540_CHT NULL
@@ -3254,7 +4000,7 @@ struct retro_core_options_v2 options_chs = {
 #define OPTION_VAL_SELECT_R3_CHT NULL
 #define OPTION_VAL_TAB_CHT NULL
 #define CEMU_DRC_POSITION_LABEL_CHT NULL
-#define OPTION_VAL_NORMAL_CHT NULL
+#define OPTION_VAL_NORMAL_CHT "正常"
 #define OPTION_VAL_SWAPPED_CHT NULL
 #define CEMU_LOG_TO_FILE_LABEL_CHT NULL
 #define CEMU_LOG_FILESYSTEM_LABEL_CHT NULL
@@ -3286,6 +4032,7 @@ struct retro_core_option_v2_category option_cats_cht[] = {
 	{ "addons", CATEGORY_ADDONS_LABEL_CHT, CATEGORY_ADDONS_INFO_0_CHT },
 	{ "logging", CATEGORY_LOGGING_LABEL_CHT, CATEGORY_LOGGING_INFO_0_CHT },
 	{ "convert", CATEGORY_CONVERT_LABEL_CHT, CATEGORY_CONVERT_INFO_0_CHT },
+	{ "graphic_packs", CATEGORY_GRAPHIC_PACKS_LABEL_CHT, CATEGORY_GRAPHIC_PACKS_INFO_0_CHT },
 	{ NULL, NULL, NULL },
 };
 struct retro_core_option_v2_definition option_defs_cht[] = {
@@ -3402,6 +4149,20 @@ struct retro_core_option_v2_definition option_defs_cht[] = {
 			{ NULL, NULL },
 		},
 		"linear"
+	},
+	{
+		"cemu_show_game_fps",
+		CEMU_SHOW_GAME_FPS_LABEL_CHT,
+		NULL,
+		CEMU_SHOW_GAME_FPS_INFO_0_CHT,
+		NULL,
+		"video",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
 	},
 	{
 		"cemu_downscale_filter",
@@ -3809,18 +4570,20 @@ struct retro_core_options_v2 options_cht = {
 
 #define CATEGORY_VIDEO_LABEL_CS NULL
 #define CATEGORY_VIDEO_INFO_0_CS NULL
-#define CATEGORY_SHADERS_LABEL_CS NULL
+#define CATEGORY_SHADERS_LABEL_CS "Shadery"
 #define CATEGORY_SHADERS_INFO_0_CS NULL
 #define CATEGORY_SCREEN_LABEL_CS NULL
 #define CATEGORY_SCREEN_INFO_0_CS NULL
-#define CATEGORY_SYSTEM_LABEL_CS NULL
+#define CATEGORY_SYSTEM_LABEL_CS "Systém"
 #define CATEGORY_SYSTEM_INFO_0_CS NULL
 #define CATEGORY_ADDONS_LABEL_CS NULL
 #define CATEGORY_ADDONS_INFO_0_CS NULL
-#define CATEGORY_LOGGING_LABEL_CS NULL
+#define CATEGORY_LOGGING_LABEL_CS "Logování"
 #define CATEGORY_LOGGING_INFO_0_CS NULL
 #define CATEGORY_CONVERT_LABEL_CS NULL
 #define CATEGORY_CONVERT_INFO_0_CS NULL
+#define CATEGORY_GRAPHIC_PACKS_LABEL_CS NULL
+#define CATEGORY_GRAPHIC_PACKS_INFO_0_CS NULL
 #define CEMU_CPU_MODE_LABEL_CS NULL
 #define OPTION_VAL_AUTO_CS NULL
 #define OPTION_VAL_SINGLECORE_INTERPRETER_CS NULL
@@ -3828,12 +4591,12 @@ struct retro_core_options_v2 options_cht = {
 #define OPTION_VAL_MULTICORE_RECOMPILER_CS NULL
 #define OPTION_VAL_MULTICORE_INTERPRETER_CS NULL
 #define CEMU_CONSOLE_LANGUAGE_LABEL_CS NULL
-#define OPTION_VAL_ENGLISH_CS NULL
-#define OPTION_VAL_JAPANESE_CS NULL
-#define OPTION_VAL_FRENCH_CS NULL
-#define OPTION_VAL_GERMAN_CS NULL
-#define OPTION_VAL_ITALIAN_CS NULL
-#define OPTION_VAL_SPANISH_CS NULL
+#define OPTION_VAL_ENGLISH_CS "Angličtina"
+#define OPTION_VAL_JAPANESE_CS "Japonština"
+#define OPTION_VAL_FRENCH_CS "Francouzština"
+#define OPTION_VAL_GERMAN_CS "Němčina"
+#define OPTION_VAL_ITALIAN_CS "Italský"
+#define OPTION_VAL_SPANISH_CS "Španělština"
 #define OPTION_VAL_CHINESE_CS NULL
 #define OPTION_VAL_KOREAN_CS NULL
 #define OPTION_VAL_DUTCH_CS NULL
@@ -3845,12 +4608,14 @@ struct retro_core_options_v2 options_cht = {
 #define CEMU_PRECOMPILED_SHADERS_LABEL_CS NULL
 #define CEMU_ACCURATE_SHADER_MUL_LABEL_CS NULL
 #define CEMU_UPSCALE_FILTER_LABEL_CS NULL
-#define OPTION_VAL_LINEAR_CS NULL
-#define OPTION_VAL_BICUBIC_CS NULL
+#define OPTION_VAL_LINEAR_CS "Lineární"
+#define OPTION_VAL_BICUBIC_CS "Bikubická"
 #define OPTION_VAL_BICUBIC_HERMITE_CS NULL
-#define OPTION_VAL_NEAREST_CS NULL
+#define OPTION_VAL_NEAREST_CS "Nejbližší"
+#define CEMU_SHOW_GAME_FPS_LABEL_CS NULL
+#define CEMU_SHOW_GAME_FPS_INFO_0_CS NULL
 #define CEMU_DOWNSCALE_FILTER_LABEL_CS NULL
-#define CEMU_INTERNAL_RESOLUTION_LABEL_CS NULL
+#define CEMU_INTERNAL_RESOLUTION_LABEL_CS "Vnitřní rozlišení"
 #define CEMU_INTERNAL_RESOLUTION_INFO_0_CS NULL
 #define OPTION_VAL_640X360_CS NULL
 #define OPTION_VAL_960X540_CS NULL
@@ -3882,7 +4647,7 @@ struct retro_core_options_v2 options_cht = {
 #define OPTION_VAL_SELECT_R3_CS NULL
 #define OPTION_VAL_TAB_CS NULL
 #define CEMU_DRC_POSITION_LABEL_CS NULL
-#define OPTION_VAL_NORMAL_CS NULL
+#define OPTION_VAL_NORMAL_CS "Normální"
 #define OPTION_VAL_SWAPPED_CS NULL
 #define CEMU_LOG_TO_FILE_LABEL_CS NULL
 #define CEMU_LOG_FILESYSTEM_LABEL_CS NULL
@@ -3914,6 +4679,7 @@ struct retro_core_option_v2_category option_cats_cs[] = {
 	{ "addons", CATEGORY_ADDONS_LABEL_CS, CATEGORY_ADDONS_INFO_0_CS },
 	{ "logging", CATEGORY_LOGGING_LABEL_CS, CATEGORY_LOGGING_INFO_0_CS },
 	{ "convert", CATEGORY_CONVERT_LABEL_CS, CATEGORY_CONVERT_INFO_0_CS },
+	{ "graphic_packs", CATEGORY_GRAPHIC_PACKS_LABEL_CS, CATEGORY_GRAPHIC_PACKS_INFO_0_CS },
 	{ NULL, NULL, NULL },
 };
 struct retro_core_option_v2_definition option_defs_cs[] = {
@@ -4030,6 +4796,20 @@ struct retro_core_option_v2_definition option_defs_cs[] = {
 			{ NULL, NULL },
 		},
 		"linear"
+	},
+	{
+		"cemu_show_game_fps",
+		CEMU_SHOW_GAME_FPS_LABEL_CS,
+		NULL,
+		CEMU_SHOW_GAME_FPS_INFO_0_CS,
+		NULL,
+		"video",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
 	},
 	{
 		"cemu_downscale_filter",
@@ -4433,11 +5213,1305 @@ struct retro_core_options_v2 options_cs = {
    option_defs_cs
 };
 
+/* RETRO_LANGUAGE_CY */
+
+#define CATEGORY_VIDEO_LABEL_CY NULL
+#define CATEGORY_VIDEO_INFO_0_CY NULL
+#define CATEGORY_SHADERS_LABEL_CY NULL
+#define CATEGORY_SHADERS_INFO_0_CY NULL
+#define CATEGORY_SCREEN_LABEL_CY NULL
+#define CATEGORY_SCREEN_INFO_0_CY NULL
+#define CATEGORY_SYSTEM_LABEL_CY NULL
+#define CATEGORY_SYSTEM_INFO_0_CY NULL
+#define CATEGORY_ADDONS_LABEL_CY NULL
+#define CATEGORY_ADDONS_INFO_0_CY NULL
+#define CATEGORY_LOGGING_LABEL_CY "Logio"
+#define CATEGORY_LOGGING_INFO_0_CY NULL
+#define CATEGORY_CONVERT_LABEL_CY NULL
+#define CATEGORY_CONVERT_INFO_0_CY NULL
+#define CATEGORY_GRAPHIC_PACKS_LABEL_CY NULL
+#define CATEGORY_GRAPHIC_PACKS_INFO_0_CY NULL
+#define CEMU_CPU_MODE_LABEL_CY NULL
+#define OPTION_VAL_AUTO_CY NULL
+#define OPTION_VAL_SINGLECORE_INTERPRETER_CY NULL
+#define OPTION_VAL_SINGLECORE_RECOMPILER_CY NULL
+#define OPTION_VAL_MULTICORE_RECOMPILER_CY NULL
+#define OPTION_VAL_MULTICORE_INTERPRETER_CY NULL
+#define CEMU_CONSOLE_LANGUAGE_LABEL_CY NULL
+#define OPTION_VAL_ENGLISH_CY NULL
+#define OPTION_VAL_JAPANESE_CY NULL
+#define OPTION_VAL_FRENCH_CY NULL
+#define OPTION_VAL_GERMAN_CY NULL
+#define OPTION_VAL_ITALIAN_CY NULL
+#define OPTION_VAL_SPANISH_CY NULL
+#define OPTION_VAL_CHINESE_CY NULL
+#define OPTION_VAL_KOREAN_CY NULL
+#define OPTION_VAL_DUTCH_CY NULL
+#define OPTION_VAL_PORTUGUESE_CY NULL
+#define OPTION_VAL_RUSSIAN_CY NULL
+#define OPTION_VAL_TAIWANESE_CY NULL
+#define CEMU_ASYNC_SHADER_COMPILE_LABEL_CY NULL
+#define CEMU_GX2DRAWDONE_SYNC_LABEL_CY NULL
+#define CEMU_PRECOMPILED_SHADERS_LABEL_CY NULL
+#define CEMU_ACCURATE_SHADER_MUL_LABEL_CY NULL
+#define CEMU_UPSCALE_FILTER_LABEL_CY NULL
+#define OPTION_VAL_LINEAR_CY NULL
+#define OPTION_VAL_BICUBIC_CY NULL
+#define OPTION_VAL_BICUBIC_HERMITE_CY NULL
+#define OPTION_VAL_NEAREST_CY NULL
+#define CEMU_SHOW_GAME_FPS_LABEL_CY NULL
+#define CEMU_SHOW_GAME_FPS_INFO_0_CY NULL
+#define CEMU_DOWNSCALE_FILTER_LABEL_CY NULL
+#define CEMU_INTERNAL_RESOLUTION_LABEL_CY NULL
+#define CEMU_INTERNAL_RESOLUTION_INFO_0_CY NULL
+#define OPTION_VAL_640X360_CY NULL
+#define OPTION_VAL_960X540_CY NULL
+#define OPTION_VAL_1280X720_CY NULL
+#define OPTION_VAL_1920X1080_CY NULL
+#define OPTION_VAL_2560X1440_CY NULL
+#define OPTION_VAL_3840X2160_CY NULL
+#define CEMU_FULLSCREEN_SCALING_LABEL_CY NULL
+#define OPTION_VAL_KEEP_ASPECT_CY NULL
+#define OPTION_VAL_STRETCH_CY NULL
+#define CEMU_THREAD_QUANTUM_LABEL_CY NULL
+#define CEMU_EMULATE_SKYLANDER_PORTAL_LABEL_CY NULL
+#define CEMU_EMULATE_INFINITY_BASE_LABEL_CY NULL
+#define CEMU_EMULATE_DIMENSIONS_TOYPAD_LABEL_CY NULL
+#define CEMU_NUMBER_OF_SCREEN_LAYOUTS_LABEL_CY NULL
+#define CEMU_SCREEN_LAYOUT1_LABEL_CY NULL
+#define OPTION_VAL_DEFAULT_SCREEN_CY NULL
+#define OPTION_VAL_GAMEPAD_SCREEN_CY NULL
+#define OPTION_VAL_SIDE_BY_SIDE_CY NULL
+#define OPTION_VAL_TOP_BOTTOM_CY NULL
+#define OPTION_VAL_PICTURE_IN_PICTURE_CY NULL
+#define CEMU_SCREEN_LAYOUT2_LABEL_CY NULL
+#define CEMU_SCREEN_LAYOUT3_LABEL_CY NULL
+#define CEMU_SCREEN_LAYOUT4_LABEL_CY NULL
+#define CEMU_SCREEN_LAYOUT5_LABEL_CY NULL
+#define CEMU_NEXT_SCREEN_LAYOUT_BUTTON_LABEL_CY NULL
+#define OPTION_VAL_L_R_L2_R2_L3_R3_CY NULL
+#define OPTION_VAL_SELECT_L3_CY NULL
+#define OPTION_VAL_SELECT_R3_CY NULL
+#define OPTION_VAL_TAB_CY NULL
+#define CEMU_DRC_POSITION_LABEL_CY NULL
+#define OPTION_VAL_NORMAL_CY NULL
+#define OPTION_VAL_SWAPPED_CY NULL
+#define CEMU_LOG_TO_FILE_LABEL_CY NULL
+#define CEMU_LOG_FILESYSTEM_LABEL_CY NULL
+#define CEMU_LOG_THREAD_SYNC_LABEL_CY NULL
+#define CEMU_LOG_SYSTEM_API_LABEL_CY NULL
+#define CEMU_LOG_TEXTURE_MEMORY_LABEL_CY NULL
+#define CEMU_LOG_TEXTURE_MEMORY_INFO_0_CY NULL
+#define CEMU_LOG_INPUT_API_LABEL_CY NULL
+#define CEMU_LOG_INPUT_API_INFO_0_CY NULL
+#define CEMU_LOG_AUDIO_LABEL_CY NULL
+#define CEMU_LOG_AUDIO_INFO_0_CY NULL
+#define CEMU_BC1_16BIT_LABEL_CY NULL
+#define CEMU_BC1_16BIT_INFO_0_CY NULL
+#define CEMU_GPU_API_LABEL_CY NULL
+#define OPTION_VAL_OPENGL_CY NULL
+#define OPTION_VAL_VULKAN_CY NULL
+#define CEMU_WUA_OUTPUT_DIR_LABEL_CY NULL
+#define CEMU_WUA_OUTPUT_DIR_INFO_0_CY NULL
+#define CEMU_CONVERT_TO_WUA_LABEL_CY NULL
+#define CEMU_CONVERT_TO_WUA_INFO_0_CY NULL
+
+struct retro_core_option_v2_category option_cats_cy[] = {
+	{ "video", CATEGORY_VIDEO_LABEL_CY, CATEGORY_VIDEO_INFO_0_CY },
+	{ "shaders", CATEGORY_SHADERS_LABEL_CY, CATEGORY_SHADERS_INFO_0_CY },
+	{ "screen", CATEGORY_SCREEN_LABEL_CY, CATEGORY_SCREEN_INFO_0_CY },
+	// No Input category: what a port drives is a frontend device type, not
+	// a core option, and an empty submenu is worse than no submenu.
+	{ "system", CATEGORY_SYSTEM_LABEL_CY, CATEGORY_SYSTEM_INFO_0_CY },
+	{ "addons", CATEGORY_ADDONS_LABEL_CY, CATEGORY_ADDONS_INFO_0_CY },
+	{ "logging", CATEGORY_LOGGING_LABEL_CY, CATEGORY_LOGGING_INFO_0_CY },
+	{ "convert", CATEGORY_CONVERT_LABEL_CY, CATEGORY_CONVERT_INFO_0_CY },
+	{ "graphic_packs", CATEGORY_GRAPHIC_PACKS_LABEL_CY, CATEGORY_GRAPHIC_PACKS_INFO_0_CY },
+	{ NULL, NULL, NULL },
+};
+struct retro_core_option_v2_definition option_defs_cy[] = {
+	{
+		"cemu_cpu_mode",
+		CEMU_CPU_MODE_LABEL_CY,
+		NULL,
+		NULL,
+		NULL,
+		"system",
+		{
+			{ "auto", OPTION_VAL_AUTO_CY },
+			{ "singlecore_interpreter", OPTION_VAL_SINGLECORE_INTERPRETER_CY },
+			{ "singlecore_recompiler", OPTION_VAL_SINGLECORE_RECOMPILER_CY },
+			{ "multicore_recompiler", OPTION_VAL_MULTICORE_RECOMPILER_CY },
+			{ "multicore_interpreter", OPTION_VAL_MULTICORE_INTERPRETER_CY },
+			{ NULL, NULL },
+		},
+		"auto"
+	},
+	{
+		"cemu_console_language",
+		CEMU_CONSOLE_LANGUAGE_LABEL_CY,
+		NULL,
+		NULL,
+		NULL,
+		"system",
+		{
+			{ "English", OPTION_VAL_ENGLISH_CY },
+			{ "Japanese", OPTION_VAL_JAPANESE_CY },
+			{ "French", OPTION_VAL_FRENCH_CY },
+			{ "German", OPTION_VAL_GERMAN_CY },
+			{ "Italian", OPTION_VAL_ITALIAN_CY },
+			{ "Spanish", OPTION_VAL_SPANISH_CY },
+			{ "Chinese", OPTION_VAL_CHINESE_CY },
+			{ "Korean", OPTION_VAL_KOREAN_CY },
+			{ "Dutch", OPTION_VAL_DUTCH_CY },
+			{ "Portuguese", OPTION_VAL_PORTUGUESE_CY },
+			{ "Russian", OPTION_VAL_RUSSIAN_CY },
+			{ "Taiwanese", OPTION_VAL_TAIWANESE_CY },
+			{ NULL, NULL },
+		},
+		"English"
+	},
+	{
+		"cemu_async_shader_compile",
+		CEMU_ASYNC_SHADER_COMPILE_LABEL_CY,
+		NULL,
+		NULL,
+		NULL,
+		"shaders",
+		{
+			{ "enabled", NULL },
+			{ "disabled", NULL },
+			{ NULL, NULL },
+		},
+		"enabled"
+	},
+	{
+		"cemu_gx2drawdone_sync",
+		CEMU_GX2DRAWDONE_SYNC_LABEL_CY,
+		NULL,
+		NULL,
+		NULL,
+		"shaders",
+		{
+			{ "enabled", NULL },
+			{ "disabled", NULL },
+			{ NULL, NULL },
+		},
+		"enabled"
+	},
+	{
+		"cemu_precompiled_shaders",
+		CEMU_PRECOMPILED_SHADERS_LABEL_CY,
+		NULL,
+		NULL,
+		NULL,
+		"shaders",
+		{
+			{ "auto", OPTION_VAL_AUTO_CY },
+			{ "enabled", NULL },
+			{ "disabled", NULL },
+			{ NULL, NULL },
+		},
+		"auto"
+	},
+	{
+		"cemu_accurate_shader_mul",
+		CEMU_ACCURATE_SHADER_MUL_LABEL_CY,
+		NULL,
+		NULL,
+		NULL,
+		"shaders",
+		{
+			{ "enabled", NULL },
+			{ "disabled", NULL },
+			{ NULL, NULL },
+		},
+		"enabled"
+	},
+	{
+		"cemu_upscale_filter",
+		CEMU_UPSCALE_FILTER_LABEL_CY,
+		NULL,
+		NULL,
+		NULL,
+		"video",
+		{
+			{ "linear", OPTION_VAL_LINEAR_CY },
+			{ "bicubic", OPTION_VAL_BICUBIC_CY },
+			{ "bicubic_hermite", OPTION_VAL_BICUBIC_HERMITE_CY },
+			{ "nearest", OPTION_VAL_NEAREST_CY },
+			{ NULL, NULL },
+		},
+		"linear"
+	},
+	{
+		"cemu_show_game_fps",
+		CEMU_SHOW_GAME_FPS_LABEL_CY,
+		NULL,
+		CEMU_SHOW_GAME_FPS_INFO_0_CY,
+		NULL,
+		"video",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_downscale_filter",
+		CEMU_DOWNSCALE_FILTER_LABEL_CY,
+		NULL,
+		NULL,
+		NULL,
+		"video",
+		{
+			{ "linear", OPTION_VAL_LINEAR_CY },
+			{ "bicubic", OPTION_VAL_BICUBIC_CY },
+			{ "bicubic_hermite", OPTION_VAL_BICUBIC_HERMITE_CY },
+			{ "nearest", OPTION_VAL_NEAREST_CY },
+			{ NULL, NULL },
+		},
+		"linear"
+	},
+	{
+		"cemu_internal_resolution",
+		CEMU_INTERNAL_RESOLUTION_LABEL_CY,
+		NULL,
+		CEMU_INTERNAL_RESOLUTION_INFO_0_CY,
+		NULL,
+		"video",
+		{
+			{ "640x360", OPTION_VAL_640X360_CY },
+			{ "960x540", OPTION_VAL_960X540_CY },
+			{ "1280x720", OPTION_VAL_1280X720_CY },
+			{ "1920x1080", OPTION_VAL_1920X1080_CY },
+			{ "2560x1440", OPTION_VAL_2560X1440_CY },
+			{ "3840x2160", OPTION_VAL_3840X2160_CY },
+			{ NULL, NULL },
+		},
+		"1280x720"
+	},
+	{
+		"cemu_fullscreen_scaling",
+		CEMU_FULLSCREEN_SCALING_LABEL_CY,
+		NULL,
+		NULL,
+		NULL,
+		"video",
+		{
+			{ "keep_aspect", OPTION_VAL_KEEP_ASPECT_CY },
+			{ "stretch", OPTION_VAL_STRETCH_CY },
+			{ NULL, NULL },
+		},
+		"keep_aspect"
+	},
+	{
+		"cemu_thread_quantum",
+		CEMU_THREAD_QUANTUM_LABEL_CY,
+		NULL,
+		NULL,
+		NULL,
+		"system",
+		{
+			{ "20000", NULL },
+			{ "45000", NULL },
+			{ "60000", NULL },
+			{ "80000", NULL },
+			{ "100000", NULL },
+			{ NULL, NULL },
+		},
+		"45000"
+	},
+	{
+		"cemu_emulate_skylander_portal",
+		CEMU_EMULATE_SKYLANDER_PORTAL_LABEL_CY,
+		NULL,
+		NULL,
+		NULL,
+		"addons",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_emulate_infinity_base",
+		CEMU_EMULATE_INFINITY_BASE_LABEL_CY,
+		NULL,
+		NULL,
+		NULL,
+		"addons",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_emulate_dimensions_toypad",
+		CEMU_EMULATE_DIMENSIONS_TOYPAD_LABEL_CY,
+		NULL,
+		NULL,
+		NULL,
+		"addons",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_number_of_screen_layouts",
+		CEMU_NUMBER_OF_SCREEN_LAYOUTS_LABEL_CY,
+		NULL,
+		NULL,
+		NULL,
+		"screen",
+		{
+			{ "1", NULL },
+			{ "2", NULL },
+			{ "3", NULL },
+			{ "4", NULL },
+			{ "5", NULL },
+			{ NULL, NULL },
+		},
+		"2"
+	},
+	{
+		"cemu_screen_layout1",
+		CEMU_SCREEN_LAYOUT1_LABEL_CY,
+		NULL,
+		NULL,
+		NULL,
+		"screen",
+		{
+			{ "Default Screen", OPTION_VAL_DEFAULT_SCREEN_CY },
+			{ "GamePad Screen", OPTION_VAL_GAMEPAD_SCREEN_CY },
+			{ "Side by Side", OPTION_VAL_SIDE_BY_SIDE_CY },
+			{ "Top Bottom", OPTION_VAL_TOP_BOTTOM_CY },
+			{ "Picture in Picture", OPTION_VAL_PICTURE_IN_PICTURE_CY },
+			{ NULL, NULL },
+		},
+		"Default Screen"
+	},
+	{
+		"cemu_screen_layout2",
+		CEMU_SCREEN_LAYOUT2_LABEL_CY,
+		NULL,
+		NULL,
+		NULL,
+		"screen",
+		{
+			{ "Default Screen", OPTION_VAL_DEFAULT_SCREEN_CY },
+			{ "GamePad Screen", OPTION_VAL_GAMEPAD_SCREEN_CY },
+			{ "Side by Side", OPTION_VAL_SIDE_BY_SIDE_CY },
+			{ "Top Bottom", OPTION_VAL_TOP_BOTTOM_CY },
+			{ "Picture in Picture", OPTION_VAL_PICTURE_IN_PICTURE_CY },
+			{ NULL, NULL },
+		},
+		"GamePad Screen"
+	},
+	{
+		"cemu_screen_layout3",
+		CEMU_SCREEN_LAYOUT3_LABEL_CY,
+		NULL,
+		NULL,
+		NULL,
+		"screen",
+		{
+			{ "Default Screen", OPTION_VAL_DEFAULT_SCREEN_CY },
+			{ "GamePad Screen", OPTION_VAL_GAMEPAD_SCREEN_CY },
+			{ "Side by Side", OPTION_VAL_SIDE_BY_SIDE_CY },
+			{ "Top Bottom", OPTION_VAL_TOP_BOTTOM_CY },
+			{ "Picture in Picture", OPTION_VAL_PICTURE_IN_PICTURE_CY },
+			{ NULL, NULL },
+		},
+		"Side by Side"
+	},
+	{
+		"cemu_screen_layout4",
+		CEMU_SCREEN_LAYOUT4_LABEL_CY,
+		NULL,
+		NULL,
+		NULL,
+		"screen",
+		{
+			{ "Default Screen", OPTION_VAL_DEFAULT_SCREEN_CY },
+			{ "GamePad Screen", OPTION_VAL_GAMEPAD_SCREEN_CY },
+			{ "Side by Side", OPTION_VAL_SIDE_BY_SIDE_CY },
+			{ "Top Bottom", OPTION_VAL_TOP_BOTTOM_CY },
+			{ "Picture in Picture", OPTION_VAL_PICTURE_IN_PICTURE_CY },
+			{ NULL, NULL },
+		},
+		"Top Bottom"
+	},
+	{
+		"cemu_screen_layout5",
+		CEMU_SCREEN_LAYOUT5_LABEL_CY,
+		NULL,
+		NULL,
+		NULL,
+		"screen",
+		{
+			{ "Default Screen", OPTION_VAL_DEFAULT_SCREEN_CY },
+			{ "GamePad Screen", OPTION_VAL_GAMEPAD_SCREEN_CY },
+			{ "Side by Side", OPTION_VAL_SIDE_BY_SIDE_CY },
+			{ "Top Bottom", OPTION_VAL_TOP_BOTTOM_CY },
+			{ "Picture in Picture", OPTION_VAL_PICTURE_IN_PICTURE_CY },
+			{ NULL, NULL },
+		},
+		"Picture in Picture"
+	},
+	{
+		"cemu_next_screen_layout_button",
+		CEMU_NEXT_SCREEN_LAYOUT_BUTTON_LABEL_CY,
+		NULL,
+		NULL,
+		NULL,
+		"screen",
+		{
+			{ "Disabled", NULL },
+			{ "L + R + L2 + R2 + L3 + R3", OPTION_VAL_L_R_L2_R2_L3_R3_CY },
+			{ "Select + L3", OPTION_VAL_SELECT_L3_CY },
+			{ "Select + R3", OPTION_VAL_SELECT_R3_CY },
+			{ "Tab", OPTION_VAL_TAB_CY },
+			{ NULL, NULL },
+		},
+		"L + R + L2 + R2 + L3 + R3"
+	},
+	{
+		"cemu_drc_position",
+		CEMU_DRC_POSITION_LABEL_CY,
+		NULL,
+		NULL,
+		NULL,
+		"screen",
+		{
+			{ "normal", OPTION_VAL_NORMAL_CY },
+			{ "swapped", OPTION_VAL_SWAPPED_CY },
+			{ NULL, NULL },
+		},
+		"normal"
+	},
+	{
+		"cemu_log_to_file",
+		CEMU_LOG_TO_FILE_LABEL_CY,
+		NULL,
+		NULL,
+		NULL,
+		"logging",
+		{
+			{ "enabled", NULL },
+			{ "disabled", NULL },
+			{ NULL, NULL },
+		},
+		"enabled"
+	},
+	{
+		"cemu_log_filesystem",
+		CEMU_LOG_FILESYSTEM_LABEL_CY,
+		NULL,
+		NULL,
+		NULL,
+		"logging",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_log_thread_sync",
+		CEMU_LOG_THREAD_SYNC_LABEL_CY,
+		NULL,
+		NULL,
+		NULL,
+		"logging",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_log_system_api",
+		CEMU_LOG_SYSTEM_API_LABEL_CY,
+		NULL,
+		NULL,
+		NULL,
+		"logging",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_log_texture_memory",
+		CEMU_LOG_TEXTURE_MEMORY_LABEL_CY,
+		NULL,
+		CEMU_LOG_TEXTURE_MEMORY_INFO_0_CY,
+		NULL,
+		"logging",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_log_input_api",
+		CEMU_LOG_INPUT_API_LABEL_CY,
+		NULL,
+		CEMU_LOG_INPUT_API_INFO_0_CY,
+		NULL,
+		"logging",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_log_audio",
+		CEMU_LOG_AUDIO_LABEL_CY,
+		NULL,
+		CEMU_LOG_AUDIO_INFO_0_CY,
+		NULL,
+		"logging",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_bc1_16bit",
+		CEMU_BC1_16BIT_LABEL_CY,
+		NULL,
+		CEMU_BC1_16BIT_INFO_0_CY,
+		NULL,
+		"video",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+#if defined(ENABLE_VULKAN) && defined(ENABLE_OPENGL)
+	{
+		"cemu_gpu_api",
+		CEMU_GPU_API_LABEL_CY,
+		NULL,
+		NULL,
+		NULL,
+		"video",
+		{
+			{ "OpenGL", OPTION_VAL_OPENGL_CY },
+			{ "Vulkan", OPTION_VAL_VULKAN_CY },
+			{ NULL, NULL },
+		},
+		"OpenGL"
+	},
+#endif
+	{
+		"cemu_wua_output_dir",
+		CEMU_WUA_OUTPUT_DIR_LABEL_CY,
+		NULL,
+		CEMU_WUA_OUTPUT_DIR_INFO_0_CY,
+		NULL,
+		"convert",
+		{
+			// Filled in at run time with wherever the frontend lets the core write.
+			{ NULL, NULL },
+		},
+		NULL
+	},
+	{
+		"cemu_convert_to_wua",
+		CEMU_CONVERT_TO_WUA_LABEL_CY,
+		NULL,
+		CEMU_CONVERT_TO_WUA_INFO_0_CY,
+		NULL,
+		"convert",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{ NULL, NULL, NULL, NULL, NULL, NULL, {{0}}, NULL },
+};
+struct retro_core_options_v2 options_cy = {
+   option_cats_cy,
+   option_defs_cy
+};
+
+/* RETRO_LANGUAGE_DA */
+
+#define CATEGORY_VIDEO_LABEL_DA NULL
+#define CATEGORY_VIDEO_INFO_0_DA NULL
+#define CATEGORY_SHADERS_LABEL_DA NULL
+#define CATEGORY_SHADERS_INFO_0_DA NULL
+#define CATEGORY_SCREEN_LABEL_DA NULL
+#define CATEGORY_SCREEN_INFO_0_DA NULL
+#define CATEGORY_SYSTEM_LABEL_DA NULL
+#define CATEGORY_SYSTEM_INFO_0_DA NULL
+#define CATEGORY_ADDONS_LABEL_DA NULL
+#define CATEGORY_ADDONS_INFO_0_DA NULL
+#define CATEGORY_LOGGING_LABEL_DA "Logning"
+#define CATEGORY_LOGGING_INFO_0_DA NULL
+#define CATEGORY_CONVERT_LABEL_DA NULL
+#define CATEGORY_CONVERT_INFO_0_DA NULL
+#define CATEGORY_GRAPHIC_PACKS_LABEL_DA NULL
+#define CATEGORY_GRAPHIC_PACKS_INFO_0_DA NULL
+#define CEMU_CPU_MODE_LABEL_DA NULL
+#define OPTION_VAL_AUTO_DA NULL
+#define OPTION_VAL_SINGLECORE_INTERPRETER_DA NULL
+#define OPTION_VAL_SINGLECORE_RECOMPILER_DA NULL
+#define OPTION_VAL_MULTICORE_RECOMPILER_DA NULL
+#define OPTION_VAL_MULTICORE_INTERPRETER_DA NULL
+#define CEMU_CONSOLE_LANGUAGE_LABEL_DA NULL
+#define OPTION_VAL_ENGLISH_DA NULL
+#define OPTION_VAL_JAPANESE_DA NULL
+#define OPTION_VAL_FRENCH_DA NULL
+#define OPTION_VAL_GERMAN_DA NULL
+#define OPTION_VAL_ITALIAN_DA NULL
+#define OPTION_VAL_SPANISH_DA NULL
+#define OPTION_VAL_CHINESE_DA NULL
+#define OPTION_VAL_KOREAN_DA NULL
+#define OPTION_VAL_DUTCH_DA NULL
+#define OPTION_VAL_PORTUGUESE_DA NULL
+#define OPTION_VAL_RUSSIAN_DA NULL
+#define OPTION_VAL_TAIWANESE_DA NULL
+#define CEMU_ASYNC_SHADER_COMPILE_LABEL_DA NULL
+#define CEMU_GX2DRAWDONE_SYNC_LABEL_DA NULL
+#define CEMU_PRECOMPILED_SHADERS_LABEL_DA NULL
+#define CEMU_ACCURATE_SHADER_MUL_LABEL_DA NULL
+#define CEMU_UPSCALE_FILTER_LABEL_DA NULL
+#define OPTION_VAL_LINEAR_DA NULL
+#define OPTION_VAL_BICUBIC_DA NULL
+#define OPTION_VAL_BICUBIC_HERMITE_DA NULL
+#define OPTION_VAL_NEAREST_DA NULL
+#define CEMU_SHOW_GAME_FPS_LABEL_DA NULL
+#define CEMU_SHOW_GAME_FPS_INFO_0_DA NULL
+#define CEMU_DOWNSCALE_FILTER_LABEL_DA NULL
+#define CEMU_INTERNAL_RESOLUTION_LABEL_DA NULL
+#define CEMU_INTERNAL_RESOLUTION_INFO_0_DA NULL
+#define OPTION_VAL_640X360_DA NULL
+#define OPTION_VAL_960X540_DA NULL
+#define OPTION_VAL_1280X720_DA NULL
+#define OPTION_VAL_1920X1080_DA NULL
+#define OPTION_VAL_2560X1440_DA NULL
+#define OPTION_VAL_3840X2160_DA NULL
+#define CEMU_FULLSCREEN_SCALING_LABEL_DA NULL
+#define OPTION_VAL_KEEP_ASPECT_DA NULL
+#define OPTION_VAL_STRETCH_DA NULL
+#define CEMU_THREAD_QUANTUM_LABEL_DA NULL
+#define CEMU_EMULATE_SKYLANDER_PORTAL_LABEL_DA NULL
+#define CEMU_EMULATE_INFINITY_BASE_LABEL_DA NULL
+#define CEMU_EMULATE_DIMENSIONS_TOYPAD_LABEL_DA NULL
+#define CEMU_NUMBER_OF_SCREEN_LAYOUTS_LABEL_DA NULL
+#define CEMU_SCREEN_LAYOUT1_LABEL_DA NULL
+#define OPTION_VAL_DEFAULT_SCREEN_DA NULL
+#define OPTION_VAL_GAMEPAD_SCREEN_DA NULL
+#define OPTION_VAL_SIDE_BY_SIDE_DA NULL
+#define OPTION_VAL_TOP_BOTTOM_DA NULL
+#define OPTION_VAL_PICTURE_IN_PICTURE_DA NULL
+#define CEMU_SCREEN_LAYOUT2_LABEL_DA NULL
+#define CEMU_SCREEN_LAYOUT3_LABEL_DA NULL
+#define CEMU_SCREEN_LAYOUT4_LABEL_DA NULL
+#define CEMU_SCREEN_LAYOUT5_LABEL_DA NULL
+#define CEMU_NEXT_SCREEN_LAYOUT_BUTTON_LABEL_DA NULL
+#define OPTION_VAL_L_R_L2_R2_L3_R3_DA NULL
+#define OPTION_VAL_SELECT_L3_DA NULL
+#define OPTION_VAL_SELECT_R3_DA NULL
+#define OPTION_VAL_TAB_DA NULL
+#define CEMU_DRC_POSITION_LABEL_DA NULL
+#define OPTION_VAL_NORMAL_DA NULL
+#define OPTION_VAL_SWAPPED_DA NULL
+#define CEMU_LOG_TO_FILE_LABEL_DA NULL
+#define CEMU_LOG_FILESYSTEM_LABEL_DA NULL
+#define CEMU_LOG_THREAD_SYNC_LABEL_DA NULL
+#define CEMU_LOG_SYSTEM_API_LABEL_DA NULL
+#define CEMU_LOG_TEXTURE_MEMORY_LABEL_DA NULL
+#define CEMU_LOG_TEXTURE_MEMORY_INFO_0_DA NULL
+#define CEMU_LOG_INPUT_API_LABEL_DA NULL
+#define CEMU_LOG_INPUT_API_INFO_0_DA NULL
+#define CEMU_LOG_AUDIO_LABEL_DA NULL
+#define CEMU_LOG_AUDIO_INFO_0_DA NULL
+#define CEMU_BC1_16BIT_LABEL_DA NULL
+#define CEMU_BC1_16BIT_INFO_0_DA NULL
+#define CEMU_GPU_API_LABEL_DA NULL
+#define OPTION_VAL_OPENGL_DA NULL
+#define OPTION_VAL_VULKAN_DA NULL
+#define CEMU_WUA_OUTPUT_DIR_LABEL_DA NULL
+#define CEMU_WUA_OUTPUT_DIR_INFO_0_DA NULL
+#define CEMU_CONVERT_TO_WUA_LABEL_DA NULL
+#define CEMU_CONVERT_TO_WUA_INFO_0_DA NULL
+
+struct retro_core_option_v2_category option_cats_da[] = {
+	{ "video", CATEGORY_VIDEO_LABEL_DA, CATEGORY_VIDEO_INFO_0_DA },
+	{ "shaders", CATEGORY_SHADERS_LABEL_DA, CATEGORY_SHADERS_INFO_0_DA },
+	{ "screen", CATEGORY_SCREEN_LABEL_DA, CATEGORY_SCREEN_INFO_0_DA },
+	// No Input category: what a port drives is a frontend device type, not
+	// a core option, and an empty submenu is worse than no submenu.
+	{ "system", CATEGORY_SYSTEM_LABEL_DA, CATEGORY_SYSTEM_INFO_0_DA },
+	{ "addons", CATEGORY_ADDONS_LABEL_DA, CATEGORY_ADDONS_INFO_0_DA },
+	{ "logging", CATEGORY_LOGGING_LABEL_DA, CATEGORY_LOGGING_INFO_0_DA },
+	{ "convert", CATEGORY_CONVERT_LABEL_DA, CATEGORY_CONVERT_INFO_0_DA },
+	{ "graphic_packs", CATEGORY_GRAPHIC_PACKS_LABEL_DA, CATEGORY_GRAPHIC_PACKS_INFO_0_DA },
+	{ NULL, NULL, NULL },
+};
+struct retro_core_option_v2_definition option_defs_da[] = {
+	{
+		"cemu_cpu_mode",
+		CEMU_CPU_MODE_LABEL_DA,
+		NULL,
+		NULL,
+		NULL,
+		"system",
+		{
+			{ "auto", OPTION_VAL_AUTO_DA },
+			{ "singlecore_interpreter", OPTION_VAL_SINGLECORE_INTERPRETER_DA },
+			{ "singlecore_recompiler", OPTION_VAL_SINGLECORE_RECOMPILER_DA },
+			{ "multicore_recompiler", OPTION_VAL_MULTICORE_RECOMPILER_DA },
+			{ "multicore_interpreter", OPTION_VAL_MULTICORE_INTERPRETER_DA },
+			{ NULL, NULL },
+		},
+		"auto"
+	},
+	{
+		"cemu_console_language",
+		CEMU_CONSOLE_LANGUAGE_LABEL_DA,
+		NULL,
+		NULL,
+		NULL,
+		"system",
+		{
+			{ "English", OPTION_VAL_ENGLISH_DA },
+			{ "Japanese", OPTION_VAL_JAPANESE_DA },
+			{ "French", OPTION_VAL_FRENCH_DA },
+			{ "German", OPTION_VAL_GERMAN_DA },
+			{ "Italian", OPTION_VAL_ITALIAN_DA },
+			{ "Spanish", OPTION_VAL_SPANISH_DA },
+			{ "Chinese", OPTION_VAL_CHINESE_DA },
+			{ "Korean", OPTION_VAL_KOREAN_DA },
+			{ "Dutch", OPTION_VAL_DUTCH_DA },
+			{ "Portuguese", OPTION_VAL_PORTUGUESE_DA },
+			{ "Russian", OPTION_VAL_RUSSIAN_DA },
+			{ "Taiwanese", OPTION_VAL_TAIWANESE_DA },
+			{ NULL, NULL },
+		},
+		"English"
+	},
+	{
+		"cemu_async_shader_compile",
+		CEMU_ASYNC_SHADER_COMPILE_LABEL_DA,
+		NULL,
+		NULL,
+		NULL,
+		"shaders",
+		{
+			{ "enabled", NULL },
+			{ "disabled", NULL },
+			{ NULL, NULL },
+		},
+		"enabled"
+	},
+	{
+		"cemu_gx2drawdone_sync",
+		CEMU_GX2DRAWDONE_SYNC_LABEL_DA,
+		NULL,
+		NULL,
+		NULL,
+		"shaders",
+		{
+			{ "enabled", NULL },
+			{ "disabled", NULL },
+			{ NULL, NULL },
+		},
+		"enabled"
+	},
+	{
+		"cemu_precompiled_shaders",
+		CEMU_PRECOMPILED_SHADERS_LABEL_DA,
+		NULL,
+		NULL,
+		NULL,
+		"shaders",
+		{
+			{ "auto", OPTION_VAL_AUTO_DA },
+			{ "enabled", NULL },
+			{ "disabled", NULL },
+			{ NULL, NULL },
+		},
+		"auto"
+	},
+	{
+		"cemu_accurate_shader_mul",
+		CEMU_ACCURATE_SHADER_MUL_LABEL_DA,
+		NULL,
+		NULL,
+		NULL,
+		"shaders",
+		{
+			{ "enabled", NULL },
+			{ "disabled", NULL },
+			{ NULL, NULL },
+		},
+		"enabled"
+	},
+	{
+		"cemu_upscale_filter",
+		CEMU_UPSCALE_FILTER_LABEL_DA,
+		NULL,
+		NULL,
+		NULL,
+		"video",
+		{
+			{ "linear", OPTION_VAL_LINEAR_DA },
+			{ "bicubic", OPTION_VAL_BICUBIC_DA },
+			{ "bicubic_hermite", OPTION_VAL_BICUBIC_HERMITE_DA },
+			{ "nearest", OPTION_VAL_NEAREST_DA },
+			{ NULL, NULL },
+		},
+		"linear"
+	},
+	{
+		"cemu_show_game_fps",
+		CEMU_SHOW_GAME_FPS_LABEL_DA,
+		NULL,
+		CEMU_SHOW_GAME_FPS_INFO_0_DA,
+		NULL,
+		"video",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_downscale_filter",
+		CEMU_DOWNSCALE_FILTER_LABEL_DA,
+		NULL,
+		NULL,
+		NULL,
+		"video",
+		{
+			{ "linear", OPTION_VAL_LINEAR_DA },
+			{ "bicubic", OPTION_VAL_BICUBIC_DA },
+			{ "bicubic_hermite", OPTION_VAL_BICUBIC_HERMITE_DA },
+			{ "nearest", OPTION_VAL_NEAREST_DA },
+			{ NULL, NULL },
+		},
+		"linear"
+	},
+	{
+		"cemu_internal_resolution",
+		CEMU_INTERNAL_RESOLUTION_LABEL_DA,
+		NULL,
+		CEMU_INTERNAL_RESOLUTION_INFO_0_DA,
+		NULL,
+		"video",
+		{
+			{ "640x360", OPTION_VAL_640X360_DA },
+			{ "960x540", OPTION_VAL_960X540_DA },
+			{ "1280x720", OPTION_VAL_1280X720_DA },
+			{ "1920x1080", OPTION_VAL_1920X1080_DA },
+			{ "2560x1440", OPTION_VAL_2560X1440_DA },
+			{ "3840x2160", OPTION_VAL_3840X2160_DA },
+			{ NULL, NULL },
+		},
+		"1280x720"
+	},
+	{
+		"cemu_fullscreen_scaling",
+		CEMU_FULLSCREEN_SCALING_LABEL_DA,
+		NULL,
+		NULL,
+		NULL,
+		"video",
+		{
+			{ "keep_aspect", OPTION_VAL_KEEP_ASPECT_DA },
+			{ "stretch", OPTION_VAL_STRETCH_DA },
+			{ NULL, NULL },
+		},
+		"keep_aspect"
+	},
+	{
+		"cemu_thread_quantum",
+		CEMU_THREAD_QUANTUM_LABEL_DA,
+		NULL,
+		NULL,
+		NULL,
+		"system",
+		{
+			{ "20000", NULL },
+			{ "45000", NULL },
+			{ "60000", NULL },
+			{ "80000", NULL },
+			{ "100000", NULL },
+			{ NULL, NULL },
+		},
+		"45000"
+	},
+	{
+		"cemu_emulate_skylander_portal",
+		CEMU_EMULATE_SKYLANDER_PORTAL_LABEL_DA,
+		NULL,
+		NULL,
+		NULL,
+		"addons",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_emulate_infinity_base",
+		CEMU_EMULATE_INFINITY_BASE_LABEL_DA,
+		NULL,
+		NULL,
+		NULL,
+		"addons",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_emulate_dimensions_toypad",
+		CEMU_EMULATE_DIMENSIONS_TOYPAD_LABEL_DA,
+		NULL,
+		NULL,
+		NULL,
+		"addons",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_number_of_screen_layouts",
+		CEMU_NUMBER_OF_SCREEN_LAYOUTS_LABEL_DA,
+		NULL,
+		NULL,
+		NULL,
+		"screen",
+		{
+			{ "1", NULL },
+			{ "2", NULL },
+			{ "3", NULL },
+			{ "4", NULL },
+			{ "5", NULL },
+			{ NULL, NULL },
+		},
+		"2"
+	},
+	{
+		"cemu_screen_layout1",
+		CEMU_SCREEN_LAYOUT1_LABEL_DA,
+		NULL,
+		NULL,
+		NULL,
+		"screen",
+		{
+			{ "Default Screen", OPTION_VAL_DEFAULT_SCREEN_DA },
+			{ "GamePad Screen", OPTION_VAL_GAMEPAD_SCREEN_DA },
+			{ "Side by Side", OPTION_VAL_SIDE_BY_SIDE_DA },
+			{ "Top Bottom", OPTION_VAL_TOP_BOTTOM_DA },
+			{ "Picture in Picture", OPTION_VAL_PICTURE_IN_PICTURE_DA },
+			{ NULL, NULL },
+		},
+		"Default Screen"
+	},
+	{
+		"cemu_screen_layout2",
+		CEMU_SCREEN_LAYOUT2_LABEL_DA,
+		NULL,
+		NULL,
+		NULL,
+		"screen",
+		{
+			{ "Default Screen", OPTION_VAL_DEFAULT_SCREEN_DA },
+			{ "GamePad Screen", OPTION_VAL_GAMEPAD_SCREEN_DA },
+			{ "Side by Side", OPTION_VAL_SIDE_BY_SIDE_DA },
+			{ "Top Bottom", OPTION_VAL_TOP_BOTTOM_DA },
+			{ "Picture in Picture", OPTION_VAL_PICTURE_IN_PICTURE_DA },
+			{ NULL, NULL },
+		},
+		"GamePad Screen"
+	},
+	{
+		"cemu_screen_layout3",
+		CEMU_SCREEN_LAYOUT3_LABEL_DA,
+		NULL,
+		NULL,
+		NULL,
+		"screen",
+		{
+			{ "Default Screen", OPTION_VAL_DEFAULT_SCREEN_DA },
+			{ "GamePad Screen", OPTION_VAL_GAMEPAD_SCREEN_DA },
+			{ "Side by Side", OPTION_VAL_SIDE_BY_SIDE_DA },
+			{ "Top Bottom", OPTION_VAL_TOP_BOTTOM_DA },
+			{ "Picture in Picture", OPTION_VAL_PICTURE_IN_PICTURE_DA },
+			{ NULL, NULL },
+		},
+		"Side by Side"
+	},
+	{
+		"cemu_screen_layout4",
+		CEMU_SCREEN_LAYOUT4_LABEL_DA,
+		NULL,
+		NULL,
+		NULL,
+		"screen",
+		{
+			{ "Default Screen", OPTION_VAL_DEFAULT_SCREEN_DA },
+			{ "GamePad Screen", OPTION_VAL_GAMEPAD_SCREEN_DA },
+			{ "Side by Side", OPTION_VAL_SIDE_BY_SIDE_DA },
+			{ "Top Bottom", OPTION_VAL_TOP_BOTTOM_DA },
+			{ "Picture in Picture", OPTION_VAL_PICTURE_IN_PICTURE_DA },
+			{ NULL, NULL },
+		},
+		"Top Bottom"
+	},
+	{
+		"cemu_screen_layout5",
+		CEMU_SCREEN_LAYOUT5_LABEL_DA,
+		NULL,
+		NULL,
+		NULL,
+		"screen",
+		{
+			{ "Default Screen", OPTION_VAL_DEFAULT_SCREEN_DA },
+			{ "GamePad Screen", OPTION_VAL_GAMEPAD_SCREEN_DA },
+			{ "Side by Side", OPTION_VAL_SIDE_BY_SIDE_DA },
+			{ "Top Bottom", OPTION_VAL_TOP_BOTTOM_DA },
+			{ "Picture in Picture", OPTION_VAL_PICTURE_IN_PICTURE_DA },
+			{ NULL, NULL },
+		},
+		"Picture in Picture"
+	},
+	{
+		"cemu_next_screen_layout_button",
+		CEMU_NEXT_SCREEN_LAYOUT_BUTTON_LABEL_DA,
+		NULL,
+		NULL,
+		NULL,
+		"screen",
+		{
+			{ "Disabled", NULL },
+			{ "L + R + L2 + R2 + L3 + R3", OPTION_VAL_L_R_L2_R2_L3_R3_DA },
+			{ "Select + L3", OPTION_VAL_SELECT_L3_DA },
+			{ "Select + R3", OPTION_VAL_SELECT_R3_DA },
+			{ "Tab", OPTION_VAL_TAB_DA },
+			{ NULL, NULL },
+		},
+		"L + R + L2 + R2 + L3 + R3"
+	},
+	{
+		"cemu_drc_position",
+		CEMU_DRC_POSITION_LABEL_DA,
+		NULL,
+		NULL,
+		NULL,
+		"screen",
+		{
+			{ "normal", OPTION_VAL_NORMAL_DA },
+			{ "swapped", OPTION_VAL_SWAPPED_DA },
+			{ NULL, NULL },
+		},
+		"normal"
+	},
+	{
+		"cemu_log_to_file",
+		CEMU_LOG_TO_FILE_LABEL_DA,
+		NULL,
+		NULL,
+		NULL,
+		"logging",
+		{
+			{ "enabled", NULL },
+			{ "disabled", NULL },
+			{ NULL, NULL },
+		},
+		"enabled"
+	},
+	{
+		"cemu_log_filesystem",
+		CEMU_LOG_FILESYSTEM_LABEL_DA,
+		NULL,
+		NULL,
+		NULL,
+		"logging",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_log_thread_sync",
+		CEMU_LOG_THREAD_SYNC_LABEL_DA,
+		NULL,
+		NULL,
+		NULL,
+		"logging",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_log_system_api",
+		CEMU_LOG_SYSTEM_API_LABEL_DA,
+		NULL,
+		NULL,
+		NULL,
+		"logging",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_log_texture_memory",
+		CEMU_LOG_TEXTURE_MEMORY_LABEL_DA,
+		NULL,
+		CEMU_LOG_TEXTURE_MEMORY_INFO_0_DA,
+		NULL,
+		"logging",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_log_input_api",
+		CEMU_LOG_INPUT_API_LABEL_DA,
+		NULL,
+		CEMU_LOG_INPUT_API_INFO_0_DA,
+		NULL,
+		"logging",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_log_audio",
+		CEMU_LOG_AUDIO_LABEL_DA,
+		NULL,
+		CEMU_LOG_AUDIO_INFO_0_DA,
+		NULL,
+		"logging",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_bc1_16bit",
+		CEMU_BC1_16BIT_LABEL_DA,
+		NULL,
+		CEMU_BC1_16BIT_INFO_0_DA,
+		NULL,
+		"video",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+#if defined(ENABLE_VULKAN) && defined(ENABLE_OPENGL)
+	{
+		"cemu_gpu_api",
+		CEMU_GPU_API_LABEL_DA,
+		NULL,
+		NULL,
+		NULL,
+		"video",
+		{
+			{ "OpenGL", OPTION_VAL_OPENGL_DA },
+			{ "Vulkan", OPTION_VAL_VULKAN_DA },
+			{ NULL, NULL },
+		},
+		"OpenGL"
+	},
+#endif
+	{
+		"cemu_wua_output_dir",
+		CEMU_WUA_OUTPUT_DIR_LABEL_DA,
+		NULL,
+		CEMU_WUA_OUTPUT_DIR_INFO_0_DA,
+		NULL,
+		"convert",
+		{
+			// Filled in at run time with wherever the frontend lets the core write.
+			{ NULL, NULL },
+		},
+		NULL
+	},
+	{
+		"cemu_convert_to_wua",
+		CEMU_CONVERT_TO_WUA_LABEL_DA,
+		NULL,
+		CEMU_CONVERT_TO_WUA_INFO_0_DA,
+		NULL,
+		"convert",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{ NULL, NULL, NULL, NULL, NULL, NULL, {{0}}, NULL },
+};
+struct retro_core_options_v2 options_da = {
+   option_cats_da,
+   option_defs_da
+};
+
 /* RETRO_LANGUAGE_DE */
 
 #define CATEGORY_VIDEO_LABEL_DE NULL
 #define CATEGORY_VIDEO_INFO_0_DE NULL
-#define CATEGORY_SHADERS_LABEL_DE NULL
+#define CATEGORY_SHADERS_LABEL_DE "Shader"
 #define CATEGORY_SHADERS_INFO_0_DE NULL
 #define CATEGORY_SCREEN_LABEL_DE NULL
 #define CATEGORY_SCREEN_INFO_0_DE NULL
@@ -4445,10 +6519,12 @@ struct retro_core_options_v2 options_cs = {
 #define CATEGORY_SYSTEM_INFO_0_DE NULL
 #define CATEGORY_ADDONS_LABEL_DE NULL
 #define CATEGORY_ADDONS_INFO_0_DE NULL
-#define CATEGORY_LOGGING_LABEL_DE NULL
+#define CATEGORY_LOGGING_LABEL_DE "Protokollierung"
 #define CATEGORY_LOGGING_INFO_0_DE NULL
 #define CATEGORY_CONVERT_LABEL_DE NULL
 #define CATEGORY_CONVERT_INFO_0_DE NULL
+#define CATEGORY_GRAPHIC_PACKS_LABEL_DE NULL
+#define CATEGORY_GRAPHIC_PACKS_INFO_0_DE NULL
 #define CEMU_CPU_MODE_LABEL_DE NULL
 #define OPTION_VAL_AUTO_DE NULL
 #define OPTION_VAL_SINGLECORE_INTERPRETER_DE NULL
@@ -4456,12 +6532,12 @@ struct retro_core_options_v2 options_cs = {
 #define OPTION_VAL_MULTICORE_RECOMPILER_DE NULL
 #define OPTION_VAL_MULTICORE_INTERPRETER_DE NULL
 #define CEMU_CONSOLE_LANGUAGE_LABEL_DE NULL
-#define OPTION_VAL_ENGLISH_DE NULL
-#define OPTION_VAL_JAPANESE_DE NULL
-#define OPTION_VAL_FRENCH_DE NULL
-#define OPTION_VAL_GERMAN_DE NULL
-#define OPTION_VAL_ITALIAN_DE NULL
-#define OPTION_VAL_SPANISH_DE NULL
+#define OPTION_VAL_ENGLISH_DE "Englisch"
+#define OPTION_VAL_JAPANESE_DE "Japanisch"
+#define OPTION_VAL_FRENCH_DE "Französisch"
+#define OPTION_VAL_GERMAN_DE "Deutsch"
+#define OPTION_VAL_ITALIAN_DE "Italienisch"
+#define OPTION_VAL_SPANISH_DE "Spanisch"
 #define OPTION_VAL_CHINESE_DE NULL
 #define OPTION_VAL_KOREAN_DE NULL
 #define OPTION_VAL_DUTCH_DE NULL
@@ -4474,18 +6550,20 @@ struct retro_core_options_v2 options_cs = {
 #define CEMU_ACCURATE_SHADER_MUL_LABEL_DE NULL
 #define CEMU_UPSCALE_FILTER_LABEL_DE NULL
 #define OPTION_VAL_LINEAR_DE NULL
-#define OPTION_VAL_BICUBIC_DE NULL
+#define OPTION_VAL_BICUBIC_DE "Bikubisch"
 #define OPTION_VAL_BICUBIC_HERMITE_DE NULL
-#define OPTION_VAL_NEAREST_DE NULL
+#define OPTION_VAL_NEAREST_DE "Nächster"
+#define CEMU_SHOW_GAME_FPS_LABEL_DE NULL
+#define CEMU_SHOW_GAME_FPS_INFO_0_DE NULL
 #define CEMU_DOWNSCALE_FILTER_LABEL_DE NULL
-#define CEMU_INTERNAL_RESOLUTION_LABEL_DE NULL
+#define CEMU_INTERNAL_RESOLUTION_LABEL_DE "Interne Auflösung"
 #define CEMU_INTERNAL_RESOLUTION_INFO_0_DE NULL
 #define OPTION_VAL_640X360_DE NULL
 #define OPTION_VAL_960X540_DE NULL
-#define OPTION_VAL_1280X720_DE NULL
-#define OPTION_VAL_1920X1080_DE NULL
-#define OPTION_VAL_2560X1440_DE NULL
-#define OPTION_VAL_3840X2160_DE NULL
+#define OPTION_VAL_1280X720_DE "1280 x 720"
+#define OPTION_VAL_1920X1080_DE "1920 x 1080"
+#define OPTION_VAL_2560X1440_DE "2560 x 1440"
+#define OPTION_VAL_3840X2160_DE "3840 x 2160"
 #define CEMU_FULLSCREEN_SCALING_LABEL_DE NULL
 #define OPTION_VAL_KEEP_ASPECT_DE NULL
 #define OPTION_VAL_STRETCH_DE NULL
@@ -4542,6 +6620,7 @@ struct retro_core_option_v2_category option_cats_de[] = {
 	{ "addons", CATEGORY_ADDONS_LABEL_DE, CATEGORY_ADDONS_INFO_0_DE },
 	{ "logging", CATEGORY_LOGGING_LABEL_DE, CATEGORY_LOGGING_INFO_0_DE },
 	{ "convert", CATEGORY_CONVERT_LABEL_DE, CATEGORY_CONVERT_INFO_0_DE },
+	{ "graphic_packs", CATEGORY_GRAPHIC_PACKS_LABEL_DE, CATEGORY_GRAPHIC_PACKS_INFO_0_DE },
 	{ NULL, NULL, NULL },
 };
 struct retro_core_option_v2_definition option_defs_de[] = {
@@ -4658,6 +6737,20 @@ struct retro_core_option_v2_definition option_defs_de[] = {
 			{ NULL, NULL },
 		},
 		"linear"
+	},
+	{
+		"cemu_show_game_fps",
+		CEMU_SHOW_GAME_FPS_LABEL_DE,
+		NULL,
+		CEMU_SHOW_GAME_FPS_INFO_0_DE,
+		NULL,
+		"video",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
 	},
 	{
 		"cemu_downscale_filter",
@@ -5063,33 +7156,35 @@ struct retro_core_options_v2 options_de = {
 
 /* RETRO_LANGUAGE_EL */
 
-#define CATEGORY_VIDEO_LABEL_EL NULL
+#define CATEGORY_VIDEO_LABEL_EL "Βίντεο"
 #define CATEGORY_VIDEO_INFO_0_EL NULL
-#define CATEGORY_SHADERS_LABEL_EL NULL
+#define CATEGORY_SHADERS_LABEL_EL "Σκιάσεις"
 #define CATEGORY_SHADERS_INFO_0_EL NULL
 #define CATEGORY_SCREEN_LABEL_EL NULL
 #define CATEGORY_SCREEN_INFO_0_EL NULL
-#define CATEGORY_SYSTEM_LABEL_EL NULL
+#define CATEGORY_SYSTEM_LABEL_EL "Σύστημα"
 #define CATEGORY_SYSTEM_INFO_0_EL NULL
 #define CATEGORY_ADDONS_LABEL_EL NULL
 #define CATEGORY_ADDONS_INFO_0_EL NULL
-#define CATEGORY_LOGGING_LABEL_EL NULL
+#define CATEGORY_LOGGING_LABEL_EL "Αρχείο Καταγραφής"
 #define CATEGORY_LOGGING_INFO_0_EL NULL
 #define CATEGORY_CONVERT_LABEL_EL NULL
 #define CATEGORY_CONVERT_INFO_0_EL NULL
+#define CATEGORY_GRAPHIC_PACKS_LABEL_EL NULL
+#define CATEGORY_GRAPHIC_PACKS_INFO_0_EL NULL
 #define CEMU_CPU_MODE_LABEL_EL NULL
-#define OPTION_VAL_AUTO_EL NULL
+#define OPTION_VAL_AUTO_EL "Αυτόματο"
 #define OPTION_VAL_SINGLECORE_INTERPRETER_EL NULL
 #define OPTION_VAL_SINGLECORE_RECOMPILER_EL NULL
 #define OPTION_VAL_MULTICORE_RECOMPILER_EL NULL
 #define OPTION_VAL_MULTICORE_INTERPRETER_EL NULL
 #define CEMU_CONSOLE_LANGUAGE_LABEL_EL NULL
-#define OPTION_VAL_ENGLISH_EL NULL
-#define OPTION_VAL_JAPANESE_EL NULL
-#define OPTION_VAL_FRENCH_EL NULL
-#define OPTION_VAL_GERMAN_EL NULL
-#define OPTION_VAL_ITALIAN_EL NULL
-#define OPTION_VAL_SPANISH_EL NULL
+#define OPTION_VAL_ENGLISH_EL "Αγγλικά"
+#define OPTION_VAL_JAPANESE_EL "Ιαπωνικά"
+#define OPTION_VAL_FRENCH_EL "Γαλλική γλώσσα"
+#define OPTION_VAL_GERMAN_EL "Γερμανός"
+#define OPTION_VAL_ITALIAN_EL "Ιταλικά"
+#define OPTION_VAL_SPANISH_EL "Ισπανικά"
 #define OPTION_VAL_CHINESE_EL NULL
 #define OPTION_VAL_KOREAN_EL NULL
 #define OPTION_VAL_DUTCH_EL NULL
@@ -5101,10 +7196,12 @@ struct retro_core_options_v2 options_de = {
 #define CEMU_PRECOMPILED_SHADERS_LABEL_EL NULL
 #define CEMU_ACCURATE_SHADER_MUL_LABEL_EL NULL
 #define CEMU_UPSCALE_FILTER_LABEL_EL NULL
-#define OPTION_VAL_LINEAR_EL NULL
+#define OPTION_VAL_LINEAR_EL "Γραμμικός"
 #define OPTION_VAL_BICUBIC_EL NULL
 #define OPTION_VAL_BICUBIC_HERMITE_EL NULL
-#define OPTION_VAL_NEAREST_EL NULL
+#define OPTION_VAL_NEAREST_EL "Κοντινότερο"
+#define CEMU_SHOW_GAME_FPS_LABEL_EL NULL
+#define CEMU_SHOW_GAME_FPS_INFO_0_EL NULL
 #define CEMU_DOWNSCALE_FILTER_LABEL_EL NULL
 #define CEMU_INTERNAL_RESOLUTION_LABEL_EL NULL
 #define CEMU_INTERNAL_RESOLUTION_INFO_0_EL NULL
@@ -5138,7 +7235,7 @@ struct retro_core_options_v2 options_de = {
 #define OPTION_VAL_SELECT_R3_EL NULL
 #define OPTION_VAL_TAB_EL NULL
 #define CEMU_DRC_POSITION_LABEL_EL NULL
-#define OPTION_VAL_NORMAL_EL NULL
+#define OPTION_VAL_NORMAL_EL "Φυσιολογικά"
 #define OPTION_VAL_SWAPPED_EL NULL
 #define CEMU_LOG_TO_FILE_LABEL_EL NULL
 #define CEMU_LOG_FILESYSTEM_LABEL_EL NULL
@@ -5170,6 +7267,7 @@ struct retro_core_option_v2_category option_cats_el[] = {
 	{ "addons", CATEGORY_ADDONS_LABEL_EL, CATEGORY_ADDONS_INFO_0_EL },
 	{ "logging", CATEGORY_LOGGING_LABEL_EL, CATEGORY_LOGGING_INFO_0_EL },
 	{ "convert", CATEGORY_CONVERT_LABEL_EL, CATEGORY_CONVERT_INFO_0_EL },
+	{ "graphic_packs", CATEGORY_GRAPHIC_PACKS_LABEL_EL, CATEGORY_GRAPHIC_PACKS_INFO_0_EL },
 	{ NULL, NULL, NULL },
 };
 struct retro_core_option_v2_definition option_defs_el[] = {
@@ -5286,6 +7384,20 @@ struct retro_core_option_v2_definition option_defs_el[] = {
 			{ NULL, NULL },
 		},
 		"linear"
+	},
+	{
+		"cemu_show_game_fps",
+		CEMU_SHOW_GAME_FPS_LABEL_EL,
+		NULL,
+		CEMU_SHOW_GAME_FPS_INFO_0_EL,
+		NULL,
+		"video",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
 	},
 	{
 		"cemu_downscale_filter",
@@ -5705,6 +7817,8 @@ struct retro_core_options_v2 options_el = {
 #define CATEGORY_LOGGING_INFO_0_EN NULL
 #define CATEGORY_CONVERT_LABEL_EN NULL
 #define CATEGORY_CONVERT_INFO_0_EN NULL
+#define CATEGORY_GRAPHIC_PACKS_LABEL_EN NULL
+#define CATEGORY_GRAPHIC_PACKS_INFO_0_EN NULL
 #define CEMU_CPU_MODE_LABEL_EN NULL
 #define OPTION_VAL_AUTO_EN NULL
 #define OPTION_VAL_SINGLECORE_INTERPRETER_EN NULL
@@ -5730,9 +7844,11 @@ struct retro_core_options_v2 options_el = {
 #define CEMU_ACCURATE_SHADER_MUL_LABEL_EN NULL
 #define CEMU_UPSCALE_FILTER_LABEL_EN NULL
 #define OPTION_VAL_LINEAR_EN NULL
-#define OPTION_VAL_BICUBIC_EN NULL
+#define OPTION_VAL_BICUBIC_EN "Bi-cubic"
 #define OPTION_VAL_BICUBIC_HERMITE_EN NULL
 #define OPTION_VAL_NEAREST_EN NULL
+#define CEMU_SHOW_GAME_FPS_LABEL_EN NULL
+#define CEMU_SHOW_GAME_FPS_INFO_0_EN NULL
 #define CEMU_DOWNSCALE_FILTER_LABEL_EN NULL
 #define CEMU_INTERNAL_RESOLUTION_LABEL_EN NULL
 #define CEMU_INTERNAL_RESOLUTION_INFO_0_EN NULL
@@ -5798,6 +7914,7 @@ struct retro_core_option_v2_category option_cats_en[] = {
 	{ "addons", CATEGORY_ADDONS_LABEL_EN, CATEGORY_ADDONS_INFO_0_EN },
 	{ "logging", CATEGORY_LOGGING_LABEL_EN, CATEGORY_LOGGING_INFO_0_EN },
 	{ "convert", CATEGORY_CONVERT_LABEL_EN, CATEGORY_CONVERT_INFO_0_EN },
+	{ "graphic_packs", CATEGORY_GRAPHIC_PACKS_LABEL_EN, CATEGORY_GRAPHIC_PACKS_INFO_0_EN },
 	{ NULL, NULL, NULL },
 };
 struct retro_core_option_v2_definition option_defs_en[] = {
@@ -5914,6 +8031,20 @@ struct retro_core_option_v2_definition option_defs_en[] = {
 			{ NULL, NULL },
 		},
 		"linear"
+	},
+	{
+		"cemu_show_game_fps",
+		CEMU_SHOW_GAME_FPS_LABEL_EN,
+		NULL,
+		CEMU_SHOW_GAME_FPS_INFO_0_EN,
+		NULL,
+		"video",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
 	},
 	{
 		"cemu_downscale_filter",
@@ -6321,31 +8452,33 @@ struct retro_core_options_v2 options_en = {
 
 #define CATEGORY_VIDEO_LABEL_EO NULL
 #define CATEGORY_VIDEO_INFO_0_EO NULL
-#define CATEGORY_SHADERS_LABEL_EO NULL
+#define CATEGORY_SHADERS_LABEL_EO "Ombrigiloj"
 #define CATEGORY_SHADERS_INFO_0_EO NULL
 #define CATEGORY_SCREEN_LABEL_EO NULL
 #define CATEGORY_SCREEN_INFO_0_EO NULL
-#define CATEGORY_SYSTEM_LABEL_EO NULL
+#define CATEGORY_SYSTEM_LABEL_EO "Sistemo"
 #define CATEGORY_SYSTEM_INFO_0_EO NULL
 #define CATEGORY_ADDONS_LABEL_EO NULL
 #define CATEGORY_ADDONS_INFO_0_EO NULL
-#define CATEGORY_LOGGING_LABEL_EO NULL
+#define CATEGORY_LOGGING_LABEL_EO "Protokolado"
 #define CATEGORY_LOGGING_INFO_0_EO NULL
 #define CATEGORY_CONVERT_LABEL_EO NULL
 #define CATEGORY_CONVERT_INFO_0_EO NULL
+#define CATEGORY_GRAPHIC_PACKS_LABEL_EO NULL
+#define CATEGORY_GRAPHIC_PACKS_INFO_0_EO NULL
 #define CEMU_CPU_MODE_LABEL_EO NULL
-#define OPTION_VAL_AUTO_EO NULL
+#define OPTION_VAL_AUTO_EO "Aŭtomata"
 #define OPTION_VAL_SINGLECORE_INTERPRETER_EO NULL
 #define OPTION_VAL_SINGLECORE_RECOMPILER_EO NULL
 #define OPTION_VAL_MULTICORE_RECOMPILER_EO NULL
 #define OPTION_VAL_MULTICORE_INTERPRETER_EO NULL
 #define CEMU_CONSOLE_LANGUAGE_LABEL_EO NULL
-#define OPTION_VAL_ENGLISH_EO NULL
-#define OPTION_VAL_JAPANESE_EO NULL
-#define OPTION_VAL_FRENCH_EO NULL
-#define OPTION_VAL_GERMAN_EO NULL
-#define OPTION_VAL_ITALIAN_EO NULL
-#define OPTION_VAL_SPANISH_EO NULL
+#define OPTION_VAL_ENGLISH_EO "Angla"
+#define OPTION_VAL_JAPANESE_EO "Japana"
+#define OPTION_VAL_FRENCH_EO "Franca"
+#define OPTION_VAL_GERMAN_EO "Germana"
+#define OPTION_VAL_ITALIAN_EO "Itala"
+#define OPTION_VAL_SPANISH_EO "Hispana"
 #define OPTION_VAL_CHINESE_EO NULL
 #define OPTION_VAL_KOREAN_EO NULL
 #define OPTION_VAL_DUTCH_EO NULL
@@ -6357,12 +8490,14 @@ struct retro_core_options_v2 options_en = {
 #define CEMU_PRECOMPILED_SHADERS_LABEL_EO NULL
 #define CEMU_ACCURATE_SHADER_MUL_LABEL_EO NULL
 #define CEMU_UPSCALE_FILTER_LABEL_EO NULL
-#define OPTION_VAL_LINEAR_EO NULL
-#define OPTION_VAL_BICUBIC_EO NULL
+#define OPTION_VAL_LINEAR_EO "Lineara"
+#define OPTION_VAL_BICUBIC_EO "Dukuba"
 #define OPTION_VAL_BICUBIC_HERMITE_EO NULL
-#define OPTION_VAL_NEAREST_EO NULL
+#define OPTION_VAL_NEAREST_EO "Plej proksima"
+#define CEMU_SHOW_GAME_FPS_LABEL_EO NULL
+#define CEMU_SHOW_GAME_FPS_INFO_0_EO NULL
 #define CEMU_DOWNSCALE_FILTER_LABEL_EO NULL
-#define CEMU_INTERNAL_RESOLUTION_LABEL_EO NULL
+#define CEMU_INTERNAL_RESOLUTION_LABEL_EO "Interna distingivo"
 #define CEMU_INTERNAL_RESOLUTION_INFO_0_EO NULL
 #define OPTION_VAL_640X360_EO NULL
 #define OPTION_VAL_960X540_EO NULL
@@ -6394,7 +8529,7 @@ struct retro_core_options_v2 options_en = {
 #define OPTION_VAL_SELECT_R3_EO NULL
 #define OPTION_VAL_TAB_EO NULL
 #define CEMU_DRC_POSITION_LABEL_EO NULL
-#define OPTION_VAL_NORMAL_EO NULL
+#define OPTION_VAL_NORMAL_EO "Normala"
 #define OPTION_VAL_SWAPPED_EO NULL
 #define CEMU_LOG_TO_FILE_LABEL_EO NULL
 #define CEMU_LOG_FILESYSTEM_LABEL_EO NULL
@@ -6426,6 +8561,7 @@ struct retro_core_option_v2_category option_cats_eo[] = {
 	{ "addons", CATEGORY_ADDONS_LABEL_EO, CATEGORY_ADDONS_INFO_0_EO },
 	{ "logging", CATEGORY_LOGGING_LABEL_EO, CATEGORY_LOGGING_INFO_0_EO },
 	{ "convert", CATEGORY_CONVERT_LABEL_EO, CATEGORY_CONVERT_INFO_0_EO },
+	{ "graphic_packs", CATEGORY_GRAPHIC_PACKS_LABEL_EO, CATEGORY_GRAPHIC_PACKS_INFO_0_EO },
 	{ NULL, NULL, NULL },
 };
 struct retro_core_option_v2_definition option_defs_eo[] = {
@@ -6542,6 +8678,20 @@ struct retro_core_option_v2_definition option_defs_eo[] = {
 			{ NULL, NULL },
 		},
 		"linear"
+	},
+	{
+		"cemu_show_game_fps",
+		CEMU_SHOW_GAME_FPS_LABEL_EO,
+		NULL,
+		CEMU_SHOW_GAME_FPS_INFO_0_EO,
+		NULL,
+		"video",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
 	},
 	{
 		"cemu_downscale_filter",
@@ -6947,102 +9097,106 @@ struct retro_core_options_v2 options_eo = {
 
 /* RETRO_LANGUAGE_ES */
 
-#define CATEGORY_VIDEO_LABEL_ES NULL
-#define CATEGORY_VIDEO_INFO_0_ES NULL
+#define CATEGORY_VIDEO_LABEL_ES "Vídeo"
+#define CATEGORY_VIDEO_INFO_0_ES "Resolución, el escalado y el ritmo de fotogramas."
 #define CATEGORY_SHADERS_LABEL_ES NULL
-#define CATEGORY_SHADERS_INFO_0_ES NULL
-#define CATEGORY_SCREEN_LABEL_ES NULL
-#define CATEGORY_SCREEN_INFO_0_ES NULL
-#define CATEGORY_SYSTEM_LABEL_ES NULL
-#define CATEGORY_SYSTEM_INFO_0_ES NULL
-#define CATEGORY_ADDONS_LABEL_ES NULL
-#define CATEGORY_ADDONS_INFO_0_ES NULL
-#define CATEGORY_LOGGING_LABEL_ES NULL
-#define CATEGORY_LOGGING_INFO_0_ES NULL
-#define CATEGORY_CONVERT_LABEL_ES NULL
-#define CATEGORY_CONVERT_INFO_0_ES NULL
-#define CEMU_CPU_MODE_LABEL_ES NULL
-#define OPTION_VAL_AUTO_ES NULL
-#define OPTION_VAL_SINGLECORE_INTERPRETER_ES NULL
-#define OPTION_VAL_SINGLECORE_RECOMPILER_ES NULL
-#define OPTION_VAL_MULTICORE_RECOMPILER_ES NULL
-#define OPTION_VAL_MULTICORE_INTERPRETER_ES NULL
-#define CEMU_CONSOLE_LANGUAGE_LABEL_ES NULL
-#define OPTION_VAL_ENGLISH_ES NULL
-#define OPTION_VAL_JAPANESE_ES NULL
-#define OPTION_VAL_FRENCH_ES NULL
-#define OPTION_VAL_GERMAN_ES NULL
-#define OPTION_VAL_ITALIAN_ES NULL
-#define OPTION_VAL_SPANISH_ES NULL
-#define OPTION_VAL_CHINESE_ES NULL
-#define OPTION_VAL_KOREAN_ES NULL
-#define OPTION_VAL_DUTCH_ES NULL
-#define OPTION_VAL_PORTUGUESE_ES NULL
-#define OPTION_VAL_RUSSIAN_ES NULL
-#define OPTION_VAL_TAIWANESE_ES NULL
-#define CEMU_ASYNC_SHADER_COMPILE_LABEL_ES NULL
-#define CEMU_GX2DRAWDONE_SYNC_LABEL_ES NULL
-#define CEMU_PRECOMPILED_SHADERS_LABEL_ES NULL
-#define CEMU_ACCURATE_SHADER_MUL_LABEL_ES NULL
-#define CEMU_UPSCALE_FILTER_LABEL_ES NULL
-#define OPTION_VAL_LINEAR_ES NULL
-#define OPTION_VAL_BICUBIC_ES NULL
-#define OPTION_VAL_BICUBIC_HERMITE_ES NULL
-#define OPTION_VAL_NEAREST_ES NULL
-#define CEMU_DOWNSCALE_FILTER_LABEL_ES NULL
-#define CEMU_INTERNAL_RESOLUTION_LABEL_ES NULL
-#define CEMU_INTERNAL_RESOLUTION_INFO_0_ES NULL
-#define OPTION_VAL_640X360_ES NULL
-#define OPTION_VAL_960X540_ES NULL
-#define OPTION_VAL_1280X720_ES NULL
-#define OPTION_VAL_1920X1080_ES NULL
-#define OPTION_VAL_2560X1440_ES NULL
-#define OPTION_VAL_3840X2160_ES NULL
-#define CEMU_FULLSCREEN_SCALING_LABEL_ES NULL
-#define OPTION_VAL_KEEP_ASPECT_ES NULL
-#define OPTION_VAL_STRETCH_ES NULL
-#define CEMU_THREAD_QUANTUM_LABEL_ES NULL
-#define CEMU_EMULATE_SKYLANDER_PORTAL_LABEL_ES NULL
-#define CEMU_EMULATE_INFINITY_BASE_LABEL_ES NULL
-#define CEMU_EMULATE_DIMENSIONS_TOYPAD_LABEL_ES NULL
-#define CEMU_NUMBER_OF_SCREEN_LAYOUTS_LABEL_ES NULL
-#define CEMU_SCREEN_LAYOUT1_LABEL_ES NULL
-#define OPTION_VAL_DEFAULT_SCREEN_ES NULL
-#define OPTION_VAL_GAMEPAD_SCREEN_ES NULL
-#define OPTION_VAL_SIDE_BY_SIDE_ES NULL
-#define OPTION_VAL_TOP_BOTTOM_ES NULL
-#define OPTION_VAL_PICTURE_IN_PICTURE_ES NULL
-#define CEMU_SCREEN_LAYOUT2_LABEL_ES NULL
-#define CEMU_SCREEN_LAYOUT3_LABEL_ES NULL
-#define CEMU_SCREEN_LAYOUT4_LABEL_ES NULL
-#define CEMU_SCREEN_LAYOUT5_LABEL_ES NULL
-#define CEMU_NEXT_SCREEN_LAYOUT_BUTTON_LABEL_ES NULL
+#define CATEGORY_SHADERS_INFO_0_ES "Traslación, cacheado y compilación de shaders."
+#define CATEGORY_SCREEN_LABEL_ES "Pantalla"
+#define CATEGORY_SCREEN_INFO_0_ES "Establece cuál de las pantallas de la Wii U se mostrará y de qué forma."
+#define CATEGORY_SYSTEM_LABEL_ES "Sistema"
+#define CATEGORY_SYSTEM_INFO_0_ES "CPU, idioma y programación de tareas."
+#define CATEGORY_ADDONS_LABEL_ES "Complementos"
+#define CATEGORY_ADDONS_INFO_0_ES "Portales de Skylanders, Infinity y Dimensions."
+#define CATEGORY_LOGGING_LABEL_ES "Registros"
+#define CATEGORY_LOGGING_INFO_0_ES "Amplía los registros generados para diagnosticar problemas."
+#define CATEGORY_CONVERT_LABEL_ES "Convertir a WUA"
+#define CATEGORY_CONVERT_INFO_0_ES "Guarda el título cargado a un archivo .wua."
+#define CATEGORY_GRAPHIC_PACKS_LABEL_ES "Paquetes de gráficos"
+#define CATEGORY_GRAPHIC_PACKS_INFO_0_ES "Selecciona los paquetes de gráficos del juego cargado y sus preajustes. Los cambios se aplicarán la próxima vez que se cargue el juego."
+#define CEMU_CPU_MODE_LABEL_ES "Modo de CPU (es necesario reiniciar)"
+#define OPTION_VAL_AUTO_ES "Valor automático"
+#define OPTION_VAL_SINGLECORE_INTERPRETER_ES "Intérprete mononúcleo"
+#define OPTION_VAL_SINGLECORE_RECOMPILER_ES "Recompilador mononúcleo"
+#define OPTION_VAL_MULTICORE_RECOMPILER_ES "Recompilador multinúcleo"
+#define OPTION_VAL_MULTICORE_INTERPRETER_ES "Intérprete multinúcleo"
+#define CEMU_CONSOLE_LANGUAGE_LABEL_ES "Idioma de la consola"
+#define OPTION_VAL_ENGLISH_ES "Inglés"
+#define OPTION_VAL_JAPANESE_ES "Japonés"
+#define OPTION_VAL_FRENCH_ES "Francés"
+#define OPTION_VAL_GERMAN_ES "Alemán"
+#define OPTION_VAL_ITALIAN_ES "Italiano"
+#define OPTION_VAL_SPANISH_ES "Español"
+#define OPTION_VAL_CHINESE_ES "Chino"
+#define OPTION_VAL_KOREAN_ES "Coreano"
+#define OPTION_VAL_DUTCH_ES "Holandés"
+#define OPTION_VAL_PORTUGUESE_ES "Portugués"
+#define OPTION_VAL_RUSSIAN_ES "Ruso"
+#define OPTION_VAL_TAIWANESE_ES "Taiwanés"
+#define CEMU_ASYNC_SHADER_COMPILE_LABEL_ES "Compilación asincrónica de shaders"
+#define CEMU_GX2DRAWDONE_SYNC_LABEL_ES "Sincronización de GX2DrawDone"
+#define CEMU_PRECOMPILED_SHADERS_LABEL_ES "Shaders precompilados"
+#define CEMU_ACCURATE_SHADER_MUL_LABEL_ES "Multiplicación precisa de shaders"
+#define CEMU_UPSCALE_FILTER_LABEL_ES "Filtro de aumento de escala"
+#define OPTION_VAL_LINEAR_ES "Lineal"
+#define OPTION_VAL_BICUBIC_ES "Bicúbica"
+#define OPTION_VAL_BICUBIC_HERMITE_ES "Bicúbico de Hermite"
+#define OPTION_VAL_NEAREST_ES "Más cercano"
+#define CEMU_SHOW_GAME_FPS_LABEL_ES "Mostrar FPS del juego"
+#define CEMU_SHOW_GAME_FPS_INFO_0_ES "Muestra la velocidad de fotogramas a la que se renderiza el juego. El contador de FPS de RetroArch cuenta la frecuencia con la que se ejecuta el núcleo y su número se mantiene en 60 cuando el juego falla al renderizar fotogramas, porque cada ejecución incluye el audio de un fotograma."
+#define CEMU_DOWNSCALE_FILTER_LABEL_ES "Filtro de reducción de escala"
+#define CEMU_INTERNAL_RESOLUTION_LABEL_ES "Resolución interna"
+#define CEMU_INTERNAL_RESOLUTION_INFO_0_ES "Una alternativa genérica para aquellos juegos que no tengan paquetes de gráficos para resoluciones: reescala todos los objetivos de renderizado con forma de pantalla, usados por algunos juegos en cosas que fallan al ser reescaladas. 640 × 360 dibuja una cuarta parte de los píxeles mostrados a 720p.Cuando se active un paquete de resolución para el juego cargado (un paquete de gráficos), el paquete establecerá una resolución concreta y esta opción quedará oculta."
+#define OPTION_VAL_640X360_ES "640 × 360"
+#define OPTION_VAL_960X540_ES "960 × 540"
+#define OPTION_VAL_1280X720_ES "1280 × 720"
+#define OPTION_VAL_1920X1080_ES "1920 × 1080"
+#define OPTION_VAL_2560X1440_ES "2560 × 1440"
+#define OPTION_VAL_3840X2160_ES "3840 × 2160"
+#define CEMU_FULLSCREEN_SCALING_LABEL_ES "Escalado a pantalla completa"
+#define OPTION_VAL_KEEP_ASPECT_ES "Preservar relación de aspecto"
+#define OPTION_VAL_STRETCH_ES "Estirar"
+#define CEMU_THREAD_QUANTUM_LABEL_ES "Cuantía de hilos"
+#define CEMU_EMULATE_SKYLANDER_PORTAL_LABEL_ES "Emular portal de Skylanders"
+#define CEMU_EMULATE_INFINITY_BASE_LABEL_ES "Emular base de Infinity"
+#define CEMU_EMULATE_DIMENSIONS_TOYPAD_LABEL_ES "Emular Toypad de Dimensions"
+#define CEMU_NUMBER_OF_SCREEN_LAYOUTS_LABEL_ES "N.º de disposiciones de pantalla"
+#define CEMU_SCREEN_LAYOUT1_LABEL_ES "Disposición 1"
+#define OPTION_VAL_DEFAULT_SCREEN_ES "Pantalla predeterminada"
+#define OPTION_VAL_GAMEPAD_SCREEN_ES "Pantalla del GamePad"
+#define OPTION_VAL_SIDE_BY_SIDE_ES "Colocación horizontal"
+#define OPTION_VAL_TOP_BOTTOM_ES "Colocación vertical"
+#define OPTION_VAL_PICTURE_IN_PICTURE_ES "Imágenes sobreimpuestas"
+#define CEMU_SCREEN_LAYOUT2_LABEL_ES "Disposición 2"
+#define CEMU_SCREEN_LAYOUT3_LABEL_ES "Disposición 3"
+#define CEMU_SCREEN_LAYOUT4_LABEL_ES "Disposición 4"
+#define CEMU_SCREEN_LAYOUT5_LABEL_ES "Disposición 5"
+#define CEMU_NEXT_SCREEN_LAYOUT_BUTTON_LABEL_ES "Siguiente disposición de pantalla"
 #define OPTION_VAL_L_R_L2_R2_L3_R3_ES NULL
-#define OPTION_VAL_SELECT_L3_ES NULL
-#define OPTION_VAL_SELECT_R3_ES NULL
-#define OPTION_VAL_TAB_ES NULL
-#define CEMU_DRC_POSITION_LABEL_ES NULL
+#define OPTION_VAL_SELECT_L3_ES "SELECT + L3"
+#define OPTION_VAL_SELECT_R3_ES "SELECT + R3"
+#define OPTION_VAL_TAB_ES "Sección"
+#define CEMU_DRC_POSITION_LABEL_ES "Posición del GamePad"
 #define OPTION_VAL_NORMAL_ES NULL
-#define OPTION_VAL_SWAPPED_ES NULL
-#define CEMU_LOG_TO_FILE_LABEL_ES NULL
-#define CEMU_LOG_FILESYSTEM_LABEL_ES NULL
-#define CEMU_LOG_THREAD_SYNC_LABEL_ES NULL
-#define CEMU_LOG_SYSTEM_API_LABEL_ES NULL
-#define CEMU_LOG_TEXTURE_MEMORY_LABEL_ES NULL
-#define CEMU_LOG_TEXTURE_MEMORY_INFO_0_ES NULL
-#define CEMU_LOG_INPUT_API_LABEL_ES NULL
-#define CEMU_LOG_INPUT_API_INFO_0_ES NULL
-#define CEMU_LOG_AUDIO_LABEL_ES NULL
-#define CEMU_LOG_AUDIO_INFO_0_ES NULL
-#define CEMU_BC1_16BIT_LABEL_ES NULL
-#define CEMU_BC1_16BIT_INFO_0_ES NULL
-#define CEMU_GPU_API_LABEL_ES NULL
+#define OPTION_VAL_SWAPPED_ES "Intercambiar"
+#define CEMU_LOG_TO_FILE_LABEL_ES "Escribir registro de Cemu en log.txt"
+#define CEMU_LOG_FILESYSTEM_LABEL_ES "Registrar acceso a archivos (depuración)"
+#define CEMU_LOG_THREAD_SYNC_LABEL_ES "Registrar sincronización de hilos de CPU (depuración)"
+#define CEMU_LOG_SYSTEM_API_LABEL_ES "Registrar llamadas a API del sistema (depuración)"
+#define CEMU_LOG_TEXTURE_MEMORY_LABEL_ES "Registrar memoria de texturas (depuración)"
+#define CEMU_LOG_TEXTURE_MEMORY_INFO_0_ES "Informa la cantidad de memoria de texturas en formato BC que ha tenido que ser descomprimida porque la GPU no puede leer sus muestras."
+#define CEMU_LOG_INPUT_API_LABEL_ES "Registrar llamadas a API de mando (depuración)"
+#define CEMU_LOG_INPUT_API_INFO_0_ES "Registra todas las llamadas que hace un título a los mandos: qué mandos ha sondeado y qué ha recibido de vuelta. Es muy molesto; se muestra durante varios segundos."
+#define CEMU_LOG_AUDIO_LABEL_ES "Registrar ritmo de audio (depuración)"
+#define CEMU_LOG_AUDIO_INFO_0_ES "Registra una vez por segundo cuántas muestras ha producido el AX, cuantas pérdidas ha sufrido el anillo y cuántas ha sufrido el front-end. Sirve para identificar en qué parte de esa cadena desaparecen fragmentos de audio."
+#define CEMU_BC1_16BIT_LABEL_ES "Reducir memoria de texturas BC1"
+#define CEMU_BC1_16BIT_INFO_0_ES "Reduce a la mitad el coste de las texturas BC1 en aquellas GPU que no puedan leer el formato BC a costa de ver algo de verde. Esta opción no surtirá efecto si el formato BC es compatible."
+#define CEMU_GPU_API_LABEL_ES "API de gráficos (es necesario reiniciar)"
 #define OPTION_VAL_OPENGL_ES NULL
 #define OPTION_VAL_VULKAN_ES NULL
-#define CEMU_WUA_OUTPUT_DIR_LABEL_ES NULL
-#define CEMU_WUA_OUTPUT_DIR_INFO_0_ES NULL
-#define CEMU_CONVERT_TO_WUA_LABEL_ES NULL
-#define CEMU_CONVERT_TO_WUA_INFO_0_ES NULL
+#define CEMU_WUA_OUTPUT_DIR_LABEL_ES "Directorio de salida"
+#define CEMU_WUA_OUTPUT_DIR_INFO_0_ES "Indica dónde se escribirá el archivo .wua. Es necesario que haya espacio suficiente en memoria."
+#define CEMU_CONVERT_TO_WUA_LABEL_ES "Iniciar conversión a WUA"
+#define CEMU_CONVERT_TO_WUA_INFO_0_ES "Escribe el título en el directorio de salida en formato .wua. El emulador seguirá ejecutándose durante el proceso."
 
 struct retro_core_option_v2_category option_cats_es[] = {
 	{ "video", CATEGORY_VIDEO_LABEL_ES, CATEGORY_VIDEO_INFO_0_ES },
@@ -7054,6 +9208,7 @@ struct retro_core_option_v2_category option_cats_es[] = {
 	{ "addons", CATEGORY_ADDONS_LABEL_ES, CATEGORY_ADDONS_INFO_0_ES },
 	{ "logging", CATEGORY_LOGGING_LABEL_ES, CATEGORY_LOGGING_INFO_0_ES },
 	{ "convert", CATEGORY_CONVERT_LABEL_ES, CATEGORY_CONVERT_INFO_0_ES },
+	{ "graphic_packs", CATEGORY_GRAPHIC_PACKS_LABEL_ES, CATEGORY_GRAPHIC_PACKS_INFO_0_ES },
 	{ NULL, NULL, NULL },
 };
 struct retro_core_option_v2_definition option_defs_es[] = {
@@ -7170,6 +9325,20 @@ struct retro_core_option_v2_definition option_defs_es[] = {
 			{ NULL, NULL },
 		},
 		"linear"
+	},
+	{
+		"cemu_show_game_fps",
+		CEMU_SHOW_GAME_FPS_LABEL_ES,
+		NULL,
+		CEMU_SHOW_GAME_FPS_INFO_0_ES,
+		NULL,
+		"video",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
 	},
 	{
 		"cemu_downscale_filter",
@@ -7575,22 +9744,24 @@ struct retro_core_options_v2 options_es = {
 
 /* RETRO_LANGUAGE_FA */
 
-#define CATEGORY_VIDEO_LABEL_FA NULL
+#define CATEGORY_VIDEO_LABEL_FA "ویدیو"
 #define CATEGORY_VIDEO_INFO_0_FA NULL
-#define CATEGORY_SHADERS_LABEL_FA NULL
+#define CATEGORY_SHADERS_LABEL_FA "سایه‌زن‌ها"
 #define CATEGORY_SHADERS_INFO_0_FA NULL
 #define CATEGORY_SCREEN_LABEL_FA NULL
 #define CATEGORY_SCREEN_INFO_0_FA NULL
-#define CATEGORY_SYSTEM_LABEL_FA NULL
+#define CATEGORY_SYSTEM_LABEL_FA "سیستم"
 #define CATEGORY_SYSTEM_INFO_0_FA NULL
 #define CATEGORY_ADDONS_LABEL_FA NULL
 #define CATEGORY_ADDONS_INFO_0_FA NULL
-#define CATEGORY_LOGGING_LABEL_FA NULL
+#define CATEGORY_LOGGING_LABEL_FA "ثبت گزارش‌ها"
 #define CATEGORY_LOGGING_INFO_0_FA NULL
 #define CATEGORY_CONVERT_LABEL_FA NULL
 #define CATEGORY_CONVERT_INFO_0_FA NULL
+#define CATEGORY_GRAPHIC_PACKS_LABEL_FA NULL
+#define CATEGORY_GRAPHIC_PACKS_INFO_0_FA NULL
 #define CEMU_CPU_MODE_LABEL_FA NULL
-#define OPTION_VAL_AUTO_FA NULL
+#define OPTION_VAL_AUTO_FA "خودکار"
 #define OPTION_VAL_SINGLECORE_INTERPRETER_FA NULL
 #define OPTION_VAL_SINGLECORE_RECOMPILER_FA NULL
 #define OPTION_VAL_MULTICORE_RECOMPILER_FA NULL
@@ -7614,18 +9785,20 @@ struct retro_core_options_v2 options_es = {
 #define CEMU_ACCURATE_SHADER_MUL_LABEL_FA NULL
 #define CEMU_UPSCALE_FILTER_LABEL_FA NULL
 #define OPTION_VAL_LINEAR_FA NULL
-#define OPTION_VAL_BICUBIC_FA NULL
+#define OPTION_VAL_BICUBIC_FA "دومکعبی"
 #define OPTION_VAL_BICUBIC_HERMITE_FA NULL
 #define OPTION_VAL_NEAREST_FA NULL
+#define CEMU_SHOW_GAME_FPS_LABEL_FA NULL
+#define CEMU_SHOW_GAME_FPS_INFO_0_FA NULL
 #define CEMU_DOWNSCALE_FILTER_LABEL_FA NULL
 #define CEMU_INTERNAL_RESOLUTION_LABEL_FA NULL
 #define CEMU_INTERNAL_RESOLUTION_INFO_0_FA NULL
 #define OPTION_VAL_640X360_FA NULL
 #define OPTION_VAL_960X540_FA NULL
-#define OPTION_VAL_1280X720_FA NULL
-#define OPTION_VAL_1920X1080_FA NULL
-#define OPTION_VAL_2560X1440_FA NULL
-#define OPTION_VAL_3840X2160_FA NULL
+#define OPTION_VAL_1280X720_FA "۱۲۸۰x۷۲۰"
+#define OPTION_VAL_1920X1080_FA "۱۹۲۰x۱۰۸۰"
+#define OPTION_VAL_2560X1440_FA "۲۵۶۰x۱۴۴۰"
+#define OPTION_VAL_3840X2160_FA "۳۸۴۰x۲۱۶۰"
 #define CEMU_FULLSCREEN_SCALING_LABEL_FA NULL
 #define OPTION_VAL_KEEP_ASPECT_FA NULL
 #define OPTION_VAL_STRETCH_FA NULL
@@ -7682,6 +9855,7 @@ struct retro_core_option_v2_category option_cats_fa[] = {
 	{ "addons", CATEGORY_ADDONS_LABEL_FA, CATEGORY_ADDONS_INFO_0_FA },
 	{ "logging", CATEGORY_LOGGING_LABEL_FA, CATEGORY_LOGGING_INFO_0_FA },
 	{ "convert", CATEGORY_CONVERT_LABEL_FA, CATEGORY_CONVERT_INFO_0_FA },
+	{ "graphic_packs", CATEGORY_GRAPHIC_PACKS_LABEL_FA, CATEGORY_GRAPHIC_PACKS_INFO_0_FA },
 	{ NULL, NULL, NULL },
 };
 struct retro_core_option_v2_definition option_defs_fa[] = {
@@ -7798,6 +9972,20 @@ struct retro_core_option_v2_definition option_defs_fa[] = {
 			{ NULL, NULL },
 		},
 		"linear"
+	},
+	{
+		"cemu_show_game_fps",
+		CEMU_SHOW_GAME_FPS_LABEL_FA,
+		NULL,
+		CEMU_SHOW_GAME_FPS_INFO_0_FA,
+		NULL,
+		"video",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
 	},
 	{
 		"cemu_downscale_filter",
@@ -8205,20 +10393,22 @@ struct retro_core_options_v2 options_fa = {
 
 #define CATEGORY_VIDEO_LABEL_FI NULL
 #define CATEGORY_VIDEO_INFO_0_FI NULL
-#define CATEGORY_SHADERS_LABEL_FI NULL
+#define CATEGORY_SHADERS_LABEL_FI "Varjostimet"
 #define CATEGORY_SHADERS_INFO_0_FI NULL
 #define CATEGORY_SCREEN_LABEL_FI NULL
 #define CATEGORY_SCREEN_INFO_0_FI NULL
-#define CATEGORY_SYSTEM_LABEL_FI NULL
+#define CATEGORY_SYSTEM_LABEL_FI "Järjestelmä"
 #define CATEGORY_SYSTEM_INFO_0_FI NULL
 #define CATEGORY_ADDONS_LABEL_FI NULL
 #define CATEGORY_ADDONS_INFO_0_FI NULL
-#define CATEGORY_LOGGING_LABEL_FI NULL
+#define CATEGORY_LOGGING_LABEL_FI "Lokiin kirjaus"
 #define CATEGORY_LOGGING_INFO_0_FI NULL
 #define CATEGORY_CONVERT_LABEL_FI NULL
 #define CATEGORY_CONVERT_INFO_0_FI NULL
+#define CATEGORY_GRAPHIC_PACKS_LABEL_FI NULL
+#define CATEGORY_GRAPHIC_PACKS_INFO_0_FI NULL
 #define CEMU_CPU_MODE_LABEL_FI NULL
-#define OPTION_VAL_AUTO_FI NULL
+#define OPTION_VAL_AUTO_FI "Automaattinen"
 #define OPTION_VAL_SINGLECORE_INTERPRETER_FI NULL
 #define OPTION_VAL_SINGLECORE_RECOMPILER_FI NULL
 #define OPTION_VAL_MULTICORE_RECOMPILER_FI NULL
@@ -8241,19 +10431,21 @@ struct retro_core_options_v2 options_fa = {
 #define CEMU_PRECOMPILED_SHADERS_LABEL_FI NULL
 #define CEMU_ACCURATE_SHADER_MUL_LABEL_FI NULL
 #define CEMU_UPSCALE_FILTER_LABEL_FI NULL
-#define OPTION_VAL_LINEAR_FI NULL
+#define OPTION_VAL_LINEAR_FI "Lineaarinen"
 #define OPTION_VAL_BICUBIC_FI NULL
 #define OPTION_VAL_BICUBIC_HERMITE_FI NULL
-#define OPTION_VAL_NEAREST_FI NULL
+#define OPTION_VAL_NEAREST_FI "Lähin"
+#define CEMU_SHOW_GAME_FPS_LABEL_FI NULL
+#define CEMU_SHOW_GAME_FPS_INFO_0_FI NULL
 #define CEMU_DOWNSCALE_FILTER_LABEL_FI NULL
-#define CEMU_INTERNAL_RESOLUTION_LABEL_FI NULL
+#define CEMU_INTERNAL_RESOLUTION_LABEL_FI "Sisäinen resoluutio"
 #define CEMU_INTERNAL_RESOLUTION_INFO_0_FI NULL
 #define OPTION_VAL_640X360_FI NULL
 #define OPTION_VAL_960X540_FI NULL
-#define OPTION_VAL_1280X720_FI NULL
-#define OPTION_VAL_1920X1080_FI NULL
-#define OPTION_VAL_2560X1440_FI NULL
-#define OPTION_VAL_3840X2160_FI NULL
+#define OPTION_VAL_1280X720_FI "1280 x 720"
+#define OPTION_VAL_1920X1080_FI "1920 x 1080"
+#define OPTION_VAL_2560X1440_FI "2560 x 1440"
+#define OPTION_VAL_3840X2160_FI "3840 x 2160"
 #define CEMU_FULLSCREEN_SCALING_LABEL_FI NULL
 #define OPTION_VAL_KEEP_ASPECT_FI NULL
 #define OPTION_VAL_STRETCH_FI NULL
@@ -8278,7 +10470,7 @@ struct retro_core_options_v2 options_fa = {
 #define OPTION_VAL_SELECT_R3_FI NULL
 #define OPTION_VAL_TAB_FI NULL
 #define CEMU_DRC_POSITION_LABEL_FI NULL
-#define OPTION_VAL_NORMAL_FI NULL
+#define OPTION_VAL_NORMAL_FI "Normaali"
 #define OPTION_VAL_SWAPPED_FI NULL
 #define CEMU_LOG_TO_FILE_LABEL_FI NULL
 #define CEMU_LOG_FILESYSTEM_LABEL_FI NULL
@@ -8310,6 +10502,7 @@ struct retro_core_option_v2_category option_cats_fi[] = {
 	{ "addons", CATEGORY_ADDONS_LABEL_FI, CATEGORY_ADDONS_INFO_0_FI },
 	{ "logging", CATEGORY_LOGGING_LABEL_FI, CATEGORY_LOGGING_INFO_0_FI },
 	{ "convert", CATEGORY_CONVERT_LABEL_FI, CATEGORY_CONVERT_INFO_0_FI },
+	{ "graphic_packs", CATEGORY_GRAPHIC_PACKS_LABEL_FI, CATEGORY_GRAPHIC_PACKS_INFO_0_FI },
 	{ NULL, NULL, NULL },
 };
 struct retro_core_option_v2_definition option_defs_fi[] = {
@@ -8426,6 +10619,20 @@ struct retro_core_option_v2_definition option_defs_fi[] = {
 			{ NULL, NULL },
 		},
 		"linear"
+	},
+	{
+		"cemu_show_game_fps",
+		CEMU_SHOW_GAME_FPS_LABEL_FI,
+		NULL,
+		CEMU_SHOW_GAME_FPS_INFO_0_FI,
+		NULL,
+		"video",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
 	},
 	{
 		"cemu_downscale_filter",
@@ -8831,102 +11038,106 @@ struct retro_core_options_v2 options_fi = {
 
 /* RETRO_LANGUAGE_FR */
 
-#define CATEGORY_VIDEO_LABEL_FR NULL
-#define CATEGORY_VIDEO_INFO_0_FR NULL
+#define CATEGORY_VIDEO_LABEL_FR "Vidéo"
+#define CATEGORY_VIDEO_INFO_0_FR "Résolution, mise à l'échelle et régularité du rythme des images."
 #define CATEGORY_SHADERS_LABEL_FR NULL
-#define CATEGORY_SHADERS_INFO_0_FR NULL
-#define CATEGORY_SCREEN_LABEL_FR NULL
-#define CATEGORY_SCREEN_INFO_0_FR NULL
-#define CATEGORY_SYSTEM_LABEL_FR NULL
-#define CATEGORY_SYSTEM_INFO_0_FR NULL
-#define CATEGORY_ADDONS_LABEL_FR NULL
-#define CATEGORY_ADDONS_INFO_0_FR NULL
-#define CATEGORY_LOGGING_LABEL_FR NULL
-#define CATEGORY_LOGGING_INFO_0_FR NULL
-#define CATEGORY_CONVERT_LABEL_FR NULL
-#define CATEGORY_CONVERT_INFO_0_FR NULL
-#define CEMU_CPU_MODE_LABEL_FR NULL
+#define CATEGORY_SHADERS_INFO_0_FR "Traduction, mise en cache et compilation de shaders."
+#define CATEGORY_SCREEN_LABEL_FR "Écran"
+#define CATEGORY_SCREEN_INFO_0_FR "Quel écran de la Wii U est affiché, et de quelle manière."
+#define CATEGORY_SYSTEM_LABEL_FR "Système"
+#define CATEGORY_SYSTEM_INFO_0_FR "Processeur, langage et ordonnancement."
+#define CATEGORY_ADDONS_LABEL_FR "Modules complémentaires"
+#define CATEGORY_ADDONS_INFO_0_FR "Portails Skylanders, Infinity et Dimensions."
+#define CATEGORY_LOGGING_LABEL_FR "Journalisation"
+#define CATEGORY_LOGGING_INFO_0_FR "Sortie de journal supplémentaire, pour le diagnostic de problèmes."
+#define CATEGORY_CONVERT_LABEL_FR "Convertir en WUA"
+#define CATEGORY_CONVERT_INFO_0_FR "Enregistrer le titre chargé sous forme d'archive .wua."
+#define CATEGORY_GRAPHIC_PACKS_LABEL_FR "Packs graphiques"
+#define CATEGORY_GRAPHIC_PACKS_INFO_0_FR "Les packs graphiques du jeu chargé et leurs préréglages. Les modifications prennent effet au prochain chargement du jeu."
+#define CEMU_CPU_MODE_LABEL_FR "Mode du processeur (redémarrage)"
 #define OPTION_VAL_AUTO_FR NULL
-#define OPTION_VAL_SINGLECORE_INTERPRETER_FR NULL
-#define OPTION_VAL_SINGLECORE_RECOMPILER_FR NULL
-#define OPTION_VAL_MULTICORE_RECOMPILER_FR NULL
-#define OPTION_VAL_MULTICORE_INTERPRETER_FR NULL
-#define CEMU_CONSOLE_LANGUAGE_LABEL_FR NULL
-#define OPTION_VAL_ENGLISH_FR NULL
-#define OPTION_VAL_JAPANESE_FR NULL
-#define OPTION_VAL_FRENCH_FR NULL
-#define OPTION_VAL_GERMAN_FR NULL
-#define OPTION_VAL_ITALIAN_FR NULL
-#define OPTION_VAL_SPANISH_FR NULL
-#define OPTION_VAL_CHINESE_FR NULL
-#define OPTION_VAL_KOREAN_FR NULL
-#define OPTION_VAL_DUTCH_FR NULL
-#define OPTION_VAL_PORTUGUESE_FR NULL
-#define OPTION_VAL_RUSSIAN_FR NULL
-#define OPTION_VAL_TAIWANESE_FR NULL
-#define CEMU_ASYNC_SHADER_COMPILE_LABEL_FR NULL
-#define CEMU_GX2DRAWDONE_SYNC_LABEL_FR NULL
-#define CEMU_PRECOMPILED_SHADERS_LABEL_FR NULL
-#define CEMU_ACCURATE_SHADER_MUL_LABEL_FR NULL
-#define CEMU_UPSCALE_FILTER_LABEL_FR NULL
-#define OPTION_VAL_LINEAR_FR NULL
-#define OPTION_VAL_BICUBIC_FR NULL
-#define OPTION_VAL_BICUBIC_HERMITE_FR NULL
-#define OPTION_VAL_NEAREST_FR NULL
-#define CEMU_DOWNSCALE_FILTER_LABEL_FR NULL
-#define CEMU_INTERNAL_RESOLUTION_LABEL_FR NULL
-#define CEMU_INTERNAL_RESOLUTION_INFO_0_FR NULL
-#define OPTION_VAL_640X360_FR NULL
-#define OPTION_VAL_960X540_FR NULL
+#define OPTION_VAL_SINGLECORE_INTERPRETER_FR "Interpréteur monocœur"
+#define OPTION_VAL_SINGLECORE_RECOMPILER_FR "Recompilateur monocœur"
+#define OPTION_VAL_MULTICORE_RECOMPILER_FR "Recompilateur multicœur"
+#define OPTION_VAL_MULTICORE_INTERPRETER_FR "Interpréteur multicœur"
+#define CEMU_CONSOLE_LANGUAGE_LABEL_FR "Langue de la console"
+#define OPTION_VAL_ENGLISH_FR "Anglais"
+#define OPTION_VAL_JAPANESE_FR "Japonais"
+#define OPTION_VAL_FRENCH_FR "Français"
+#define OPTION_VAL_GERMAN_FR "Allemand"
+#define OPTION_VAL_ITALIAN_FR "Italien"
+#define OPTION_VAL_SPANISH_FR "Espagnol"
+#define OPTION_VAL_CHINESE_FR "Chinois"
+#define OPTION_VAL_KOREAN_FR "Coréen"
+#define OPTION_VAL_DUTCH_FR "Néerlandais"
+#define OPTION_VAL_PORTUGUESE_FR "Portugais"
+#define OPTION_VAL_RUSSIAN_FR "Russe"
+#define OPTION_VAL_TAIWANESE_FR "Taïwanais"
+#define CEMU_ASYNC_SHADER_COMPILE_LABEL_FR "Compilation asynchrone des shaders"
+#define CEMU_GX2DRAWDONE_SYNC_LABEL_FR "Synchronisation GX2DrawDone"
+#define CEMU_PRECOMPILED_SHADERS_LABEL_FR "Shaders précompilés"
+#define CEMU_ACCURATE_SHADER_MUL_LABEL_FR "Multiplication précise des shaders"
+#define CEMU_UPSCALE_FILTER_LABEL_FR "Filtre de mise à l'échelle"
+#define OPTION_VAL_LINEAR_FR "Linéaire"
+#define OPTION_VAL_BICUBIC_FR "Bicubique"
+#define OPTION_VAL_BICUBIC_HERMITE_FR "Hermite bicubique"
+#define OPTION_VAL_NEAREST_FR "Au plus proche"
+#define CEMU_SHOW_GAME_FPS_LABEL_FR "Afficher les images/s du jeu"
+#define CEMU_SHOW_GAME_FPS_INFO_0_FR "Afficher la fréquence d'images à laquelle le jeu est rendu. Le propre compteur d'images/s de RetroArch compte la fréquence à laquelle le cœur s'exécute, et il reste à 60 lorsque le jeu perd des images, car chaque exécution contient l'équivalent d'une image audio."
+#define CEMU_DOWNSCALE_FILTER_LABEL_FR "Filtre de réduction d'échelle"
+#define CEMU_INTERNAL_RESOLUTION_LABEL_FR "Résolution interne"
+#define CEMU_INTERNAL_RESOLUTION_INFO_0_FR "Une solution de repli générique pour les jeux ne disposant pas de pack graphique de résolution : elle redimensionne \toutes les cibles de rendu qui sont au format de l'écran, ce qui peut poser problème lors du redimensionnement \pour certains jeux utilisant ces cibles. 640x360 affiche un quart des pixels du 720p. Lorsqu'un pack de résolution \est activé pour le jeu chargé (packs graphiques), c'est ce pack qui définit la résolution et cette option est masquée."
+#define OPTION_VAL_640X360_FR "640 x 360"
+#define OPTION_VAL_960X540_FR "960 x 540"
 #define OPTION_VAL_1280X720_FR NULL
 #define OPTION_VAL_1920X1080_FR NULL
 #define OPTION_VAL_2560X1440_FR NULL
 #define OPTION_VAL_3840X2160_FR NULL
-#define CEMU_FULLSCREEN_SCALING_LABEL_FR NULL
-#define OPTION_VAL_KEEP_ASPECT_FR NULL
-#define OPTION_VAL_STRETCH_FR NULL
-#define CEMU_THREAD_QUANTUM_LABEL_FR NULL
-#define CEMU_EMULATE_SKYLANDER_PORTAL_LABEL_FR NULL
-#define CEMU_EMULATE_INFINITY_BASE_LABEL_FR NULL
-#define CEMU_EMULATE_DIMENSIONS_TOYPAD_LABEL_FR NULL
-#define CEMU_NUMBER_OF_SCREEN_LAYOUTS_LABEL_FR NULL
-#define CEMU_SCREEN_LAYOUT1_LABEL_FR NULL
-#define OPTION_VAL_DEFAULT_SCREEN_FR NULL
-#define OPTION_VAL_GAMEPAD_SCREEN_FR NULL
-#define OPTION_VAL_SIDE_BY_SIDE_FR NULL
-#define OPTION_VAL_TOP_BOTTOM_FR NULL
-#define OPTION_VAL_PICTURE_IN_PICTURE_FR NULL
-#define CEMU_SCREEN_LAYOUT2_LABEL_FR NULL
-#define CEMU_SCREEN_LAYOUT3_LABEL_FR NULL
-#define CEMU_SCREEN_LAYOUT4_LABEL_FR NULL
-#define CEMU_SCREEN_LAYOUT5_LABEL_FR NULL
-#define CEMU_NEXT_SCREEN_LAYOUT_BUTTON_LABEL_FR NULL
+#define CEMU_FULLSCREEN_SCALING_LABEL_FR "Mise à l'échelle en plein écran"
+#define OPTION_VAL_KEEP_ASPECT_FR "Conserver l'aspect"
+#define OPTION_VAL_STRETCH_FR "Étirer"
+#define CEMU_THREAD_QUANTUM_LABEL_FR "Quantum de fil d'exécution"
+#define CEMU_EMULATE_SKYLANDER_PORTAL_LABEL_FR "Émuler le portail de Skylanders"
+#define CEMU_EMULATE_INFINITY_BASE_LABEL_FR "Émuler l'Infinity Base"
+#define CEMU_EMULATE_DIMENSIONS_TOYPAD_LABEL_FR "Émuler le Toy Pad de Dimensions"
+#define CEMU_NUMBER_OF_SCREEN_LAYOUTS_LABEL_FR "Nombre de dispositions d'écran"
+#define CEMU_SCREEN_LAYOUT1_LABEL_FR "Disposition 1"
+#define OPTION_VAL_DEFAULT_SCREEN_FR "Écran par défaut"
+#define OPTION_VAL_GAMEPAD_SCREEN_FR "Écran du GamePad"
+#define OPTION_VAL_SIDE_BY_SIDE_FR "Côte à côte"
+#define OPTION_VAL_TOP_BOTTOM_FR "Haut bas"
+#define OPTION_VAL_PICTURE_IN_PICTURE_FR "Image dans l'image"
+#define CEMU_SCREEN_LAYOUT2_LABEL_FR "Disposition 2"
+#define CEMU_SCREEN_LAYOUT3_LABEL_FR "Disposition 3"
+#define CEMU_SCREEN_LAYOUT4_LABEL_FR "Disposition 4"
+#define CEMU_SCREEN_LAYOUT5_LABEL_FR "Disposition 5"
+#define CEMU_NEXT_SCREEN_LAYOUT_BUTTON_LABEL_FR "Disposition d'écran suivante"
 #define OPTION_VAL_L_R_L2_R2_L3_R3_FR NULL
 #define OPTION_VAL_SELECT_L3_FR NULL
 #define OPTION_VAL_SELECT_R3_FR NULL
-#define OPTION_VAL_TAB_FR NULL
-#define CEMU_DRC_POSITION_LABEL_FR NULL
-#define OPTION_VAL_NORMAL_FR NULL
-#define OPTION_VAL_SWAPPED_FR NULL
-#define CEMU_LOG_TO_FILE_LABEL_FR NULL
-#define CEMU_LOG_FILESYSTEM_LABEL_FR NULL
-#define CEMU_LOG_THREAD_SYNC_LABEL_FR NULL
-#define CEMU_LOG_SYSTEM_API_LABEL_FR NULL
-#define CEMU_LOG_TEXTURE_MEMORY_LABEL_FR NULL
-#define CEMU_LOG_TEXTURE_MEMORY_INFO_0_FR NULL
-#define CEMU_LOG_INPUT_API_LABEL_FR NULL
-#define CEMU_LOG_INPUT_API_INFO_0_FR NULL
-#define CEMU_LOG_AUDIO_LABEL_FR NULL
-#define CEMU_LOG_AUDIO_INFO_0_FR NULL
-#define CEMU_BC1_16BIT_LABEL_FR NULL
-#define CEMU_BC1_16BIT_INFO_0_FR NULL
-#define CEMU_GPU_API_LABEL_FR NULL
+#define OPTION_VAL_TAB_FR "Tabulation"
+#define CEMU_DRC_POSITION_LABEL_FR "Position du GamePad"
+#define OPTION_VAL_NORMAL_FR "Normale"
+#define OPTION_VAL_SWAPPED_FR "Échangé"
+#define CEMU_LOG_TO_FILE_LABEL_FR "Écrire le journal de Cemu dans log.txt"
+#define CEMU_LOG_FILESYSTEM_LABEL_FR "Journaliser les accès fichiers (débogage)"
+#define CEMU_LOG_THREAD_SYNC_LABEL_FR "Journaliser la synchronisation des fils d'exécution (débogage)"
+#define CEMU_LOG_SYSTEM_API_LABEL_FR "Journaliser les appels API système (débogage)"
+#define CEMU_LOG_TEXTURE_MEMORY_LABEL_FR "Journaliser la mémoire de texture (débogage)"
+#define CEMU_LOG_TEXTURE_MEMORY_INFO_0_FR "Indique la quantité de mémoire de texture BC qui a dû être \décompressée car ce processeur graphique ne peut pas l'échantillonner."
+#define CEMU_LOG_INPUT_API_LABEL_FR "Journaliser les appels API du contrôleur (débogage)"
+#define CEMU_LOG_INPUT_API_INFO_0_FR "Enregistre tous les appels au contrôleur effectués par un titre — les \entrées (pads) interrogées et les commandes envoyées. Génère beaucoup \de données, mais seulement pendant quelques secondes à la fois."
+#define CEMU_LOG_AUDIO_LABEL_FR "Journaliser le rythme audio (débogage)"
+#define CEMU_LOG_AUDIO_INFO_0_FR "Une fois par seconde, combien d'échantillons AX a produits, combien \la mémoire tampon circulaire (ring) a dû en rejeter et combien l'interface \graphique en a récupérés. Sert à déterminer à quel stade de la chaîne \le signal audio est perdu."
+#define CEMU_BC1_16BIT_LABEL_FR "Réduire la mémoire de texture BC1"
+#define CEMU_BC1_16BIT_INFO_0_FR "Réduit de moitié le coût des textures BC1 sur un processeur \graphique qui ne peut pas échantillonner BC, au prix d'un peu \de vert. Aucun effet là où BC est pris en charge."
+#define CEMU_GPU_API_LABEL_FR "API graphique (redémarrage)"
 #define OPTION_VAL_OPENGL_FR NULL
 #define OPTION_VAL_VULKAN_FR NULL
-#define CEMU_WUA_OUTPUT_DIR_LABEL_FR NULL
-#define CEMU_WUA_OUTPUT_DIR_INFO_0_FR NULL
-#define CEMU_CONVERT_TO_WUA_LABEL_FR NULL
-#define CEMU_CONVERT_TO_WUA_INFO_0_FR NULL
+#define CEMU_WUA_OUTPUT_DIR_LABEL_FR "Dossier de sortie"
+#define CEMU_WUA_OUTPUT_DIR_INFO_0_FR "L'emplacement où le fichier .wua est écrit. Il faut prévoir de l'espace pour celui-ci."
+#define CEMU_CONVERT_TO_WUA_LABEL_FR "Lancer la conversion vers WUA"
+#define CEMU_CONVERT_TO_WUA_INFO_0_FR "Écrit le titre dans le dossier de sortie au format .wua. \Il continue de fonctionner pendant que cela se produit."
 
 struct retro_core_option_v2_category option_cats_fr[] = {
 	{ "video", CATEGORY_VIDEO_LABEL_FR, CATEGORY_VIDEO_INFO_0_FR },
@@ -8938,6 +11149,7 @@ struct retro_core_option_v2_category option_cats_fr[] = {
 	{ "addons", CATEGORY_ADDONS_LABEL_FR, CATEGORY_ADDONS_INFO_0_FR },
 	{ "logging", CATEGORY_LOGGING_LABEL_FR, CATEGORY_LOGGING_INFO_0_FR },
 	{ "convert", CATEGORY_CONVERT_LABEL_FR, CATEGORY_CONVERT_INFO_0_FR },
+	{ "graphic_packs", CATEGORY_GRAPHIC_PACKS_LABEL_FR, CATEGORY_GRAPHIC_PACKS_INFO_0_FR },
 	{ NULL, NULL, NULL },
 };
 struct retro_core_option_v2_definition option_defs_fr[] = {
@@ -9054,6 +11266,20 @@ struct retro_core_option_v2_definition option_defs_fr[] = {
 			{ NULL, NULL },
 		},
 		"linear"
+	},
+	{
+		"cemu_show_game_fps",
+		CEMU_SHOW_GAME_FPS_LABEL_FR,
+		NULL,
+		CEMU_SHOW_GAME_FPS_INFO_0_FR,
+		NULL,
+		"video",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
 	},
 	{
 		"cemu_downscale_filter",
@@ -9459,33 +11685,35 @@ struct retro_core_options_v2 options_fr = {
 
 /* RETRO_LANGUAGE_GA */
 
-#define CATEGORY_VIDEO_LABEL_GA NULL
+#define CATEGORY_VIDEO_LABEL_GA "Físeán"
 #define CATEGORY_VIDEO_INFO_0_GA NULL
-#define CATEGORY_SHADERS_LABEL_GA NULL
+#define CATEGORY_SHADERS_LABEL_GA "Scáthaitheoirí"
 #define CATEGORY_SHADERS_INFO_0_GA NULL
 #define CATEGORY_SCREEN_LABEL_GA NULL
 #define CATEGORY_SCREEN_INFO_0_GA NULL
-#define CATEGORY_SYSTEM_LABEL_GA NULL
+#define CATEGORY_SYSTEM_LABEL_GA "Córas"
 #define CATEGORY_SYSTEM_INFO_0_GA NULL
 #define CATEGORY_ADDONS_LABEL_GA NULL
 #define CATEGORY_ADDONS_INFO_0_GA NULL
-#define CATEGORY_LOGGING_LABEL_GA NULL
+#define CATEGORY_LOGGING_LABEL_GA "Logáil"
 #define CATEGORY_LOGGING_INFO_0_GA NULL
 #define CATEGORY_CONVERT_LABEL_GA NULL
 #define CATEGORY_CONVERT_INFO_0_GA NULL
+#define CATEGORY_GRAPHIC_PACKS_LABEL_GA NULL
+#define CATEGORY_GRAPHIC_PACKS_INFO_0_GA NULL
 #define CEMU_CPU_MODE_LABEL_GA NULL
-#define OPTION_VAL_AUTO_GA NULL
+#define OPTION_VAL_AUTO_GA "Uathoibríoch"
 #define OPTION_VAL_SINGLECORE_INTERPRETER_GA NULL
 #define OPTION_VAL_SINGLECORE_RECOMPILER_GA NULL
 #define OPTION_VAL_MULTICORE_RECOMPILER_GA NULL
 #define OPTION_VAL_MULTICORE_INTERPRETER_GA NULL
 #define CEMU_CONSOLE_LANGUAGE_LABEL_GA NULL
-#define OPTION_VAL_ENGLISH_GA NULL
-#define OPTION_VAL_JAPANESE_GA NULL
-#define OPTION_VAL_FRENCH_GA NULL
-#define OPTION_VAL_GERMAN_GA NULL
-#define OPTION_VAL_ITALIAN_GA NULL
-#define OPTION_VAL_SPANISH_GA NULL
+#define OPTION_VAL_ENGLISH_GA "Béarla"
+#define OPTION_VAL_JAPANESE_GA "Seapáinis"
+#define OPTION_VAL_FRENCH_GA "Fraincis"
+#define OPTION_VAL_GERMAN_GA "Gearmáinis"
+#define OPTION_VAL_ITALIAN_GA "Iodáilis"
+#define OPTION_VAL_SPANISH_GA "Spáinnis"
 #define OPTION_VAL_CHINESE_GA NULL
 #define OPTION_VAL_KOREAN_GA NULL
 #define OPTION_VAL_DUTCH_GA NULL
@@ -9497,12 +11725,14 @@ struct retro_core_options_v2 options_fr = {
 #define CEMU_PRECOMPILED_SHADERS_LABEL_GA NULL
 #define CEMU_ACCURATE_SHADER_MUL_LABEL_GA NULL
 #define CEMU_UPSCALE_FILTER_LABEL_GA NULL
-#define OPTION_VAL_LINEAR_GA NULL
-#define OPTION_VAL_BICUBIC_GA NULL
+#define OPTION_VAL_LINEAR_GA "Líneach"
+#define OPTION_VAL_BICUBIC_GA "Déchiúbach"
 #define OPTION_VAL_BICUBIC_HERMITE_GA NULL
-#define OPTION_VAL_NEAREST_GA NULL
+#define OPTION_VAL_NEAREST_GA "Is cóngaraí"
+#define CEMU_SHOW_GAME_FPS_LABEL_GA NULL
+#define CEMU_SHOW_GAME_FPS_INFO_0_GA NULL
 #define CEMU_DOWNSCALE_FILTER_LABEL_GA NULL
-#define CEMU_INTERNAL_RESOLUTION_LABEL_GA NULL
+#define CEMU_INTERNAL_RESOLUTION_LABEL_GA "Rún Inmheánach"
 #define CEMU_INTERNAL_RESOLUTION_INFO_0_GA NULL
 #define OPTION_VAL_640X360_GA NULL
 #define OPTION_VAL_960X540_GA NULL
@@ -9534,7 +11764,7 @@ struct retro_core_options_v2 options_fr = {
 #define OPTION_VAL_SELECT_R3_GA NULL
 #define OPTION_VAL_TAB_GA NULL
 #define CEMU_DRC_POSITION_LABEL_GA NULL
-#define OPTION_VAL_NORMAL_GA NULL
+#define OPTION_VAL_NORMAL_GA "Gnáth"
 #define OPTION_VAL_SWAPPED_GA NULL
 #define CEMU_LOG_TO_FILE_LABEL_GA NULL
 #define CEMU_LOG_FILESYSTEM_LABEL_GA NULL
@@ -9566,6 +11796,7 @@ struct retro_core_option_v2_category option_cats_ga[] = {
 	{ "addons", CATEGORY_ADDONS_LABEL_GA, CATEGORY_ADDONS_INFO_0_GA },
 	{ "logging", CATEGORY_LOGGING_LABEL_GA, CATEGORY_LOGGING_INFO_0_GA },
 	{ "convert", CATEGORY_CONVERT_LABEL_GA, CATEGORY_CONVERT_INFO_0_GA },
+	{ "graphic_packs", CATEGORY_GRAPHIC_PACKS_LABEL_GA, CATEGORY_GRAPHIC_PACKS_INFO_0_GA },
 	{ NULL, NULL, NULL },
 };
 struct retro_core_option_v2_definition option_defs_ga[] = {
@@ -9682,6 +11913,20 @@ struct retro_core_option_v2_definition option_defs_ga[] = {
 			{ NULL, NULL },
 		},
 		"linear"
+	},
+	{
+		"cemu_show_game_fps",
+		CEMU_SHOW_GAME_FPS_LABEL_GA,
+		NULL,
+		CEMU_SHOW_GAME_FPS_INFO_0_GA,
+		NULL,
+		"video",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
 	},
 	{
 		"cemu_downscale_filter",
@@ -10087,20 +12332,22 @@ struct retro_core_options_v2 options_ga = {
 
 /* RETRO_LANGUAGE_GL */
 
-#define CATEGORY_VIDEO_LABEL_GL NULL
+#define CATEGORY_VIDEO_LABEL_GL "Vídeo"
 #define CATEGORY_VIDEO_INFO_0_GL NULL
-#define CATEGORY_SHADERS_LABEL_GL NULL
+#define CATEGORY_SHADERS_LABEL_GL "Sombreadores"
 #define CATEGORY_SHADERS_INFO_0_GL NULL
 #define CATEGORY_SCREEN_LABEL_GL NULL
 #define CATEGORY_SCREEN_INFO_0_GL NULL
-#define CATEGORY_SYSTEM_LABEL_GL NULL
+#define CATEGORY_SYSTEM_LABEL_GL "Sistema"
 #define CATEGORY_SYSTEM_INFO_0_GL NULL
 #define CATEGORY_ADDONS_LABEL_GL NULL
 #define CATEGORY_ADDONS_INFO_0_GL NULL
-#define CATEGORY_LOGGING_LABEL_GL NULL
+#define CATEGORY_LOGGING_LABEL_GL "Rexistro de eventos"
 #define CATEGORY_LOGGING_INFO_0_GL NULL
 #define CATEGORY_CONVERT_LABEL_GL NULL
 #define CATEGORY_CONVERT_INFO_0_GL NULL
+#define CATEGORY_GRAPHIC_PACKS_LABEL_GL NULL
+#define CATEGORY_GRAPHIC_PACKS_INFO_0_GL NULL
 #define CEMU_CPU_MODE_LABEL_GL NULL
 #define OPTION_VAL_AUTO_GL NULL
 #define OPTION_VAL_SINGLECORE_INTERPRETER_GL NULL
@@ -10108,12 +12355,12 @@ struct retro_core_options_v2 options_ga = {
 #define OPTION_VAL_MULTICORE_RECOMPILER_GL NULL
 #define OPTION_VAL_MULTICORE_INTERPRETER_GL NULL
 #define CEMU_CONSOLE_LANGUAGE_LABEL_GL NULL
-#define OPTION_VAL_ENGLISH_GL NULL
-#define OPTION_VAL_JAPANESE_GL NULL
-#define OPTION_VAL_FRENCH_GL NULL
-#define OPTION_VAL_GERMAN_GL NULL
-#define OPTION_VAL_ITALIAN_GL NULL
-#define OPTION_VAL_SPANISH_GL NULL
+#define OPTION_VAL_ENGLISH_GL "Inglés"
+#define OPTION_VAL_JAPANESE_GL "Xaponés"
+#define OPTION_VAL_FRENCH_GL "Francés"
+#define OPTION_VAL_GERMAN_GL "Alemán"
+#define OPTION_VAL_ITALIAN_GL "Italiano"
+#define OPTION_VAL_SPANISH_GL "Español"
 #define OPTION_VAL_CHINESE_GL NULL
 #define OPTION_VAL_KOREAN_GL NULL
 #define OPTION_VAL_DUTCH_GL NULL
@@ -10125,12 +12372,14 @@ struct retro_core_options_v2 options_ga = {
 #define CEMU_PRECOMPILED_SHADERS_LABEL_GL NULL
 #define CEMU_ACCURATE_SHADER_MUL_LABEL_GL NULL
 #define CEMU_UPSCALE_FILTER_LABEL_GL NULL
-#define OPTION_VAL_LINEAR_GL NULL
-#define OPTION_VAL_BICUBIC_GL NULL
+#define OPTION_VAL_LINEAR_GL "Lineal"
+#define OPTION_VAL_BICUBIC_GL "Bicúbico"
 #define OPTION_VAL_BICUBIC_HERMITE_GL NULL
 #define OPTION_VAL_NEAREST_GL NULL
+#define CEMU_SHOW_GAME_FPS_LABEL_GL NULL
+#define CEMU_SHOW_GAME_FPS_INFO_0_GL NULL
 #define CEMU_DOWNSCALE_FILTER_LABEL_GL NULL
-#define CEMU_INTERNAL_RESOLUTION_LABEL_GL NULL
+#define CEMU_INTERNAL_RESOLUTION_LABEL_GL "Resolución interna"
 #define CEMU_INTERNAL_RESOLUTION_INFO_0_GL NULL
 #define OPTION_VAL_640X360_GL NULL
 #define OPTION_VAL_960X540_GL NULL
@@ -10194,6 +12443,7 @@ struct retro_core_option_v2_category option_cats_gl[] = {
 	{ "addons", CATEGORY_ADDONS_LABEL_GL, CATEGORY_ADDONS_INFO_0_GL },
 	{ "logging", CATEGORY_LOGGING_LABEL_GL, CATEGORY_LOGGING_INFO_0_GL },
 	{ "convert", CATEGORY_CONVERT_LABEL_GL, CATEGORY_CONVERT_INFO_0_GL },
+	{ "graphic_packs", CATEGORY_GRAPHIC_PACKS_LABEL_GL, CATEGORY_GRAPHIC_PACKS_INFO_0_GL },
 	{ NULL, NULL, NULL },
 };
 struct retro_core_option_v2_definition option_defs_gl[] = {
@@ -10310,6 +12560,20 @@ struct retro_core_option_v2_definition option_defs_gl[] = {
 			{ NULL, NULL },
 		},
 		"linear"
+	},
+	{
+		"cemu_show_game_fps",
+		CEMU_SHOW_GAME_FPS_LABEL_GL,
+		NULL,
+		CEMU_SHOW_GAME_FPS_INFO_0_GL,
+		NULL,
+		"video",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
 	},
 	{
 		"cemu_downscale_filter",
@@ -10715,7 +12979,7 @@ struct retro_core_options_v2 options_gl = {
 
 /* RETRO_LANGUAGE_HE */
 
-#define CATEGORY_VIDEO_LABEL_HE NULL
+#define CATEGORY_VIDEO_LABEL_HE "וידאו"
 #define CATEGORY_VIDEO_INFO_0_HE NULL
 #define CATEGORY_SHADERS_LABEL_HE NULL
 #define CATEGORY_SHADERS_INFO_0_HE NULL
@@ -10725,10 +12989,12 @@ struct retro_core_options_v2 options_gl = {
 #define CATEGORY_SYSTEM_INFO_0_HE NULL
 #define CATEGORY_ADDONS_LABEL_HE NULL
 #define CATEGORY_ADDONS_INFO_0_HE NULL
-#define CATEGORY_LOGGING_LABEL_HE NULL
+#define CATEGORY_LOGGING_LABEL_HE "רישום"
 #define CATEGORY_LOGGING_INFO_0_HE NULL
 #define CATEGORY_CONVERT_LABEL_HE NULL
 #define CATEGORY_CONVERT_INFO_0_HE NULL
+#define CATEGORY_GRAPHIC_PACKS_LABEL_HE NULL
+#define CATEGORY_GRAPHIC_PACKS_INFO_0_HE NULL
 #define CEMU_CPU_MODE_LABEL_HE NULL
 #define OPTION_VAL_AUTO_HE NULL
 #define OPTION_VAL_SINGLECORE_INTERPRETER_HE NULL
@@ -10757,6 +13023,8 @@ struct retro_core_options_v2 options_gl = {
 #define OPTION_VAL_BICUBIC_HE NULL
 #define OPTION_VAL_BICUBIC_HERMITE_HE NULL
 #define OPTION_VAL_NEAREST_HE NULL
+#define CEMU_SHOW_GAME_FPS_LABEL_HE NULL
+#define CEMU_SHOW_GAME_FPS_INFO_0_HE NULL
 #define CEMU_DOWNSCALE_FILTER_LABEL_HE NULL
 #define CEMU_INTERNAL_RESOLUTION_LABEL_HE NULL
 #define CEMU_INTERNAL_RESOLUTION_INFO_0_HE NULL
@@ -10822,6 +13090,7 @@ struct retro_core_option_v2_category option_cats_he[] = {
 	{ "addons", CATEGORY_ADDONS_LABEL_HE, CATEGORY_ADDONS_INFO_0_HE },
 	{ "logging", CATEGORY_LOGGING_LABEL_HE, CATEGORY_LOGGING_INFO_0_HE },
 	{ "convert", CATEGORY_CONVERT_LABEL_HE, CATEGORY_CONVERT_INFO_0_HE },
+	{ "graphic_packs", CATEGORY_GRAPHIC_PACKS_LABEL_HE, CATEGORY_GRAPHIC_PACKS_INFO_0_HE },
 	{ NULL, NULL, NULL },
 };
 struct retro_core_option_v2_definition option_defs_he[] = {
@@ -10938,6 +13207,20 @@ struct retro_core_option_v2_definition option_defs_he[] = {
 			{ NULL, NULL },
 		},
 		"linear"
+	},
+	{
+		"cemu_show_game_fps",
+		CEMU_SHOW_GAME_FPS_LABEL_HE,
+		NULL,
+		CEMU_SHOW_GAME_FPS_INFO_0_HE,
+		NULL,
+		"video",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
 	},
 	{
 		"cemu_downscale_filter",
@@ -11341,35 +13624,684 @@ struct retro_core_options_v2 options_he = {
    option_defs_he
 };
 
+/* RETRO_LANGUAGE_HR */
+
+#define CATEGORY_VIDEO_LABEL_HR NULL
+#define CATEGORY_VIDEO_INFO_0_HR NULL
+#define CATEGORY_SHADERS_LABEL_HR NULL
+#define CATEGORY_SHADERS_INFO_0_HR NULL
+#define CATEGORY_SCREEN_LABEL_HR NULL
+#define CATEGORY_SCREEN_INFO_0_HR NULL
+#define CATEGORY_SYSTEM_LABEL_HR "Sustav"
+#define CATEGORY_SYSTEM_INFO_0_HR NULL
+#define CATEGORY_ADDONS_LABEL_HR NULL
+#define CATEGORY_ADDONS_INFO_0_HR NULL
+#define CATEGORY_LOGGING_LABEL_HR "Izvještavanje"
+#define CATEGORY_LOGGING_INFO_0_HR NULL
+#define CATEGORY_CONVERT_LABEL_HR NULL
+#define CATEGORY_CONVERT_INFO_0_HR NULL
+#define CATEGORY_GRAPHIC_PACKS_LABEL_HR NULL
+#define CATEGORY_GRAPHIC_PACKS_INFO_0_HR NULL
+#define CEMU_CPU_MODE_LABEL_HR NULL
+#define OPTION_VAL_AUTO_HR NULL
+#define OPTION_VAL_SINGLECORE_INTERPRETER_HR NULL
+#define OPTION_VAL_SINGLECORE_RECOMPILER_HR NULL
+#define OPTION_VAL_MULTICORE_RECOMPILER_HR NULL
+#define OPTION_VAL_MULTICORE_INTERPRETER_HR NULL
+#define CEMU_CONSOLE_LANGUAGE_LABEL_HR NULL
+#define OPTION_VAL_ENGLISH_HR "Engleski"
+#define OPTION_VAL_JAPANESE_HR "Japanski"
+#define OPTION_VAL_FRENCH_HR "Francuski"
+#define OPTION_VAL_GERMAN_HR "Njemački"
+#define OPTION_VAL_ITALIAN_HR "Talijanski"
+#define OPTION_VAL_SPANISH_HR "Španjolski"
+#define OPTION_VAL_CHINESE_HR NULL
+#define OPTION_VAL_KOREAN_HR NULL
+#define OPTION_VAL_DUTCH_HR NULL
+#define OPTION_VAL_PORTUGUESE_HR NULL
+#define OPTION_VAL_RUSSIAN_HR NULL
+#define OPTION_VAL_TAIWANESE_HR NULL
+#define CEMU_ASYNC_SHADER_COMPILE_LABEL_HR NULL
+#define CEMU_GX2DRAWDONE_SYNC_LABEL_HR NULL
+#define CEMU_PRECOMPILED_SHADERS_LABEL_HR NULL
+#define CEMU_ACCURATE_SHADER_MUL_LABEL_HR NULL
+#define CEMU_UPSCALE_FILTER_LABEL_HR NULL
+#define OPTION_VAL_LINEAR_HR NULL
+#define OPTION_VAL_BICUBIC_HR "Bikubično"
+#define OPTION_VAL_BICUBIC_HERMITE_HR NULL
+#define OPTION_VAL_NEAREST_HR NULL
+#define CEMU_SHOW_GAME_FPS_LABEL_HR NULL
+#define CEMU_SHOW_GAME_FPS_INFO_0_HR NULL
+#define CEMU_DOWNSCALE_FILTER_LABEL_HR NULL
+#define CEMU_INTERNAL_RESOLUTION_LABEL_HR NULL
+#define CEMU_INTERNAL_RESOLUTION_INFO_0_HR NULL
+#define OPTION_VAL_640X360_HR NULL
+#define OPTION_VAL_960X540_HR NULL
+#define OPTION_VAL_1280X720_HR NULL
+#define OPTION_VAL_1920X1080_HR NULL
+#define OPTION_VAL_2560X1440_HR NULL
+#define OPTION_VAL_3840X2160_HR NULL
+#define CEMU_FULLSCREEN_SCALING_LABEL_HR NULL
+#define OPTION_VAL_KEEP_ASPECT_HR NULL
+#define OPTION_VAL_STRETCH_HR NULL
+#define CEMU_THREAD_QUANTUM_LABEL_HR NULL
+#define CEMU_EMULATE_SKYLANDER_PORTAL_LABEL_HR NULL
+#define CEMU_EMULATE_INFINITY_BASE_LABEL_HR NULL
+#define CEMU_EMULATE_DIMENSIONS_TOYPAD_LABEL_HR NULL
+#define CEMU_NUMBER_OF_SCREEN_LAYOUTS_LABEL_HR NULL
+#define CEMU_SCREEN_LAYOUT1_LABEL_HR NULL
+#define OPTION_VAL_DEFAULT_SCREEN_HR NULL
+#define OPTION_VAL_GAMEPAD_SCREEN_HR NULL
+#define OPTION_VAL_SIDE_BY_SIDE_HR NULL
+#define OPTION_VAL_TOP_BOTTOM_HR NULL
+#define OPTION_VAL_PICTURE_IN_PICTURE_HR NULL
+#define CEMU_SCREEN_LAYOUT2_LABEL_HR NULL
+#define CEMU_SCREEN_LAYOUT3_LABEL_HR NULL
+#define CEMU_SCREEN_LAYOUT4_LABEL_HR NULL
+#define CEMU_SCREEN_LAYOUT5_LABEL_HR NULL
+#define CEMU_NEXT_SCREEN_LAYOUT_BUTTON_LABEL_HR NULL
+#define OPTION_VAL_L_R_L2_R2_L3_R3_HR NULL
+#define OPTION_VAL_SELECT_L3_HR NULL
+#define OPTION_VAL_SELECT_R3_HR NULL
+#define OPTION_VAL_TAB_HR NULL
+#define CEMU_DRC_POSITION_LABEL_HR NULL
+#define OPTION_VAL_NORMAL_HR NULL
+#define OPTION_VAL_SWAPPED_HR NULL
+#define CEMU_LOG_TO_FILE_LABEL_HR NULL
+#define CEMU_LOG_FILESYSTEM_LABEL_HR NULL
+#define CEMU_LOG_THREAD_SYNC_LABEL_HR NULL
+#define CEMU_LOG_SYSTEM_API_LABEL_HR NULL
+#define CEMU_LOG_TEXTURE_MEMORY_LABEL_HR NULL
+#define CEMU_LOG_TEXTURE_MEMORY_INFO_0_HR NULL
+#define CEMU_LOG_INPUT_API_LABEL_HR NULL
+#define CEMU_LOG_INPUT_API_INFO_0_HR NULL
+#define CEMU_LOG_AUDIO_LABEL_HR NULL
+#define CEMU_LOG_AUDIO_INFO_0_HR NULL
+#define CEMU_BC1_16BIT_LABEL_HR NULL
+#define CEMU_BC1_16BIT_INFO_0_HR NULL
+#define CEMU_GPU_API_LABEL_HR NULL
+#define OPTION_VAL_OPENGL_HR NULL
+#define OPTION_VAL_VULKAN_HR NULL
+#define CEMU_WUA_OUTPUT_DIR_LABEL_HR NULL
+#define CEMU_WUA_OUTPUT_DIR_INFO_0_HR NULL
+#define CEMU_CONVERT_TO_WUA_LABEL_HR NULL
+#define CEMU_CONVERT_TO_WUA_INFO_0_HR NULL
+
+struct retro_core_option_v2_category option_cats_hr[] = {
+	{ "video", CATEGORY_VIDEO_LABEL_HR, CATEGORY_VIDEO_INFO_0_HR },
+	{ "shaders", CATEGORY_SHADERS_LABEL_HR, CATEGORY_SHADERS_INFO_0_HR },
+	{ "screen", CATEGORY_SCREEN_LABEL_HR, CATEGORY_SCREEN_INFO_0_HR },
+	// No Input category: what a port drives is a frontend device type, not
+	// a core option, and an empty submenu is worse than no submenu.
+	{ "system", CATEGORY_SYSTEM_LABEL_HR, CATEGORY_SYSTEM_INFO_0_HR },
+	{ "addons", CATEGORY_ADDONS_LABEL_HR, CATEGORY_ADDONS_INFO_0_HR },
+	{ "logging", CATEGORY_LOGGING_LABEL_HR, CATEGORY_LOGGING_INFO_0_HR },
+	{ "convert", CATEGORY_CONVERT_LABEL_HR, CATEGORY_CONVERT_INFO_0_HR },
+	{ "graphic_packs", CATEGORY_GRAPHIC_PACKS_LABEL_HR, CATEGORY_GRAPHIC_PACKS_INFO_0_HR },
+	{ NULL, NULL, NULL },
+};
+struct retro_core_option_v2_definition option_defs_hr[] = {
+	{
+		"cemu_cpu_mode",
+		CEMU_CPU_MODE_LABEL_HR,
+		NULL,
+		NULL,
+		NULL,
+		"system",
+		{
+			{ "auto", OPTION_VAL_AUTO_HR },
+			{ "singlecore_interpreter", OPTION_VAL_SINGLECORE_INTERPRETER_HR },
+			{ "singlecore_recompiler", OPTION_VAL_SINGLECORE_RECOMPILER_HR },
+			{ "multicore_recompiler", OPTION_VAL_MULTICORE_RECOMPILER_HR },
+			{ "multicore_interpreter", OPTION_VAL_MULTICORE_INTERPRETER_HR },
+			{ NULL, NULL },
+		},
+		"auto"
+	},
+	{
+		"cemu_console_language",
+		CEMU_CONSOLE_LANGUAGE_LABEL_HR,
+		NULL,
+		NULL,
+		NULL,
+		"system",
+		{
+			{ "English", OPTION_VAL_ENGLISH_HR },
+			{ "Japanese", OPTION_VAL_JAPANESE_HR },
+			{ "French", OPTION_VAL_FRENCH_HR },
+			{ "German", OPTION_VAL_GERMAN_HR },
+			{ "Italian", OPTION_VAL_ITALIAN_HR },
+			{ "Spanish", OPTION_VAL_SPANISH_HR },
+			{ "Chinese", OPTION_VAL_CHINESE_HR },
+			{ "Korean", OPTION_VAL_KOREAN_HR },
+			{ "Dutch", OPTION_VAL_DUTCH_HR },
+			{ "Portuguese", OPTION_VAL_PORTUGUESE_HR },
+			{ "Russian", OPTION_VAL_RUSSIAN_HR },
+			{ "Taiwanese", OPTION_VAL_TAIWANESE_HR },
+			{ NULL, NULL },
+		},
+		"English"
+	},
+	{
+		"cemu_async_shader_compile",
+		CEMU_ASYNC_SHADER_COMPILE_LABEL_HR,
+		NULL,
+		NULL,
+		NULL,
+		"shaders",
+		{
+			{ "enabled", NULL },
+			{ "disabled", NULL },
+			{ NULL, NULL },
+		},
+		"enabled"
+	},
+	{
+		"cemu_gx2drawdone_sync",
+		CEMU_GX2DRAWDONE_SYNC_LABEL_HR,
+		NULL,
+		NULL,
+		NULL,
+		"shaders",
+		{
+			{ "enabled", NULL },
+			{ "disabled", NULL },
+			{ NULL, NULL },
+		},
+		"enabled"
+	},
+	{
+		"cemu_precompiled_shaders",
+		CEMU_PRECOMPILED_SHADERS_LABEL_HR,
+		NULL,
+		NULL,
+		NULL,
+		"shaders",
+		{
+			{ "auto", OPTION_VAL_AUTO_HR },
+			{ "enabled", NULL },
+			{ "disabled", NULL },
+			{ NULL, NULL },
+		},
+		"auto"
+	},
+	{
+		"cemu_accurate_shader_mul",
+		CEMU_ACCURATE_SHADER_MUL_LABEL_HR,
+		NULL,
+		NULL,
+		NULL,
+		"shaders",
+		{
+			{ "enabled", NULL },
+			{ "disabled", NULL },
+			{ NULL, NULL },
+		},
+		"enabled"
+	},
+	{
+		"cemu_upscale_filter",
+		CEMU_UPSCALE_FILTER_LABEL_HR,
+		NULL,
+		NULL,
+		NULL,
+		"video",
+		{
+			{ "linear", OPTION_VAL_LINEAR_HR },
+			{ "bicubic", OPTION_VAL_BICUBIC_HR },
+			{ "bicubic_hermite", OPTION_VAL_BICUBIC_HERMITE_HR },
+			{ "nearest", OPTION_VAL_NEAREST_HR },
+			{ NULL, NULL },
+		},
+		"linear"
+	},
+	{
+		"cemu_show_game_fps",
+		CEMU_SHOW_GAME_FPS_LABEL_HR,
+		NULL,
+		CEMU_SHOW_GAME_FPS_INFO_0_HR,
+		NULL,
+		"video",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_downscale_filter",
+		CEMU_DOWNSCALE_FILTER_LABEL_HR,
+		NULL,
+		NULL,
+		NULL,
+		"video",
+		{
+			{ "linear", OPTION_VAL_LINEAR_HR },
+			{ "bicubic", OPTION_VAL_BICUBIC_HR },
+			{ "bicubic_hermite", OPTION_VAL_BICUBIC_HERMITE_HR },
+			{ "nearest", OPTION_VAL_NEAREST_HR },
+			{ NULL, NULL },
+		},
+		"linear"
+	},
+	{
+		"cemu_internal_resolution",
+		CEMU_INTERNAL_RESOLUTION_LABEL_HR,
+		NULL,
+		CEMU_INTERNAL_RESOLUTION_INFO_0_HR,
+		NULL,
+		"video",
+		{
+			{ "640x360", OPTION_VAL_640X360_HR },
+			{ "960x540", OPTION_VAL_960X540_HR },
+			{ "1280x720", OPTION_VAL_1280X720_HR },
+			{ "1920x1080", OPTION_VAL_1920X1080_HR },
+			{ "2560x1440", OPTION_VAL_2560X1440_HR },
+			{ "3840x2160", OPTION_VAL_3840X2160_HR },
+			{ NULL, NULL },
+		},
+		"1280x720"
+	},
+	{
+		"cemu_fullscreen_scaling",
+		CEMU_FULLSCREEN_SCALING_LABEL_HR,
+		NULL,
+		NULL,
+		NULL,
+		"video",
+		{
+			{ "keep_aspect", OPTION_VAL_KEEP_ASPECT_HR },
+			{ "stretch", OPTION_VAL_STRETCH_HR },
+			{ NULL, NULL },
+		},
+		"keep_aspect"
+	},
+	{
+		"cemu_thread_quantum",
+		CEMU_THREAD_QUANTUM_LABEL_HR,
+		NULL,
+		NULL,
+		NULL,
+		"system",
+		{
+			{ "20000", NULL },
+			{ "45000", NULL },
+			{ "60000", NULL },
+			{ "80000", NULL },
+			{ "100000", NULL },
+			{ NULL, NULL },
+		},
+		"45000"
+	},
+	{
+		"cemu_emulate_skylander_portal",
+		CEMU_EMULATE_SKYLANDER_PORTAL_LABEL_HR,
+		NULL,
+		NULL,
+		NULL,
+		"addons",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_emulate_infinity_base",
+		CEMU_EMULATE_INFINITY_BASE_LABEL_HR,
+		NULL,
+		NULL,
+		NULL,
+		"addons",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_emulate_dimensions_toypad",
+		CEMU_EMULATE_DIMENSIONS_TOYPAD_LABEL_HR,
+		NULL,
+		NULL,
+		NULL,
+		"addons",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_number_of_screen_layouts",
+		CEMU_NUMBER_OF_SCREEN_LAYOUTS_LABEL_HR,
+		NULL,
+		NULL,
+		NULL,
+		"screen",
+		{
+			{ "1", NULL },
+			{ "2", NULL },
+			{ "3", NULL },
+			{ "4", NULL },
+			{ "5", NULL },
+			{ NULL, NULL },
+		},
+		"2"
+	},
+	{
+		"cemu_screen_layout1",
+		CEMU_SCREEN_LAYOUT1_LABEL_HR,
+		NULL,
+		NULL,
+		NULL,
+		"screen",
+		{
+			{ "Default Screen", OPTION_VAL_DEFAULT_SCREEN_HR },
+			{ "GamePad Screen", OPTION_VAL_GAMEPAD_SCREEN_HR },
+			{ "Side by Side", OPTION_VAL_SIDE_BY_SIDE_HR },
+			{ "Top Bottom", OPTION_VAL_TOP_BOTTOM_HR },
+			{ "Picture in Picture", OPTION_VAL_PICTURE_IN_PICTURE_HR },
+			{ NULL, NULL },
+		},
+		"Default Screen"
+	},
+	{
+		"cemu_screen_layout2",
+		CEMU_SCREEN_LAYOUT2_LABEL_HR,
+		NULL,
+		NULL,
+		NULL,
+		"screen",
+		{
+			{ "Default Screen", OPTION_VAL_DEFAULT_SCREEN_HR },
+			{ "GamePad Screen", OPTION_VAL_GAMEPAD_SCREEN_HR },
+			{ "Side by Side", OPTION_VAL_SIDE_BY_SIDE_HR },
+			{ "Top Bottom", OPTION_VAL_TOP_BOTTOM_HR },
+			{ "Picture in Picture", OPTION_VAL_PICTURE_IN_PICTURE_HR },
+			{ NULL, NULL },
+		},
+		"GamePad Screen"
+	},
+	{
+		"cemu_screen_layout3",
+		CEMU_SCREEN_LAYOUT3_LABEL_HR,
+		NULL,
+		NULL,
+		NULL,
+		"screen",
+		{
+			{ "Default Screen", OPTION_VAL_DEFAULT_SCREEN_HR },
+			{ "GamePad Screen", OPTION_VAL_GAMEPAD_SCREEN_HR },
+			{ "Side by Side", OPTION_VAL_SIDE_BY_SIDE_HR },
+			{ "Top Bottom", OPTION_VAL_TOP_BOTTOM_HR },
+			{ "Picture in Picture", OPTION_VAL_PICTURE_IN_PICTURE_HR },
+			{ NULL, NULL },
+		},
+		"Side by Side"
+	},
+	{
+		"cemu_screen_layout4",
+		CEMU_SCREEN_LAYOUT4_LABEL_HR,
+		NULL,
+		NULL,
+		NULL,
+		"screen",
+		{
+			{ "Default Screen", OPTION_VAL_DEFAULT_SCREEN_HR },
+			{ "GamePad Screen", OPTION_VAL_GAMEPAD_SCREEN_HR },
+			{ "Side by Side", OPTION_VAL_SIDE_BY_SIDE_HR },
+			{ "Top Bottom", OPTION_VAL_TOP_BOTTOM_HR },
+			{ "Picture in Picture", OPTION_VAL_PICTURE_IN_PICTURE_HR },
+			{ NULL, NULL },
+		},
+		"Top Bottom"
+	},
+	{
+		"cemu_screen_layout5",
+		CEMU_SCREEN_LAYOUT5_LABEL_HR,
+		NULL,
+		NULL,
+		NULL,
+		"screen",
+		{
+			{ "Default Screen", OPTION_VAL_DEFAULT_SCREEN_HR },
+			{ "GamePad Screen", OPTION_VAL_GAMEPAD_SCREEN_HR },
+			{ "Side by Side", OPTION_VAL_SIDE_BY_SIDE_HR },
+			{ "Top Bottom", OPTION_VAL_TOP_BOTTOM_HR },
+			{ "Picture in Picture", OPTION_VAL_PICTURE_IN_PICTURE_HR },
+			{ NULL, NULL },
+		},
+		"Picture in Picture"
+	},
+	{
+		"cemu_next_screen_layout_button",
+		CEMU_NEXT_SCREEN_LAYOUT_BUTTON_LABEL_HR,
+		NULL,
+		NULL,
+		NULL,
+		"screen",
+		{
+			{ "Disabled", NULL },
+			{ "L + R + L2 + R2 + L3 + R3", OPTION_VAL_L_R_L2_R2_L3_R3_HR },
+			{ "Select + L3", OPTION_VAL_SELECT_L3_HR },
+			{ "Select + R3", OPTION_VAL_SELECT_R3_HR },
+			{ "Tab", OPTION_VAL_TAB_HR },
+			{ NULL, NULL },
+		},
+		"L + R + L2 + R2 + L3 + R3"
+	},
+	{
+		"cemu_drc_position",
+		CEMU_DRC_POSITION_LABEL_HR,
+		NULL,
+		NULL,
+		NULL,
+		"screen",
+		{
+			{ "normal", OPTION_VAL_NORMAL_HR },
+			{ "swapped", OPTION_VAL_SWAPPED_HR },
+			{ NULL, NULL },
+		},
+		"normal"
+	},
+	{
+		"cemu_log_to_file",
+		CEMU_LOG_TO_FILE_LABEL_HR,
+		NULL,
+		NULL,
+		NULL,
+		"logging",
+		{
+			{ "enabled", NULL },
+			{ "disabled", NULL },
+			{ NULL, NULL },
+		},
+		"enabled"
+	},
+	{
+		"cemu_log_filesystem",
+		CEMU_LOG_FILESYSTEM_LABEL_HR,
+		NULL,
+		NULL,
+		NULL,
+		"logging",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_log_thread_sync",
+		CEMU_LOG_THREAD_SYNC_LABEL_HR,
+		NULL,
+		NULL,
+		NULL,
+		"logging",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_log_system_api",
+		CEMU_LOG_SYSTEM_API_LABEL_HR,
+		NULL,
+		NULL,
+		NULL,
+		"logging",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_log_texture_memory",
+		CEMU_LOG_TEXTURE_MEMORY_LABEL_HR,
+		NULL,
+		CEMU_LOG_TEXTURE_MEMORY_INFO_0_HR,
+		NULL,
+		"logging",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_log_input_api",
+		CEMU_LOG_INPUT_API_LABEL_HR,
+		NULL,
+		CEMU_LOG_INPUT_API_INFO_0_HR,
+		NULL,
+		"logging",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_log_audio",
+		CEMU_LOG_AUDIO_LABEL_HR,
+		NULL,
+		CEMU_LOG_AUDIO_INFO_0_HR,
+		NULL,
+		"logging",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_bc1_16bit",
+		CEMU_BC1_16BIT_LABEL_HR,
+		NULL,
+		CEMU_BC1_16BIT_INFO_0_HR,
+		NULL,
+		"video",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+#if defined(ENABLE_VULKAN) && defined(ENABLE_OPENGL)
+	{
+		"cemu_gpu_api",
+		CEMU_GPU_API_LABEL_HR,
+		NULL,
+		NULL,
+		NULL,
+		"video",
+		{
+			{ "OpenGL", OPTION_VAL_OPENGL_HR },
+			{ "Vulkan", OPTION_VAL_VULKAN_HR },
+			{ NULL, NULL },
+		},
+		"OpenGL"
+	},
+#endif
+	{
+		"cemu_wua_output_dir",
+		CEMU_WUA_OUTPUT_DIR_LABEL_HR,
+		NULL,
+		CEMU_WUA_OUTPUT_DIR_INFO_0_HR,
+		NULL,
+		"convert",
+		{
+			// Filled in at run time with wherever the frontend lets the core write.
+			{ NULL, NULL },
+		},
+		NULL
+	},
+	{
+		"cemu_convert_to_wua",
+		CEMU_CONVERT_TO_WUA_LABEL_HR,
+		NULL,
+		CEMU_CONVERT_TO_WUA_INFO_0_HR,
+		NULL,
+		"convert",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{ NULL, NULL, NULL, NULL, NULL, NULL, {{0}}, NULL },
+};
+struct retro_core_options_v2 options_hr = {
+   option_cats_hr,
+   option_defs_hr
+};
+
 /* RETRO_LANGUAGE_HU */
 
-#define CATEGORY_VIDEO_LABEL_HU NULL
+#define CATEGORY_VIDEO_LABEL_HU "Kép"
 #define CATEGORY_VIDEO_INFO_0_HU NULL
-#define CATEGORY_SHADERS_LABEL_HU NULL
+#define CATEGORY_SHADERS_LABEL_HU "Shaderek"
 #define CATEGORY_SHADERS_INFO_0_HU NULL
 #define CATEGORY_SCREEN_LABEL_HU NULL
 #define CATEGORY_SCREEN_INFO_0_HU NULL
-#define CATEGORY_SYSTEM_LABEL_HU NULL
+#define CATEGORY_SYSTEM_LABEL_HU "Rendszer"
 #define CATEGORY_SYSTEM_INFO_0_HU NULL
 #define CATEGORY_ADDONS_LABEL_HU NULL
 #define CATEGORY_ADDONS_INFO_0_HU NULL
-#define CATEGORY_LOGGING_LABEL_HU NULL
+#define CATEGORY_LOGGING_LABEL_HU "Naplózás"
 #define CATEGORY_LOGGING_INFO_0_HU NULL
 #define CATEGORY_CONVERT_LABEL_HU NULL
 #define CATEGORY_CONVERT_INFO_0_HU NULL
+#define CATEGORY_GRAPHIC_PACKS_LABEL_HU NULL
+#define CATEGORY_GRAPHIC_PACKS_INFO_0_HU NULL
 #define CEMU_CPU_MODE_LABEL_HU NULL
-#define OPTION_VAL_AUTO_HU NULL
+#define OPTION_VAL_AUTO_HU "Automatikus"
 #define OPTION_VAL_SINGLECORE_INTERPRETER_HU NULL
 #define OPTION_VAL_SINGLECORE_RECOMPILER_HU NULL
 #define OPTION_VAL_MULTICORE_RECOMPILER_HU NULL
 #define OPTION_VAL_MULTICORE_INTERPRETER_HU NULL
 #define CEMU_CONSOLE_LANGUAGE_LABEL_HU NULL
-#define OPTION_VAL_ENGLISH_HU NULL
-#define OPTION_VAL_JAPANESE_HU NULL
-#define OPTION_VAL_FRENCH_HU NULL
-#define OPTION_VAL_GERMAN_HU NULL
-#define OPTION_VAL_ITALIAN_HU NULL
-#define OPTION_VAL_SPANISH_HU NULL
+#define OPTION_VAL_ENGLISH_HU "angol"
+#define OPTION_VAL_JAPANESE_HU "japán"
+#define OPTION_VAL_FRENCH_HU "francia"
+#define OPTION_VAL_GERMAN_HU "német"
+#define OPTION_VAL_ITALIAN_HU "olasz"
+#define OPTION_VAL_SPANISH_HU "spanyol"
 #define OPTION_VAL_CHINESE_HU NULL
 #define OPTION_VAL_KOREAN_HU NULL
 #define OPTION_VAL_DUTCH_HU NULL
@@ -11381,12 +14313,14 @@ struct retro_core_options_v2 options_he = {
 #define CEMU_PRECOMPILED_SHADERS_LABEL_HU NULL
 #define CEMU_ACCURATE_SHADER_MUL_LABEL_HU NULL
 #define CEMU_UPSCALE_FILTER_LABEL_HU NULL
-#define OPTION_VAL_LINEAR_HU NULL
-#define OPTION_VAL_BICUBIC_HU NULL
+#define OPTION_VAL_LINEAR_HU "Lineáris"
+#define OPTION_VAL_BICUBIC_HU "Kettős köbös (Bicubic)"
 #define OPTION_VAL_BICUBIC_HERMITE_HU NULL
-#define OPTION_VAL_NEAREST_HU NULL
+#define OPTION_VAL_NEAREST_HU "Legközelebbi"
+#define CEMU_SHOW_GAME_FPS_LABEL_HU NULL
+#define CEMU_SHOW_GAME_FPS_INFO_0_HU NULL
 #define CEMU_DOWNSCALE_FILTER_LABEL_HU NULL
-#define CEMU_INTERNAL_RESOLUTION_LABEL_HU NULL
+#define CEMU_INTERNAL_RESOLUTION_LABEL_HU "Belső felbontás"
 #define CEMU_INTERNAL_RESOLUTION_INFO_0_HU NULL
 #define OPTION_VAL_640X360_HU NULL
 #define OPTION_VAL_960X540_HU NULL
@@ -11418,7 +14352,7 @@ struct retro_core_options_v2 options_he = {
 #define OPTION_VAL_SELECT_R3_HU NULL
 #define OPTION_VAL_TAB_HU NULL
 #define CEMU_DRC_POSITION_LABEL_HU NULL
-#define OPTION_VAL_NORMAL_HU NULL
+#define OPTION_VAL_NORMAL_HU "Normál"
 #define OPTION_VAL_SWAPPED_HU NULL
 #define CEMU_LOG_TO_FILE_LABEL_HU NULL
 #define CEMU_LOG_FILESYSTEM_LABEL_HU NULL
@@ -11450,6 +14384,7 @@ struct retro_core_option_v2_category option_cats_hu[] = {
 	{ "addons", CATEGORY_ADDONS_LABEL_HU, CATEGORY_ADDONS_INFO_0_HU },
 	{ "logging", CATEGORY_LOGGING_LABEL_HU, CATEGORY_LOGGING_INFO_0_HU },
 	{ "convert", CATEGORY_CONVERT_LABEL_HU, CATEGORY_CONVERT_INFO_0_HU },
+	{ "graphic_packs", CATEGORY_GRAPHIC_PACKS_LABEL_HU, CATEGORY_GRAPHIC_PACKS_INFO_0_HU },
 	{ NULL, NULL, NULL },
 };
 struct retro_core_option_v2_definition option_defs_hu[] = {
@@ -11566,6 +14501,20 @@ struct retro_core_option_v2_definition option_defs_hu[] = {
 			{ NULL, NULL },
 		},
 		"linear"
+	},
+	{
+		"cemu_show_game_fps",
+		CEMU_SHOW_GAME_FPS_LABEL_HU,
+		NULL,
+		CEMU_SHOW_GAME_FPS_INFO_0_HU,
+		NULL,
+		"video",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
 	},
 	{
 		"cemu_downscale_filter",
@@ -11977,27 +14926,29 @@ struct retro_core_options_v2 options_hu = {
 #define CATEGORY_SHADERS_INFO_0_ID NULL
 #define CATEGORY_SCREEN_LABEL_ID NULL
 #define CATEGORY_SCREEN_INFO_0_ID NULL
-#define CATEGORY_SYSTEM_LABEL_ID NULL
+#define CATEGORY_SYSTEM_LABEL_ID "Sistem"
 #define CATEGORY_SYSTEM_INFO_0_ID NULL
 #define CATEGORY_ADDONS_LABEL_ID NULL
 #define CATEGORY_ADDONS_INFO_0_ID NULL
-#define CATEGORY_LOGGING_LABEL_ID NULL
+#define CATEGORY_LOGGING_LABEL_ID "Pencatatan Log"
 #define CATEGORY_LOGGING_INFO_0_ID NULL
 #define CATEGORY_CONVERT_LABEL_ID NULL
 #define CATEGORY_CONVERT_INFO_0_ID NULL
+#define CATEGORY_GRAPHIC_PACKS_LABEL_ID NULL
+#define CATEGORY_GRAPHIC_PACKS_INFO_0_ID NULL
 #define CEMU_CPU_MODE_LABEL_ID NULL
-#define OPTION_VAL_AUTO_ID NULL
+#define OPTION_VAL_AUTO_ID "Otomatis"
 #define OPTION_VAL_SINGLECORE_INTERPRETER_ID NULL
 #define OPTION_VAL_SINGLECORE_RECOMPILER_ID NULL
 #define OPTION_VAL_MULTICORE_RECOMPILER_ID NULL
 #define OPTION_VAL_MULTICORE_INTERPRETER_ID NULL
 #define CEMU_CONSOLE_LANGUAGE_LABEL_ID NULL
-#define OPTION_VAL_ENGLISH_ID NULL
-#define OPTION_VAL_JAPANESE_ID NULL
-#define OPTION_VAL_FRENCH_ID NULL
-#define OPTION_VAL_GERMAN_ID NULL
-#define OPTION_VAL_ITALIAN_ID NULL
-#define OPTION_VAL_SPANISH_ID NULL
+#define OPTION_VAL_ENGLISH_ID "Bahasa Inggris"
+#define OPTION_VAL_JAPANESE_ID "Bahasa Jepang"
+#define OPTION_VAL_FRENCH_ID "Bahasa Perancis"
+#define OPTION_VAL_GERMAN_ID "Bahasa Jerman"
+#define OPTION_VAL_ITALIAN_ID "Bahasa Itali"
+#define OPTION_VAL_SPANISH_ID "Bahasa Spanyol"
 #define OPTION_VAL_CHINESE_ID NULL
 #define OPTION_VAL_KOREAN_ID NULL
 #define OPTION_VAL_DUTCH_ID NULL
@@ -12013,8 +14964,10 @@ struct retro_core_options_v2 options_hu = {
 #define OPTION_VAL_BICUBIC_ID NULL
 #define OPTION_VAL_BICUBIC_HERMITE_ID NULL
 #define OPTION_VAL_NEAREST_ID NULL
+#define CEMU_SHOW_GAME_FPS_LABEL_ID NULL
+#define CEMU_SHOW_GAME_FPS_INFO_0_ID NULL
 #define CEMU_DOWNSCALE_FILTER_LABEL_ID NULL
-#define CEMU_INTERNAL_RESOLUTION_LABEL_ID NULL
+#define CEMU_INTERNAL_RESOLUTION_LABEL_ID "Resolusi Internal"
 #define CEMU_INTERNAL_RESOLUTION_INFO_0_ID NULL
 #define OPTION_VAL_640X360_ID NULL
 #define OPTION_VAL_960X540_ID NULL
@@ -12078,6 +15031,7 @@ struct retro_core_option_v2_category option_cats_id[] = {
 	{ "addons", CATEGORY_ADDONS_LABEL_ID, CATEGORY_ADDONS_INFO_0_ID },
 	{ "logging", CATEGORY_LOGGING_LABEL_ID, CATEGORY_LOGGING_INFO_0_ID },
 	{ "convert", CATEGORY_CONVERT_LABEL_ID, CATEGORY_CONVERT_INFO_0_ID },
+	{ "graphic_packs", CATEGORY_GRAPHIC_PACKS_LABEL_ID, CATEGORY_GRAPHIC_PACKS_INFO_0_ID },
 	{ NULL, NULL, NULL },
 };
 struct retro_core_option_v2_definition option_defs_id[] = {
@@ -12194,6 +15148,20 @@ struct retro_core_option_v2_definition option_defs_id[] = {
 			{ NULL, NULL },
 		},
 		"linear"
+	},
+	{
+		"cemu_show_game_fps",
+		CEMU_SHOW_GAME_FPS_LABEL_ID,
+		NULL,
+		CEMU_SHOW_GAME_FPS_INFO_0_ID,
+		NULL,
+		"video",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
 	},
 	{
 		"cemu_downscale_filter",
@@ -12605,14 +15573,16 @@ struct retro_core_options_v2 options_id = {
 #define CATEGORY_SHADERS_INFO_0_IT NULL
 #define CATEGORY_SCREEN_LABEL_IT NULL
 #define CATEGORY_SCREEN_INFO_0_IT NULL
-#define CATEGORY_SYSTEM_LABEL_IT NULL
+#define CATEGORY_SYSTEM_LABEL_IT "Sistema"
 #define CATEGORY_SYSTEM_INFO_0_IT NULL
 #define CATEGORY_ADDONS_LABEL_IT NULL
 #define CATEGORY_ADDONS_INFO_0_IT NULL
-#define CATEGORY_LOGGING_LABEL_IT NULL
+#define CATEGORY_LOGGING_LABEL_IT "Registrazione dei log"
 #define CATEGORY_LOGGING_INFO_0_IT NULL
 #define CATEGORY_CONVERT_LABEL_IT NULL
 #define CATEGORY_CONVERT_INFO_0_IT NULL
+#define CATEGORY_GRAPHIC_PACKS_LABEL_IT NULL
+#define CATEGORY_GRAPHIC_PACKS_INFO_0_IT NULL
 #define CEMU_CPU_MODE_LABEL_IT NULL
 #define OPTION_VAL_AUTO_IT NULL
 #define OPTION_VAL_SINGLECORE_INTERPRETER_IT NULL
@@ -12620,12 +15590,12 @@ struct retro_core_options_v2 options_id = {
 #define OPTION_VAL_MULTICORE_RECOMPILER_IT NULL
 #define OPTION_VAL_MULTICORE_INTERPRETER_IT NULL
 #define CEMU_CONSOLE_LANGUAGE_LABEL_IT NULL
-#define OPTION_VAL_ENGLISH_IT NULL
-#define OPTION_VAL_JAPANESE_IT NULL
-#define OPTION_VAL_FRENCH_IT NULL
-#define OPTION_VAL_GERMAN_IT NULL
-#define OPTION_VAL_ITALIAN_IT NULL
-#define OPTION_VAL_SPANISH_IT NULL
+#define OPTION_VAL_ENGLISH_IT "Inglese"
+#define OPTION_VAL_JAPANESE_IT "Giapponese"
+#define OPTION_VAL_FRENCH_IT "Francese"
+#define OPTION_VAL_GERMAN_IT "Tedesco"
+#define OPTION_VAL_ITALIAN_IT "Italiano"
+#define OPTION_VAL_SPANISH_IT "Spagnolo"
 #define OPTION_VAL_CHINESE_IT NULL
 #define OPTION_VAL_KOREAN_IT NULL
 #define OPTION_VAL_DUTCH_IT NULL
@@ -12637,12 +15607,14 @@ struct retro_core_options_v2 options_id = {
 #define CEMU_PRECOMPILED_SHADERS_LABEL_IT NULL
 #define CEMU_ACCURATE_SHADER_MUL_LABEL_IT NULL
 #define CEMU_UPSCALE_FILTER_LABEL_IT NULL
-#define OPTION_VAL_LINEAR_IT NULL
-#define OPTION_VAL_BICUBIC_IT NULL
+#define OPTION_VAL_LINEAR_IT "Lineare"
+#define OPTION_VAL_BICUBIC_IT "Bicubico"
 #define OPTION_VAL_BICUBIC_HERMITE_IT NULL
-#define OPTION_VAL_NEAREST_IT NULL
+#define OPTION_VAL_NEAREST_IT "Più Vicino"
+#define CEMU_SHOW_GAME_FPS_LABEL_IT NULL
+#define CEMU_SHOW_GAME_FPS_INFO_0_IT NULL
 #define CEMU_DOWNSCALE_FILTER_LABEL_IT NULL
-#define CEMU_INTERNAL_RESOLUTION_LABEL_IT NULL
+#define CEMU_INTERNAL_RESOLUTION_LABEL_IT "Risoluzione Interna"
 #define CEMU_INTERNAL_RESOLUTION_INFO_0_IT NULL
 #define OPTION_VAL_640X360_IT NULL
 #define OPTION_VAL_960X540_IT NULL
@@ -12674,7 +15646,7 @@ struct retro_core_options_v2 options_id = {
 #define OPTION_VAL_SELECT_R3_IT NULL
 #define OPTION_VAL_TAB_IT NULL
 #define CEMU_DRC_POSITION_LABEL_IT NULL
-#define OPTION_VAL_NORMAL_IT NULL
+#define OPTION_VAL_NORMAL_IT "Normale"
 #define OPTION_VAL_SWAPPED_IT NULL
 #define CEMU_LOG_TO_FILE_LABEL_IT NULL
 #define CEMU_LOG_FILESYSTEM_LABEL_IT NULL
@@ -12706,6 +15678,7 @@ struct retro_core_option_v2_category option_cats_it[] = {
 	{ "addons", CATEGORY_ADDONS_LABEL_IT, CATEGORY_ADDONS_INFO_0_IT },
 	{ "logging", CATEGORY_LOGGING_LABEL_IT, CATEGORY_LOGGING_INFO_0_IT },
 	{ "convert", CATEGORY_CONVERT_LABEL_IT, CATEGORY_CONVERT_INFO_0_IT },
+	{ "graphic_packs", CATEGORY_GRAPHIC_PACKS_LABEL_IT, CATEGORY_GRAPHIC_PACKS_INFO_0_IT },
 	{ NULL, NULL, NULL },
 };
 struct retro_core_option_v2_definition option_defs_it[] = {
@@ -12822,6 +15795,20 @@ struct retro_core_option_v2_definition option_defs_it[] = {
 			{ NULL, NULL },
 		},
 		"linear"
+	},
+	{
+		"cemu_show_game_fps",
+		CEMU_SHOW_GAME_FPS_LABEL_IT,
+		NULL,
+		CEMU_SHOW_GAME_FPS_INFO_0_IT,
+		NULL,
+		"video",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
 	},
 	{
 		"cemu_downscale_filter",
@@ -13227,33 +16214,35 @@ struct retro_core_options_v2 options_it = {
 
 /* RETRO_LANGUAGE_JA */
 
-#define CATEGORY_VIDEO_LABEL_JA NULL
+#define CATEGORY_VIDEO_LABEL_JA "ビデオ"
 #define CATEGORY_VIDEO_INFO_0_JA NULL
-#define CATEGORY_SHADERS_LABEL_JA NULL
+#define CATEGORY_SHADERS_LABEL_JA "シェーダー"
 #define CATEGORY_SHADERS_INFO_0_JA NULL
 #define CATEGORY_SCREEN_LABEL_JA NULL
 #define CATEGORY_SCREEN_INFO_0_JA NULL
-#define CATEGORY_SYSTEM_LABEL_JA NULL
+#define CATEGORY_SYSTEM_LABEL_JA "システム"
 #define CATEGORY_SYSTEM_INFO_0_JA NULL
 #define CATEGORY_ADDONS_LABEL_JA NULL
 #define CATEGORY_ADDONS_INFO_0_JA NULL
-#define CATEGORY_LOGGING_LABEL_JA NULL
+#define CATEGORY_LOGGING_LABEL_JA "ログ"
 #define CATEGORY_LOGGING_INFO_0_JA NULL
 #define CATEGORY_CONVERT_LABEL_JA NULL
 #define CATEGORY_CONVERT_INFO_0_JA NULL
+#define CATEGORY_GRAPHIC_PACKS_LABEL_JA NULL
+#define CATEGORY_GRAPHIC_PACKS_INFO_0_JA NULL
 #define CEMU_CPU_MODE_LABEL_JA NULL
-#define OPTION_VAL_AUTO_JA NULL
+#define OPTION_VAL_AUTO_JA "自動"
 #define OPTION_VAL_SINGLECORE_INTERPRETER_JA NULL
 #define OPTION_VAL_SINGLECORE_RECOMPILER_JA NULL
 #define OPTION_VAL_MULTICORE_RECOMPILER_JA NULL
 #define OPTION_VAL_MULTICORE_INTERPRETER_JA NULL
 #define CEMU_CONSOLE_LANGUAGE_LABEL_JA NULL
-#define OPTION_VAL_ENGLISH_JA NULL
-#define OPTION_VAL_JAPANESE_JA NULL
-#define OPTION_VAL_FRENCH_JA NULL
-#define OPTION_VAL_GERMAN_JA NULL
-#define OPTION_VAL_ITALIAN_JA NULL
-#define OPTION_VAL_SPANISH_JA NULL
+#define OPTION_VAL_ENGLISH_JA "英語"
+#define OPTION_VAL_JAPANESE_JA "日本語"
+#define OPTION_VAL_FRENCH_JA "フランス語"
+#define OPTION_VAL_GERMAN_JA "ドイツ語"
+#define OPTION_VAL_ITALIAN_JA "イタリア語"
+#define OPTION_VAL_SPANISH_JA "スペイン語"
 #define OPTION_VAL_CHINESE_JA NULL
 #define OPTION_VAL_KOREAN_JA NULL
 #define OPTION_VAL_DUTCH_JA NULL
@@ -13265,12 +16254,14 @@ struct retro_core_options_v2 options_it = {
 #define CEMU_PRECOMPILED_SHADERS_LABEL_JA NULL
 #define CEMU_ACCURATE_SHADER_MUL_LABEL_JA NULL
 #define CEMU_UPSCALE_FILTER_LABEL_JA NULL
-#define OPTION_VAL_LINEAR_JA NULL
-#define OPTION_VAL_BICUBIC_JA NULL
+#define OPTION_VAL_LINEAR_JA "リニア"
+#define OPTION_VAL_BICUBIC_JA "バイキュービック"
 #define OPTION_VAL_BICUBIC_HERMITE_JA NULL
-#define OPTION_VAL_NEAREST_JA NULL
+#define OPTION_VAL_NEAREST_JA "ニアレスト"
+#define CEMU_SHOW_GAME_FPS_LABEL_JA NULL
+#define CEMU_SHOW_GAME_FPS_INFO_0_JA NULL
 #define CEMU_DOWNSCALE_FILTER_LABEL_JA NULL
-#define CEMU_INTERNAL_RESOLUTION_LABEL_JA NULL
+#define CEMU_INTERNAL_RESOLUTION_LABEL_JA "内部解像度"
 #define CEMU_INTERNAL_RESOLUTION_INFO_0_JA NULL
 #define OPTION_VAL_640X360_JA NULL
 #define OPTION_VAL_960X540_JA NULL
@@ -13302,7 +16293,7 @@ struct retro_core_options_v2 options_it = {
 #define OPTION_VAL_SELECT_R3_JA NULL
 #define OPTION_VAL_TAB_JA NULL
 #define CEMU_DRC_POSITION_LABEL_JA NULL
-#define OPTION_VAL_NORMAL_JA NULL
+#define OPTION_VAL_NORMAL_JA "通常"
 #define OPTION_VAL_SWAPPED_JA NULL
 #define CEMU_LOG_TO_FILE_LABEL_JA NULL
 #define CEMU_LOG_FILESYSTEM_LABEL_JA NULL
@@ -13334,6 +16325,7 @@ struct retro_core_option_v2_category option_cats_ja[] = {
 	{ "addons", CATEGORY_ADDONS_LABEL_JA, CATEGORY_ADDONS_INFO_0_JA },
 	{ "logging", CATEGORY_LOGGING_LABEL_JA, CATEGORY_LOGGING_INFO_0_JA },
 	{ "convert", CATEGORY_CONVERT_LABEL_JA, CATEGORY_CONVERT_INFO_0_JA },
+	{ "graphic_packs", CATEGORY_GRAPHIC_PACKS_LABEL_JA, CATEGORY_GRAPHIC_PACKS_INFO_0_JA },
 	{ NULL, NULL, NULL },
 };
 struct retro_core_option_v2_definition option_defs_ja[] = {
@@ -13450,6 +16442,20 @@ struct retro_core_option_v2_definition option_defs_ja[] = {
 			{ NULL, NULL },
 		},
 		"linear"
+	},
+	{
+		"cemu_show_game_fps",
+		CEMU_SHOW_GAME_FPS_LABEL_JA,
+		NULL,
+		CEMU_SHOW_GAME_FPS_INFO_0_JA,
+		NULL,
+		"video",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
 	},
 	{
 		"cemu_downscale_filter",
@@ -13855,33 +16861,35 @@ struct retro_core_options_v2 options_ja = {
 
 /* RETRO_LANGUAGE_KO */
 
-#define CATEGORY_VIDEO_LABEL_KO NULL
+#define CATEGORY_VIDEO_LABEL_KO "비디오"
 #define CATEGORY_VIDEO_INFO_0_KO NULL
-#define CATEGORY_SHADERS_LABEL_KO NULL
+#define CATEGORY_SHADERS_LABEL_KO "셰이더"
 #define CATEGORY_SHADERS_INFO_0_KO NULL
 #define CATEGORY_SCREEN_LABEL_KO NULL
 #define CATEGORY_SCREEN_INFO_0_KO NULL
-#define CATEGORY_SYSTEM_LABEL_KO NULL
+#define CATEGORY_SYSTEM_LABEL_KO "시스템"
 #define CATEGORY_SYSTEM_INFO_0_KO NULL
 #define CATEGORY_ADDONS_LABEL_KO NULL
 #define CATEGORY_ADDONS_INFO_0_KO NULL
-#define CATEGORY_LOGGING_LABEL_KO NULL
+#define CATEGORY_LOGGING_LABEL_KO "로그"
 #define CATEGORY_LOGGING_INFO_0_KO NULL
 #define CATEGORY_CONVERT_LABEL_KO NULL
 #define CATEGORY_CONVERT_INFO_0_KO NULL
+#define CATEGORY_GRAPHIC_PACKS_LABEL_KO NULL
+#define CATEGORY_GRAPHIC_PACKS_INFO_0_KO NULL
 #define CEMU_CPU_MODE_LABEL_KO NULL
-#define OPTION_VAL_AUTO_KO NULL
+#define OPTION_VAL_AUTO_KO "자동"
 #define OPTION_VAL_SINGLECORE_INTERPRETER_KO NULL
 #define OPTION_VAL_SINGLECORE_RECOMPILER_KO NULL
 #define OPTION_VAL_MULTICORE_RECOMPILER_KO NULL
 #define OPTION_VAL_MULTICORE_INTERPRETER_KO NULL
 #define CEMU_CONSOLE_LANGUAGE_LABEL_KO NULL
-#define OPTION_VAL_ENGLISH_KO NULL
-#define OPTION_VAL_JAPANESE_KO NULL
-#define OPTION_VAL_FRENCH_KO NULL
-#define OPTION_VAL_GERMAN_KO NULL
-#define OPTION_VAL_ITALIAN_KO NULL
-#define OPTION_VAL_SPANISH_KO NULL
+#define OPTION_VAL_ENGLISH_KO "영어"
+#define OPTION_VAL_JAPANESE_KO "일본어"
+#define OPTION_VAL_FRENCH_KO "프랑스어"
+#define OPTION_VAL_GERMAN_KO "독일어"
+#define OPTION_VAL_ITALIAN_KO "이탈리아어"
+#define OPTION_VAL_SPANISH_KO "스페인어"
 #define OPTION_VAL_CHINESE_KO NULL
 #define OPTION_VAL_KOREAN_KO NULL
 #define OPTION_VAL_DUTCH_KO NULL
@@ -13893,12 +16901,14 @@ struct retro_core_options_v2 options_ja = {
 #define CEMU_PRECOMPILED_SHADERS_LABEL_KO NULL
 #define CEMU_ACCURATE_SHADER_MUL_LABEL_KO NULL
 #define CEMU_UPSCALE_FILTER_LABEL_KO NULL
-#define OPTION_VAL_LINEAR_KO NULL
-#define OPTION_VAL_BICUBIC_KO NULL
+#define OPTION_VAL_LINEAR_KO "선형"
+#define OPTION_VAL_BICUBIC_KO "쌍입방보간"
 #define OPTION_VAL_BICUBIC_HERMITE_KO NULL
-#define OPTION_VAL_NEAREST_KO NULL
+#define OPTION_VAL_NEAREST_KO "최근접"
+#define CEMU_SHOW_GAME_FPS_LABEL_KO NULL
+#define CEMU_SHOW_GAME_FPS_INFO_0_KO NULL
 #define CEMU_DOWNSCALE_FILTER_LABEL_KO NULL
-#define CEMU_INTERNAL_RESOLUTION_LABEL_KO NULL
+#define CEMU_INTERNAL_RESOLUTION_LABEL_KO "내부 해상도"
 #define CEMU_INTERNAL_RESOLUTION_INFO_0_KO NULL
 #define OPTION_VAL_640X360_KO NULL
 #define OPTION_VAL_960X540_KO NULL
@@ -13930,7 +16940,7 @@ struct retro_core_options_v2 options_ja = {
 #define OPTION_VAL_SELECT_R3_KO NULL
 #define OPTION_VAL_TAB_KO NULL
 #define CEMU_DRC_POSITION_LABEL_KO NULL
-#define OPTION_VAL_NORMAL_KO NULL
+#define OPTION_VAL_NORMAL_KO "보통"
 #define OPTION_VAL_SWAPPED_KO NULL
 #define CEMU_LOG_TO_FILE_LABEL_KO NULL
 #define CEMU_LOG_FILESYSTEM_LABEL_KO NULL
@@ -13962,6 +16972,7 @@ struct retro_core_option_v2_category option_cats_ko[] = {
 	{ "addons", CATEGORY_ADDONS_LABEL_KO, CATEGORY_ADDONS_INFO_0_KO },
 	{ "logging", CATEGORY_LOGGING_LABEL_KO, CATEGORY_LOGGING_INFO_0_KO },
 	{ "convert", CATEGORY_CONVERT_LABEL_KO, CATEGORY_CONVERT_INFO_0_KO },
+	{ "graphic_packs", CATEGORY_GRAPHIC_PACKS_LABEL_KO, CATEGORY_GRAPHIC_PACKS_INFO_0_KO },
 	{ NULL, NULL, NULL },
 };
 struct retro_core_option_v2_definition option_defs_ko[] = {
@@ -14078,6 +17089,20 @@ struct retro_core_option_v2_definition option_defs_ko[] = {
 			{ NULL, NULL },
 		},
 		"linear"
+	},
+	{
+		"cemu_show_game_fps",
+		CEMU_SHOW_GAME_FPS_LABEL_KO,
+		NULL,
+		CEMU_SHOW_GAME_FPS_INFO_0_KO,
+		NULL,
+		"video",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
 	},
 	{
 		"cemu_downscale_filter",
@@ -14489,27 +17514,29 @@ struct retro_core_options_v2 options_ko = {
 #define CATEGORY_SHADERS_INFO_0_NL NULL
 #define CATEGORY_SCREEN_LABEL_NL NULL
 #define CATEGORY_SCREEN_INFO_0_NL NULL
-#define CATEGORY_SYSTEM_LABEL_NL NULL
+#define CATEGORY_SYSTEM_LABEL_NL "Systeem"
 #define CATEGORY_SYSTEM_INFO_0_NL NULL
 #define CATEGORY_ADDONS_LABEL_NL NULL
 #define CATEGORY_ADDONS_INFO_0_NL NULL
-#define CATEGORY_LOGGING_LABEL_NL NULL
+#define CATEGORY_LOGGING_LABEL_NL "Loggen"
 #define CATEGORY_LOGGING_INFO_0_NL NULL
 #define CATEGORY_CONVERT_LABEL_NL NULL
 #define CATEGORY_CONVERT_INFO_0_NL NULL
+#define CATEGORY_GRAPHIC_PACKS_LABEL_NL NULL
+#define CATEGORY_GRAPHIC_PACKS_INFO_0_NL NULL
 #define CEMU_CPU_MODE_LABEL_NL NULL
-#define OPTION_VAL_AUTO_NL NULL
+#define OPTION_VAL_AUTO_NL "Automatisch"
 #define OPTION_VAL_SINGLECORE_INTERPRETER_NL NULL
 #define OPTION_VAL_SINGLECORE_RECOMPILER_NL NULL
 #define OPTION_VAL_MULTICORE_RECOMPILER_NL NULL
 #define OPTION_VAL_MULTICORE_INTERPRETER_NL NULL
 #define CEMU_CONSOLE_LANGUAGE_LABEL_NL NULL
-#define OPTION_VAL_ENGLISH_NL NULL
-#define OPTION_VAL_JAPANESE_NL NULL
-#define OPTION_VAL_FRENCH_NL NULL
-#define OPTION_VAL_GERMAN_NL NULL
-#define OPTION_VAL_ITALIAN_NL NULL
-#define OPTION_VAL_SPANISH_NL NULL
+#define OPTION_VAL_ENGLISH_NL "Engels"
+#define OPTION_VAL_JAPANESE_NL "Japans"
+#define OPTION_VAL_FRENCH_NL "Frans"
+#define OPTION_VAL_GERMAN_NL "Duits"
+#define OPTION_VAL_ITALIAN_NL "Italiaans"
+#define OPTION_VAL_SPANISH_NL "Spaans"
 #define OPTION_VAL_CHINESE_NL NULL
 #define OPTION_VAL_KOREAN_NL NULL
 #define OPTION_VAL_DUTCH_NL NULL
@@ -14521,10 +17548,12 @@ struct retro_core_options_v2 options_ko = {
 #define CEMU_PRECOMPILED_SHADERS_LABEL_NL NULL
 #define CEMU_ACCURATE_SHADER_MUL_LABEL_NL NULL
 #define CEMU_UPSCALE_FILTER_LABEL_NL NULL
-#define OPTION_VAL_LINEAR_NL NULL
-#define OPTION_VAL_BICUBIC_NL NULL
+#define OPTION_VAL_LINEAR_NL "Lineair"
+#define OPTION_VAL_BICUBIC_NL "Bicubisch"
 #define OPTION_VAL_BICUBIC_HERMITE_NL NULL
-#define OPTION_VAL_NEAREST_NL NULL
+#define OPTION_VAL_NEAREST_NL "Naaste"
+#define CEMU_SHOW_GAME_FPS_LABEL_NL NULL
+#define CEMU_SHOW_GAME_FPS_INFO_0_NL NULL
 #define CEMU_DOWNSCALE_FILTER_LABEL_NL NULL
 #define CEMU_INTERNAL_RESOLUTION_LABEL_NL NULL
 #define CEMU_INTERNAL_RESOLUTION_INFO_0_NL NULL
@@ -14558,7 +17587,7 @@ struct retro_core_options_v2 options_ko = {
 #define OPTION_VAL_SELECT_R3_NL NULL
 #define OPTION_VAL_TAB_NL NULL
 #define CEMU_DRC_POSITION_LABEL_NL NULL
-#define OPTION_VAL_NORMAL_NL NULL
+#define OPTION_VAL_NORMAL_NL "Normaal"
 #define OPTION_VAL_SWAPPED_NL NULL
 #define CEMU_LOG_TO_FILE_LABEL_NL NULL
 #define CEMU_LOG_FILESYSTEM_LABEL_NL NULL
@@ -14590,6 +17619,7 @@ struct retro_core_option_v2_category option_cats_nl[] = {
 	{ "addons", CATEGORY_ADDONS_LABEL_NL, CATEGORY_ADDONS_INFO_0_NL },
 	{ "logging", CATEGORY_LOGGING_LABEL_NL, CATEGORY_LOGGING_INFO_0_NL },
 	{ "convert", CATEGORY_CONVERT_LABEL_NL, CATEGORY_CONVERT_INFO_0_NL },
+	{ "graphic_packs", CATEGORY_GRAPHIC_PACKS_LABEL_NL, CATEGORY_GRAPHIC_PACKS_INFO_0_NL },
 	{ NULL, NULL, NULL },
 };
 struct retro_core_option_v2_definition option_defs_nl[] = {
@@ -14706,6 +17736,20 @@ struct retro_core_option_v2_definition option_defs_nl[] = {
 			{ NULL, NULL },
 		},
 		"linear"
+	},
+	{
+		"cemu_show_game_fps",
+		CEMU_SHOW_GAME_FPS_LABEL_NL,
+		NULL,
+		CEMU_SHOW_GAME_FPS_INFO_0_NL,
+		NULL,
+		"video",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
 	},
 	{
 		"cemu_downscale_filter",
@@ -15125,6 +18169,8 @@ struct retro_core_options_v2 options_nl = {
 #define CATEGORY_LOGGING_INFO_0_NO NULL
 #define CATEGORY_CONVERT_LABEL_NO NULL
 #define CATEGORY_CONVERT_INFO_0_NO NULL
+#define CATEGORY_GRAPHIC_PACKS_LABEL_NO NULL
+#define CATEGORY_GRAPHIC_PACKS_INFO_0_NO NULL
 #define CEMU_CPU_MODE_LABEL_NO NULL
 #define OPTION_VAL_AUTO_NO NULL
 #define OPTION_VAL_SINGLECORE_INTERPRETER_NO NULL
@@ -15150,11 +18196,13 @@ struct retro_core_options_v2 options_nl = {
 #define CEMU_ACCURATE_SHADER_MUL_LABEL_NO NULL
 #define CEMU_UPSCALE_FILTER_LABEL_NO NULL
 #define OPTION_VAL_LINEAR_NO NULL
-#define OPTION_VAL_BICUBIC_NO NULL
+#define OPTION_VAL_BICUBIC_NO "Bikubisk"
 #define OPTION_VAL_BICUBIC_HERMITE_NO NULL
 #define OPTION_VAL_NEAREST_NO NULL
+#define CEMU_SHOW_GAME_FPS_LABEL_NO NULL
+#define CEMU_SHOW_GAME_FPS_INFO_0_NO NULL
 #define CEMU_DOWNSCALE_FILTER_LABEL_NO NULL
-#define CEMU_INTERNAL_RESOLUTION_LABEL_NO NULL
+#define CEMU_INTERNAL_RESOLUTION_LABEL_NO "Intern oppløsning"
 #define CEMU_INTERNAL_RESOLUTION_INFO_0_NO NULL
 #define OPTION_VAL_640X360_NO NULL
 #define OPTION_VAL_960X540_NO NULL
@@ -15218,6 +18266,7 @@ struct retro_core_option_v2_category option_cats_no[] = {
 	{ "addons", CATEGORY_ADDONS_LABEL_NO, CATEGORY_ADDONS_INFO_0_NO },
 	{ "logging", CATEGORY_LOGGING_LABEL_NO, CATEGORY_LOGGING_INFO_0_NO },
 	{ "convert", CATEGORY_CONVERT_LABEL_NO, CATEGORY_CONVERT_INFO_0_NO },
+	{ "graphic_packs", CATEGORY_GRAPHIC_PACKS_LABEL_NO, CATEGORY_GRAPHIC_PACKS_INFO_0_NO },
 	{ NULL, NULL, NULL },
 };
 struct retro_core_option_v2_definition option_defs_no[] = {
@@ -15334,6 +18383,20 @@ struct retro_core_option_v2_definition option_defs_no[] = {
 			{ NULL, NULL },
 		},
 		"linear"
+	},
+	{
+		"cemu_show_game_fps",
+		CEMU_SHOW_GAME_FPS_LABEL_NO,
+		NULL,
+		CEMU_SHOW_GAME_FPS_INFO_0_NO,
+		NULL,
+		"video",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
 	},
 	{
 		"cemu_downscale_filter",
@@ -15737,11 +18800,658 @@ struct retro_core_options_v2 options_no = {
    option_defs_no
 };
 
+/* RETRO_LANGUAGE_OR */
+
+#define CATEGORY_VIDEO_LABEL_OR "ଵିଡ଼ିଓ"
+#define CATEGORY_VIDEO_INFO_0_OR NULL
+#define CATEGORY_SHADERS_LABEL_OR NULL
+#define CATEGORY_SHADERS_INFO_0_OR NULL
+#define CATEGORY_SCREEN_LABEL_OR NULL
+#define CATEGORY_SCREEN_INFO_0_OR NULL
+#define CATEGORY_SYSTEM_LABEL_OR NULL
+#define CATEGORY_SYSTEM_INFO_0_OR NULL
+#define CATEGORY_ADDONS_LABEL_OR NULL
+#define CATEGORY_ADDONS_INFO_0_OR NULL
+#define CATEGORY_LOGGING_LABEL_OR NULL
+#define CATEGORY_LOGGING_INFO_0_OR NULL
+#define CATEGORY_CONVERT_LABEL_OR NULL
+#define CATEGORY_CONVERT_INFO_0_OR NULL
+#define CATEGORY_GRAPHIC_PACKS_LABEL_OR NULL
+#define CATEGORY_GRAPHIC_PACKS_INFO_0_OR NULL
+#define CEMU_CPU_MODE_LABEL_OR NULL
+#define OPTION_VAL_AUTO_OR NULL
+#define OPTION_VAL_SINGLECORE_INTERPRETER_OR NULL
+#define OPTION_VAL_SINGLECORE_RECOMPILER_OR NULL
+#define OPTION_VAL_MULTICORE_RECOMPILER_OR NULL
+#define OPTION_VAL_MULTICORE_INTERPRETER_OR NULL
+#define CEMU_CONSOLE_LANGUAGE_LABEL_OR NULL
+#define OPTION_VAL_ENGLISH_OR NULL
+#define OPTION_VAL_JAPANESE_OR NULL
+#define OPTION_VAL_FRENCH_OR NULL
+#define OPTION_VAL_GERMAN_OR NULL
+#define OPTION_VAL_ITALIAN_OR NULL
+#define OPTION_VAL_SPANISH_OR NULL
+#define OPTION_VAL_CHINESE_OR NULL
+#define OPTION_VAL_KOREAN_OR NULL
+#define OPTION_VAL_DUTCH_OR NULL
+#define OPTION_VAL_PORTUGUESE_OR NULL
+#define OPTION_VAL_RUSSIAN_OR NULL
+#define OPTION_VAL_TAIWANESE_OR NULL
+#define CEMU_ASYNC_SHADER_COMPILE_LABEL_OR NULL
+#define CEMU_GX2DRAWDONE_SYNC_LABEL_OR NULL
+#define CEMU_PRECOMPILED_SHADERS_LABEL_OR NULL
+#define CEMU_ACCURATE_SHADER_MUL_LABEL_OR NULL
+#define CEMU_UPSCALE_FILTER_LABEL_OR NULL
+#define OPTION_VAL_LINEAR_OR NULL
+#define OPTION_VAL_BICUBIC_OR NULL
+#define OPTION_VAL_BICUBIC_HERMITE_OR NULL
+#define OPTION_VAL_NEAREST_OR NULL
+#define CEMU_SHOW_GAME_FPS_LABEL_OR NULL
+#define CEMU_SHOW_GAME_FPS_INFO_0_OR NULL
+#define CEMU_DOWNSCALE_FILTER_LABEL_OR NULL
+#define CEMU_INTERNAL_RESOLUTION_LABEL_OR NULL
+#define CEMU_INTERNAL_RESOLUTION_INFO_0_OR NULL
+#define OPTION_VAL_640X360_OR NULL
+#define OPTION_VAL_960X540_OR NULL
+#define OPTION_VAL_1280X720_OR NULL
+#define OPTION_VAL_1920X1080_OR NULL
+#define OPTION_VAL_2560X1440_OR NULL
+#define OPTION_VAL_3840X2160_OR NULL
+#define CEMU_FULLSCREEN_SCALING_LABEL_OR NULL
+#define OPTION_VAL_KEEP_ASPECT_OR NULL
+#define OPTION_VAL_STRETCH_OR NULL
+#define CEMU_THREAD_QUANTUM_LABEL_OR NULL
+#define CEMU_EMULATE_SKYLANDER_PORTAL_LABEL_OR NULL
+#define CEMU_EMULATE_INFINITY_BASE_LABEL_OR NULL
+#define CEMU_EMULATE_DIMENSIONS_TOYPAD_LABEL_OR NULL
+#define CEMU_NUMBER_OF_SCREEN_LAYOUTS_LABEL_OR NULL
+#define CEMU_SCREEN_LAYOUT1_LABEL_OR NULL
+#define OPTION_VAL_DEFAULT_SCREEN_OR NULL
+#define OPTION_VAL_GAMEPAD_SCREEN_OR NULL
+#define OPTION_VAL_SIDE_BY_SIDE_OR NULL
+#define OPTION_VAL_TOP_BOTTOM_OR NULL
+#define OPTION_VAL_PICTURE_IN_PICTURE_OR NULL
+#define CEMU_SCREEN_LAYOUT2_LABEL_OR NULL
+#define CEMU_SCREEN_LAYOUT3_LABEL_OR NULL
+#define CEMU_SCREEN_LAYOUT4_LABEL_OR NULL
+#define CEMU_SCREEN_LAYOUT5_LABEL_OR NULL
+#define CEMU_NEXT_SCREEN_LAYOUT_BUTTON_LABEL_OR NULL
+#define OPTION_VAL_L_R_L2_R2_L3_R3_OR NULL
+#define OPTION_VAL_SELECT_L3_OR NULL
+#define OPTION_VAL_SELECT_R3_OR NULL
+#define OPTION_VAL_TAB_OR NULL
+#define CEMU_DRC_POSITION_LABEL_OR NULL
+#define OPTION_VAL_NORMAL_OR NULL
+#define OPTION_VAL_SWAPPED_OR NULL
+#define CEMU_LOG_TO_FILE_LABEL_OR NULL
+#define CEMU_LOG_FILESYSTEM_LABEL_OR NULL
+#define CEMU_LOG_THREAD_SYNC_LABEL_OR NULL
+#define CEMU_LOG_SYSTEM_API_LABEL_OR NULL
+#define CEMU_LOG_TEXTURE_MEMORY_LABEL_OR NULL
+#define CEMU_LOG_TEXTURE_MEMORY_INFO_0_OR NULL
+#define CEMU_LOG_INPUT_API_LABEL_OR NULL
+#define CEMU_LOG_INPUT_API_INFO_0_OR NULL
+#define CEMU_LOG_AUDIO_LABEL_OR NULL
+#define CEMU_LOG_AUDIO_INFO_0_OR NULL
+#define CEMU_BC1_16BIT_LABEL_OR NULL
+#define CEMU_BC1_16BIT_INFO_0_OR NULL
+#define CEMU_GPU_API_LABEL_OR NULL
+#define OPTION_VAL_OPENGL_OR NULL
+#define OPTION_VAL_VULKAN_OR NULL
+#define CEMU_WUA_OUTPUT_DIR_LABEL_OR NULL
+#define CEMU_WUA_OUTPUT_DIR_INFO_0_OR NULL
+#define CEMU_CONVERT_TO_WUA_LABEL_OR NULL
+#define CEMU_CONVERT_TO_WUA_INFO_0_OR NULL
+
+struct retro_core_option_v2_category option_cats_or[] = {
+	{ "video", CATEGORY_VIDEO_LABEL_OR, CATEGORY_VIDEO_INFO_0_OR },
+	{ "shaders", CATEGORY_SHADERS_LABEL_OR, CATEGORY_SHADERS_INFO_0_OR },
+	{ "screen", CATEGORY_SCREEN_LABEL_OR, CATEGORY_SCREEN_INFO_0_OR },
+	// No Input category: what a port drives is a frontend device type, not
+	// a core option, and an empty submenu is worse than no submenu.
+	{ "system", CATEGORY_SYSTEM_LABEL_OR, CATEGORY_SYSTEM_INFO_0_OR },
+	{ "addons", CATEGORY_ADDONS_LABEL_OR, CATEGORY_ADDONS_INFO_0_OR },
+	{ "logging", CATEGORY_LOGGING_LABEL_OR, CATEGORY_LOGGING_INFO_0_OR },
+	{ "convert", CATEGORY_CONVERT_LABEL_OR, CATEGORY_CONVERT_INFO_0_OR },
+	{ "graphic_packs", CATEGORY_GRAPHIC_PACKS_LABEL_OR, CATEGORY_GRAPHIC_PACKS_INFO_0_OR },
+	{ NULL, NULL, NULL },
+};
+struct retro_core_option_v2_definition option_defs_or[] = {
+	{
+		"cemu_cpu_mode",
+		CEMU_CPU_MODE_LABEL_OR,
+		NULL,
+		NULL,
+		NULL,
+		"system",
+		{
+			{ "auto", OPTION_VAL_AUTO_OR },
+			{ "singlecore_interpreter", OPTION_VAL_SINGLECORE_INTERPRETER_OR },
+			{ "singlecore_recompiler", OPTION_VAL_SINGLECORE_RECOMPILER_OR },
+			{ "multicore_recompiler", OPTION_VAL_MULTICORE_RECOMPILER_OR },
+			{ "multicore_interpreter", OPTION_VAL_MULTICORE_INTERPRETER_OR },
+			{ NULL, NULL },
+		},
+		"auto"
+	},
+	{
+		"cemu_console_language",
+		CEMU_CONSOLE_LANGUAGE_LABEL_OR,
+		NULL,
+		NULL,
+		NULL,
+		"system",
+		{
+			{ "English", OPTION_VAL_ENGLISH_OR },
+			{ "Japanese", OPTION_VAL_JAPANESE_OR },
+			{ "French", OPTION_VAL_FRENCH_OR },
+			{ "German", OPTION_VAL_GERMAN_OR },
+			{ "Italian", OPTION_VAL_ITALIAN_OR },
+			{ "Spanish", OPTION_VAL_SPANISH_OR },
+			{ "Chinese", OPTION_VAL_CHINESE_OR },
+			{ "Korean", OPTION_VAL_KOREAN_OR },
+			{ "Dutch", OPTION_VAL_DUTCH_OR },
+			{ "Portuguese", OPTION_VAL_PORTUGUESE_OR },
+			{ "Russian", OPTION_VAL_RUSSIAN_OR },
+			{ "Taiwanese", OPTION_VAL_TAIWANESE_OR },
+			{ NULL, NULL },
+		},
+		"English"
+	},
+	{
+		"cemu_async_shader_compile",
+		CEMU_ASYNC_SHADER_COMPILE_LABEL_OR,
+		NULL,
+		NULL,
+		NULL,
+		"shaders",
+		{
+			{ "enabled", NULL },
+			{ "disabled", NULL },
+			{ NULL, NULL },
+		},
+		"enabled"
+	},
+	{
+		"cemu_gx2drawdone_sync",
+		CEMU_GX2DRAWDONE_SYNC_LABEL_OR,
+		NULL,
+		NULL,
+		NULL,
+		"shaders",
+		{
+			{ "enabled", NULL },
+			{ "disabled", NULL },
+			{ NULL, NULL },
+		},
+		"enabled"
+	},
+	{
+		"cemu_precompiled_shaders",
+		CEMU_PRECOMPILED_SHADERS_LABEL_OR,
+		NULL,
+		NULL,
+		NULL,
+		"shaders",
+		{
+			{ "auto", OPTION_VAL_AUTO_OR },
+			{ "enabled", NULL },
+			{ "disabled", NULL },
+			{ NULL, NULL },
+		},
+		"auto"
+	},
+	{
+		"cemu_accurate_shader_mul",
+		CEMU_ACCURATE_SHADER_MUL_LABEL_OR,
+		NULL,
+		NULL,
+		NULL,
+		"shaders",
+		{
+			{ "enabled", NULL },
+			{ "disabled", NULL },
+			{ NULL, NULL },
+		},
+		"enabled"
+	},
+	{
+		"cemu_upscale_filter",
+		CEMU_UPSCALE_FILTER_LABEL_OR,
+		NULL,
+		NULL,
+		NULL,
+		"video",
+		{
+			{ "linear", OPTION_VAL_LINEAR_OR },
+			{ "bicubic", OPTION_VAL_BICUBIC_OR },
+			{ "bicubic_hermite", OPTION_VAL_BICUBIC_HERMITE_OR },
+			{ "nearest", OPTION_VAL_NEAREST_OR },
+			{ NULL, NULL },
+		},
+		"linear"
+	},
+	{
+		"cemu_show_game_fps",
+		CEMU_SHOW_GAME_FPS_LABEL_OR,
+		NULL,
+		CEMU_SHOW_GAME_FPS_INFO_0_OR,
+		NULL,
+		"video",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_downscale_filter",
+		CEMU_DOWNSCALE_FILTER_LABEL_OR,
+		NULL,
+		NULL,
+		NULL,
+		"video",
+		{
+			{ "linear", OPTION_VAL_LINEAR_OR },
+			{ "bicubic", OPTION_VAL_BICUBIC_OR },
+			{ "bicubic_hermite", OPTION_VAL_BICUBIC_HERMITE_OR },
+			{ "nearest", OPTION_VAL_NEAREST_OR },
+			{ NULL, NULL },
+		},
+		"linear"
+	},
+	{
+		"cemu_internal_resolution",
+		CEMU_INTERNAL_RESOLUTION_LABEL_OR,
+		NULL,
+		CEMU_INTERNAL_RESOLUTION_INFO_0_OR,
+		NULL,
+		"video",
+		{
+			{ "640x360", OPTION_VAL_640X360_OR },
+			{ "960x540", OPTION_VAL_960X540_OR },
+			{ "1280x720", OPTION_VAL_1280X720_OR },
+			{ "1920x1080", OPTION_VAL_1920X1080_OR },
+			{ "2560x1440", OPTION_VAL_2560X1440_OR },
+			{ "3840x2160", OPTION_VAL_3840X2160_OR },
+			{ NULL, NULL },
+		},
+		"1280x720"
+	},
+	{
+		"cemu_fullscreen_scaling",
+		CEMU_FULLSCREEN_SCALING_LABEL_OR,
+		NULL,
+		NULL,
+		NULL,
+		"video",
+		{
+			{ "keep_aspect", OPTION_VAL_KEEP_ASPECT_OR },
+			{ "stretch", OPTION_VAL_STRETCH_OR },
+			{ NULL, NULL },
+		},
+		"keep_aspect"
+	},
+	{
+		"cemu_thread_quantum",
+		CEMU_THREAD_QUANTUM_LABEL_OR,
+		NULL,
+		NULL,
+		NULL,
+		"system",
+		{
+			{ "20000", NULL },
+			{ "45000", NULL },
+			{ "60000", NULL },
+			{ "80000", NULL },
+			{ "100000", NULL },
+			{ NULL, NULL },
+		},
+		"45000"
+	},
+	{
+		"cemu_emulate_skylander_portal",
+		CEMU_EMULATE_SKYLANDER_PORTAL_LABEL_OR,
+		NULL,
+		NULL,
+		NULL,
+		"addons",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_emulate_infinity_base",
+		CEMU_EMULATE_INFINITY_BASE_LABEL_OR,
+		NULL,
+		NULL,
+		NULL,
+		"addons",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_emulate_dimensions_toypad",
+		CEMU_EMULATE_DIMENSIONS_TOYPAD_LABEL_OR,
+		NULL,
+		NULL,
+		NULL,
+		"addons",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_number_of_screen_layouts",
+		CEMU_NUMBER_OF_SCREEN_LAYOUTS_LABEL_OR,
+		NULL,
+		NULL,
+		NULL,
+		"screen",
+		{
+			{ "1", NULL },
+			{ "2", NULL },
+			{ "3", NULL },
+			{ "4", NULL },
+			{ "5", NULL },
+			{ NULL, NULL },
+		},
+		"2"
+	},
+	{
+		"cemu_screen_layout1",
+		CEMU_SCREEN_LAYOUT1_LABEL_OR,
+		NULL,
+		NULL,
+		NULL,
+		"screen",
+		{
+			{ "Default Screen", OPTION_VAL_DEFAULT_SCREEN_OR },
+			{ "GamePad Screen", OPTION_VAL_GAMEPAD_SCREEN_OR },
+			{ "Side by Side", OPTION_VAL_SIDE_BY_SIDE_OR },
+			{ "Top Bottom", OPTION_VAL_TOP_BOTTOM_OR },
+			{ "Picture in Picture", OPTION_VAL_PICTURE_IN_PICTURE_OR },
+			{ NULL, NULL },
+		},
+		"Default Screen"
+	},
+	{
+		"cemu_screen_layout2",
+		CEMU_SCREEN_LAYOUT2_LABEL_OR,
+		NULL,
+		NULL,
+		NULL,
+		"screen",
+		{
+			{ "Default Screen", OPTION_VAL_DEFAULT_SCREEN_OR },
+			{ "GamePad Screen", OPTION_VAL_GAMEPAD_SCREEN_OR },
+			{ "Side by Side", OPTION_VAL_SIDE_BY_SIDE_OR },
+			{ "Top Bottom", OPTION_VAL_TOP_BOTTOM_OR },
+			{ "Picture in Picture", OPTION_VAL_PICTURE_IN_PICTURE_OR },
+			{ NULL, NULL },
+		},
+		"GamePad Screen"
+	},
+	{
+		"cemu_screen_layout3",
+		CEMU_SCREEN_LAYOUT3_LABEL_OR,
+		NULL,
+		NULL,
+		NULL,
+		"screen",
+		{
+			{ "Default Screen", OPTION_VAL_DEFAULT_SCREEN_OR },
+			{ "GamePad Screen", OPTION_VAL_GAMEPAD_SCREEN_OR },
+			{ "Side by Side", OPTION_VAL_SIDE_BY_SIDE_OR },
+			{ "Top Bottom", OPTION_VAL_TOP_BOTTOM_OR },
+			{ "Picture in Picture", OPTION_VAL_PICTURE_IN_PICTURE_OR },
+			{ NULL, NULL },
+		},
+		"Side by Side"
+	},
+	{
+		"cemu_screen_layout4",
+		CEMU_SCREEN_LAYOUT4_LABEL_OR,
+		NULL,
+		NULL,
+		NULL,
+		"screen",
+		{
+			{ "Default Screen", OPTION_VAL_DEFAULT_SCREEN_OR },
+			{ "GamePad Screen", OPTION_VAL_GAMEPAD_SCREEN_OR },
+			{ "Side by Side", OPTION_VAL_SIDE_BY_SIDE_OR },
+			{ "Top Bottom", OPTION_VAL_TOP_BOTTOM_OR },
+			{ "Picture in Picture", OPTION_VAL_PICTURE_IN_PICTURE_OR },
+			{ NULL, NULL },
+		},
+		"Top Bottom"
+	},
+	{
+		"cemu_screen_layout5",
+		CEMU_SCREEN_LAYOUT5_LABEL_OR,
+		NULL,
+		NULL,
+		NULL,
+		"screen",
+		{
+			{ "Default Screen", OPTION_VAL_DEFAULT_SCREEN_OR },
+			{ "GamePad Screen", OPTION_VAL_GAMEPAD_SCREEN_OR },
+			{ "Side by Side", OPTION_VAL_SIDE_BY_SIDE_OR },
+			{ "Top Bottom", OPTION_VAL_TOP_BOTTOM_OR },
+			{ "Picture in Picture", OPTION_VAL_PICTURE_IN_PICTURE_OR },
+			{ NULL, NULL },
+		},
+		"Picture in Picture"
+	},
+	{
+		"cemu_next_screen_layout_button",
+		CEMU_NEXT_SCREEN_LAYOUT_BUTTON_LABEL_OR,
+		NULL,
+		NULL,
+		NULL,
+		"screen",
+		{
+			{ "Disabled", NULL },
+			{ "L + R + L2 + R2 + L3 + R3", OPTION_VAL_L_R_L2_R2_L3_R3_OR },
+			{ "Select + L3", OPTION_VAL_SELECT_L3_OR },
+			{ "Select + R3", OPTION_VAL_SELECT_R3_OR },
+			{ "Tab", OPTION_VAL_TAB_OR },
+			{ NULL, NULL },
+		},
+		"L + R + L2 + R2 + L3 + R3"
+	},
+	{
+		"cemu_drc_position",
+		CEMU_DRC_POSITION_LABEL_OR,
+		NULL,
+		NULL,
+		NULL,
+		"screen",
+		{
+			{ "normal", OPTION_VAL_NORMAL_OR },
+			{ "swapped", OPTION_VAL_SWAPPED_OR },
+			{ NULL, NULL },
+		},
+		"normal"
+	},
+	{
+		"cemu_log_to_file",
+		CEMU_LOG_TO_FILE_LABEL_OR,
+		NULL,
+		NULL,
+		NULL,
+		"logging",
+		{
+			{ "enabled", NULL },
+			{ "disabled", NULL },
+			{ NULL, NULL },
+		},
+		"enabled"
+	},
+	{
+		"cemu_log_filesystem",
+		CEMU_LOG_FILESYSTEM_LABEL_OR,
+		NULL,
+		NULL,
+		NULL,
+		"logging",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_log_thread_sync",
+		CEMU_LOG_THREAD_SYNC_LABEL_OR,
+		NULL,
+		NULL,
+		NULL,
+		"logging",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_log_system_api",
+		CEMU_LOG_SYSTEM_API_LABEL_OR,
+		NULL,
+		NULL,
+		NULL,
+		"logging",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_log_texture_memory",
+		CEMU_LOG_TEXTURE_MEMORY_LABEL_OR,
+		NULL,
+		CEMU_LOG_TEXTURE_MEMORY_INFO_0_OR,
+		NULL,
+		"logging",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_log_input_api",
+		CEMU_LOG_INPUT_API_LABEL_OR,
+		NULL,
+		CEMU_LOG_INPUT_API_INFO_0_OR,
+		NULL,
+		"logging",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_log_audio",
+		CEMU_LOG_AUDIO_LABEL_OR,
+		NULL,
+		CEMU_LOG_AUDIO_INFO_0_OR,
+		NULL,
+		"logging",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_bc1_16bit",
+		CEMU_BC1_16BIT_LABEL_OR,
+		NULL,
+		CEMU_BC1_16BIT_INFO_0_OR,
+		NULL,
+		"video",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+#if defined(ENABLE_VULKAN) && defined(ENABLE_OPENGL)
+	{
+		"cemu_gpu_api",
+		CEMU_GPU_API_LABEL_OR,
+		NULL,
+		NULL,
+		NULL,
+		"video",
+		{
+			{ "OpenGL", OPTION_VAL_OPENGL_OR },
+			{ "Vulkan", OPTION_VAL_VULKAN_OR },
+			{ NULL, NULL },
+		},
+		"OpenGL"
+	},
+#endif
+	{
+		"cemu_wua_output_dir",
+		CEMU_WUA_OUTPUT_DIR_LABEL_OR,
+		NULL,
+		CEMU_WUA_OUTPUT_DIR_INFO_0_OR,
+		NULL,
+		"convert",
+		{
+			// Filled in at run time with wherever the frontend lets the core write.
+			{ NULL, NULL },
+		},
+		NULL
+	},
+	{
+		"cemu_convert_to_wua",
+		CEMU_CONVERT_TO_WUA_LABEL_OR,
+		NULL,
+		CEMU_CONVERT_TO_WUA_INFO_0_OR,
+		NULL,
+		"convert",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{ NULL, NULL, NULL, NULL, NULL, NULL, {{0}}, NULL },
+};
+struct retro_core_options_v2 options_or = {
+   option_cats_or,
+   option_defs_or
+};
+
 /* RETRO_LANGUAGE_PL */
 
-#define CATEGORY_VIDEO_LABEL_PL NULL
+#define CATEGORY_VIDEO_LABEL_PL "Wideo"
 #define CATEGORY_VIDEO_INFO_0_PL NULL
-#define CATEGORY_SHADERS_LABEL_PL NULL
+#define CATEGORY_SHADERS_LABEL_PL "Shadery"
 #define CATEGORY_SHADERS_INFO_0_PL NULL
 #define CATEGORY_SCREEN_LABEL_PL NULL
 #define CATEGORY_SCREEN_INFO_0_PL NULL
@@ -15749,23 +19459,25 @@ struct retro_core_options_v2 options_no = {
 #define CATEGORY_SYSTEM_INFO_0_PL NULL
 #define CATEGORY_ADDONS_LABEL_PL NULL
 #define CATEGORY_ADDONS_INFO_0_PL NULL
-#define CATEGORY_LOGGING_LABEL_PL NULL
+#define CATEGORY_LOGGING_LABEL_PL "Logowanie"
 #define CATEGORY_LOGGING_INFO_0_PL NULL
 #define CATEGORY_CONVERT_LABEL_PL NULL
 #define CATEGORY_CONVERT_INFO_0_PL NULL
+#define CATEGORY_GRAPHIC_PACKS_LABEL_PL NULL
+#define CATEGORY_GRAPHIC_PACKS_INFO_0_PL NULL
 #define CEMU_CPU_MODE_LABEL_PL NULL
-#define OPTION_VAL_AUTO_PL NULL
+#define OPTION_VAL_AUTO_PL "Automatyczny"
 #define OPTION_VAL_SINGLECORE_INTERPRETER_PL NULL
 #define OPTION_VAL_SINGLECORE_RECOMPILER_PL NULL
 #define OPTION_VAL_MULTICORE_RECOMPILER_PL NULL
 #define OPTION_VAL_MULTICORE_INTERPRETER_PL NULL
 #define CEMU_CONSOLE_LANGUAGE_LABEL_PL NULL
-#define OPTION_VAL_ENGLISH_PL NULL
-#define OPTION_VAL_JAPANESE_PL NULL
-#define OPTION_VAL_FRENCH_PL NULL
-#define OPTION_VAL_GERMAN_PL NULL
-#define OPTION_VAL_ITALIAN_PL NULL
-#define OPTION_VAL_SPANISH_PL NULL
+#define OPTION_VAL_ENGLISH_PL "angielski"
+#define OPTION_VAL_JAPANESE_PL "japoński"
+#define OPTION_VAL_FRENCH_PL "francuski"
+#define OPTION_VAL_GERMAN_PL "niemiecki"
+#define OPTION_VAL_ITALIAN_PL "włoski"
+#define OPTION_VAL_SPANISH_PL "hiszpański"
 #define OPTION_VAL_CHINESE_PL NULL
 #define OPTION_VAL_KOREAN_PL NULL
 #define OPTION_VAL_DUTCH_PL NULL
@@ -15777,12 +19489,14 @@ struct retro_core_options_v2 options_no = {
 #define CEMU_PRECOMPILED_SHADERS_LABEL_PL NULL
 #define CEMU_ACCURATE_SHADER_MUL_LABEL_PL NULL
 #define CEMU_UPSCALE_FILTER_LABEL_PL NULL
-#define OPTION_VAL_LINEAR_PL NULL
-#define OPTION_VAL_BICUBIC_PL NULL
+#define OPTION_VAL_LINEAR_PL "Liniowy"
+#define OPTION_VAL_BICUBIC_PL "Dwusześcienny"
 #define OPTION_VAL_BICUBIC_HERMITE_PL NULL
-#define OPTION_VAL_NEAREST_PL NULL
+#define OPTION_VAL_NEAREST_PL "Najbliższy"
+#define CEMU_SHOW_GAME_FPS_LABEL_PL NULL
+#define CEMU_SHOW_GAME_FPS_INFO_0_PL NULL
 #define CEMU_DOWNSCALE_FILTER_LABEL_PL NULL
-#define CEMU_INTERNAL_RESOLUTION_LABEL_PL NULL
+#define CEMU_INTERNAL_RESOLUTION_LABEL_PL "Wewnętrzna rozdzielczość"
 #define CEMU_INTERNAL_RESOLUTION_INFO_0_PL NULL
 #define OPTION_VAL_640X360_PL NULL
 #define OPTION_VAL_960X540_PL NULL
@@ -15814,7 +19528,7 @@ struct retro_core_options_v2 options_no = {
 #define OPTION_VAL_SELECT_R3_PL NULL
 #define OPTION_VAL_TAB_PL NULL
 #define CEMU_DRC_POSITION_LABEL_PL NULL
-#define OPTION_VAL_NORMAL_PL NULL
+#define OPTION_VAL_NORMAL_PL "Normalnie"
 #define OPTION_VAL_SWAPPED_PL NULL
 #define CEMU_LOG_TO_FILE_LABEL_PL NULL
 #define CEMU_LOG_FILESYSTEM_LABEL_PL NULL
@@ -15846,6 +19560,7 @@ struct retro_core_option_v2_category option_cats_pl[] = {
 	{ "addons", CATEGORY_ADDONS_LABEL_PL, CATEGORY_ADDONS_INFO_0_PL },
 	{ "logging", CATEGORY_LOGGING_LABEL_PL, CATEGORY_LOGGING_INFO_0_PL },
 	{ "convert", CATEGORY_CONVERT_LABEL_PL, CATEGORY_CONVERT_INFO_0_PL },
+	{ "graphic_packs", CATEGORY_GRAPHIC_PACKS_LABEL_PL, CATEGORY_GRAPHIC_PACKS_INFO_0_PL },
 	{ NULL, NULL, NULL },
 };
 struct retro_core_option_v2_definition option_defs_pl[] = {
@@ -15962,6 +19677,20 @@ struct retro_core_option_v2_definition option_defs_pl[] = {
 			{ NULL, NULL },
 		},
 		"linear"
+	},
+	{
+		"cemu_show_game_fps",
+		CEMU_SHOW_GAME_FPS_LABEL_PL,
+		NULL,
+		CEMU_SHOW_GAME_FPS_INFO_0_PL,
+		NULL,
+		"video",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
 	},
 	{
 		"cemu_downscale_filter",
@@ -16367,33 +20096,35 @@ struct retro_core_options_v2 options_pl = {
 
 /* RETRO_LANGUAGE_PT_BR */
 
-#define CATEGORY_VIDEO_LABEL_PT_BR NULL
+#define CATEGORY_VIDEO_LABEL_PT_BR "Vídeo"
 #define CATEGORY_VIDEO_INFO_0_PT_BR NULL
-#define CATEGORY_SHADERS_LABEL_PT_BR NULL
+#define CATEGORY_SHADERS_LABEL_PT_BR "Sombreadores"
 #define CATEGORY_SHADERS_INFO_0_PT_BR NULL
 #define CATEGORY_SCREEN_LABEL_PT_BR NULL
 #define CATEGORY_SCREEN_INFO_0_PT_BR NULL
-#define CATEGORY_SYSTEM_LABEL_PT_BR NULL
+#define CATEGORY_SYSTEM_LABEL_PT_BR "Sistema"
 #define CATEGORY_SYSTEM_INFO_0_PT_BR NULL
 #define CATEGORY_ADDONS_LABEL_PT_BR NULL
 #define CATEGORY_ADDONS_INFO_0_PT_BR NULL
-#define CATEGORY_LOGGING_LABEL_PT_BR NULL
+#define CATEGORY_LOGGING_LABEL_PT_BR "Registro de eventos"
 #define CATEGORY_LOGGING_INFO_0_PT_BR NULL
 #define CATEGORY_CONVERT_LABEL_PT_BR NULL
 #define CATEGORY_CONVERT_INFO_0_PT_BR NULL
+#define CATEGORY_GRAPHIC_PACKS_LABEL_PT_BR NULL
+#define CATEGORY_GRAPHIC_PACKS_INFO_0_PT_BR NULL
 #define CEMU_CPU_MODE_LABEL_PT_BR NULL
-#define OPTION_VAL_AUTO_PT_BR NULL
+#define OPTION_VAL_AUTO_PT_BR "Automático"
 #define OPTION_VAL_SINGLECORE_INTERPRETER_PT_BR NULL
 #define OPTION_VAL_SINGLECORE_RECOMPILER_PT_BR NULL
 #define OPTION_VAL_MULTICORE_RECOMPILER_PT_BR NULL
 #define OPTION_VAL_MULTICORE_INTERPRETER_PT_BR NULL
 #define CEMU_CONSOLE_LANGUAGE_LABEL_PT_BR NULL
-#define OPTION_VAL_ENGLISH_PT_BR NULL
-#define OPTION_VAL_JAPANESE_PT_BR NULL
-#define OPTION_VAL_FRENCH_PT_BR NULL
-#define OPTION_VAL_GERMAN_PT_BR NULL
-#define OPTION_VAL_ITALIAN_PT_BR NULL
-#define OPTION_VAL_SPANISH_PT_BR NULL
+#define OPTION_VAL_ENGLISH_PT_BR "Inglês"
+#define OPTION_VAL_JAPANESE_PT_BR "Japonês"
+#define OPTION_VAL_FRENCH_PT_BR "Francês"
+#define OPTION_VAL_GERMAN_PT_BR "Alemão"
+#define OPTION_VAL_ITALIAN_PT_BR "Italiano"
+#define OPTION_VAL_SPANISH_PT_BR "Espanhol"
 #define OPTION_VAL_CHINESE_PT_BR NULL
 #define OPTION_VAL_KOREAN_PT_BR NULL
 #define OPTION_VAL_DUTCH_PT_BR NULL
@@ -16406,11 +20137,13 @@ struct retro_core_options_v2 options_pl = {
 #define CEMU_ACCURATE_SHADER_MUL_LABEL_PT_BR NULL
 #define CEMU_UPSCALE_FILTER_LABEL_PT_BR NULL
 #define OPTION_VAL_LINEAR_PT_BR NULL
-#define OPTION_VAL_BICUBIC_PT_BR NULL
+#define OPTION_VAL_BICUBIC_PT_BR "Bicúbico"
 #define OPTION_VAL_BICUBIC_HERMITE_PT_BR NULL
 #define OPTION_VAL_NEAREST_PT_BR NULL
+#define CEMU_SHOW_GAME_FPS_LABEL_PT_BR NULL
+#define CEMU_SHOW_GAME_FPS_INFO_0_PT_BR NULL
 #define CEMU_DOWNSCALE_FILTER_LABEL_PT_BR NULL
-#define CEMU_INTERNAL_RESOLUTION_LABEL_PT_BR NULL
+#define CEMU_INTERNAL_RESOLUTION_LABEL_PT_BR "Resolução interna"
 #define CEMU_INTERNAL_RESOLUTION_INFO_0_PT_BR NULL
 #define OPTION_VAL_640X360_PT_BR NULL
 #define OPTION_VAL_960X540_PT_BR NULL
@@ -16474,6 +20207,7 @@ struct retro_core_option_v2_category option_cats_pt_br[] = {
 	{ "addons", CATEGORY_ADDONS_LABEL_PT_BR, CATEGORY_ADDONS_INFO_0_PT_BR },
 	{ "logging", CATEGORY_LOGGING_LABEL_PT_BR, CATEGORY_LOGGING_INFO_0_PT_BR },
 	{ "convert", CATEGORY_CONVERT_LABEL_PT_BR, CATEGORY_CONVERT_INFO_0_PT_BR },
+	{ "graphic_packs", CATEGORY_GRAPHIC_PACKS_LABEL_PT_BR, CATEGORY_GRAPHIC_PACKS_INFO_0_PT_BR },
 	{ NULL, NULL, NULL },
 };
 struct retro_core_option_v2_definition option_defs_pt_br[] = {
@@ -16590,6 +20324,20 @@ struct retro_core_option_v2_definition option_defs_pt_br[] = {
 			{ NULL, NULL },
 		},
 		"linear"
+	},
+	{
+		"cemu_show_game_fps",
+		CEMU_SHOW_GAME_FPS_LABEL_PT_BR,
+		NULL,
+		CEMU_SHOW_GAME_FPS_INFO_0_PT_BR,
+		NULL,
+		"video",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
 	},
 	{
 		"cemu_downscale_filter",
@@ -16995,9 +20743,9 @@ struct retro_core_options_v2 options_pt_br = {
 
 /* RETRO_LANGUAGE_PT_PT */
 
-#define CATEGORY_VIDEO_LABEL_PT_PT NULL
+#define CATEGORY_VIDEO_LABEL_PT_PT "Vídeo"
 #define CATEGORY_VIDEO_INFO_0_PT_PT NULL
-#define CATEGORY_SHADERS_LABEL_PT_PT NULL
+#define CATEGORY_SHADERS_LABEL_PT_PT "Shader"
 #define CATEGORY_SHADERS_INFO_0_PT_PT NULL
 #define CATEGORY_SCREEN_LABEL_PT_PT NULL
 #define CATEGORY_SCREEN_INFO_0_PT_PT NULL
@@ -17005,23 +20753,25 @@ struct retro_core_options_v2 options_pt_br = {
 #define CATEGORY_SYSTEM_INFO_0_PT_PT NULL
 #define CATEGORY_ADDONS_LABEL_PT_PT NULL
 #define CATEGORY_ADDONS_INFO_0_PT_PT NULL
-#define CATEGORY_LOGGING_LABEL_PT_PT NULL
+#define CATEGORY_LOGGING_LABEL_PT_PT "Registo"
 #define CATEGORY_LOGGING_INFO_0_PT_PT NULL
 #define CATEGORY_CONVERT_LABEL_PT_PT NULL
 #define CATEGORY_CONVERT_INFO_0_PT_PT NULL
+#define CATEGORY_GRAPHIC_PACKS_LABEL_PT_PT NULL
+#define CATEGORY_GRAPHIC_PACKS_INFO_0_PT_PT NULL
 #define CEMU_CPU_MODE_LABEL_PT_PT NULL
-#define OPTION_VAL_AUTO_PT_PT NULL
+#define OPTION_VAL_AUTO_PT_PT "Automático"
 #define OPTION_VAL_SINGLECORE_INTERPRETER_PT_PT NULL
 #define OPTION_VAL_SINGLECORE_RECOMPILER_PT_PT NULL
 #define OPTION_VAL_MULTICORE_RECOMPILER_PT_PT NULL
 #define OPTION_VAL_MULTICORE_INTERPRETER_PT_PT NULL
 #define CEMU_CONSOLE_LANGUAGE_LABEL_PT_PT NULL
-#define OPTION_VAL_ENGLISH_PT_PT NULL
-#define OPTION_VAL_JAPANESE_PT_PT NULL
-#define OPTION_VAL_FRENCH_PT_PT NULL
-#define OPTION_VAL_GERMAN_PT_PT NULL
-#define OPTION_VAL_ITALIAN_PT_PT NULL
-#define OPTION_VAL_SPANISH_PT_PT NULL
+#define OPTION_VAL_ENGLISH_PT_PT "Inglês"
+#define OPTION_VAL_JAPANESE_PT_PT "Japonês"
+#define OPTION_VAL_FRENCH_PT_PT "Francês"
+#define OPTION_VAL_GERMAN_PT_PT "Alemão"
+#define OPTION_VAL_ITALIAN_PT_PT "Italiano"
+#define OPTION_VAL_SPANISH_PT_PT "Espanhol"
 #define OPTION_VAL_CHINESE_PT_PT NULL
 #define OPTION_VAL_KOREAN_PT_PT NULL
 #define OPTION_VAL_DUTCH_PT_PT NULL
@@ -17034,9 +20784,11 @@ struct retro_core_options_v2 options_pt_br = {
 #define CEMU_ACCURATE_SHADER_MUL_LABEL_PT_PT NULL
 #define CEMU_UPSCALE_FILTER_LABEL_PT_PT NULL
 #define OPTION_VAL_LINEAR_PT_PT NULL
-#define OPTION_VAL_BICUBIC_PT_PT NULL
+#define OPTION_VAL_BICUBIC_PT_PT "Bicúbico"
 #define OPTION_VAL_BICUBIC_HERMITE_PT_PT NULL
-#define OPTION_VAL_NEAREST_PT_PT NULL
+#define OPTION_VAL_NEAREST_PT_PT "O mais próximo"
+#define CEMU_SHOW_GAME_FPS_LABEL_PT_PT NULL
+#define CEMU_SHOW_GAME_FPS_INFO_0_PT_PT NULL
 #define CEMU_DOWNSCALE_FILTER_LABEL_PT_PT NULL
 #define CEMU_INTERNAL_RESOLUTION_LABEL_PT_PT NULL
 #define CEMU_INTERNAL_RESOLUTION_INFO_0_PT_PT NULL
@@ -17102,6 +20854,7 @@ struct retro_core_option_v2_category option_cats_pt_pt[] = {
 	{ "addons", CATEGORY_ADDONS_LABEL_PT_PT, CATEGORY_ADDONS_INFO_0_PT_PT },
 	{ "logging", CATEGORY_LOGGING_LABEL_PT_PT, CATEGORY_LOGGING_INFO_0_PT_PT },
 	{ "convert", CATEGORY_CONVERT_LABEL_PT_PT, CATEGORY_CONVERT_INFO_0_PT_PT },
+	{ "graphic_packs", CATEGORY_GRAPHIC_PACKS_LABEL_PT_PT, CATEGORY_GRAPHIC_PACKS_INFO_0_PT_PT },
 	{ NULL, NULL, NULL },
 };
 struct retro_core_option_v2_definition option_defs_pt_pt[] = {
@@ -17218,6 +20971,20 @@ struct retro_core_option_v2_definition option_defs_pt_pt[] = {
 			{ NULL, NULL },
 		},
 		"linear"
+	},
+	{
+		"cemu_show_game_fps",
+		CEMU_SHOW_GAME_FPS_LABEL_PT_PT,
+		NULL,
+		CEMU_SHOW_GAME_FPS_INFO_0_PT_PT,
+		NULL,
+		"video",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
 	},
 	{
 		"cemu_downscale_filter",
@@ -17623,33 +21390,35 @@ struct retro_core_options_v2 options_pt_pt = {
 
 /* RETRO_LANGUAGE_RU */
 
-#define CATEGORY_VIDEO_LABEL_RU NULL
+#define CATEGORY_VIDEO_LABEL_RU "Видео"
 #define CATEGORY_VIDEO_INFO_0_RU NULL
-#define CATEGORY_SHADERS_LABEL_RU NULL
+#define CATEGORY_SHADERS_LABEL_RU "Шейдеры"
 #define CATEGORY_SHADERS_INFO_0_RU NULL
 #define CATEGORY_SCREEN_LABEL_RU NULL
 #define CATEGORY_SCREEN_INFO_0_RU NULL
-#define CATEGORY_SYSTEM_LABEL_RU NULL
+#define CATEGORY_SYSTEM_LABEL_RU "Система"
 #define CATEGORY_SYSTEM_INFO_0_RU NULL
 #define CATEGORY_ADDONS_LABEL_RU NULL
 #define CATEGORY_ADDONS_INFO_0_RU NULL
-#define CATEGORY_LOGGING_LABEL_RU NULL
+#define CATEGORY_LOGGING_LABEL_RU "Логирование"
 #define CATEGORY_LOGGING_INFO_0_RU NULL
 #define CATEGORY_CONVERT_LABEL_RU NULL
 #define CATEGORY_CONVERT_INFO_0_RU NULL
+#define CATEGORY_GRAPHIC_PACKS_LABEL_RU NULL
+#define CATEGORY_GRAPHIC_PACKS_INFO_0_RU NULL
 #define CEMU_CPU_MODE_LABEL_RU NULL
-#define OPTION_VAL_AUTO_RU NULL
+#define OPTION_VAL_AUTO_RU "Автоматически"
 #define OPTION_VAL_SINGLECORE_INTERPRETER_RU NULL
 #define OPTION_VAL_SINGLECORE_RECOMPILER_RU NULL
 #define OPTION_VAL_MULTICORE_RECOMPILER_RU NULL
 #define OPTION_VAL_MULTICORE_INTERPRETER_RU NULL
 #define CEMU_CONSOLE_LANGUAGE_LABEL_RU NULL
-#define OPTION_VAL_ENGLISH_RU NULL
-#define OPTION_VAL_JAPANESE_RU NULL
-#define OPTION_VAL_FRENCH_RU NULL
-#define OPTION_VAL_GERMAN_RU NULL
-#define OPTION_VAL_ITALIAN_RU NULL
-#define OPTION_VAL_SPANISH_RU NULL
+#define OPTION_VAL_ENGLISH_RU "Английский"
+#define OPTION_VAL_JAPANESE_RU "Японский"
+#define OPTION_VAL_FRENCH_RU "Французский"
+#define OPTION_VAL_GERMAN_RU "Немецкий"
+#define OPTION_VAL_ITALIAN_RU "Итальянский"
+#define OPTION_VAL_SPANISH_RU "Испанский"
 #define OPTION_VAL_CHINESE_RU NULL
 #define OPTION_VAL_KOREAN_RU NULL
 #define OPTION_VAL_DUTCH_RU NULL
@@ -17661,12 +21430,14 @@ struct retro_core_options_v2 options_pt_pt = {
 #define CEMU_PRECOMPILED_SHADERS_LABEL_RU NULL
 #define CEMU_ACCURATE_SHADER_MUL_LABEL_RU NULL
 #define CEMU_UPSCALE_FILTER_LABEL_RU NULL
-#define OPTION_VAL_LINEAR_RU NULL
-#define OPTION_VAL_BICUBIC_RU NULL
+#define OPTION_VAL_LINEAR_RU "Линейный"
+#define OPTION_VAL_BICUBIC_RU "Бикубическая"
 #define OPTION_VAL_BICUBIC_HERMITE_RU NULL
-#define OPTION_VAL_NEAREST_RU NULL
+#define OPTION_VAL_NEAREST_RU "Ближайший"
+#define CEMU_SHOW_GAME_FPS_LABEL_RU NULL
+#define CEMU_SHOW_GAME_FPS_INFO_0_RU NULL
 #define CEMU_DOWNSCALE_FILTER_LABEL_RU NULL
-#define CEMU_INTERNAL_RESOLUTION_LABEL_RU NULL
+#define CEMU_INTERNAL_RESOLUTION_LABEL_RU "Внутреннее разрешение"
 #define CEMU_INTERNAL_RESOLUTION_INFO_0_RU NULL
 #define OPTION_VAL_640X360_RU NULL
 #define OPTION_VAL_960X540_RU NULL
@@ -17698,7 +21469,7 @@ struct retro_core_options_v2 options_pt_pt = {
 #define OPTION_VAL_SELECT_R3_RU NULL
 #define OPTION_VAL_TAB_RU NULL
 #define CEMU_DRC_POSITION_LABEL_RU NULL
-#define OPTION_VAL_NORMAL_RU NULL
+#define OPTION_VAL_NORMAL_RU "Нормально"
 #define OPTION_VAL_SWAPPED_RU NULL
 #define CEMU_LOG_TO_FILE_LABEL_RU NULL
 #define CEMU_LOG_FILESYSTEM_LABEL_RU NULL
@@ -17730,6 +21501,7 @@ struct retro_core_option_v2_category option_cats_ru[] = {
 	{ "addons", CATEGORY_ADDONS_LABEL_RU, CATEGORY_ADDONS_INFO_0_RU },
 	{ "logging", CATEGORY_LOGGING_LABEL_RU, CATEGORY_LOGGING_INFO_0_RU },
 	{ "convert", CATEGORY_CONVERT_LABEL_RU, CATEGORY_CONVERT_INFO_0_RU },
+	{ "graphic_packs", CATEGORY_GRAPHIC_PACKS_LABEL_RU, CATEGORY_GRAPHIC_PACKS_INFO_0_RU },
 	{ NULL, NULL, NULL },
 };
 struct retro_core_option_v2_definition option_defs_ru[] = {
@@ -17846,6 +21618,20 @@ struct retro_core_option_v2_definition option_defs_ru[] = {
 			{ NULL, NULL },
 		},
 		"linear"
+	},
+	{
+		"cemu_show_game_fps",
+		CEMU_SHOW_GAME_FPS_LABEL_RU,
+		NULL,
+		CEMU_SHOW_GAME_FPS_INFO_0_RU,
+		NULL,
+		"video",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
 	},
 	{
 		"cemu_downscale_filter",
@@ -18252,101 +22038,105 @@ struct retro_core_options_v2 options_ru = {
 /* RETRO_LANGUAGE_SK */
 
 #define CATEGORY_VIDEO_LABEL_SK NULL
-#define CATEGORY_VIDEO_INFO_0_SK NULL
-#define CATEGORY_SHADERS_LABEL_SK NULL
-#define CATEGORY_SHADERS_INFO_0_SK NULL
-#define CATEGORY_SCREEN_LABEL_SK NULL
-#define CATEGORY_SCREEN_INFO_0_SK NULL
-#define CATEGORY_SYSTEM_LABEL_SK NULL
-#define CATEGORY_SYSTEM_INFO_0_SK NULL
-#define CATEGORY_ADDONS_LABEL_SK NULL
-#define CATEGORY_ADDONS_INFO_0_SK NULL
-#define CATEGORY_LOGGING_LABEL_SK NULL
-#define CATEGORY_LOGGING_INFO_0_SK NULL
-#define CATEGORY_CONVERT_LABEL_SK NULL
-#define CATEGORY_CONVERT_INFO_0_SK NULL
-#define CEMU_CPU_MODE_LABEL_SK NULL
+#define CATEGORY_VIDEO_INFO_0_SK "Rozlíšenie, škálovanie a časovanie snímok."
+#define CATEGORY_SHADERS_LABEL_SK "Shadery"
+#define CATEGORY_SHADERS_INFO_0_SK "Preklad, ukladanie do vyrovnávacej pamäte a kompilácia shaderov."
+#define CATEGORY_SCREEN_LABEL_SK "Obrazovka"
+#define CATEGORY_SCREEN_INFO_0_SK "Ktorá obrazovka Wii U sa zobrazí a ako."
+#define CATEGORY_SYSTEM_LABEL_SK "Systém"
+#define CATEGORY_SYSTEM_INFO_0_SK "CPU, jazyk a plánovanie."
+#define CATEGORY_ADDONS_LABEL_SK "Doplnky"
+#define CATEGORY_ADDONS_INFO_0_SK "Portály Skylanders, Infinity a Dimensions."
+#define CATEGORY_LOGGING_LABEL_SK "Záznam"
+#define CATEGORY_LOGGING_INFO_0_SK "Dodatočný výstup do záznamu na diagnostiku problémov."
+#define CATEGORY_CONVERT_LABEL_SK "Konverzia do WUA"
+#define CATEGORY_CONVERT_INFO_0_SK "Zapíše načítaný titul ako archív .wua."
+#define CATEGORY_GRAPHIC_PACKS_LABEL_SK "Grafické balíky"
+#define CATEGORY_GRAPHIC_PACKS_INFO_0_SK "Grafické balíky načítanej hry a ich predvoľby. Zmeny sa prejavia pri ďalšom načítaní hry."
+#define CEMU_CPU_MODE_LABEL_SK "Režim CPU (reštart)"
 #define OPTION_VAL_AUTO_SK NULL
-#define OPTION_VAL_SINGLECORE_INTERPRETER_SK NULL
-#define OPTION_VAL_SINGLECORE_RECOMPILER_SK NULL
-#define OPTION_VAL_MULTICORE_RECOMPILER_SK NULL
-#define OPTION_VAL_MULTICORE_INTERPRETER_SK NULL
-#define CEMU_CONSOLE_LANGUAGE_LABEL_SK NULL
-#define OPTION_VAL_ENGLISH_SK NULL
-#define OPTION_VAL_JAPANESE_SK NULL
-#define OPTION_VAL_FRENCH_SK NULL
-#define OPTION_VAL_GERMAN_SK NULL
-#define OPTION_VAL_ITALIAN_SK NULL
-#define OPTION_VAL_SPANISH_SK NULL
-#define OPTION_VAL_CHINESE_SK NULL
-#define OPTION_VAL_KOREAN_SK NULL
-#define OPTION_VAL_DUTCH_SK NULL
-#define OPTION_VAL_PORTUGUESE_SK NULL
-#define OPTION_VAL_RUSSIAN_SK NULL
-#define OPTION_VAL_TAIWANESE_SK NULL
-#define CEMU_ASYNC_SHADER_COMPILE_LABEL_SK NULL
-#define CEMU_GX2DRAWDONE_SYNC_LABEL_SK NULL
-#define CEMU_PRECOMPILED_SHADERS_LABEL_SK NULL
-#define CEMU_ACCURATE_SHADER_MUL_LABEL_SK NULL
-#define CEMU_UPSCALE_FILTER_LABEL_SK NULL
-#define OPTION_VAL_LINEAR_SK NULL
-#define OPTION_VAL_BICUBIC_SK NULL
-#define OPTION_VAL_BICUBIC_HERMITE_SK NULL
-#define OPTION_VAL_NEAREST_SK NULL
-#define CEMU_DOWNSCALE_FILTER_LABEL_SK NULL
-#define CEMU_INTERNAL_RESOLUTION_LABEL_SK NULL
-#define CEMU_INTERNAL_RESOLUTION_INFO_0_SK NULL
+#define OPTION_VAL_SINGLECORE_INTERPRETER_SK "Jednojadrový interpreter"
+#define OPTION_VAL_SINGLECORE_RECOMPILER_SK "Jednojadrový rekompilátor"
+#define OPTION_VAL_MULTICORE_RECOMPILER_SK "Viacjadrový rekompilátor"
+#define OPTION_VAL_MULTICORE_INTERPRETER_SK "Viacjadrový interpreter"
+#define CEMU_CONSOLE_LANGUAGE_LABEL_SK "Jazyk konzoly"
+#define OPTION_VAL_ENGLISH_SK "Angličtina"
+#define OPTION_VAL_JAPANESE_SK "Japončina"
+#define OPTION_VAL_FRENCH_SK "Francúzština"
+#define OPTION_VAL_GERMAN_SK "Nemčina"
+#define OPTION_VAL_ITALIAN_SK "Taliančina"
+#define OPTION_VAL_SPANISH_SK "Španielčina"
+#define OPTION_VAL_CHINESE_SK "Čínština"
+#define OPTION_VAL_KOREAN_SK "Kórejčina"
+#define OPTION_VAL_DUTCH_SK "Holandčina"
+#define OPTION_VAL_PORTUGUESE_SK "Portugalčina"
+#define OPTION_VAL_RUSSIAN_SK "Ruština"
+#define OPTION_VAL_TAIWANESE_SK "Taiwančina"
+#define CEMU_ASYNC_SHADER_COMPILE_LABEL_SK "Asynchrónna kompilácia shaderov"
+#define CEMU_GX2DRAWDONE_SYNC_LABEL_SK "Synchronizácia GX2DrawDone"
+#define CEMU_PRECOMPILED_SHADERS_LABEL_SK "Predkompilované shadery"
+#define CEMU_ACCURATE_SHADER_MUL_LABEL_SK "Presné násobenie v shaderoch"
+#define CEMU_UPSCALE_FILTER_LABEL_SK "Filter zväčšenia"
+#define OPTION_VAL_LINEAR_SK "Lineárny"
+#define OPTION_VAL_BICUBIC_SK "Bikubická"
+#define OPTION_VAL_BICUBIC_HERMITE_SK "Bikubický Hermite"
+#define OPTION_VAL_NEAREST_SK "Najbližšie"
+#define CEMU_SHOW_GAME_FPS_LABEL_SK "Zobraziť FPS hry"
+#define CEMU_SHOW_GAME_FPS_INFO_0_SK "Zobrazí snímkovú frekvenciu, v ktorej hra vykresľuje. Vlastné počítadlo FPS v RetroArchu počíta, ako často beží jadro, a to ostáva na 60 aj vtedy, keď hra stráca snímky, pretože každý beh nesie zvuk za jednu snímku."
+#define CEMU_DOWNSCALE_FILTER_LABEL_SK "Filter zmenšenia"
+#define CEMU_INTERNAL_RESOLUTION_LABEL_SK "Vnútorné rozlíšenie"
+#define CEMU_INTERNAL_RESOLUTION_INFO_0_SK "Všeobecná náhrada pre hry bez grafického balíka rozlíšenia: mení veľkosť každého cieľa vykresľovania v tvare obrazovky, \čo niektoré hry používajú na veci, ktoré sa pri zmene veľkosti pokazia. 640x360 kreslí štvrtinu pixelov oproti 720p. \Keď je pre načítanú hru zapnutý balík rozlíšenia (Grafické balíky), rozlíšenie určuje balík a táto voľba sa skryje."
 #define OPTION_VAL_640X360_SK NULL
 #define OPTION_VAL_960X540_SK NULL
 #define OPTION_VAL_1280X720_SK NULL
 #define OPTION_VAL_1920X1080_SK NULL
 #define OPTION_VAL_2560X1440_SK NULL
 #define OPTION_VAL_3840X2160_SK NULL
-#define CEMU_FULLSCREEN_SCALING_LABEL_SK NULL
-#define OPTION_VAL_KEEP_ASPECT_SK NULL
-#define OPTION_VAL_STRETCH_SK NULL
-#define CEMU_THREAD_QUANTUM_LABEL_SK NULL
-#define CEMU_EMULATE_SKYLANDER_PORTAL_LABEL_SK NULL
-#define CEMU_EMULATE_INFINITY_BASE_LABEL_SK NULL
-#define CEMU_EMULATE_DIMENSIONS_TOYPAD_LABEL_SK NULL
-#define CEMU_NUMBER_OF_SCREEN_LAYOUTS_LABEL_SK NULL
-#define CEMU_SCREEN_LAYOUT1_LABEL_SK NULL
-#define OPTION_VAL_DEFAULT_SCREEN_SK NULL
-#define OPTION_VAL_GAMEPAD_SCREEN_SK NULL
-#define OPTION_VAL_SIDE_BY_SIDE_SK NULL
-#define OPTION_VAL_TOP_BOTTOM_SK NULL
-#define OPTION_VAL_PICTURE_IN_PICTURE_SK NULL
-#define CEMU_SCREEN_LAYOUT2_LABEL_SK NULL
-#define CEMU_SCREEN_LAYOUT3_LABEL_SK NULL
-#define CEMU_SCREEN_LAYOUT4_LABEL_SK NULL
-#define CEMU_SCREEN_LAYOUT5_LABEL_SK NULL
-#define CEMU_NEXT_SCREEN_LAYOUT_BUTTON_LABEL_SK NULL
+#define CEMU_FULLSCREEN_SCALING_LABEL_SK "Škálovanie na celú obrazovku"
+#define OPTION_VAL_KEEP_ASPECT_SK "Zachovať pomer strán"
+#define OPTION_VAL_STRETCH_SK "Roztiahnuť"
+#define CEMU_THREAD_QUANTUM_LABEL_SK "Kvantum vlákien"
+#define CEMU_EMULATE_SKYLANDER_PORTAL_LABEL_SK "Emulovať portál Skylander"
+#define CEMU_EMULATE_INFINITY_BASE_LABEL_SK "Emulovať Infinity Base"
+#define CEMU_EMULATE_DIMENSIONS_TOYPAD_LABEL_SK "Emulovať Dimensions Toypad"
+#define CEMU_NUMBER_OF_SCREEN_LAYOUTS_LABEL_SK "Počet rozložení obrazovky"
+#define CEMU_SCREEN_LAYOUT1_LABEL_SK "Rozloženie 1"
+#define OPTION_VAL_DEFAULT_SCREEN_SK "Predvolená obrazovka"
+#define OPTION_VAL_GAMEPAD_SCREEN_SK "Obrazovka GamePadu"
+#define OPTION_VAL_SIDE_BY_SIDE_SK "Vedľa seba"
+#define OPTION_VAL_TOP_BOTTOM_SK "Nad sebou"
+#define OPTION_VAL_PICTURE_IN_PICTURE_SK "Obraz v obraze"
+#define CEMU_SCREEN_LAYOUT2_LABEL_SK "Rozloženie 2"
+#define CEMU_SCREEN_LAYOUT3_LABEL_SK "Rozloženie 3"
+#define CEMU_SCREEN_LAYOUT4_LABEL_SK "Rozloženie 4"
+#define CEMU_SCREEN_LAYOUT5_LABEL_SK "Rozloženie 5"
+#define CEMU_NEXT_SCREEN_LAYOUT_BUTTON_LABEL_SK "Ďalšie rozloženie obrazovky"
 #define OPTION_VAL_L_R_L2_R2_L3_R3_SK NULL
 #define OPTION_VAL_SELECT_L3_SK NULL
 #define OPTION_VAL_SELECT_R3_SK NULL
 #define OPTION_VAL_TAB_SK NULL
-#define CEMU_DRC_POSITION_LABEL_SK NULL
-#define OPTION_VAL_NORMAL_SK NULL
-#define OPTION_VAL_SWAPPED_SK NULL
-#define CEMU_LOG_TO_FILE_LABEL_SK NULL
-#define CEMU_LOG_FILESYSTEM_LABEL_SK NULL
-#define CEMU_LOG_THREAD_SYNC_LABEL_SK NULL
-#define CEMU_LOG_SYSTEM_API_LABEL_SK NULL
-#define CEMU_LOG_TEXTURE_MEMORY_LABEL_SK NULL
-#define CEMU_LOG_TEXTURE_MEMORY_INFO_0_SK NULL
-#define CEMU_LOG_INPUT_API_LABEL_SK NULL
-#define CEMU_LOG_INPUT_API_INFO_0_SK NULL
-#define CEMU_LOG_AUDIO_LABEL_SK NULL
-#define CEMU_LOG_AUDIO_INFO_0_SK NULL
-#define CEMU_BC1_16BIT_LABEL_SK NULL
-#define CEMU_BC1_16BIT_INFO_0_SK NULL
-#define CEMU_GPU_API_LABEL_SK NULL
+#define CEMU_DRC_POSITION_LABEL_SK "Poloha GamePadu"
+#define OPTION_VAL_NORMAL_SK "Normálne"
+#define OPTION_VAL_SWAPPED_SK "Prehodené"
+#define CEMU_LOG_TO_FILE_LABEL_SK "Zapisovať záznam Cemu do log.txt"
+#define CEMU_LOG_FILESYSTEM_LABEL_SK "Zaznamenávať prístup k súborom (ladenie)"
+#define CEMU_LOG_THREAD_SYNC_LABEL_SK "Zaznamenávať synchronizáciu vlákien (ladenie)"
+#define CEMU_LOG_SYSTEM_API_LABEL_SK "Zaznamenávať volania systémového API (ladenie)"
+#define CEMU_LOG_TEXTURE_MEMORY_LABEL_SK "Zaznamenávať pamäť textúr (ladenie)"
+#define CEMU_LOG_TEXTURE_MEMORY_INFO_0_SK "Hlási, koľko pamäte textúr tvoria textúry BC, \ktoré sa museli dekomprimovať, pretože tento GPU ich nevie vzorkovať."
+#define CEMU_LOG_INPUT_API_LABEL_SK "Zaznamenávať volania API ovládačov (ladenie)"
+#define CEMU_LOG_INPUT_API_INFO_0_SK "Zaznamenáva každé volanie ovládača, ktoré titul urobí – ktoré \ovládače hľadal a čo sa dozvedel. Veľa výstupu; zapínajte len na pár sekúnd."
+#define CEMU_LOG_AUDIO_LABEL_SK "Zaznamenávať časovanie zvuku (ladenie)"
+#define CEMU_LOG_AUDIO_INFO_0_SK "Raz za sekundu zapíše, koľko vzoriek vytvoril AX, koľko \ich musel kruhový buffer zahodiť a koľko si ich zobral frontend. Pomáha zistiť, \na ktorom konci tohto reťazca sa zvuk stráca."
+#define CEMU_BC1_16BIT_LABEL_SK "Znížiť pamäť textúr BC1"
+#define CEMU_BC1_16BIT_INFO_0_SK "Zníži na polovicu pamäť, ktorú zaberajú textúry BC1 na GPU, ktorý nevie vzorkovať BC, \za cenu jedného bitu zelenej. Tam, kde je BC podporované, nemá vplyv."
+#define CEMU_GPU_API_LABEL_SK "Grafické API (reštart)"
 #define OPTION_VAL_OPENGL_SK NULL
 #define OPTION_VAL_VULKAN_SK NULL
-#define CEMU_WUA_OUTPUT_DIR_LABEL_SK NULL
-#define CEMU_WUA_OUTPUT_DIR_INFO_0_SK NULL
-#define CEMU_CONVERT_TO_WUA_LABEL_SK NULL
-#define CEMU_CONVERT_TO_WUA_INFO_0_SK NULL
+#define CEMU_WUA_OUTPUT_DIR_LABEL_SK "Výstupný priečinok"
+#define CEMU_WUA_OUTPUT_DIR_INFO_0_SK "Kam sa zapíše súbor .wua. Musí mať preň dosť miesta."
+#define CEMU_CONVERT_TO_WUA_LABEL_SK "Spustiť konverziu do WUA"
+#define CEMU_CONVERT_TO_WUA_INFO_0_SK "Zapíše titul do výstupného priečinka ako súbor .wua. \Titul počas toho beží ďalej."
 
 struct retro_core_option_v2_category option_cats_sk[] = {
 	{ "video", CATEGORY_VIDEO_LABEL_SK, CATEGORY_VIDEO_INFO_0_SK },
@@ -18358,6 +22148,7 @@ struct retro_core_option_v2_category option_cats_sk[] = {
 	{ "addons", CATEGORY_ADDONS_LABEL_SK, CATEGORY_ADDONS_INFO_0_SK },
 	{ "logging", CATEGORY_LOGGING_LABEL_SK, CATEGORY_LOGGING_INFO_0_SK },
 	{ "convert", CATEGORY_CONVERT_LABEL_SK, CATEGORY_CONVERT_INFO_0_SK },
+	{ "graphic_packs", CATEGORY_GRAPHIC_PACKS_LABEL_SK, CATEGORY_GRAPHIC_PACKS_INFO_0_SK },
 	{ NULL, NULL, NULL },
 };
 struct retro_core_option_v2_definition option_defs_sk[] = {
@@ -18474,6 +22265,20 @@ struct retro_core_option_v2_definition option_defs_sk[] = {
 			{ NULL, NULL },
 		},
 		"linear"
+	},
+	{
+		"cemu_show_game_fps",
+		CEMU_SHOW_GAME_FPS_LABEL_SK,
+		NULL,
+		CEMU_SHOW_GAME_FPS_INFO_0_SK,
+		NULL,
+		"video",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
 	},
 	{
 		"cemu_downscale_filter",
@@ -18877,6 +22682,653 @@ struct retro_core_options_v2 options_sk = {
    option_defs_sk
 };
 
+/* RETRO_LANGUAGE_SR */
+
+#define CATEGORY_VIDEO_LABEL_SR NULL
+#define CATEGORY_VIDEO_INFO_0_SR NULL
+#define CATEGORY_SHADERS_LABEL_SR NULL
+#define CATEGORY_SHADERS_INFO_0_SR NULL
+#define CATEGORY_SCREEN_LABEL_SR NULL
+#define CATEGORY_SCREEN_INFO_0_SR NULL
+#define CATEGORY_SYSTEM_LABEL_SR NULL
+#define CATEGORY_SYSTEM_INFO_0_SR NULL
+#define CATEGORY_ADDONS_LABEL_SR NULL
+#define CATEGORY_ADDONS_INFO_0_SR NULL
+#define CATEGORY_LOGGING_LABEL_SR "Beleženje"
+#define CATEGORY_LOGGING_INFO_0_SR NULL
+#define CATEGORY_CONVERT_LABEL_SR NULL
+#define CATEGORY_CONVERT_INFO_0_SR NULL
+#define CATEGORY_GRAPHIC_PACKS_LABEL_SR NULL
+#define CATEGORY_GRAPHIC_PACKS_INFO_0_SR NULL
+#define CEMU_CPU_MODE_LABEL_SR NULL
+#define OPTION_VAL_AUTO_SR NULL
+#define OPTION_VAL_SINGLECORE_INTERPRETER_SR NULL
+#define OPTION_VAL_SINGLECORE_RECOMPILER_SR NULL
+#define OPTION_VAL_MULTICORE_RECOMPILER_SR NULL
+#define OPTION_VAL_MULTICORE_INTERPRETER_SR NULL
+#define CEMU_CONSOLE_LANGUAGE_LABEL_SR NULL
+#define OPTION_VAL_ENGLISH_SR NULL
+#define OPTION_VAL_JAPANESE_SR NULL
+#define OPTION_VAL_FRENCH_SR NULL
+#define OPTION_VAL_GERMAN_SR NULL
+#define OPTION_VAL_ITALIAN_SR NULL
+#define OPTION_VAL_SPANISH_SR NULL
+#define OPTION_VAL_CHINESE_SR NULL
+#define OPTION_VAL_KOREAN_SR NULL
+#define OPTION_VAL_DUTCH_SR NULL
+#define OPTION_VAL_PORTUGUESE_SR NULL
+#define OPTION_VAL_RUSSIAN_SR NULL
+#define OPTION_VAL_TAIWANESE_SR NULL
+#define CEMU_ASYNC_SHADER_COMPILE_LABEL_SR NULL
+#define CEMU_GX2DRAWDONE_SYNC_LABEL_SR NULL
+#define CEMU_PRECOMPILED_SHADERS_LABEL_SR NULL
+#define CEMU_ACCURATE_SHADER_MUL_LABEL_SR NULL
+#define CEMU_UPSCALE_FILTER_LABEL_SR NULL
+#define OPTION_VAL_LINEAR_SR NULL
+#define OPTION_VAL_BICUBIC_SR "Bikubno"
+#define OPTION_VAL_BICUBIC_HERMITE_SR NULL
+#define OPTION_VAL_NEAREST_SR NULL
+#define CEMU_SHOW_GAME_FPS_LABEL_SR NULL
+#define CEMU_SHOW_GAME_FPS_INFO_0_SR NULL
+#define CEMU_DOWNSCALE_FILTER_LABEL_SR NULL
+#define CEMU_INTERNAL_RESOLUTION_LABEL_SR NULL
+#define CEMU_INTERNAL_RESOLUTION_INFO_0_SR NULL
+#define OPTION_VAL_640X360_SR NULL
+#define OPTION_VAL_960X540_SR NULL
+#define OPTION_VAL_1280X720_SR NULL
+#define OPTION_VAL_1920X1080_SR NULL
+#define OPTION_VAL_2560X1440_SR NULL
+#define OPTION_VAL_3840X2160_SR NULL
+#define CEMU_FULLSCREEN_SCALING_LABEL_SR NULL
+#define OPTION_VAL_KEEP_ASPECT_SR NULL
+#define OPTION_VAL_STRETCH_SR NULL
+#define CEMU_THREAD_QUANTUM_LABEL_SR NULL
+#define CEMU_EMULATE_SKYLANDER_PORTAL_LABEL_SR NULL
+#define CEMU_EMULATE_INFINITY_BASE_LABEL_SR NULL
+#define CEMU_EMULATE_DIMENSIONS_TOYPAD_LABEL_SR NULL
+#define CEMU_NUMBER_OF_SCREEN_LAYOUTS_LABEL_SR NULL
+#define CEMU_SCREEN_LAYOUT1_LABEL_SR NULL
+#define OPTION_VAL_DEFAULT_SCREEN_SR NULL
+#define OPTION_VAL_GAMEPAD_SCREEN_SR NULL
+#define OPTION_VAL_SIDE_BY_SIDE_SR NULL
+#define OPTION_VAL_TOP_BOTTOM_SR NULL
+#define OPTION_VAL_PICTURE_IN_PICTURE_SR NULL
+#define CEMU_SCREEN_LAYOUT2_LABEL_SR NULL
+#define CEMU_SCREEN_LAYOUT3_LABEL_SR NULL
+#define CEMU_SCREEN_LAYOUT4_LABEL_SR NULL
+#define CEMU_SCREEN_LAYOUT5_LABEL_SR NULL
+#define CEMU_NEXT_SCREEN_LAYOUT_BUTTON_LABEL_SR NULL
+#define OPTION_VAL_L_R_L2_R2_L3_R3_SR NULL
+#define OPTION_VAL_SELECT_L3_SR NULL
+#define OPTION_VAL_SELECT_R3_SR NULL
+#define OPTION_VAL_TAB_SR NULL
+#define CEMU_DRC_POSITION_LABEL_SR NULL
+#define OPTION_VAL_NORMAL_SR NULL
+#define OPTION_VAL_SWAPPED_SR NULL
+#define CEMU_LOG_TO_FILE_LABEL_SR NULL
+#define CEMU_LOG_FILESYSTEM_LABEL_SR NULL
+#define CEMU_LOG_THREAD_SYNC_LABEL_SR NULL
+#define CEMU_LOG_SYSTEM_API_LABEL_SR NULL
+#define CEMU_LOG_TEXTURE_MEMORY_LABEL_SR NULL
+#define CEMU_LOG_TEXTURE_MEMORY_INFO_0_SR NULL
+#define CEMU_LOG_INPUT_API_LABEL_SR NULL
+#define CEMU_LOG_INPUT_API_INFO_0_SR NULL
+#define CEMU_LOG_AUDIO_LABEL_SR NULL
+#define CEMU_LOG_AUDIO_INFO_0_SR NULL
+#define CEMU_BC1_16BIT_LABEL_SR NULL
+#define CEMU_BC1_16BIT_INFO_0_SR NULL
+#define CEMU_GPU_API_LABEL_SR NULL
+#define OPTION_VAL_OPENGL_SR NULL
+#define OPTION_VAL_VULKAN_SR NULL
+#define CEMU_WUA_OUTPUT_DIR_LABEL_SR NULL
+#define CEMU_WUA_OUTPUT_DIR_INFO_0_SR NULL
+#define CEMU_CONVERT_TO_WUA_LABEL_SR NULL
+#define CEMU_CONVERT_TO_WUA_INFO_0_SR NULL
+
+struct retro_core_option_v2_category option_cats_sr[] = {
+	{ "video", CATEGORY_VIDEO_LABEL_SR, CATEGORY_VIDEO_INFO_0_SR },
+	{ "shaders", CATEGORY_SHADERS_LABEL_SR, CATEGORY_SHADERS_INFO_0_SR },
+	{ "screen", CATEGORY_SCREEN_LABEL_SR, CATEGORY_SCREEN_INFO_0_SR },
+	// No Input category: what a port drives is a frontend device type, not
+	// a core option, and an empty submenu is worse than no submenu.
+	{ "system", CATEGORY_SYSTEM_LABEL_SR, CATEGORY_SYSTEM_INFO_0_SR },
+	{ "addons", CATEGORY_ADDONS_LABEL_SR, CATEGORY_ADDONS_INFO_0_SR },
+	{ "logging", CATEGORY_LOGGING_LABEL_SR, CATEGORY_LOGGING_INFO_0_SR },
+	{ "convert", CATEGORY_CONVERT_LABEL_SR, CATEGORY_CONVERT_INFO_0_SR },
+	{ "graphic_packs", CATEGORY_GRAPHIC_PACKS_LABEL_SR, CATEGORY_GRAPHIC_PACKS_INFO_0_SR },
+	{ NULL, NULL, NULL },
+};
+struct retro_core_option_v2_definition option_defs_sr[] = {
+	{
+		"cemu_cpu_mode",
+		CEMU_CPU_MODE_LABEL_SR,
+		NULL,
+		NULL,
+		NULL,
+		"system",
+		{
+			{ "auto", OPTION_VAL_AUTO_SR },
+			{ "singlecore_interpreter", OPTION_VAL_SINGLECORE_INTERPRETER_SR },
+			{ "singlecore_recompiler", OPTION_VAL_SINGLECORE_RECOMPILER_SR },
+			{ "multicore_recompiler", OPTION_VAL_MULTICORE_RECOMPILER_SR },
+			{ "multicore_interpreter", OPTION_VAL_MULTICORE_INTERPRETER_SR },
+			{ NULL, NULL },
+		},
+		"auto"
+	},
+	{
+		"cemu_console_language",
+		CEMU_CONSOLE_LANGUAGE_LABEL_SR,
+		NULL,
+		NULL,
+		NULL,
+		"system",
+		{
+			{ "English", OPTION_VAL_ENGLISH_SR },
+			{ "Japanese", OPTION_VAL_JAPANESE_SR },
+			{ "French", OPTION_VAL_FRENCH_SR },
+			{ "German", OPTION_VAL_GERMAN_SR },
+			{ "Italian", OPTION_VAL_ITALIAN_SR },
+			{ "Spanish", OPTION_VAL_SPANISH_SR },
+			{ "Chinese", OPTION_VAL_CHINESE_SR },
+			{ "Korean", OPTION_VAL_KOREAN_SR },
+			{ "Dutch", OPTION_VAL_DUTCH_SR },
+			{ "Portuguese", OPTION_VAL_PORTUGUESE_SR },
+			{ "Russian", OPTION_VAL_RUSSIAN_SR },
+			{ "Taiwanese", OPTION_VAL_TAIWANESE_SR },
+			{ NULL, NULL },
+		},
+		"English"
+	},
+	{
+		"cemu_async_shader_compile",
+		CEMU_ASYNC_SHADER_COMPILE_LABEL_SR,
+		NULL,
+		NULL,
+		NULL,
+		"shaders",
+		{
+			{ "enabled", NULL },
+			{ "disabled", NULL },
+			{ NULL, NULL },
+		},
+		"enabled"
+	},
+	{
+		"cemu_gx2drawdone_sync",
+		CEMU_GX2DRAWDONE_SYNC_LABEL_SR,
+		NULL,
+		NULL,
+		NULL,
+		"shaders",
+		{
+			{ "enabled", NULL },
+			{ "disabled", NULL },
+			{ NULL, NULL },
+		},
+		"enabled"
+	},
+	{
+		"cemu_precompiled_shaders",
+		CEMU_PRECOMPILED_SHADERS_LABEL_SR,
+		NULL,
+		NULL,
+		NULL,
+		"shaders",
+		{
+			{ "auto", OPTION_VAL_AUTO_SR },
+			{ "enabled", NULL },
+			{ "disabled", NULL },
+			{ NULL, NULL },
+		},
+		"auto"
+	},
+	{
+		"cemu_accurate_shader_mul",
+		CEMU_ACCURATE_SHADER_MUL_LABEL_SR,
+		NULL,
+		NULL,
+		NULL,
+		"shaders",
+		{
+			{ "enabled", NULL },
+			{ "disabled", NULL },
+			{ NULL, NULL },
+		},
+		"enabled"
+	},
+	{
+		"cemu_upscale_filter",
+		CEMU_UPSCALE_FILTER_LABEL_SR,
+		NULL,
+		NULL,
+		NULL,
+		"video",
+		{
+			{ "linear", OPTION_VAL_LINEAR_SR },
+			{ "bicubic", OPTION_VAL_BICUBIC_SR },
+			{ "bicubic_hermite", OPTION_VAL_BICUBIC_HERMITE_SR },
+			{ "nearest", OPTION_VAL_NEAREST_SR },
+			{ NULL, NULL },
+		},
+		"linear"
+	},
+	{
+		"cemu_show_game_fps",
+		CEMU_SHOW_GAME_FPS_LABEL_SR,
+		NULL,
+		CEMU_SHOW_GAME_FPS_INFO_0_SR,
+		NULL,
+		"video",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_downscale_filter",
+		CEMU_DOWNSCALE_FILTER_LABEL_SR,
+		NULL,
+		NULL,
+		NULL,
+		"video",
+		{
+			{ "linear", OPTION_VAL_LINEAR_SR },
+			{ "bicubic", OPTION_VAL_BICUBIC_SR },
+			{ "bicubic_hermite", OPTION_VAL_BICUBIC_HERMITE_SR },
+			{ "nearest", OPTION_VAL_NEAREST_SR },
+			{ NULL, NULL },
+		},
+		"linear"
+	},
+	{
+		"cemu_internal_resolution",
+		CEMU_INTERNAL_RESOLUTION_LABEL_SR,
+		NULL,
+		CEMU_INTERNAL_RESOLUTION_INFO_0_SR,
+		NULL,
+		"video",
+		{
+			{ "640x360", OPTION_VAL_640X360_SR },
+			{ "960x540", OPTION_VAL_960X540_SR },
+			{ "1280x720", OPTION_VAL_1280X720_SR },
+			{ "1920x1080", OPTION_VAL_1920X1080_SR },
+			{ "2560x1440", OPTION_VAL_2560X1440_SR },
+			{ "3840x2160", OPTION_VAL_3840X2160_SR },
+			{ NULL, NULL },
+		},
+		"1280x720"
+	},
+	{
+		"cemu_fullscreen_scaling",
+		CEMU_FULLSCREEN_SCALING_LABEL_SR,
+		NULL,
+		NULL,
+		NULL,
+		"video",
+		{
+			{ "keep_aspect", OPTION_VAL_KEEP_ASPECT_SR },
+			{ "stretch", OPTION_VAL_STRETCH_SR },
+			{ NULL, NULL },
+		},
+		"keep_aspect"
+	},
+	{
+		"cemu_thread_quantum",
+		CEMU_THREAD_QUANTUM_LABEL_SR,
+		NULL,
+		NULL,
+		NULL,
+		"system",
+		{
+			{ "20000", NULL },
+			{ "45000", NULL },
+			{ "60000", NULL },
+			{ "80000", NULL },
+			{ "100000", NULL },
+			{ NULL, NULL },
+		},
+		"45000"
+	},
+	{
+		"cemu_emulate_skylander_portal",
+		CEMU_EMULATE_SKYLANDER_PORTAL_LABEL_SR,
+		NULL,
+		NULL,
+		NULL,
+		"addons",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_emulate_infinity_base",
+		CEMU_EMULATE_INFINITY_BASE_LABEL_SR,
+		NULL,
+		NULL,
+		NULL,
+		"addons",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_emulate_dimensions_toypad",
+		CEMU_EMULATE_DIMENSIONS_TOYPAD_LABEL_SR,
+		NULL,
+		NULL,
+		NULL,
+		"addons",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_number_of_screen_layouts",
+		CEMU_NUMBER_OF_SCREEN_LAYOUTS_LABEL_SR,
+		NULL,
+		NULL,
+		NULL,
+		"screen",
+		{
+			{ "1", NULL },
+			{ "2", NULL },
+			{ "3", NULL },
+			{ "4", NULL },
+			{ "5", NULL },
+			{ NULL, NULL },
+		},
+		"2"
+	},
+	{
+		"cemu_screen_layout1",
+		CEMU_SCREEN_LAYOUT1_LABEL_SR,
+		NULL,
+		NULL,
+		NULL,
+		"screen",
+		{
+			{ "Default Screen", OPTION_VAL_DEFAULT_SCREEN_SR },
+			{ "GamePad Screen", OPTION_VAL_GAMEPAD_SCREEN_SR },
+			{ "Side by Side", OPTION_VAL_SIDE_BY_SIDE_SR },
+			{ "Top Bottom", OPTION_VAL_TOP_BOTTOM_SR },
+			{ "Picture in Picture", OPTION_VAL_PICTURE_IN_PICTURE_SR },
+			{ NULL, NULL },
+		},
+		"Default Screen"
+	},
+	{
+		"cemu_screen_layout2",
+		CEMU_SCREEN_LAYOUT2_LABEL_SR,
+		NULL,
+		NULL,
+		NULL,
+		"screen",
+		{
+			{ "Default Screen", OPTION_VAL_DEFAULT_SCREEN_SR },
+			{ "GamePad Screen", OPTION_VAL_GAMEPAD_SCREEN_SR },
+			{ "Side by Side", OPTION_VAL_SIDE_BY_SIDE_SR },
+			{ "Top Bottom", OPTION_VAL_TOP_BOTTOM_SR },
+			{ "Picture in Picture", OPTION_VAL_PICTURE_IN_PICTURE_SR },
+			{ NULL, NULL },
+		},
+		"GamePad Screen"
+	},
+	{
+		"cemu_screen_layout3",
+		CEMU_SCREEN_LAYOUT3_LABEL_SR,
+		NULL,
+		NULL,
+		NULL,
+		"screen",
+		{
+			{ "Default Screen", OPTION_VAL_DEFAULT_SCREEN_SR },
+			{ "GamePad Screen", OPTION_VAL_GAMEPAD_SCREEN_SR },
+			{ "Side by Side", OPTION_VAL_SIDE_BY_SIDE_SR },
+			{ "Top Bottom", OPTION_VAL_TOP_BOTTOM_SR },
+			{ "Picture in Picture", OPTION_VAL_PICTURE_IN_PICTURE_SR },
+			{ NULL, NULL },
+		},
+		"Side by Side"
+	},
+	{
+		"cemu_screen_layout4",
+		CEMU_SCREEN_LAYOUT4_LABEL_SR,
+		NULL,
+		NULL,
+		NULL,
+		"screen",
+		{
+			{ "Default Screen", OPTION_VAL_DEFAULT_SCREEN_SR },
+			{ "GamePad Screen", OPTION_VAL_GAMEPAD_SCREEN_SR },
+			{ "Side by Side", OPTION_VAL_SIDE_BY_SIDE_SR },
+			{ "Top Bottom", OPTION_VAL_TOP_BOTTOM_SR },
+			{ "Picture in Picture", OPTION_VAL_PICTURE_IN_PICTURE_SR },
+			{ NULL, NULL },
+		},
+		"Top Bottom"
+	},
+	{
+		"cemu_screen_layout5",
+		CEMU_SCREEN_LAYOUT5_LABEL_SR,
+		NULL,
+		NULL,
+		NULL,
+		"screen",
+		{
+			{ "Default Screen", OPTION_VAL_DEFAULT_SCREEN_SR },
+			{ "GamePad Screen", OPTION_VAL_GAMEPAD_SCREEN_SR },
+			{ "Side by Side", OPTION_VAL_SIDE_BY_SIDE_SR },
+			{ "Top Bottom", OPTION_VAL_TOP_BOTTOM_SR },
+			{ "Picture in Picture", OPTION_VAL_PICTURE_IN_PICTURE_SR },
+			{ NULL, NULL },
+		},
+		"Picture in Picture"
+	},
+	{
+		"cemu_next_screen_layout_button",
+		CEMU_NEXT_SCREEN_LAYOUT_BUTTON_LABEL_SR,
+		NULL,
+		NULL,
+		NULL,
+		"screen",
+		{
+			{ "Disabled", NULL },
+			{ "L + R + L2 + R2 + L3 + R3", OPTION_VAL_L_R_L2_R2_L3_R3_SR },
+			{ "Select + L3", OPTION_VAL_SELECT_L3_SR },
+			{ "Select + R3", OPTION_VAL_SELECT_R3_SR },
+			{ "Tab", OPTION_VAL_TAB_SR },
+			{ NULL, NULL },
+		},
+		"L + R + L2 + R2 + L3 + R3"
+	},
+	{
+		"cemu_drc_position",
+		CEMU_DRC_POSITION_LABEL_SR,
+		NULL,
+		NULL,
+		NULL,
+		"screen",
+		{
+			{ "normal", OPTION_VAL_NORMAL_SR },
+			{ "swapped", OPTION_VAL_SWAPPED_SR },
+			{ NULL, NULL },
+		},
+		"normal"
+	},
+	{
+		"cemu_log_to_file",
+		CEMU_LOG_TO_FILE_LABEL_SR,
+		NULL,
+		NULL,
+		NULL,
+		"logging",
+		{
+			{ "enabled", NULL },
+			{ "disabled", NULL },
+			{ NULL, NULL },
+		},
+		"enabled"
+	},
+	{
+		"cemu_log_filesystem",
+		CEMU_LOG_FILESYSTEM_LABEL_SR,
+		NULL,
+		NULL,
+		NULL,
+		"logging",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_log_thread_sync",
+		CEMU_LOG_THREAD_SYNC_LABEL_SR,
+		NULL,
+		NULL,
+		NULL,
+		"logging",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_log_system_api",
+		CEMU_LOG_SYSTEM_API_LABEL_SR,
+		NULL,
+		NULL,
+		NULL,
+		"logging",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_log_texture_memory",
+		CEMU_LOG_TEXTURE_MEMORY_LABEL_SR,
+		NULL,
+		CEMU_LOG_TEXTURE_MEMORY_INFO_0_SR,
+		NULL,
+		"logging",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_log_input_api",
+		CEMU_LOG_INPUT_API_LABEL_SR,
+		NULL,
+		CEMU_LOG_INPUT_API_INFO_0_SR,
+		NULL,
+		"logging",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_log_audio",
+		CEMU_LOG_AUDIO_LABEL_SR,
+		NULL,
+		CEMU_LOG_AUDIO_INFO_0_SR,
+		NULL,
+		"logging",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_bc1_16bit",
+		CEMU_BC1_16BIT_LABEL_SR,
+		NULL,
+		CEMU_BC1_16BIT_INFO_0_SR,
+		NULL,
+		"video",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+#if defined(ENABLE_VULKAN) && defined(ENABLE_OPENGL)
+	{
+		"cemu_gpu_api",
+		CEMU_GPU_API_LABEL_SR,
+		NULL,
+		NULL,
+		NULL,
+		"video",
+		{
+			{ "OpenGL", OPTION_VAL_OPENGL_SR },
+			{ "Vulkan", OPTION_VAL_VULKAN_SR },
+			{ NULL, NULL },
+		},
+		"OpenGL"
+	},
+#endif
+	{
+		"cemu_wua_output_dir",
+		CEMU_WUA_OUTPUT_DIR_LABEL_SR,
+		NULL,
+		CEMU_WUA_OUTPUT_DIR_INFO_0_SR,
+		NULL,
+		"convert",
+		{
+			// Filled in at run time with wherever the frontend lets the core write.
+			{ NULL, NULL },
+		},
+		NULL
+	},
+	{
+		"cemu_convert_to_wua",
+		CEMU_CONVERT_TO_WUA_LABEL_SR,
+		NULL,
+		CEMU_CONVERT_TO_WUA_INFO_0_SR,
+		NULL,
+		"convert",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{ NULL, NULL, NULL, NULL, NULL, NULL, {{0}}, NULL },
+};
+struct retro_core_options_v2 options_sr = {
+   option_cats_sr,
+   option_defs_sr
+};
+
 /* RETRO_LANGUAGE_SV */
 
 #define CATEGORY_VIDEO_LABEL_SV NULL
@@ -18889,10 +23341,12 @@ struct retro_core_options_v2 options_sk = {
 #define CATEGORY_SYSTEM_INFO_0_SV NULL
 #define CATEGORY_ADDONS_LABEL_SV NULL
 #define CATEGORY_ADDONS_INFO_0_SV NULL
-#define CATEGORY_LOGGING_LABEL_SV NULL
+#define CATEGORY_LOGGING_LABEL_SV "Loggning"
 #define CATEGORY_LOGGING_INFO_0_SV NULL
 #define CATEGORY_CONVERT_LABEL_SV NULL
 #define CATEGORY_CONVERT_INFO_0_SV NULL
+#define CATEGORY_GRAPHIC_PACKS_LABEL_SV NULL
+#define CATEGORY_GRAPHIC_PACKS_INFO_0_SV NULL
 #define CEMU_CPU_MODE_LABEL_SV NULL
 #define OPTION_VAL_AUTO_SV NULL
 #define OPTION_VAL_SINGLECORE_INTERPRETER_SV NULL
@@ -18900,12 +23354,12 @@ struct retro_core_options_v2 options_sk = {
 #define OPTION_VAL_MULTICORE_RECOMPILER_SV NULL
 #define OPTION_VAL_MULTICORE_INTERPRETER_SV NULL
 #define CEMU_CONSOLE_LANGUAGE_LABEL_SV NULL
-#define OPTION_VAL_ENGLISH_SV NULL
-#define OPTION_VAL_JAPANESE_SV NULL
-#define OPTION_VAL_FRENCH_SV NULL
-#define OPTION_VAL_GERMAN_SV NULL
-#define OPTION_VAL_ITALIAN_SV NULL
-#define OPTION_VAL_SPANISH_SV NULL
+#define OPTION_VAL_ENGLISH_SV "Engelska"
+#define OPTION_VAL_JAPANESE_SV "Japanska"
+#define OPTION_VAL_FRENCH_SV "Franska"
+#define OPTION_VAL_GERMAN_SV "Tyska"
+#define OPTION_VAL_ITALIAN_SV "Italienska"
+#define OPTION_VAL_SPANISH_SV "Spanska"
 #define OPTION_VAL_CHINESE_SV NULL
 #define OPTION_VAL_KOREAN_SV NULL
 #define OPTION_VAL_DUTCH_SV NULL
@@ -18917,12 +23371,14 @@ struct retro_core_options_v2 options_sk = {
 #define CEMU_PRECOMPILED_SHADERS_LABEL_SV NULL
 #define CEMU_ACCURATE_SHADER_MUL_LABEL_SV NULL
 #define CEMU_UPSCALE_FILTER_LABEL_SV NULL
-#define OPTION_VAL_LINEAR_SV NULL
-#define OPTION_VAL_BICUBIC_SV NULL
+#define OPTION_VAL_LINEAR_SV "Linjär"
+#define OPTION_VAL_BICUBIC_SV "Bikubisk"
 #define OPTION_VAL_BICUBIC_HERMITE_SV NULL
-#define OPTION_VAL_NEAREST_SV NULL
+#define OPTION_VAL_NEAREST_SV "Närmsta"
+#define CEMU_SHOW_GAME_FPS_LABEL_SV NULL
+#define CEMU_SHOW_GAME_FPS_INFO_0_SV NULL
 #define CEMU_DOWNSCALE_FILTER_LABEL_SV NULL
-#define CEMU_INTERNAL_RESOLUTION_LABEL_SV NULL
+#define CEMU_INTERNAL_RESOLUTION_LABEL_SV "Intern upplösning"
 #define CEMU_INTERNAL_RESOLUTION_INFO_0_SV NULL
 #define OPTION_VAL_640X360_SV NULL
 #define OPTION_VAL_960X540_SV NULL
@@ -18986,6 +23442,7 @@ struct retro_core_option_v2_category option_cats_sv[] = {
 	{ "addons", CATEGORY_ADDONS_LABEL_SV, CATEGORY_ADDONS_INFO_0_SV },
 	{ "logging", CATEGORY_LOGGING_LABEL_SV, CATEGORY_LOGGING_INFO_0_SV },
 	{ "convert", CATEGORY_CONVERT_LABEL_SV, CATEGORY_CONVERT_INFO_0_SV },
+	{ "graphic_packs", CATEGORY_GRAPHIC_PACKS_LABEL_SV, CATEGORY_GRAPHIC_PACKS_INFO_0_SV },
 	{ NULL, NULL, NULL },
 };
 struct retro_core_option_v2_definition option_defs_sv[] = {
@@ -19102,6 +23559,20 @@ struct retro_core_option_v2_definition option_defs_sv[] = {
 			{ NULL, NULL },
 		},
 		"linear"
+	},
+	{
+		"cemu_show_game_fps",
+		CEMU_SHOW_GAME_FPS_LABEL_SV,
+		NULL,
+		CEMU_SHOW_GAME_FPS_INFO_0_SV,
+		NULL,
+		"video",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
 	},
 	{
 		"cemu_downscale_filter",
@@ -19505,35 +23976,684 @@ struct retro_core_options_v2 options_sv = {
    option_defs_sv
 };
 
+/* RETRO_LANGUAGE_TH */
+
+#define CATEGORY_VIDEO_LABEL_TH "วิดีโอ"
+#define CATEGORY_VIDEO_INFO_0_TH NULL
+#define CATEGORY_SHADERS_LABEL_TH NULL
+#define CATEGORY_SHADERS_INFO_0_TH NULL
+#define CATEGORY_SCREEN_LABEL_TH NULL
+#define CATEGORY_SCREEN_INFO_0_TH NULL
+#define CATEGORY_SYSTEM_LABEL_TH "ระบบ"
+#define CATEGORY_SYSTEM_INFO_0_TH NULL
+#define CATEGORY_ADDONS_LABEL_TH NULL
+#define CATEGORY_ADDONS_INFO_0_TH NULL
+#define CATEGORY_LOGGING_LABEL_TH "การบันทึกข้อมูล"
+#define CATEGORY_LOGGING_INFO_0_TH NULL
+#define CATEGORY_CONVERT_LABEL_TH NULL
+#define CATEGORY_CONVERT_INFO_0_TH NULL
+#define CATEGORY_GRAPHIC_PACKS_LABEL_TH NULL
+#define CATEGORY_GRAPHIC_PACKS_INFO_0_TH NULL
+#define CEMU_CPU_MODE_LABEL_TH NULL
+#define OPTION_VAL_AUTO_TH "อัตโนมัติ"
+#define OPTION_VAL_SINGLECORE_INTERPRETER_TH NULL
+#define OPTION_VAL_SINGLECORE_RECOMPILER_TH NULL
+#define OPTION_VAL_MULTICORE_RECOMPILER_TH NULL
+#define OPTION_VAL_MULTICORE_INTERPRETER_TH NULL
+#define CEMU_CONSOLE_LANGUAGE_LABEL_TH NULL
+#define OPTION_VAL_ENGLISH_TH "อังกฤษ"
+#define OPTION_VAL_JAPANESE_TH "ญี่ปุ่น"
+#define OPTION_VAL_FRENCH_TH "ฝรั่งเศส"
+#define OPTION_VAL_GERMAN_TH "เยอรมัน"
+#define OPTION_VAL_ITALIAN_TH "อิตาลี"
+#define OPTION_VAL_SPANISH_TH "สเปน"
+#define OPTION_VAL_CHINESE_TH NULL
+#define OPTION_VAL_KOREAN_TH NULL
+#define OPTION_VAL_DUTCH_TH NULL
+#define OPTION_VAL_PORTUGUESE_TH NULL
+#define OPTION_VAL_RUSSIAN_TH NULL
+#define OPTION_VAL_TAIWANESE_TH NULL
+#define CEMU_ASYNC_SHADER_COMPILE_LABEL_TH NULL
+#define CEMU_GX2DRAWDONE_SYNC_LABEL_TH NULL
+#define CEMU_PRECOMPILED_SHADERS_LABEL_TH NULL
+#define CEMU_ACCURATE_SHADER_MUL_LABEL_TH NULL
+#define CEMU_UPSCALE_FILTER_LABEL_TH NULL
+#define OPTION_VAL_LINEAR_TH "เส้นตรง"
+#define OPTION_VAL_BICUBIC_TH "ไบคิวบิก"
+#define OPTION_VAL_BICUBIC_HERMITE_TH NULL
+#define OPTION_VAL_NEAREST_TH "ใกล้ที่สุด"
+#define CEMU_SHOW_GAME_FPS_LABEL_TH NULL
+#define CEMU_SHOW_GAME_FPS_INFO_0_TH NULL
+#define CEMU_DOWNSCALE_FILTER_LABEL_TH NULL
+#define CEMU_INTERNAL_RESOLUTION_LABEL_TH "ความละเอียดภายใน"
+#define CEMU_INTERNAL_RESOLUTION_INFO_0_TH NULL
+#define OPTION_VAL_640X360_TH NULL
+#define OPTION_VAL_960X540_TH NULL
+#define OPTION_VAL_1280X720_TH NULL
+#define OPTION_VAL_1920X1080_TH NULL
+#define OPTION_VAL_2560X1440_TH NULL
+#define OPTION_VAL_3840X2160_TH NULL
+#define CEMU_FULLSCREEN_SCALING_LABEL_TH NULL
+#define OPTION_VAL_KEEP_ASPECT_TH NULL
+#define OPTION_VAL_STRETCH_TH NULL
+#define CEMU_THREAD_QUANTUM_LABEL_TH NULL
+#define CEMU_EMULATE_SKYLANDER_PORTAL_LABEL_TH NULL
+#define CEMU_EMULATE_INFINITY_BASE_LABEL_TH NULL
+#define CEMU_EMULATE_DIMENSIONS_TOYPAD_LABEL_TH NULL
+#define CEMU_NUMBER_OF_SCREEN_LAYOUTS_LABEL_TH NULL
+#define CEMU_SCREEN_LAYOUT1_LABEL_TH NULL
+#define OPTION_VAL_DEFAULT_SCREEN_TH NULL
+#define OPTION_VAL_GAMEPAD_SCREEN_TH NULL
+#define OPTION_VAL_SIDE_BY_SIDE_TH NULL
+#define OPTION_VAL_TOP_BOTTOM_TH NULL
+#define OPTION_VAL_PICTURE_IN_PICTURE_TH NULL
+#define CEMU_SCREEN_LAYOUT2_LABEL_TH NULL
+#define CEMU_SCREEN_LAYOUT3_LABEL_TH NULL
+#define CEMU_SCREEN_LAYOUT4_LABEL_TH NULL
+#define CEMU_SCREEN_LAYOUT5_LABEL_TH NULL
+#define CEMU_NEXT_SCREEN_LAYOUT_BUTTON_LABEL_TH NULL
+#define OPTION_VAL_L_R_L2_R2_L3_R3_TH NULL
+#define OPTION_VAL_SELECT_L3_TH NULL
+#define OPTION_VAL_SELECT_R3_TH NULL
+#define OPTION_VAL_TAB_TH NULL
+#define CEMU_DRC_POSITION_LABEL_TH NULL
+#define OPTION_VAL_NORMAL_TH "ปกติ"
+#define OPTION_VAL_SWAPPED_TH NULL
+#define CEMU_LOG_TO_FILE_LABEL_TH NULL
+#define CEMU_LOG_FILESYSTEM_LABEL_TH NULL
+#define CEMU_LOG_THREAD_SYNC_LABEL_TH NULL
+#define CEMU_LOG_SYSTEM_API_LABEL_TH NULL
+#define CEMU_LOG_TEXTURE_MEMORY_LABEL_TH NULL
+#define CEMU_LOG_TEXTURE_MEMORY_INFO_0_TH NULL
+#define CEMU_LOG_INPUT_API_LABEL_TH NULL
+#define CEMU_LOG_INPUT_API_INFO_0_TH NULL
+#define CEMU_LOG_AUDIO_LABEL_TH NULL
+#define CEMU_LOG_AUDIO_INFO_0_TH NULL
+#define CEMU_BC1_16BIT_LABEL_TH NULL
+#define CEMU_BC1_16BIT_INFO_0_TH NULL
+#define CEMU_GPU_API_LABEL_TH NULL
+#define OPTION_VAL_OPENGL_TH NULL
+#define OPTION_VAL_VULKAN_TH NULL
+#define CEMU_WUA_OUTPUT_DIR_LABEL_TH NULL
+#define CEMU_WUA_OUTPUT_DIR_INFO_0_TH NULL
+#define CEMU_CONVERT_TO_WUA_LABEL_TH NULL
+#define CEMU_CONVERT_TO_WUA_INFO_0_TH NULL
+
+struct retro_core_option_v2_category option_cats_th[] = {
+	{ "video", CATEGORY_VIDEO_LABEL_TH, CATEGORY_VIDEO_INFO_0_TH },
+	{ "shaders", CATEGORY_SHADERS_LABEL_TH, CATEGORY_SHADERS_INFO_0_TH },
+	{ "screen", CATEGORY_SCREEN_LABEL_TH, CATEGORY_SCREEN_INFO_0_TH },
+	// No Input category: what a port drives is a frontend device type, not
+	// a core option, and an empty submenu is worse than no submenu.
+	{ "system", CATEGORY_SYSTEM_LABEL_TH, CATEGORY_SYSTEM_INFO_0_TH },
+	{ "addons", CATEGORY_ADDONS_LABEL_TH, CATEGORY_ADDONS_INFO_0_TH },
+	{ "logging", CATEGORY_LOGGING_LABEL_TH, CATEGORY_LOGGING_INFO_0_TH },
+	{ "convert", CATEGORY_CONVERT_LABEL_TH, CATEGORY_CONVERT_INFO_0_TH },
+	{ "graphic_packs", CATEGORY_GRAPHIC_PACKS_LABEL_TH, CATEGORY_GRAPHIC_PACKS_INFO_0_TH },
+	{ NULL, NULL, NULL },
+};
+struct retro_core_option_v2_definition option_defs_th[] = {
+	{
+		"cemu_cpu_mode",
+		CEMU_CPU_MODE_LABEL_TH,
+		NULL,
+		NULL,
+		NULL,
+		"system",
+		{
+			{ "auto", OPTION_VAL_AUTO_TH },
+			{ "singlecore_interpreter", OPTION_VAL_SINGLECORE_INTERPRETER_TH },
+			{ "singlecore_recompiler", OPTION_VAL_SINGLECORE_RECOMPILER_TH },
+			{ "multicore_recompiler", OPTION_VAL_MULTICORE_RECOMPILER_TH },
+			{ "multicore_interpreter", OPTION_VAL_MULTICORE_INTERPRETER_TH },
+			{ NULL, NULL },
+		},
+		"auto"
+	},
+	{
+		"cemu_console_language",
+		CEMU_CONSOLE_LANGUAGE_LABEL_TH,
+		NULL,
+		NULL,
+		NULL,
+		"system",
+		{
+			{ "English", OPTION_VAL_ENGLISH_TH },
+			{ "Japanese", OPTION_VAL_JAPANESE_TH },
+			{ "French", OPTION_VAL_FRENCH_TH },
+			{ "German", OPTION_VAL_GERMAN_TH },
+			{ "Italian", OPTION_VAL_ITALIAN_TH },
+			{ "Spanish", OPTION_VAL_SPANISH_TH },
+			{ "Chinese", OPTION_VAL_CHINESE_TH },
+			{ "Korean", OPTION_VAL_KOREAN_TH },
+			{ "Dutch", OPTION_VAL_DUTCH_TH },
+			{ "Portuguese", OPTION_VAL_PORTUGUESE_TH },
+			{ "Russian", OPTION_VAL_RUSSIAN_TH },
+			{ "Taiwanese", OPTION_VAL_TAIWANESE_TH },
+			{ NULL, NULL },
+		},
+		"English"
+	},
+	{
+		"cemu_async_shader_compile",
+		CEMU_ASYNC_SHADER_COMPILE_LABEL_TH,
+		NULL,
+		NULL,
+		NULL,
+		"shaders",
+		{
+			{ "enabled", NULL },
+			{ "disabled", NULL },
+			{ NULL, NULL },
+		},
+		"enabled"
+	},
+	{
+		"cemu_gx2drawdone_sync",
+		CEMU_GX2DRAWDONE_SYNC_LABEL_TH,
+		NULL,
+		NULL,
+		NULL,
+		"shaders",
+		{
+			{ "enabled", NULL },
+			{ "disabled", NULL },
+			{ NULL, NULL },
+		},
+		"enabled"
+	},
+	{
+		"cemu_precompiled_shaders",
+		CEMU_PRECOMPILED_SHADERS_LABEL_TH,
+		NULL,
+		NULL,
+		NULL,
+		"shaders",
+		{
+			{ "auto", OPTION_VAL_AUTO_TH },
+			{ "enabled", NULL },
+			{ "disabled", NULL },
+			{ NULL, NULL },
+		},
+		"auto"
+	},
+	{
+		"cemu_accurate_shader_mul",
+		CEMU_ACCURATE_SHADER_MUL_LABEL_TH,
+		NULL,
+		NULL,
+		NULL,
+		"shaders",
+		{
+			{ "enabled", NULL },
+			{ "disabled", NULL },
+			{ NULL, NULL },
+		},
+		"enabled"
+	},
+	{
+		"cemu_upscale_filter",
+		CEMU_UPSCALE_FILTER_LABEL_TH,
+		NULL,
+		NULL,
+		NULL,
+		"video",
+		{
+			{ "linear", OPTION_VAL_LINEAR_TH },
+			{ "bicubic", OPTION_VAL_BICUBIC_TH },
+			{ "bicubic_hermite", OPTION_VAL_BICUBIC_HERMITE_TH },
+			{ "nearest", OPTION_VAL_NEAREST_TH },
+			{ NULL, NULL },
+		},
+		"linear"
+	},
+	{
+		"cemu_show_game_fps",
+		CEMU_SHOW_GAME_FPS_LABEL_TH,
+		NULL,
+		CEMU_SHOW_GAME_FPS_INFO_0_TH,
+		NULL,
+		"video",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_downscale_filter",
+		CEMU_DOWNSCALE_FILTER_LABEL_TH,
+		NULL,
+		NULL,
+		NULL,
+		"video",
+		{
+			{ "linear", OPTION_VAL_LINEAR_TH },
+			{ "bicubic", OPTION_VAL_BICUBIC_TH },
+			{ "bicubic_hermite", OPTION_VAL_BICUBIC_HERMITE_TH },
+			{ "nearest", OPTION_VAL_NEAREST_TH },
+			{ NULL, NULL },
+		},
+		"linear"
+	},
+	{
+		"cemu_internal_resolution",
+		CEMU_INTERNAL_RESOLUTION_LABEL_TH,
+		NULL,
+		CEMU_INTERNAL_RESOLUTION_INFO_0_TH,
+		NULL,
+		"video",
+		{
+			{ "640x360", OPTION_VAL_640X360_TH },
+			{ "960x540", OPTION_VAL_960X540_TH },
+			{ "1280x720", OPTION_VAL_1280X720_TH },
+			{ "1920x1080", OPTION_VAL_1920X1080_TH },
+			{ "2560x1440", OPTION_VAL_2560X1440_TH },
+			{ "3840x2160", OPTION_VAL_3840X2160_TH },
+			{ NULL, NULL },
+		},
+		"1280x720"
+	},
+	{
+		"cemu_fullscreen_scaling",
+		CEMU_FULLSCREEN_SCALING_LABEL_TH,
+		NULL,
+		NULL,
+		NULL,
+		"video",
+		{
+			{ "keep_aspect", OPTION_VAL_KEEP_ASPECT_TH },
+			{ "stretch", OPTION_VAL_STRETCH_TH },
+			{ NULL, NULL },
+		},
+		"keep_aspect"
+	},
+	{
+		"cemu_thread_quantum",
+		CEMU_THREAD_QUANTUM_LABEL_TH,
+		NULL,
+		NULL,
+		NULL,
+		"system",
+		{
+			{ "20000", NULL },
+			{ "45000", NULL },
+			{ "60000", NULL },
+			{ "80000", NULL },
+			{ "100000", NULL },
+			{ NULL, NULL },
+		},
+		"45000"
+	},
+	{
+		"cemu_emulate_skylander_portal",
+		CEMU_EMULATE_SKYLANDER_PORTAL_LABEL_TH,
+		NULL,
+		NULL,
+		NULL,
+		"addons",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_emulate_infinity_base",
+		CEMU_EMULATE_INFINITY_BASE_LABEL_TH,
+		NULL,
+		NULL,
+		NULL,
+		"addons",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_emulate_dimensions_toypad",
+		CEMU_EMULATE_DIMENSIONS_TOYPAD_LABEL_TH,
+		NULL,
+		NULL,
+		NULL,
+		"addons",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_number_of_screen_layouts",
+		CEMU_NUMBER_OF_SCREEN_LAYOUTS_LABEL_TH,
+		NULL,
+		NULL,
+		NULL,
+		"screen",
+		{
+			{ "1", NULL },
+			{ "2", NULL },
+			{ "3", NULL },
+			{ "4", NULL },
+			{ "5", NULL },
+			{ NULL, NULL },
+		},
+		"2"
+	},
+	{
+		"cemu_screen_layout1",
+		CEMU_SCREEN_LAYOUT1_LABEL_TH,
+		NULL,
+		NULL,
+		NULL,
+		"screen",
+		{
+			{ "Default Screen", OPTION_VAL_DEFAULT_SCREEN_TH },
+			{ "GamePad Screen", OPTION_VAL_GAMEPAD_SCREEN_TH },
+			{ "Side by Side", OPTION_VAL_SIDE_BY_SIDE_TH },
+			{ "Top Bottom", OPTION_VAL_TOP_BOTTOM_TH },
+			{ "Picture in Picture", OPTION_VAL_PICTURE_IN_PICTURE_TH },
+			{ NULL, NULL },
+		},
+		"Default Screen"
+	},
+	{
+		"cemu_screen_layout2",
+		CEMU_SCREEN_LAYOUT2_LABEL_TH,
+		NULL,
+		NULL,
+		NULL,
+		"screen",
+		{
+			{ "Default Screen", OPTION_VAL_DEFAULT_SCREEN_TH },
+			{ "GamePad Screen", OPTION_VAL_GAMEPAD_SCREEN_TH },
+			{ "Side by Side", OPTION_VAL_SIDE_BY_SIDE_TH },
+			{ "Top Bottom", OPTION_VAL_TOP_BOTTOM_TH },
+			{ "Picture in Picture", OPTION_VAL_PICTURE_IN_PICTURE_TH },
+			{ NULL, NULL },
+		},
+		"GamePad Screen"
+	},
+	{
+		"cemu_screen_layout3",
+		CEMU_SCREEN_LAYOUT3_LABEL_TH,
+		NULL,
+		NULL,
+		NULL,
+		"screen",
+		{
+			{ "Default Screen", OPTION_VAL_DEFAULT_SCREEN_TH },
+			{ "GamePad Screen", OPTION_VAL_GAMEPAD_SCREEN_TH },
+			{ "Side by Side", OPTION_VAL_SIDE_BY_SIDE_TH },
+			{ "Top Bottom", OPTION_VAL_TOP_BOTTOM_TH },
+			{ "Picture in Picture", OPTION_VAL_PICTURE_IN_PICTURE_TH },
+			{ NULL, NULL },
+		},
+		"Side by Side"
+	},
+	{
+		"cemu_screen_layout4",
+		CEMU_SCREEN_LAYOUT4_LABEL_TH,
+		NULL,
+		NULL,
+		NULL,
+		"screen",
+		{
+			{ "Default Screen", OPTION_VAL_DEFAULT_SCREEN_TH },
+			{ "GamePad Screen", OPTION_VAL_GAMEPAD_SCREEN_TH },
+			{ "Side by Side", OPTION_VAL_SIDE_BY_SIDE_TH },
+			{ "Top Bottom", OPTION_VAL_TOP_BOTTOM_TH },
+			{ "Picture in Picture", OPTION_VAL_PICTURE_IN_PICTURE_TH },
+			{ NULL, NULL },
+		},
+		"Top Bottom"
+	},
+	{
+		"cemu_screen_layout5",
+		CEMU_SCREEN_LAYOUT5_LABEL_TH,
+		NULL,
+		NULL,
+		NULL,
+		"screen",
+		{
+			{ "Default Screen", OPTION_VAL_DEFAULT_SCREEN_TH },
+			{ "GamePad Screen", OPTION_VAL_GAMEPAD_SCREEN_TH },
+			{ "Side by Side", OPTION_VAL_SIDE_BY_SIDE_TH },
+			{ "Top Bottom", OPTION_VAL_TOP_BOTTOM_TH },
+			{ "Picture in Picture", OPTION_VAL_PICTURE_IN_PICTURE_TH },
+			{ NULL, NULL },
+		},
+		"Picture in Picture"
+	},
+	{
+		"cemu_next_screen_layout_button",
+		CEMU_NEXT_SCREEN_LAYOUT_BUTTON_LABEL_TH,
+		NULL,
+		NULL,
+		NULL,
+		"screen",
+		{
+			{ "Disabled", NULL },
+			{ "L + R + L2 + R2 + L3 + R3", OPTION_VAL_L_R_L2_R2_L3_R3_TH },
+			{ "Select + L3", OPTION_VAL_SELECT_L3_TH },
+			{ "Select + R3", OPTION_VAL_SELECT_R3_TH },
+			{ "Tab", OPTION_VAL_TAB_TH },
+			{ NULL, NULL },
+		},
+		"L + R + L2 + R2 + L3 + R3"
+	},
+	{
+		"cemu_drc_position",
+		CEMU_DRC_POSITION_LABEL_TH,
+		NULL,
+		NULL,
+		NULL,
+		"screen",
+		{
+			{ "normal", OPTION_VAL_NORMAL_TH },
+			{ "swapped", OPTION_VAL_SWAPPED_TH },
+			{ NULL, NULL },
+		},
+		"normal"
+	},
+	{
+		"cemu_log_to_file",
+		CEMU_LOG_TO_FILE_LABEL_TH,
+		NULL,
+		NULL,
+		NULL,
+		"logging",
+		{
+			{ "enabled", NULL },
+			{ "disabled", NULL },
+			{ NULL, NULL },
+		},
+		"enabled"
+	},
+	{
+		"cemu_log_filesystem",
+		CEMU_LOG_FILESYSTEM_LABEL_TH,
+		NULL,
+		NULL,
+		NULL,
+		"logging",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_log_thread_sync",
+		CEMU_LOG_THREAD_SYNC_LABEL_TH,
+		NULL,
+		NULL,
+		NULL,
+		"logging",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_log_system_api",
+		CEMU_LOG_SYSTEM_API_LABEL_TH,
+		NULL,
+		NULL,
+		NULL,
+		"logging",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_log_texture_memory",
+		CEMU_LOG_TEXTURE_MEMORY_LABEL_TH,
+		NULL,
+		CEMU_LOG_TEXTURE_MEMORY_INFO_0_TH,
+		NULL,
+		"logging",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_log_input_api",
+		CEMU_LOG_INPUT_API_LABEL_TH,
+		NULL,
+		CEMU_LOG_INPUT_API_INFO_0_TH,
+		NULL,
+		"logging",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_log_audio",
+		CEMU_LOG_AUDIO_LABEL_TH,
+		NULL,
+		CEMU_LOG_AUDIO_INFO_0_TH,
+		NULL,
+		"logging",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_bc1_16bit",
+		CEMU_BC1_16BIT_LABEL_TH,
+		NULL,
+		CEMU_BC1_16BIT_INFO_0_TH,
+		NULL,
+		"video",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+#if defined(ENABLE_VULKAN) && defined(ENABLE_OPENGL)
+	{
+		"cemu_gpu_api",
+		CEMU_GPU_API_LABEL_TH,
+		NULL,
+		NULL,
+		NULL,
+		"video",
+		{
+			{ "OpenGL", OPTION_VAL_OPENGL_TH },
+			{ "Vulkan", OPTION_VAL_VULKAN_TH },
+			{ NULL, NULL },
+		},
+		"OpenGL"
+	},
+#endif
+	{
+		"cemu_wua_output_dir",
+		CEMU_WUA_OUTPUT_DIR_LABEL_TH,
+		NULL,
+		CEMU_WUA_OUTPUT_DIR_INFO_0_TH,
+		NULL,
+		"convert",
+		{
+			// Filled in at run time with wherever the frontend lets the core write.
+			{ NULL, NULL },
+		},
+		NULL
+	},
+	{
+		"cemu_convert_to_wua",
+		CEMU_CONVERT_TO_WUA_LABEL_TH,
+		NULL,
+		CEMU_CONVERT_TO_WUA_INFO_0_TH,
+		NULL,
+		"convert",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{ NULL, NULL, NULL, NULL, NULL, NULL, {{0}}, NULL },
+};
+struct retro_core_options_v2 options_th = {
+   option_cats_th,
+   option_defs_th
+};
+
 /* RETRO_LANGUAGE_TR */
 
 #define CATEGORY_VIDEO_LABEL_TR NULL
 #define CATEGORY_VIDEO_INFO_0_TR NULL
-#define CATEGORY_SHADERS_LABEL_TR NULL
+#define CATEGORY_SHADERS_LABEL_TR "Gölgelendirici"
 #define CATEGORY_SHADERS_INFO_0_TR NULL
 #define CATEGORY_SCREEN_LABEL_TR NULL
 #define CATEGORY_SCREEN_INFO_0_TR NULL
-#define CATEGORY_SYSTEM_LABEL_TR NULL
+#define CATEGORY_SYSTEM_LABEL_TR "Sistem"
 #define CATEGORY_SYSTEM_INFO_0_TR NULL
 #define CATEGORY_ADDONS_LABEL_TR NULL
 #define CATEGORY_ADDONS_INFO_0_TR NULL
-#define CATEGORY_LOGGING_LABEL_TR NULL
+#define CATEGORY_LOGGING_LABEL_TR "Günlükler"
 #define CATEGORY_LOGGING_INFO_0_TR NULL
 #define CATEGORY_CONVERT_LABEL_TR NULL
 #define CATEGORY_CONVERT_INFO_0_TR NULL
+#define CATEGORY_GRAPHIC_PACKS_LABEL_TR NULL
+#define CATEGORY_GRAPHIC_PACKS_INFO_0_TR NULL
 #define CEMU_CPU_MODE_LABEL_TR NULL
-#define OPTION_VAL_AUTO_TR NULL
+#define OPTION_VAL_AUTO_TR "Otomatik"
 #define OPTION_VAL_SINGLECORE_INTERPRETER_TR NULL
 #define OPTION_VAL_SINGLECORE_RECOMPILER_TR NULL
 #define OPTION_VAL_MULTICORE_RECOMPILER_TR NULL
 #define OPTION_VAL_MULTICORE_INTERPRETER_TR NULL
 #define CEMU_CONSOLE_LANGUAGE_LABEL_TR NULL
-#define OPTION_VAL_ENGLISH_TR NULL
-#define OPTION_VAL_JAPANESE_TR NULL
-#define OPTION_VAL_FRENCH_TR NULL
-#define OPTION_VAL_GERMAN_TR NULL
-#define OPTION_VAL_ITALIAN_TR NULL
-#define OPTION_VAL_SPANISH_TR NULL
+#define OPTION_VAL_ENGLISH_TR "İngilizce"
+#define OPTION_VAL_JAPANESE_TR "Japonca"
+#define OPTION_VAL_FRENCH_TR "Fransızca"
+#define OPTION_VAL_GERMAN_TR "Almanca"
+#define OPTION_VAL_ITALIAN_TR "İtalyanca"
+#define OPTION_VAL_SPANISH_TR "İspanyolca"
 #define OPTION_VAL_CHINESE_TR NULL
 #define OPTION_VAL_KOREAN_TR NULL
 #define OPTION_VAL_DUTCH_TR NULL
@@ -19545,12 +24665,14 @@ struct retro_core_options_v2 options_sv = {
 #define CEMU_PRECOMPILED_SHADERS_LABEL_TR NULL
 #define CEMU_ACCURATE_SHADER_MUL_LABEL_TR NULL
 #define CEMU_UPSCALE_FILTER_LABEL_TR NULL
-#define OPTION_VAL_LINEAR_TR NULL
-#define OPTION_VAL_BICUBIC_TR NULL
+#define OPTION_VAL_LINEAR_TR "Doğrusal"
+#define OPTION_VAL_BICUBIC_TR "Bikübik"
 #define OPTION_VAL_BICUBIC_HERMITE_TR NULL
-#define OPTION_VAL_NEAREST_TR NULL
+#define OPTION_VAL_NEAREST_TR "En yakın"
+#define CEMU_SHOW_GAME_FPS_LABEL_TR NULL
+#define CEMU_SHOW_GAME_FPS_INFO_0_TR NULL
 #define CEMU_DOWNSCALE_FILTER_LABEL_TR NULL
-#define CEMU_INTERNAL_RESOLUTION_LABEL_TR NULL
+#define CEMU_INTERNAL_RESOLUTION_LABEL_TR "Dahili Çözünürlük"
 #define CEMU_INTERNAL_RESOLUTION_INFO_0_TR NULL
 #define OPTION_VAL_640X360_TR NULL
 #define OPTION_VAL_960X540_TR NULL
@@ -19614,6 +24736,7 @@ struct retro_core_option_v2_category option_cats_tr[] = {
 	{ "addons", CATEGORY_ADDONS_LABEL_TR, CATEGORY_ADDONS_INFO_0_TR },
 	{ "logging", CATEGORY_LOGGING_LABEL_TR, CATEGORY_LOGGING_INFO_0_TR },
 	{ "convert", CATEGORY_CONVERT_LABEL_TR, CATEGORY_CONVERT_INFO_0_TR },
+	{ "graphic_packs", CATEGORY_GRAPHIC_PACKS_LABEL_TR, CATEGORY_GRAPHIC_PACKS_INFO_0_TR },
 	{ NULL, NULL, NULL },
 };
 struct retro_core_option_v2_definition option_defs_tr[] = {
@@ -19730,6 +24853,20 @@ struct retro_core_option_v2_definition option_defs_tr[] = {
 			{ NULL, NULL },
 		},
 		"linear"
+	},
+	{
+		"cemu_show_game_fps",
+		CEMU_SHOW_GAME_FPS_LABEL_TR,
+		NULL,
+		CEMU_SHOW_GAME_FPS_INFO_0_TR,
+		NULL,
+		"video",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
 	},
 	{
 		"cemu_downscale_filter",
@@ -20133,35 +25270,684 @@ struct retro_core_options_v2 options_tr = {
    option_defs_tr
 };
 
+/* RETRO_LANGUAGE_TT */
+
+#define CATEGORY_VIDEO_LABEL_TT "Видео"
+#define CATEGORY_VIDEO_INFO_0_TT NULL
+#define CATEGORY_SHADERS_LABEL_TT NULL
+#define CATEGORY_SHADERS_INFO_0_TT NULL
+#define CATEGORY_SCREEN_LABEL_TT NULL
+#define CATEGORY_SCREEN_INFO_0_TT NULL
+#define CATEGORY_SYSTEM_LABEL_TT NULL
+#define CATEGORY_SYSTEM_INFO_0_TT NULL
+#define CATEGORY_ADDONS_LABEL_TT NULL
+#define CATEGORY_ADDONS_INFO_0_TT NULL
+#define CATEGORY_LOGGING_LABEL_TT NULL
+#define CATEGORY_LOGGING_INFO_0_TT NULL
+#define CATEGORY_CONVERT_LABEL_TT NULL
+#define CATEGORY_CONVERT_INFO_0_TT NULL
+#define CATEGORY_GRAPHIC_PACKS_LABEL_TT NULL
+#define CATEGORY_GRAPHIC_PACKS_INFO_0_TT NULL
+#define CEMU_CPU_MODE_LABEL_TT NULL
+#define OPTION_VAL_AUTO_TT NULL
+#define OPTION_VAL_SINGLECORE_INTERPRETER_TT NULL
+#define OPTION_VAL_SINGLECORE_RECOMPILER_TT NULL
+#define OPTION_VAL_MULTICORE_RECOMPILER_TT NULL
+#define OPTION_VAL_MULTICORE_INTERPRETER_TT NULL
+#define CEMU_CONSOLE_LANGUAGE_LABEL_TT NULL
+#define OPTION_VAL_ENGLISH_TT "Инглизчә"
+#define OPTION_VAL_JAPANESE_TT "Япоча"
+#define OPTION_VAL_FRENCH_TT "Французча"
+#define OPTION_VAL_GERMAN_TT "Алманча"
+#define OPTION_VAL_ITALIAN_TT "Итальянча"
+#define OPTION_VAL_SPANISH_TT "Испанча"
+#define OPTION_VAL_CHINESE_TT NULL
+#define OPTION_VAL_KOREAN_TT NULL
+#define OPTION_VAL_DUTCH_TT NULL
+#define OPTION_VAL_PORTUGUESE_TT NULL
+#define OPTION_VAL_RUSSIAN_TT NULL
+#define OPTION_VAL_TAIWANESE_TT NULL
+#define CEMU_ASYNC_SHADER_COMPILE_LABEL_TT NULL
+#define CEMU_GX2DRAWDONE_SYNC_LABEL_TT NULL
+#define CEMU_PRECOMPILED_SHADERS_LABEL_TT NULL
+#define CEMU_ACCURATE_SHADER_MUL_LABEL_TT NULL
+#define CEMU_UPSCALE_FILTER_LABEL_TT NULL
+#define OPTION_VAL_LINEAR_TT NULL
+#define OPTION_VAL_BICUBIC_TT NULL
+#define OPTION_VAL_BICUBIC_HERMITE_TT NULL
+#define OPTION_VAL_NEAREST_TT NULL
+#define CEMU_SHOW_GAME_FPS_LABEL_TT NULL
+#define CEMU_SHOW_GAME_FPS_INFO_0_TT NULL
+#define CEMU_DOWNSCALE_FILTER_LABEL_TT NULL
+#define CEMU_INTERNAL_RESOLUTION_LABEL_TT NULL
+#define CEMU_INTERNAL_RESOLUTION_INFO_0_TT NULL
+#define OPTION_VAL_640X360_TT NULL
+#define OPTION_VAL_960X540_TT NULL
+#define OPTION_VAL_1280X720_TT NULL
+#define OPTION_VAL_1920X1080_TT NULL
+#define OPTION_VAL_2560X1440_TT NULL
+#define OPTION_VAL_3840X2160_TT NULL
+#define CEMU_FULLSCREEN_SCALING_LABEL_TT NULL
+#define OPTION_VAL_KEEP_ASPECT_TT NULL
+#define OPTION_VAL_STRETCH_TT NULL
+#define CEMU_THREAD_QUANTUM_LABEL_TT NULL
+#define CEMU_EMULATE_SKYLANDER_PORTAL_LABEL_TT NULL
+#define CEMU_EMULATE_INFINITY_BASE_LABEL_TT NULL
+#define CEMU_EMULATE_DIMENSIONS_TOYPAD_LABEL_TT NULL
+#define CEMU_NUMBER_OF_SCREEN_LAYOUTS_LABEL_TT NULL
+#define CEMU_SCREEN_LAYOUT1_LABEL_TT NULL
+#define OPTION_VAL_DEFAULT_SCREEN_TT NULL
+#define OPTION_VAL_GAMEPAD_SCREEN_TT NULL
+#define OPTION_VAL_SIDE_BY_SIDE_TT NULL
+#define OPTION_VAL_TOP_BOTTOM_TT NULL
+#define OPTION_VAL_PICTURE_IN_PICTURE_TT NULL
+#define CEMU_SCREEN_LAYOUT2_LABEL_TT NULL
+#define CEMU_SCREEN_LAYOUT3_LABEL_TT NULL
+#define CEMU_SCREEN_LAYOUT4_LABEL_TT NULL
+#define CEMU_SCREEN_LAYOUT5_LABEL_TT NULL
+#define CEMU_NEXT_SCREEN_LAYOUT_BUTTON_LABEL_TT NULL
+#define OPTION_VAL_L_R_L2_R2_L3_R3_TT NULL
+#define OPTION_VAL_SELECT_L3_TT NULL
+#define OPTION_VAL_SELECT_R3_TT NULL
+#define OPTION_VAL_TAB_TT NULL
+#define CEMU_DRC_POSITION_LABEL_TT NULL
+#define OPTION_VAL_NORMAL_TT NULL
+#define OPTION_VAL_SWAPPED_TT NULL
+#define CEMU_LOG_TO_FILE_LABEL_TT NULL
+#define CEMU_LOG_FILESYSTEM_LABEL_TT NULL
+#define CEMU_LOG_THREAD_SYNC_LABEL_TT NULL
+#define CEMU_LOG_SYSTEM_API_LABEL_TT NULL
+#define CEMU_LOG_TEXTURE_MEMORY_LABEL_TT NULL
+#define CEMU_LOG_TEXTURE_MEMORY_INFO_0_TT NULL
+#define CEMU_LOG_INPUT_API_LABEL_TT NULL
+#define CEMU_LOG_INPUT_API_INFO_0_TT NULL
+#define CEMU_LOG_AUDIO_LABEL_TT NULL
+#define CEMU_LOG_AUDIO_INFO_0_TT NULL
+#define CEMU_BC1_16BIT_LABEL_TT NULL
+#define CEMU_BC1_16BIT_INFO_0_TT NULL
+#define CEMU_GPU_API_LABEL_TT NULL
+#define OPTION_VAL_OPENGL_TT NULL
+#define OPTION_VAL_VULKAN_TT NULL
+#define CEMU_WUA_OUTPUT_DIR_LABEL_TT NULL
+#define CEMU_WUA_OUTPUT_DIR_INFO_0_TT NULL
+#define CEMU_CONVERT_TO_WUA_LABEL_TT NULL
+#define CEMU_CONVERT_TO_WUA_INFO_0_TT NULL
+
+struct retro_core_option_v2_category option_cats_tt[] = {
+	{ "video", CATEGORY_VIDEO_LABEL_TT, CATEGORY_VIDEO_INFO_0_TT },
+	{ "shaders", CATEGORY_SHADERS_LABEL_TT, CATEGORY_SHADERS_INFO_0_TT },
+	{ "screen", CATEGORY_SCREEN_LABEL_TT, CATEGORY_SCREEN_INFO_0_TT },
+	// No Input category: what a port drives is a frontend device type, not
+	// a core option, and an empty submenu is worse than no submenu.
+	{ "system", CATEGORY_SYSTEM_LABEL_TT, CATEGORY_SYSTEM_INFO_0_TT },
+	{ "addons", CATEGORY_ADDONS_LABEL_TT, CATEGORY_ADDONS_INFO_0_TT },
+	{ "logging", CATEGORY_LOGGING_LABEL_TT, CATEGORY_LOGGING_INFO_0_TT },
+	{ "convert", CATEGORY_CONVERT_LABEL_TT, CATEGORY_CONVERT_INFO_0_TT },
+	{ "graphic_packs", CATEGORY_GRAPHIC_PACKS_LABEL_TT, CATEGORY_GRAPHIC_PACKS_INFO_0_TT },
+	{ NULL, NULL, NULL },
+};
+struct retro_core_option_v2_definition option_defs_tt[] = {
+	{
+		"cemu_cpu_mode",
+		CEMU_CPU_MODE_LABEL_TT,
+		NULL,
+		NULL,
+		NULL,
+		"system",
+		{
+			{ "auto", OPTION_VAL_AUTO_TT },
+			{ "singlecore_interpreter", OPTION_VAL_SINGLECORE_INTERPRETER_TT },
+			{ "singlecore_recompiler", OPTION_VAL_SINGLECORE_RECOMPILER_TT },
+			{ "multicore_recompiler", OPTION_VAL_MULTICORE_RECOMPILER_TT },
+			{ "multicore_interpreter", OPTION_VAL_MULTICORE_INTERPRETER_TT },
+			{ NULL, NULL },
+		},
+		"auto"
+	},
+	{
+		"cemu_console_language",
+		CEMU_CONSOLE_LANGUAGE_LABEL_TT,
+		NULL,
+		NULL,
+		NULL,
+		"system",
+		{
+			{ "English", OPTION_VAL_ENGLISH_TT },
+			{ "Japanese", OPTION_VAL_JAPANESE_TT },
+			{ "French", OPTION_VAL_FRENCH_TT },
+			{ "German", OPTION_VAL_GERMAN_TT },
+			{ "Italian", OPTION_VAL_ITALIAN_TT },
+			{ "Spanish", OPTION_VAL_SPANISH_TT },
+			{ "Chinese", OPTION_VAL_CHINESE_TT },
+			{ "Korean", OPTION_VAL_KOREAN_TT },
+			{ "Dutch", OPTION_VAL_DUTCH_TT },
+			{ "Portuguese", OPTION_VAL_PORTUGUESE_TT },
+			{ "Russian", OPTION_VAL_RUSSIAN_TT },
+			{ "Taiwanese", OPTION_VAL_TAIWANESE_TT },
+			{ NULL, NULL },
+		},
+		"English"
+	},
+	{
+		"cemu_async_shader_compile",
+		CEMU_ASYNC_SHADER_COMPILE_LABEL_TT,
+		NULL,
+		NULL,
+		NULL,
+		"shaders",
+		{
+			{ "enabled", NULL },
+			{ "disabled", NULL },
+			{ NULL, NULL },
+		},
+		"enabled"
+	},
+	{
+		"cemu_gx2drawdone_sync",
+		CEMU_GX2DRAWDONE_SYNC_LABEL_TT,
+		NULL,
+		NULL,
+		NULL,
+		"shaders",
+		{
+			{ "enabled", NULL },
+			{ "disabled", NULL },
+			{ NULL, NULL },
+		},
+		"enabled"
+	},
+	{
+		"cemu_precompiled_shaders",
+		CEMU_PRECOMPILED_SHADERS_LABEL_TT,
+		NULL,
+		NULL,
+		NULL,
+		"shaders",
+		{
+			{ "auto", OPTION_VAL_AUTO_TT },
+			{ "enabled", NULL },
+			{ "disabled", NULL },
+			{ NULL, NULL },
+		},
+		"auto"
+	},
+	{
+		"cemu_accurate_shader_mul",
+		CEMU_ACCURATE_SHADER_MUL_LABEL_TT,
+		NULL,
+		NULL,
+		NULL,
+		"shaders",
+		{
+			{ "enabled", NULL },
+			{ "disabled", NULL },
+			{ NULL, NULL },
+		},
+		"enabled"
+	},
+	{
+		"cemu_upscale_filter",
+		CEMU_UPSCALE_FILTER_LABEL_TT,
+		NULL,
+		NULL,
+		NULL,
+		"video",
+		{
+			{ "linear", OPTION_VAL_LINEAR_TT },
+			{ "bicubic", OPTION_VAL_BICUBIC_TT },
+			{ "bicubic_hermite", OPTION_VAL_BICUBIC_HERMITE_TT },
+			{ "nearest", OPTION_VAL_NEAREST_TT },
+			{ NULL, NULL },
+		},
+		"linear"
+	},
+	{
+		"cemu_show_game_fps",
+		CEMU_SHOW_GAME_FPS_LABEL_TT,
+		NULL,
+		CEMU_SHOW_GAME_FPS_INFO_0_TT,
+		NULL,
+		"video",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_downscale_filter",
+		CEMU_DOWNSCALE_FILTER_LABEL_TT,
+		NULL,
+		NULL,
+		NULL,
+		"video",
+		{
+			{ "linear", OPTION_VAL_LINEAR_TT },
+			{ "bicubic", OPTION_VAL_BICUBIC_TT },
+			{ "bicubic_hermite", OPTION_VAL_BICUBIC_HERMITE_TT },
+			{ "nearest", OPTION_VAL_NEAREST_TT },
+			{ NULL, NULL },
+		},
+		"linear"
+	},
+	{
+		"cemu_internal_resolution",
+		CEMU_INTERNAL_RESOLUTION_LABEL_TT,
+		NULL,
+		CEMU_INTERNAL_RESOLUTION_INFO_0_TT,
+		NULL,
+		"video",
+		{
+			{ "640x360", OPTION_VAL_640X360_TT },
+			{ "960x540", OPTION_VAL_960X540_TT },
+			{ "1280x720", OPTION_VAL_1280X720_TT },
+			{ "1920x1080", OPTION_VAL_1920X1080_TT },
+			{ "2560x1440", OPTION_VAL_2560X1440_TT },
+			{ "3840x2160", OPTION_VAL_3840X2160_TT },
+			{ NULL, NULL },
+		},
+		"1280x720"
+	},
+	{
+		"cemu_fullscreen_scaling",
+		CEMU_FULLSCREEN_SCALING_LABEL_TT,
+		NULL,
+		NULL,
+		NULL,
+		"video",
+		{
+			{ "keep_aspect", OPTION_VAL_KEEP_ASPECT_TT },
+			{ "stretch", OPTION_VAL_STRETCH_TT },
+			{ NULL, NULL },
+		},
+		"keep_aspect"
+	},
+	{
+		"cemu_thread_quantum",
+		CEMU_THREAD_QUANTUM_LABEL_TT,
+		NULL,
+		NULL,
+		NULL,
+		"system",
+		{
+			{ "20000", NULL },
+			{ "45000", NULL },
+			{ "60000", NULL },
+			{ "80000", NULL },
+			{ "100000", NULL },
+			{ NULL, NULL },
+		},
+		"45000"
+	},
+	{
+		"cemu_emulate_skylander_portal",
+		CEMU_EMULATE_SKYLANDER_PORTAL_LABEL_TT,
+		NULL,
+		NULL,
+		NULL,
+		"addons",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_emulate_infinity_base",
+		CEMU_EMULATE_INFINITY_BASE_LABEL_TT,
+		NULL,
+		NULL,
+		NULL,
+		"addons",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_emulate_dimensions_toypad",
+		CEMU_EMULATE_DIMENSIONS_TOYPAD_LABEL_TT,
+		NULL,
+		NULL,
+		NULL,
+		"addons",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_number_of_screen_layouts",
+		CEMU_NUMBER_OF_SCREEN_LAYOUTS_LABEL_TT,
+		NULL,
+		NULL,
+		NULL,
+		"screen",
+		{
+			{ "1", NULL },
+			{ "2", NULL },
+			{ "3", NULL },
+			{ "4", NULL },
+			{ "5", NULL },
+			{ NULL, NULL },
+		},
+		"2"
+	},
+	{
+		"cemu_screen_layout1",
+		CEMU_SCREEN_LAYOUT1_LABEL_TT,
+		NULL,
+		NULL,
+		NULL,
+		"screen",
+		{
+			{ "Default Screen", OPTION_VAL_DEFAULT_SCREEN_TT },
+			{ "GamePad Screen", OPTION_VAL_GAMEPAD_SCREEN_TT },
+			{ "Side by Side", OPTION_VAL_SIDE_BY_SIDE_TT },
+			{ "Top Bottom", OPTION_VAL_TOP_BOTTOM_TT },
+			{ "Picture in Picture", OPTION_VAL_PICTURE_IN_PICTURE_TT },
+			{ NULL, NULL },
+		},
+		"Default Screen"
+	},
+	{
+		"cemu_screen_layout2",
+		CEMU_SCREEN_LAYOUT2_LABEL_TT,
+		NULL,
+		NULL,
+		NULL,
+		"screen",
+		{
+			{ "Default Screen", OPTION_VAL_DEFAULT_SCREEN_TT },
+			{ "GamePad Screen", OPTION_VAL_GAMEPAD_SCREEN_TT },
+			{ "Side by Side", OPTION_VAL_SIDE_BY_SIDE_TT },
+			{ "Top Bottom", OPTION_VAL_TOP_BOTTOM_TT },
+			{ "Picture in Picture", OPTION_VAL_PICTURE_IN_PICTURE_TT },
+			{ NULL, NULL },
+		},
+		"GamePad Screen"
+	},
+	{
+		"cemu_screen_layout3",
+		CEMU_SCREEN_LAYOUT3_LABEL_TT,
+		NULL,
+		NULL,
+		NULL,
+		"screen",
+		{
+			{ "Default Screen", OPTION_VAL_DEFAULT_SCREEN_TT },
+			{ "GamePad Screen", OPTION_VAL_GAMEPAD_SCREEN_TT },
+			{ "Side by Side", OPTION_VAL_SIDE_BY_SIDE_TT },
+			{ "Top Bottom", OPTION_VAL_TOP_BOTTOM_TT },
+			{ "Picture in Picture", OPTION_VAL_PICTURE_IN_PICTURE_TT },
+			{ NULL, NULL },
+		},
+		"Side by Side"
+	},
+	{
+		"cemu_screen_layout4",
+		CEMU_SCREEN_LAYOUT4_LABEL_TT,
+		NULL,
+		NULL,
+		NULL,
+		"screen",
+		{
+			{ "Default Screen", OPTION_VAL_DEFAULT_SCREEN_TT },
+			{ "GamePad Screen", OPTION_VAL_GAMEPAD_SCREEN_TT },
+			{ "Side by Side", OPTION_VAL_SIDE_BY_SIDE_TT },
+			{ "Top Bottom", OPTION_VAL_TOP_BOTTOM_TT },
+			{ "Picture in Picture", OPTION_VAL_PICTURE_IN_PICTURE_TT },
+			{ NULL, NULL },
+		},
+		"Top Bottom"
+	},
+	{
+		"cemu_screen_layout5",
+		CEMU_SCREEN_LAYOUT5_LABEL_TT,
+		NULL,
+		NULL,
+		NULL,
+		"screen",
+		{
+			{ "Default Screen", OPTION_VAL_DEFAULT_SCREEN_TT },
+			{ "GamePad Screen", OPTION_VAL_GAMEPAD_SCREEN_TT },
+			{ "Side by Side", OPTION_VAL_SIDE_BY_SIDE_TT },
+			{ "Top Bottom", OPTION_VAL_TOP_BOTTOM_TT },
+			{ "Picture in Picture", OPTION_VAL_PICTURE_IN_PICTURE_TT },
+			{ NULL, NULL },
+		},
+		"Picture in Picture"
+	},
+	{
+		"cemu_next_screen_layout_button",
+		CEMU_NEXT_SCREEN_LAYOUT_BUTTON_LABEL_TT,
+		NULL,
+		NULL,
+		NULL,
+		"screen",
+		{
+			{ "Disabled", NULL },
+			{ "L + R + L2 + R2 + L3 + R3", OPTION_VAL_L_R_L2_R2_L3_R3_TT },
+			{ "Select + L3", OPTION_VAL_SELECT_L3_TT },
+			{ "Select + R3", OPTION_VAL_SELECT_R3_TT },
+			{ "Tab", OPTION_VAL_TAB_TT },
+			{ NULL, NULL },
+		},
+		"L + R + L2 + R2 + L3 + R3"
+	},
+	{
+		"cemu_drc_position",
+		CEMU_DRC_POSITION_LABEL_TT,
+		NULL,
+		NULL,
+		NULL,
+		"screen",
+		{
+			{ "normal", OPTION_VAL_NORMAL_TT },
+			{ "swapped", OPTION_VAL_SWAPPED_TT },
+			{ NULL, NULL },
+		},
+		"normal"
+	},
+	{
+		"cemu_log_to_file",
+		CEMU_LOG_TO_FILE_LABEL_TT,
+		NULL,
+		NULL,
+		NULL,
+		"logging",
+		{
+			{ "enabled", NULL },
+			{ "disabled", NULL },
+			{ NULL, NULL },
+		},
+		"enabled"
+	},
+	{
+		"cemu_log_filesystem",
+		CEMU_LOG_FILESYSTEM_LABEL_TT,
+		NULL,
+		NULL,
+		NULL,
+		"logging",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_log_thread_sync",
+		CEMU_LOG_THREAD_SYNC_LABEL_TT,
+		NULL,
+		NULL,
+		NULL,
+		"logging",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_log_system_api",
+		CEMU_LOG_SYSTEM_API_LABEL_TT,
+		NULL,
+		NULL,
+		NULL,
+		"logging",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_log_texture_memory",
+		CEMU_LOG_TEXTURE_MEMORY_LABEL_TT,
+		NULL,
+		CEMU_LOG_TEXTURE_MEMORY_INFO_0_TT,
+		NULL,
+		"logging",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_log_input_api",
+		CEMU_LOG_INPUT_API_LABEL_TT,
+		NULL,
+		CEMU_LOG_INPUT_API_INFO_0_TT,
+		NULL,
+		"logging",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_log_audio",
+		CEMU_LOG_AUDIO_LABEL_TT,
+		NULL,
+		CEMU_LOG_AUDIO_INFO_0_TT,
+		NULL,
+		"logging",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_bc1_16bit",
+		CEMU_BC1_16BIT_LABEL_TT,
+		NULL,
+		CEMU_BC1_16BIT_INFO_0_TT,
+		NULL,
+		"video",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+#if defined(ENABLE_VULKAN) && defined(ENABLE_OPENGL)
+	{
+		"cemu_gpu_api",
+		CEMU_GPU_API_LABEL_TT,
+		NULL,
+		NULL,
+		NULL,
+		"video",
+		{
+			{ "OpenGL", OPTION_VAL_OPENGL_TT },
+			{ "Vulkan", OPTION_VAL_VULKAN_TT },
+			{ NULL, NULL },
+		},
+		"OpenGL"
+	},
+#endif
+	{
+		"cemu_wua_output_dir",
+		CEMU_WUA_OUTPUT_DIR_LABEL_TT,
+		NULL,
+		CEMU_WUA_OUTPUT_DIR_INFO_0_TT,
+		NULL,
+		"convert",
+		{
+			// Filled in at run time with wherever the frontend lets the core write.
+			{ NULL, NULL },
+		},
+		NULL
+	},
+	{
+		"cemu_convert_to_wua",
+		CEMU_CONVERT_TO_WUA_LABEL_TT,
+		NULL,
+		CEMU_CONVERT_TO_WUA_INFO_0_TT,
+		NULL,
+		"convert",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{ NULL, NULL, NULL, NULL, NULL, NULL, {{0}}, NULL },
+};
+struct retro_core_options_v2 options_tt = {
+   option_cats_tt,
+   option_defs_tt
+};
+
 /* RETRO_LANGUAGE_UK */
 
-#define CATEGORY_VIDEO_LABEL_UK NULL
+#define CATEGORY_VIDEO_LABEL_UK "Відео"
 #define CATEGORY_VIDEO_INFO_0_UK NULL
-#define CATEGORY_SHADERS_LABEL_UK NULL
+#define CATEGORY_SHADERS_LABEL_UK "Шейдери"
 #define CATEGORY_SHADERS_INFO_0_UK NULL
 #define CATEGORY_SCREEN_LABEL_UK NULL
 #define CATEGORY_SCREEN_INFO_0_UK NULL
-#define CATEGORY_SYSTEM_LABEL_UK NULL
+#define CATEGORY_SYSTEM_LABEL_UK "Система"
 #define CATEGORY_SYSTEM_INFO_0_UK NULL
 #define CATEGORY_ADDONS_LABEL_UK NULL
 #define CATEGORY_ADDONS_INFO_0_UK NULL
-#define CATEGORY_LOGGING_LABEL_UK NULL
+#define CATEGORY_LOGGING_LABEL_UK "Журналювання"
 #define CATEGORY_LOGGING_INFO_0_UK NULL
 #define CATEGORY_CONVERT_LABEL_UK NULL
 #define CATEGORY_CONVERT_INFO_0_UK NULL
+#define CATEGORY_GRAPHIC_PACKS_LABEL_UK NULL
+#define CATEGORY_GRAPHIC_PACKS_INFO_0_UK NULL
 #define CEMU_CPU_MODE_LABEL_UK NULL
-#define OPTION_VAL_AUTO_UK NULL
+#define OPTION_VAL_AUTO_UK "Автоматично"
 #define OPTION_VAL_SINGLECORE_INTERPRETER_UK NULL
 #define OPTION_VAL_SINGLECORE_RECOMPILER_UK NULL
 #define OPTION_VAL_MULTICORE_RECOMPILER_UK NULL
 #define OPTION_VAL_MULTICORE_INTERPRETER_UK NULL
 #define CEMU_CONSOLE_LANGUAGE_LABEL_UK NULL
-#define OPTION_VAL_ENGLISH_UK NULL
-#define OPTION_VAL_JAPANESE_UK NULL
-#define OPTION_VAL_FRENCH_UK NULL
-#define OPTION_VAL_GERMAN_UK NULL
-#define OPTION_VAL_ITALIAN_UK NULL
-#define OPTION_VAL_SPANISH_UK NULL
+#define OPTION_VAL_ENGLISH_UK "Англійська"
+#define OPTION_VAL_JAPANESE_UK "Японська"
+#define OPTION_VAL_FRENCH_UK "Французька"
+#define OPTION_VAL_GERMAN_UK "Німецька"
+#define OPTION_VAL_ITALIAN_UK "Італійська"
+#define OPTION_VAL_SPANISH_UK "Іспанська"
 #define OPTION_VAL_CHINESE_UK NULL
 #define OPTION_VAL_KOREAN_UK NULL
 #define OPTION_VAL_DUTCH_UK NULL
@@ -20173,19 +25959,21 @@ struct retro_core_options_v2 options_tr = {
 #define CEMU_PRECOMPILED_SHADERS_LABEL_UK NULL
 #define CEMU_ACCURATE_SHADER_MUL_LABEL_UK NULL
 #define CEMU_UPSCALE_FILTER_LABEL_UK NULL
-#define OPTION_VAL_LINEAR_UK NULL
-#define OPTION_VAL_BICUBIC_UK NULL
+#define OPTION_VAL_LINEAR_UK "Лінійна"
+#define OPTION_VAL_BICUBIC_UK "Бікубічна"
 #define OPTION_VAL_BICUBIC_HERMITE_UK NULL
-#define OPTION_VAL_NEAREST_UK NULL
+#define OPTION_VAL_NEAREST_UK "Найближчі"
+#define CEMU_SHOW_GAME_FPS_LABEL_UK NULL
+#define CEMU_SHOW_GAME_FPS_INFO_0_UK NULL
 #define CEMU_DOWNSCALE_FILTER_LABEL_UK NULL
-#define CEMU_INTERNAL_RESOLUTION_LABEL_UK NULL
+#define CEMU_INTERNAL_RESOLUTION_LABEL_UK "Роздільна здатність"
 #define CEMU_INTERNAL_RESOLUTION_INFO_0_UK NULL
 #define OPTION_VAL_640X360_UK NULL
 #define OPTION_VAL_960X540_UK NULL
 #define OPTION_VAL_1280X720_UK NULL
 #define OPTION_VAL_1920X1080_UK NULL
-#define OPTION_VAL_2560X1440_UK NULL
-#define OPTION_VAL_3840X2160_UK NULL
+#define OPTION_VAL_2560X1440_UK "2560х1440"
+#define OPTION_VAL_3840X2160_UK "3840х2160"
 #define CEMU_FULLSCREEN_SCALING_LABEL_UK NULL
 #define OPTION_VAL_KEEP_ASPECT_UK NULL
 #define OPTION_VAL_STRETCH_UK NULL
@@ -20210,7 +25998,7 @@ struct retro_core_options_v2 options_tr = {
 #define OPTION_VAL_SELECT_R3_UK NULL
 #define OPTION_VAL_TAB_UK NULL
 #define CEMU_DRC_POSITION_LABEL_UK NULL
-#define OPTION_VAL_NORMAL_UK NULL
+#define OPTION_VAL_NORMAL_UK "Нормально"
 #define OPTION_VAL_SWAPPED_UK NULL
 #define CEMU_LOG_TO_FILE_LABEL_UK NULL
 #define CEMU_LOG_FILESYSTEM_LABEL_UK NULL
@@ -20242,6 +26030,7 @@ struct retro_core_option_v2_category option_cats_uk[] = {
 	{ "addons", CATEGORY_ADDONS_LABEL_UK, CATEGORY_ADDONS_INFO_0_UK },
 	{ "logging", CATEGORY_LOGGING_LABEL_UK, CATEGORY_LOGGING_INFO_0_UK },
 	{ "convert", CATEGORY_CONVERT_LABEL_UK, CATEGORY_CONVERT_INFO_0_UK },
+	{ "graphic_packs", CATEGORY_GRAPHIC_PACKS_LABEL_UK, CATEGORY_GRAPHIC_PACKS_INFO_0_UK },
 	{ NULL, NULL, NULL },
 };
 struct retro_core_option_v2_definition option_defs_uk[] = {
@@ -20358,6 +26147,20 @@ struct retro_core_option_v2_definition option_defs_uk[] = {
 			{ NULL, NULL },
 		},
 		"linear"
+	},
+	{
+		"cemu_show_game_fps",
+		CEMU_SHOW_GAME_FPS_LABEL_UK,
+		NULL,
+		CEMU_SHOW_GAME_FPS_INFO_0_UK,
+		NULL,
+		"video",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
 	},
 	{
 		"cemu_downscale_filter",
@@ -20763,22 +26566,24 @@ struct retro_core_options_v2 options_uk = {
 
 /* RETRO_LANGUAGE_VAL */
 
-#define CATEGORY_VIDEO_LABEL_VAL NULL
+#define CATEGORY_VIDEO_LABEL_VAL "Vídeo"
 #define CATEGORY_VIDEO_INFO_0_VAL NULL
 #define CATEGORY_SHADERS_LABEL_VAL NULL
 #define CATEGORY_SHADERS_INFO_0_VAL NULL
 #define CATEGORY_SCREEN_LABEL_VAL NULL
 #define CATEGORY_SCREEN_INFO_0_VAL NULL
-#define CATEGORY_SYSTEM_LABEL_VAL NULL
+#define CATEGORY_SYSTEM_LABEL_VAL "Sistema"
 #define CATEGORY_SYSTEM_INFO_0_VAL NULL
 #define CATEGORY_ADDONS_LABEL_VAL NULL
 #define CATEGORY_ADDONS_INFO_0_VAL NULL
-#define CATEGORY_LOGGING_LABEL_VAL NULL
+#define CATEGORY_LOGGING_LABEL_VAL "Registres"
 #define CATEGORY_LOGGING_INFO_0_VAL NULL
 #define CATEGORY_CONVERT_LABEL_VAL NULL
 #define CATEGORY_CONVERT_INFO_0_VAL NULL
+#define CATEGORY_GRAPHIC_PACKS_LABEL_VAL NULL
+#define CATEGORY_GRAPHIC_PACKS_INFO_0_VAL NULL
 #define CEMU_CPU_MODE_LABEL_VAL NULL
-#define OPTION_VAL_AUTO_VAL NULL
+#define OPTION_VAL_AUTO_VAL "Selecció automàtica"
 #define OPTION_VAL_SINGLECORE_INTERPRETER_VAL NULL
 #define OPTION_VAL_SINGLECORE_RECOMPILER_VAL NULL
 #define OPTION_VAL_MULTICORE_RECOMPILER_VAL NULL
@@ -20802,18 +26607,20 @@ struct retro_core_options_v2 options_uk = {
 #define CEMU_ACCURATE_SHADER_MUL_LABEL_VAL NULL
 #define CEMU_UPSCALE_FILTER_LABEL_VAL NULL
 #define OPTION_VAL_LINEAR_VAL NULL
-#define OPTION_VAL_BICUBIC_VAL NULL
+#define OPTION_VAL_BICUBIC_VAL "Bicúbica"
 #define OPTION_VAL_BICUBIC_HERMITE_VAL NULL
 #define OPTION_VAL_NEAREST_VAL NULL
+#define CEMU_SHOW_GAME_FPS_LABEL_VAL NULL
+#define CEMU_SHOW_GAME_FPS_INFO_0_VAL NULL
 #define CEMU_DOWNSCALE_FILTER_LABEL_VAL NULL
 #define CEMU_INTERNAL_RESOLUTION_LABEL_VAL NULL
 #define CEMU_INTERNAL_RESOLUTION_INFO_0_VAL NULL
 #define OPTION_VAL_640X360_VAL NULL
 #define OPTION_VAL_960X540_VAL NULL
-#define OPTION_VAL_1280X720_VAL NULL
-#define OPTION_VAL_1920X1080_VAL NULL
-#define OPTION_VAL_2560X1440_VAL NULL
-#define OPTION_VAL_3840X2160_VAL NULL
+#define OPTION_VAL_1280X720_VAL "1280×720"
+#define OPTION_VAL_1920X1080_VAL "1920×1080"
+#define OPTION_VAL_2560X1440_VAL "2560×1440"
+#define OPTION_VAL_3840X2160_VAL "3840×2160"
 #define CEMU_FULLSCREEN_SCALING_LABEL_VAL NULL
 #define OPTION_VAL_KEEP_ASPECT_VAL NULL
 #define OPTION_VAL_STRETCH_VAL NULL
@@ -20870,6 +26677,7 @@ struct retro_core_option_v2_category option_cats_val[] = {
 	{ "addons", CATEGORY_ADDONS_LABEL_VAL, CATEGORY_ADDONS_INFO_0_VAL },
 	{ "logging", CATEGORY_LOGGING_LABEL_VAL, CATEGORY_LOGGING_INFO_0_VAL },
 	{ "convert", CATEGORY_CONVERT_LABEL_VAL, CATEGORY_CONVERT_INFO_0_VAL },
+	{ "graphic_packs", CATEGORY_GRAPHIC_PACKS_LABEL_VAL, CATEGORY_GRAPHIC_PACKS_INFO_0_VAL },
 	{ NULL, NULL, NULL },
 };
 struct retro_core_option_v2_definition option_defs_val[] = {
@@ -20986,6 +26794,20 @@ struct retro_core_option_v2_definition option_defs_val[] = {
 			{ NULL, NULL },
 		},
 		"linear"
+	},
+	{
+		"cemu_show_game_fps",
+		CEMU_SHOW_GAME_FPS_LABEL_VAL,
+		NULL,
+		CEMU_SHOW_GAME_FPS_INFO_0_VAL,
+		NULL,
+		"video",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
 	},
 	{
 		"cemu_downscale_filter",
@@ -21392,101 +27214,105 @@ struct retro_core_options_v2 options_val = {
 /* RETRO_LANGUAGE_VN */
 
 #define CATEGORY_VIDEO_LABEL_VN NULL
-#define CATEGORY_VIDEO_INFO_0_VN NULL
-#define CATEGORY_SHADERS_LABEL_VN NULL
-#define CATEGORY_SHADERS_INFO_0_VN NULL
-#define CATEGORY_SCREEN_LABEL_VN NULL
-#define CATEGORY_SCREEN_INFO_0_VN NULL
-#define CATEGORY_SYSTEM_LABEL_VN NULL
-#define CATEGORY_SYSTEM_INFO_0_VN NULL
-#define CATEGORY_ADDONS_LABEL_VN NULL
-#define CATEGORY_ADDONS_INFO_0_VN NULL
-#define CATEGORY_LOGGING_LABEL_VN NULL
-#define CATEGORY_LOGGING_INFO_0_VN NULL
-#define CATEGORY_CONVERT_LABEL_VN NULL
-#define CATEGORY_CONVERT_INFO_0_VN NULL
-#define CEMU_CPU_MODE_LABEL_VN NULL
-#define OPTION_VAL_AUTO_VN NULL
-#define OPTION_VAL_SINGLECORE_INTERPRETER_VN NULL
-#define OPTION_VAL_SINGLECORE_RECOMPILER_VN NULL
-#define OPTION_VAL_MULTICORE_RECOMPILER_VN NULL
-#define OPTION_VAL_MULTICORE_INTERPRETER_VN NULL
-#define CEMU_CONSOLE_LANGUAGE_LABEL_VN NULL
-#define OPTION_VAL_ENGLISH_VN NULL
-#define OPTION_VAL_JAPANESE_VN NULL
-#define OPTION_VAL_FRENCH_VN NULL
-#define OPTION_VAL_GERMAN_VN NULL
-#define OPTION_VAL_ITALIAN_VN NULL
-#define OPTION_VAL_SPANISH_VN NULL
-#define OPTION_VAL_CHINESE_VN NULL
-#define OPTION_VAL_KOREAN_VN NULL
-#define OPTION_VAL_DUTCH_VN NULL
-#define OPTION_VAL_PORTUGUESE_VN NULL
-#define OPTION_VAL_RUSSIAN_VN NULL
-#define OPTION_VAL_TAIWANESE_VN NULL
-#define CEMU_ASYNC_SHADER_COMPILE_LABEL_VN NULL
-#define CEMU_GX2DRAWDONE_SYNC_LABEL_VN NULL
-#define CEMU_PRECOMPILED_SHADERS_LABEL_VN NULL
-#define CEMU_ACCURATE_SHADER_MUL_LABEL_VN NULL
-#define CEMU_UPSCALE_FILTER_LABEL_VN NULL
-#define OPTION_VAL_LINEAR_VN NULL
-#define OPTION_VAL_BICUBIC_VN NULL
+#define CATEGORY_VIDEO_INFO_0_VN "Độ phân giải, tỷ lệ phóng và điều chỉnh nhịp khung hình."
+#define CATEGORY_SHADERS_LABEL_VN "Bộ đổ bóng"
+#define CATEGORY_SHADERS_INFO_0_VN "Chuyển đổi, lưu bộ nhớ đệm và biên dịch bộ đổ bóng."
+#define CATEGORY_SCREEN_LABEL_VN "Màn hình"
+#define CATEGORY_SCREEN_INFO_0_VN "Chọn màn hình Wii U nào được hiển thị và cách hiển thị."
+#define CATEGORY_SYSTEM_LABEL_VN "Hệ thống"
+#define CATEGORY_SYSTEM_INFO_0_VN "CPU, ngôn ngữ và cách phân bổ thời gian xử lý."
+#define CATEGORY_ADDONS_LABEL_VN "Tiện Ích bổ sung"
+#define CATEGORY_ADDONS_INFO_0_VN "Cổng Skylanders, Infinity và Dimensions."
+#define CATEGORY_LOGGING_LABEL_VN "Ghi nhật ký"
+#define CATEGORY_LOGGING_INFO_0_VN "Thông tin nhật ký bổ sung để chẩn đoán sự cố."
+#define CATEGORY_CONVERT_LABEL_VN "Chuyển Sang WUA"
+#define CATEGORY_CONVERT_INFO_0_VN "Ghi tựa game đang được tải thành tệp lưu trữ .wua."
+#define CATEGORY_GRAPHIC_PACKS_LABEL_VN "Gói đồ họa"
+#define CATEGORY_GRAPHIC_PACKS_INFO_0_VN "Các gói đồ họa và thiết lập có sẵn của trò chơi đang được tải. Thay đổi sẽ có hiệu lực vào lần tiếp theo trò chơi được tải."
+#define CEMU_CPU_MODE_LABEL_VN "Chế độ CPU (khởi động lại)"
+#define OPTION_VAL_AUTO_VN "Tự động"
+#define OPTION_VAL_SINGLECORE_INTERPRETER_VN "Trình thông dịch đơn luồng"
+#define OPTION_VAL_SINGLECORE_RECOMPILER_VN "Trình biên dịch lại đơn luồng"
+#define OPTION_VAL_MULTICORE_RECOMPILER_VN "Trình biên dịch lại đa luồng"
+#define OPTION_VAL_MULTICORE_INTERPRETER_VN "Trình thông dịch đa luồng"
+#define CEMU_CONSOLE_LANGUAGE_LABEL_VN "Ngôn ngữ máy chơi"
+#define OPTION_VAL_ENGLISH_VN "Tiếng Anh"
+#define OPTION_VAL_JAPANESE_VN "Tiếng Nhật"
+#define OPTION_VAL_FRENCH_VN "Tiếng Pháp"
+#define OPTION_VAL_GERMAN_VN "Tiếng Đức"
+#define OPTION_VAL_ITALIAN_VN "Tiếng Ý"
+#define OPTION_VAL_SPANISH_VN "Tiếng Tây Ban Nha"
+#define OPTION_VAL_CHINESE_VN "Tiếng Trung"
+#define OPTION_VAL_KOREAN_VN "Tiếng Hàn"
+#define OPTION_VAL_DUTCH_VN "Tiếng Hà Lan"
+#define OPTION_VAL_PORTUGUESE_VN "Tiếng Bồ Đào Nha"
+#define OPTION_VAL_RUSSIAN_VN "Tiếng Nga"
+#define OPTION_VAL_TAIWANESE_VN "Tiếng Đài Loan"
+#define CEMU_ASYNC_SHADER_COMPILE_LABEL_VN "Biên dịch bộ đổ bóng không đồng bộ"
+#define CEMU_GX2DRAWDONE_SYNC_LABEL_VN "Đồng bộ GX2DrawDone"
+#define CEMU_PRECOMPILED_SHADERS_LABEL_VN "Bộ đổ bóng đã biên dịch sẵn"
+#define CEMU_ACCURATE_SHADER_MUL_LABEL_VN "Tính toán nhân bộ đổ bóng chính xác"
+#define CEMU_UPSCALE_FILTER_LABEL_VN "Bộ lọc phóng to"
+#define OPTION_VAL_LINEAR_VN "Tuyến tính"
+#define OPTION_VAL_BICUBIC_VN "Bo tròn cạnh"
 #define OPTION_VAL_BICUBIC_HERMITE_VN NULL
-#define OPTION_VAL_NEAREST_VN NULL
-#define CEMU_DOWNSCALE_FILTER_LABEL_VN NULL
-#define CEMU_INTERNAL_RESOLUTION_LABEL_VN NULL
-#define CEMU_INTERNAL_RESOLUTION_INFO_0_VN NULL
+#define OPTION_VAL_NEAREST_VN "Gần nhất"
+#define CEMU_SHOW_GAME_FPS_LABEL_VN "Hiển thị FPS của trò chơi"
+#define CEMU_SHOW_GAME_FPS_INFO_0_VN "Hiển thị tốc độ khung hình mà trò chơi đang kết xuất. Bộ đếm FPS của RetroArch tính số lần lõi được chạy, và con số này vẫn ở mức 60 khi trò chơi bị giảm khung hình, vì mỗi lần chạy đều xử lý lượng âm thanh tương ứng với một khung hình."
+#define CEMU_DOWNSCALE_FILTER_LABEL_VN "Bộ lọc giảm độ phân giải"
+#define CEMU_INTERNAL_RESOLUTION_LABEL_VN "Độ phân giải nội bộ"
+#define CEMU_INTERNAL_RESOLUTION_INFO_0_VN "Tùy chọn dự phòng chung cho các trò chơi không có gói đồ họa độ phân giải: thay đổi kích thước mọi vùng kết xuất có hình dạng giống màn hình, \mà một số trò chơi sử dụng cho những nội dung sẽ bị lỗi khi thay đổi kích thước. 640x360 chỉ kết xuất một phần tư số điểm ảnh so với 720p. \Khi gói độ phân giải được bật cho trò chơi đang tải (Gói đồ họa), gói này sẽ thiết lập độ phân giải và tùy chọn này sẽ bị ẩn."
 #define OPTION_VAL_640X360_VN NULL
 #define OPTION_VAL_960X540_VN NULL
 #define OPTION_VAL_1280X720_VN NULL
 #define OPTION_VAL_1920X1080_VN NULL
 #define OPTION_VAL_2560X1440_VN NULL
 #define OPTION_VAL_3840X2160_VN NULL
-#define CEMU_FULLSCREEN_SCALING_LABEL_VN NULL
-#define OPTION_VAL_KEEP_ASPECT_VN NULL
-#define OPTION_VAL_STRETCH_VN NULL
-#define CEMU_THREAD_QUANTUM_LABEL_VN NULL
-#define CEMU_EMULATE_SKYLANDER_PORTAL_LABEL_VN NULL
-#define CEMU_EMULATE_INFINITY_BASE_LABEL_VN NULL
-#define CEMU_EMULATE_DIMENSIONS_TOYPAD_LABEL_VN NULL
-#define CEMU_NUMBER_OF_SCREEN_LAYOUTS_LABEL_VN NULL
-#define CEMU_SCREEN_LAYOUT1_LABEL_VN NULL
-#define OPTION_VAL_DEFAULT_SCREEN_VN NULL
-#define OPTION_VAL_GAMEPAD_SCREEN_VN NULL
-#define OPTION_VAL_SIDE_BY_SIDE_VN NULL
-#define OPTION_VAL_TOP_BOTTOM_VN NULL
-#define OPTION_VAL_PICTURE_IN_PICTURE_VN NULL
-#define CEMU_SCREEN_LAYOUT2_LABEL_VN NULL
-#define CEMU_SCREEN_LAYOUT3_LABEL_VN NULL
-#define CEMU_SCREEN_LAYOUT4_LABEL_VN NULL
-#define CEMU_SCREEN_LAYOUT5_LABEL_VN NULL
-#define CEMU_NEXT_SCREEN_LAYOUT_BUTTON_LABEL_VN NULL
+#define CEMU_FULLSCREEN_SCALING_LABEL_VN "Tỷ lệ hiển thị toàn màn hình"
+#define OPTION_VAL_KEEP_ASPECT_VN "Giữ nguyên tỷ lệ"
+#define OPTION_VAL_STRETCH_VN "Kéo giãn"
+#define CEMU_THREAD_QUANTUM_LABEL_VN "Lượng xử lý mỗi luồng"
+#define CEMU_EMULATE_SKYLANDER_PORTAL_LABEL_VN "Mô phỏng cổng Skylander"
+#define CEMU_EMULATE_INFINITY_BASE_LABEL_VN "Mô phỏng đế Infinity"
+#define CEMU_EMULATE_DIMENSIONS_TOYPAD_LABEL_VN "Mô phỏng bàn đặt đồ chơi Dimensions"
+#define CEMU_NUMBER_OF_SCREEN_LAYOUTS_LABEL_VN "# Số bố cục màn hình"
+#define CEMU_SCREEN_LAYOUT1_LABEL_VN "Bố cục 1"
+#define OPTION_VAL_DEFAULT_SCREEN_VN "Màn hình mặc định"
+#define OPTION_VAL_GAMEPAD_SCREEN_VN "Màn hình GamePad"
+#define OPTION_VAL_SIDE_BY_SIDE_VN "Đặt cạnh nhau"
+#define OPTION_VAL_TOP_BOTTOM_VN "Trên dưới"
+#define OPTION_VAL_PICTURE_IN_PICTURE_VN "Hình trong hình"
+#define CEMU_SCREEN_LAYOUT2_LABEL_VN "Bố cục 2"
+#define CEMU_SCREEN_LAYOUT3_LABEL_VN "Bố cục 3"
+#define CEMU_SCREEN_LAYOUT4_LABEL_VN "Bố cục 4"
+#define CEMU_SCREEN_LAYOUT5_LABEL_VN "Bố cục 5"
+#define CEMU_NEXT_SCREEN_LAYOUT_BUTTON_LABEL_VN "Bố cục màn hình tiếp theo"
 #define OPTION_VAL_L_R_L2_R2_L3_R3_VN NULL
 #define OPTION_VAL_SELECT_L3_VN NULL
 #define OPTION_VAL_SELECT_R3_VN NULL
 #define OPTION_VAL_TAB_VN NULL
-#define CEMU_DRC_POSITION_LABEL_VN NULL
-#define OPTION_VAL_NORMAL_VN NULL
-#define OPTION_VAL_SWAPPED_VN NULL
-#define CEMU_LOG_TO_FILE_LABEL_VN NULL
-#define CEMU_LOG_FILESYSTEM_LABEL_VN NULL
-#define CEMU_LOG_THREAD_SYNC_LABEL_VN NULL
-#define CEMU_LOG_SYSTEM_API_LABEL_VN NULL
-#define CEMU_LOG_TEXTURE_MEMORY_LABEL_VN NULL
-#define CEMU_LOG_TEXTURE_MEMORY_INFO_0_VN NULL
-#define CEMU_LOG_INPUT_API_LABEL_VN NULL
-#define CEMU_LOG_INPUT_API_INFO_0_VN NULL
-#define CEMU_LOG_AUDIO_LABEL_VN NULL
-#define CEMU_LOG_AUDIO_INFO_0_VN NULL
-#define CEMU_BC1_16BIT_LABEL_VN NULL
-#define CEMU_BC1_16BIT_INFO_0_VN NULL
-#define CEMU_GPU_API_LABEL_VN NULL
+#define CEMU_DRC_POSITION_LABEL_VN "Vị trí GamePad"
+#define OPTION_VAL_NORMAL_VN "Bình thường"
+#define OPTION_VAL_SWAPPED_VN "Hoán đổi"
+#define CEMU_LOG_TO_FILE_LABEL_VN "Ghi nhật ký Cemu vào log.txt"
+#define CEMU_LOG_FILESYSTEM_LABEL_VN "Ghi quyền truy cập tệp nhật ký (gỡ lỗi)"
+#define CEMU_LOG_THREAD_SYNC_LABEL_VN "Ghi đồng bộ hóa luồng vào tệp nhật ký (gỡ lỗi)"
+#define CEMU_LOG_SYSTEM_API_LABEL_VN "Ghi các lệnh gọi API hệ thống vào tệp nhật ký (gỡ lỗi)"
+#define CEMU_LOG_TEXTURE_MEMORY_LABEL_VN "Ghi bộ nhớ kết cấu vào tệp nhật ký (gỡ lỗi)"
+#define CEMU_LOG_TEXTURE_MEMORY_INFO_0_VN "Báo cáo lượng bộ nhớ kết cấu ở dạng BC \đã phải giải nén vì GPU này không thể lấy mẫu trực tiếp."
+#define CEMU_LOG_INPUT_API_LABEL_VN "Ghi các lệnh gọi API tay cầm vào tệp nhật ký (gỡ lỗi)"
+#define CEMU_LOG_INPUT_API_INFO_0_VN "Ghi lại mọi lệnh gọi tay cầm mà trò chơi thực hiện - bao gồm \những tay cầm mà trò chơi kiểm tra và thông tin mà hệ thống trả về. Tạo rất nhiều dữ liệu; chỉ nên bật trong vài giây mỗi lần."
+#define CEMU_LOG_AUDIO_LABEL_VN "Ghi nhịp xử lý âm thanh vào tệp nhật ký (gỡ lỗi)"
+#define CEMU_LOG_AUDIO_INFO_0_VN "Mỗi giây ghi lại số mẫu âm thanh mà AX tạo ra, số mẫu \phải loại bỏ khỏi bộ đệm vòng và số mẫu mà giao diện chính nhận được. Dùng để xác địnhâm thanh bị mất ở khâu nào trong chuỗi xử lý."
+#define CEMU_BC1_16BIT_LABEL_VN "Giảm bộ nhớ kết cấu BC1"
+#define CEMU_BC1_16BIT_INFO_0_VN "Giảm một nửa dung lượng bộ nhớ mà kết cấu BC1 sử dụng trên GPU không thể lấy mẫu BC,đổi lại mất đi một bit màu xanh lá. Không có tác dụng trên GPU hỗ trợ BC."
+#define CEMU_GPU_API_LABEL_VN "API đồ họa (khởi động lại)"
 #define OPTION_VAL_OPENGL_VN NULL
 #define OPTION_VAL_VULKAN_VN NULL
-#define CEMU_WUA_OUTPUT_DIR_LABEL_VN NULL
-#define CEMU_WUA_OUTPUT_DIR_INFO_0_VN NULL
-#define CEMU_CONVERT_TO_WUA_LABEL_VN NULL
-#define CEMU_CONVERT_TO_WUA_INFO_0_VN NULL
+#define CEMU_WUA_OUTPUT_DIR_LABEL_VN "Thư mục đầu ra"
+#define CEMU_WUA_OUTPUT_DIR_INFO_0_VN "Nơi tệp .wua được ghi. Cần đủ dung lượng để chứa tệp này."
+#define CEMU_CONVERT_TO_WUA_LABEL_VN "Bắt đầu chuyển đổi sang WUA"
+#define CEMU_CONVERT_TO_WUA_INFO_0_VN "Ghi tựa game vào thư mục đầu ra dưới dạng tệp .wua. \ Quá trình vẫn tiếp tục chạy trong khi thực hiện việc này."
 
 struct retro_core_option_v2_category option_cats_vn[] = {
 	{ "video", CATEGORY_VIDEO_LABEL_VN, CATEGORY_VIDEO_INFO_0_VN },
@@ -21498,6 +27324,7 @@ struct retro_core_option_v2_category option_cats_vn[] = {
 	{ "addons", CATEGORY_ADDONS_LABEL_VN, CATEGORY_ADDONS_INFO_0_VN },
 	{ "logging", CATEGORY_LOGGING_LABEL_VN, CATEGORY_LOGGING_INFO_0_VN },
 	{ "convert", CATEGORY_CONVERT_LABEL_VN, CATEGORY_CONVERT_INFO_0_VN },
+	{ "graphic_packs", CATEGORY_GRAPHIC_PACKS_LABEL_VN, CATEGORY_GRAPHIC_PACKS_INFO_0_VN },
 	{ NULL, NULL, NULL },
 };
 struct retro_core_option_v2_definition option_defs_vn[] = {
@@ -21614,6 +27441,20 @@ struct retro_core_option_v2_definition option_defs_vn[] = {
 			{ NULL, NULL },
 		},
 		"linear"
+	},
+	{
+		"cemu_show_game_fps",
+		CEMU_SHOW_GAME_FPS_LABEL_VN,
+		NULL,
+		CEMU_SHOW_GAME_FPS_INFO_0_VN,
+		NULL,
+		"video",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
 	},
 	{
 		"cemu_downscale_filter",
