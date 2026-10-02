@@ -6545,8 +6545,8 @@ struct retro_core_options_v2 options_da = {
 #define CATEGORY_CONVERT_INFO_0_DE NULL
 #define CATEGORY_GRAPHIC_PACKS_LABEL_DE NULL
 #define CATEGORY_GRAPHIC_PACKS_INFO_0_DE NULL
-#define CEMU_CPU_MODE_LABEL_DE NULL
-#define CEMU_CPU_MODE_INFO_0_DE NULL
+#define CEMU_CPU_MODE_LABEL_DE "CPU-Modus"
+#define CEMU_CPU_MODE_INFO_0_DE "So werden die PowerPC-Kerne der Wii U emuliert. Die Option „Automatsch“ wählt den Multicore-Recompiler, wenn die CPU über vier oder mehr physische Kerne verfügt, andernfalls den Single-Core-Recompiler. Die Interpreter sind deutlich langsamer und sind für die Fehlersuche gedacht. (Neustart erforderlich)"
 #define OPTION_VAL_AUTO_DE NULL
 #define OPTION_VAL_SINGLECORE_INTERPRETER_DE NULL
 #define OPTION_VAL_SINGLECORE_RECOMPILER_DE NULL
@@ -6578,7 +6578,7 @@ struct retro_core_options_v2 options_da = {
 #define CEMU_SHOW_GAME_FPS_INFO_0_DE NULL
 #define CEMU_DOWNSCALE_FILTER_LABEL_DE NULL
 #define CEMU_INTERNAL_RESOLUTION_LABEL_DE "Interne Auflösung"
-#define CEMU_INTERNAL_RESOLUTION_INFO_0_DE NULL
+#define CEMU_INTERNAL_RESOLUTION_INFO_0_DE "Ein allgemeiner Ersatz für Spiele ohne Auflösungsgrafikpaket: Passt die Größe jedes bildschirmförmigen Renderziels an, das manche Spiele für Elemente verwenden, bei denen es bei einer Größenänderung zu Fehlern kommt. Bei einer Auflösung von 640×360 wird ein Viertel der Pixel von 720p gezeichnet. Wenn für das geladene Spiel ein Auflösungsgrafikpaket aktiviert ist (Grafikpakete), legt das Paket die Auflösung fest und diese Option wird ausgeblendet."
 #define OPTION_VAL_640X360_DE NULL
 #define OPTION_VAL_960X540_DE NULL
 #define OPTION_VAL_1280X720_DE "1280 x 720"
@@ -6616,14 +6616,14 @@ struct retro_core_options_v2 options_da = {
 #define CEMU_LOG_THREAD_SYNC_LABEL_DE NULL
 #define CEMU_LOG_SYSTEM_API_LABEL_DE NULL
 #define CEMU_LOG_TEXTURE_MEMORY_LABEL_DE NULL
-#define CEMU_LOG_TEXTURE_MEMORY_INFO_0_DE NULL
+#define CEMU_LOG_TEXTURE_MEMORY_INFO_0_DE "Gibt an, wie viel des Texturspeichers aus BC besteht, der dekomprimiert werden musste, da diese GPU ihn nicht abtasten kann."
 #define CEMU_LOG_INPUT_API_LABEL_DE NULL
-#define CEMU_LOG_INPUT_API_INFO_0_DE NULL
+#define CEMU_LOG_INPUT_API_INFO_0_DE "Protokolliert jeden Controlleraufruf, den ein Titel auslöst – welche Pads er abgefragt hat und welche Rückmeldung er erhalten hat. Erzeugt viel Datenverkehr; jeweils für einige Sekunden."
 #define CEMU_LOG_AUDIO_LABEL_DE NULL
-#define CEMU_LOG_AUDIO_INFO_0_DE NULL
+#define CEMU_LOG_AUDIO_INFO_0_DE "Einmal pro Sekunde: Wie viele Samples AX erzeugt, wie viele der Ring verwerfen musste und wie viele das Frontend übernommen hat. So lässt sich herausfinden, an welchem Ende dieser Kette Audio verloren geht."
 #define CEMU_BC1_16BIT_LABEL_DE NULL
 #define CEMU_BC1_16BIT_INFO_0_DE NULL
-#define CEMU_GPU_API_LABEL_DE NULL
+#define CEMU_GPU_API_LABEL_DE "Grafik-API"
 #define CEMU_GPU_API_INFO_0_DE NULL
 #define OPTION_VAL_OPENGL_DE NULL
 #define OPTION_VAL_VULKAN_DE NULL
@@ -11088,8 +11088,8 @@ struct retro_core_options_v2 options_fi = {
 #define CATEGORY_CONVERT_INFO_0_FR "Enregistrer le titre chargé sous forme d'archive .wua."
 #define CATEGORY_GRAPHIC_PACKS_LABEL_FR "Packs graphiques"
 #define CATEGORY_GRAPHIC_PACKS_INFO_0_FR "Les packs graphiques du jeu chargé et leurs préréglages. Les modifications prennent effet au prochain chargement du jeu."
-#define CEMU_CPU_MODE_LABEL_FR NULL
-#define CEMU_CPU_MODE_INFO_0_FR NULL
+#define CEMU_CPU_MODE_LABEL_FR "Mode du processeur"
+#define CEMU_CPU_MODE_INFO_0_FR "Comment les cœurs PowerPC de la Wii U sont émulés. Auto prend le recompilateur multicœur sur un processeur avec quatre cœurs physiques ou plus et celui monocœur dans le cas contraire. Les interpréteurs sont beaucoup plus lents et sont destinés au débogage. (Redémarrage requis)"
 #define OPTION_VAL_AUTO_FR NULL
 #define OPTION_VAL_SINGLECORE_INTERPRETER_FR "Interpréteur monocœur"
 #define OPTION_VAL_SINGLECORE_RECOMPILER_FR "Recompilateur monocœur"
@@ -11121,7 +11121,7 @@ struct retro_core_options_v2 options_fi = {
 #define CEMU_SHOW_GAME_FPS_INFO_0_FR "Afficher la fréquence d'images à laquelle le jeu est rendu. Le propre compteur d'images/s de RetroArch compte la fréquence à laquelle le cœur s'exécute, et il reste à 60 lorsque le jeu perd des images, car chaque exécution contient l'équivalent d'une image audio."
 #define CEMU_DOWNSCALE_FILTER_LABEL_FR "Filtre de réduction d'échelle"
 #define CEMU_INTERNAL_RESOLUTION_LABEL_FR "Résolution interne"
-#define CEMU_INTERNAL_RESOLUTION_INFO_0_FR NULL
+#define CEMU_INTERNAL_RESOLUTION_INFO_0_FR "Une solution de repli générique pour les jeux ne disposant pas de pack graphique de résolution : elle redimensionne toutes les cibles de rendu qui sont au format de l'écran, ce qui peut poser problème lors du redimensionnement pour certains jeux utilisant ces cibles. 640 x 360 affiche un quart des pixels du 720p. Lorsqu'un pack de résolution est activé pour le jeu chargé (packs graphiques), c'est ce pack qui définit la résolution et cette option est masquée."
 #define OPTION_VAL_640X360_FR "640 x 360"
 #define OPTION_VAL_960X540_FR "960 x 540"
 #define OPTION_VAL_1280X720_FR "1280 x 720"
@@ -11159,21 +11159,21 @@ struct retro_core_options_v2 options_fi = {
 #define CEMU_LOG_THREAD_SYNC_LABEL_FR "Journaliser la synchronisation des fils d'exécution (débogage)"
 #define CEMU_LOG_SYSTEM_API_LABEL_FR "Journaliser les appels API système (débogage)"
 #define CEMU_LOG_TEXTURE_MEMORY_LABEL_FR "Journaliser la mémoire de texture (débogage)"
-#define CEMU_LOG_TEXTURE_MEMORY_INFO_0_FR NULL
+#define CEMU_LOG_TEXTURE_MEMORY_INFO_0_FR "Indique la quantité de mémoire de texture BC qui a dû être décompressée car ce processeur graphique ne peut pas l'échantillonner."
 #define CEMU_LOG_INPUT_API_LABEL_FR "Journaliser les appels API du contrôleur (débogage)"
-#define CEMU_LOG_INPUT_API_INFO_0_FR NULL
+#define CEMU_LOG_INPUT_API_INFO_0_FR "Enregistre tous les appels au contrôleur effectués par un titre — les entrées (pads) interrogées et les commandes envoyées. Génère beaucoup de données, mais seulement pendant quelques secondes à la fois."
 #define CEMU_LOG_AUDIO_LABEL_FR "Journaliser le rythme audio (débogage)"
-#define CEMU_LOG_AUDIO_INFO_0_FR NULL
+#define CEMU_LOG_AUDIO_INFO_0_FR "Une fois par seconde, combien d'échantillons AX a produits, combien la mémoire tampon circulaire (ring) a dû en rejeter et combien l'interface graphique en a récupérés. Sert à déterminer à quel stade de la chaîne le signal audio est perdu."
 #define CEMU_BC1_16BIT_LABEL_FR "Réduire la mémoire de texture BC1"
-#define CEMU_BC1_16BIT_INFO_0_FR NULL
-#define CEMU_GPU_API_LABEL_FR NULL
-#define CEMU_GPU_API_INFO_0_FR NULL
+#define CEMU_BC1_16BIT_INFO_0_FR "Réduit de moitié le coût des textures BC1 sur un processeur graphique qui ne peut pas échantillonner BC, au prix d'un peu de vert. Aucun effet là où BC est pris en charge."
+#define CEMU_GPU_API_LABEL_FR "API graphique"
+#define CEMU_GPU_API_INFO_0_FR "L'API graphique utilisée par Cemu pour le rendu. (Redémarrage requis)"
 #define OPTION_VAL_OPENGL_FR NULL
 #define OPTION_VAL_VULKAN_FR NULL
 #define CEMU_WUA_OUTPUT_DIR_LABEL_FR "Dossier de sortie"
 #define CEMU_WUA_OUTPUT_DIR_INFO_0_FR "L'emplacement où le fichier .wua est écrit. Il faut prévoir de l'espace pour celui-ci."
 #define CEMU_CONVERT_TO_WUA_LABEL_FR "Lancer la conversion vers WUA"
-#define CEMU_CONVERT_TO_WUA_INFO_0_FR NULL
+#define CEMU_CONVERT_TO_WUA_INFO_0_FR "Écrit le titre dans le dossier de sortie au format .wua. Il continue de fonctionner pendant que cela se produit."
 
 struct retro_core_option_v2_category option_cats_fr[] = {
 	{ "video", CATEGORY_VIDEO_LABEL_FR, CATEGORY_VIDEO_INFO_0_FR },
@@ -11722,107 +11722,107 @@ struct retro_core_options_v2 options_fr = {
 /* RETRO_LANGUAGE_GA */
 
 #define CATEGORY_VIDEO_LABEL_GA "Físeán"
-#define CATEGORY_VIDEO_INFO_0_GA NULL
+#define CATEGORY_VIDEO_INFO_0_GA "Taifeach, scálú agus luas na bhfrámaí."
 #define CATEGORY_SHADERS_LABEL_GA "Scáthaitheoirí"
-#define CATEGORY_SHADERS_INFO_0_GA NULL
-#define CATEGORY_SCREEN_LABEL_GA NULL
-#define CATEGORY_SCREEN_INFO_0_GA NULL
+#define CATEGORY_SHADERS_INFO_0_GA "Aistriú, taisceadh agus tiomsú scáthóirí."
+#define CATEGORY_SCREEN_LABEL_GA "Scáileán"
+#define CATEGORY_SCREEN_INFO_0_GA "Cén scáileán Wii U a thaispeántar, agus conas."
 #define CATEGORY_SYSTEM_LABEL_GA "Córas"
-#define CATEGORY_SYSTEM_INFO_0_GA NULL
-#define CATEGORY_ADDONS_LABEL_GA NULL
-#define CATEGORY_ADDONS_INFO_0_GA NULL
+#define CATEGORY_SYSTEM_INFO_0_GA "LAP, teanga agus sceidealú."
+#define CATEGORY_ADDONS_LABEL_GA "Breiseáin"
+#define CATEGORY_ADDONS_INFO_0_GA "Tairseacha Skylanders, Infinity agus Dimensions."
 #define CATEGORY_LOGGING_LABEL_GA "Logáil"
-#define CATEGORY_LOGGING_INFO_0_GA NULL
-#define CATEGORY_CONVERT_LABEL_GA NULL
-#define CATEGORY_CONVERT_INFO_0_GA NULL
-#define CATEGORY_GRAPHIC_PACKS_LABEL_GA NULL
-#define CATEGORY_GRAPHIC_PACKS_INFO_0_GA NULL
-#define CEMU_CPU_MODE_LABEL_GA NULL
-#define CEMU_CPU_MODE_INFO_0_GA NULL
+#define CATEGORY_LOGGING_INFO_0_GA "Aschur loga breise, chun fadhbanna a dhiagnóisiú."
+#define CATEGORY_CONVERT_LABEL_GA "Tiontaigh go WUA"
+#define CATEGORY_CONVERT_INFO_0_GA "Scríobh an teideal luchtaithe amach mar chartlann .wua."
+#define CATEGORY_GRAPHIC_PACKS_LABEL_GA "Pacáistí Grafaicí"
+#define CATEGORY_GRAPHIC_PACKS_INFO_0_GA "Pacáistí grafaicí an chluiche atá luchtaithe agus a gcuid réamhshocruithe. Cuirtear na hathruithe i bhfeidhm an chéad uair eile a luchtófar an cluiche."
+#define CEMU_CPU_MODE_LABEL_GA "Modh LAP"
+#define CEMU_CPU_MODE_INFO_0_GA "An chaoi a ndéantar aithris ar chroíleacáin PowerPC an Wii U. Roghnaíonn an socrú 'Auto' an t-aththiomsaitheoir ilchroíleacán má bhíonn ceithre chroíleacán fisiciúil nó níos mó ag an LAP, agus an leagan aonchroíleacáin murach sin. Bíonn na léirmhínitheoirí i bhfad níos moille agus tá siad ceaptha le haghaidh dífhabhtaithe. (Teastaíonn atosú)"
 #define OPTION_VAL_AUTO_GA "Uathoibríoch"
-#define OPTION_VAL_SINGLECORE_INTERPRETER_GA NULL
-#define OPTION_VAL_SINGLECORE_RECOMPILER_GA NULL
-#define OPTION_VAL_MULTICORE_RECOMPILER_GA NULL
-#define OPTION_VAL_MULTICORE_INTERPRETER_GA NULL
-#define CEMU_CONSOLE_LANGUAGE_LABEL_GA NULL
+#define OPTION_VAL_SINGLECORE_INTERPRETER_GA "Léirmhínitheoir aonchroíleáin"
+#define OPTION_VAL_SINGLECORE_RECOMPILER_GA "Aththiomsaitheoir Aonchroí"
+#define OPTION_VAL_MULTICORE_RECOMPILER_GA "Athiompailteoir Ilchroí"
+#define OPTION_VAL_MULTICORE_INTERPRETER_GA "Léirmhínitheoir Ilchroí"
+#define CEMU_CONSOLE_LANGUAGE_LABEL_GA "Teanga an Chonsóil"
 #define OPTION_VAL_ENGLISH_GA "Béarla"
 #define OPTION_VAL_JAPANESE_GA "Seapáinis"
 #define OPTION_VAL_FRENCH_GA "Fraincis"
 #define OPTION_VAL_GERMAN_GA "Gearmáinis"
 #define OPTION_VAL_ITALIAN_GA "Iodáilis"
 #define OPTION_VAL_SPANISH_GA "Spáinnis"
-#define OPTION_VAL_CHINESE_GA NULL
-#define OPTION_VAL_KOREAN_GA NULL
-#define OPTION_VAL_DUTCH_GA NULL
-#define OPTION_VAL_PORTUGUESE_GA NULL
-#define OPTION_VAL_RUSSIAN_GA NULL
-#define OPTION_VAL_TAIWANESE_GA NULL
-#define CEMU_ASYNC_SHADER_COMPILE_LABEL_GA NULL
-#define CEMU_GX2DRAWDONE_SYNC_LABEL_GA NULL
-#define CEMU_PRECOMPILED_SHADERS_LABEL_GA NULL
-#define CEMU_ACCURATE_SHADER_MUL_LABEL_GA NULL
-#define CEMU_UPSCALE_FILTER_LABEL_GA NULL
+#define OPTION_VAL_CHINESE_GA "Sínis"
+#define OPTION_VAL_KOREAN_GA "Cóiréis"
+#define OPTION_VAL_DUTCH_GA "Ollannais"
+#define OPTION_VAL_PORTUGUESE_GA "Portaingéilis"
+#define OPTION_VAL_RUSSIAN_GA "Rúisis"
+#define OPTION_VAL_TAIWANESE_GA "Téavánach"
+#define CEMU_ASYNC_SHADER_COMPILE_LABEL_GA "Tiomsú Scáthaitheora Asincrónach"
+#define CEMU_GX2DRAWDONE_SYNC_LABEL_GA "Sioncrónú GX2DrawDone"
+#define CEMU_PRECOMPILED_SHADERS_LABEL_GA "Scáthóirí Réamhchomhthiomsaithe"
+#define CEMU_ACCURATE_SHADER_MUL_LABEL_GA "Iolrú Cruinn Scáthóra"
+#define CEMU_UPSCALE_FILTER_LABEL_GA "Scagaire Uasghrádaithe"
 #define OPTION_VAL_LINEAR_GA "Líneach"
 #define OPTION_VAL_BICUBIC_GA "Déchiúbach"
-#define OPTION_VAL_BICUBIC_HERMITE_GA NULL
+#define OPTION_VAL_BICUBIC_HERMITE_GA "Hermite déchiúbach"
 #define OPTION_VAL_NEAREST_GA "Is cóngaraí"
-#define CEMU_SHOW_GAME_FPS_LABEL_GA NULL
-#define CEMU_SHOW_GAME_FPS_INFO_0_GA NULL
-#define CEMU_DOWNSCALE_FILTER_LABEL_GA NULL
+#define CEMU_SHOW_GAME_FPS_LABEL_GA "Taispeáin FPS an chluiche"
+#define CEMU_SHOW_GAME_FPS_INFO_0_GA "Taispeáin an ráta frámaí a úsáideann an cluiche le linn rindreála. Déanann áireamhán FPS RetroArch féin comhaireamh ar cé chomh minic agus a ritheann an croíleacán, agus fanann an luach sin ag 60 fiú nuair a chailleann an cluiche frámaí, toisc go mbíonn méid fuaime comhionann le fráma amháin ag gabháil le gach rith."
+#define CEMU_DOWNSCALE_FILTER_LABEL_GA "Scagaire Laghdaithe Scála"
 #define CEMU_INTERNAL_RESOLUTION_LABEL_GA "Rún Inmheánach"
-#define CEMU_INTERNAL_RESOLUTION_INFO_0_GA NULL
+#define CEMU_INTERNAL_RESOLUTION_INFO_0_GA "Rogha chúltaca ghinearálta do chluichí nach bhfuil pacáiste grafaicí réitigh acu: athraíonn sí méid gach sprice rindreála a bhfuil cruth scáileáin uirthi — rud a úsáideann roinnt cluichí le haghaidh gnéithe a théann ó mhaith nuair a athraítear an méid. Tarraingítear an ceathrú cuid de na picteilíní a bhaineann le 720p i gcás 640x360. Nuair a bhíonn pacáiste réitigh cumasaithe don chluiche atá á rith (Pacáistí Grafaicí), socraíonn an pacáiste an réiteach agus cuirtear an rogha seo i bhfolach."
 #define OPTION_VAL_640X360_GA NULL
 #define OPTION_VAL_960X540_GA NULL
 #define OPTION_VAL_1280X720_GA NULL
 #define OPTION_VAL_1920X1080_GA NULL
 #define OPTION_VAL_2560X1440_GA NULL
 #define OPTION_VAL_3840X2160_GA NULL
-#define CEMU_FULLSCREEN_SCALING_LABEL_GA NULL
-#define OPTION_VAL_KEEP_ASPECT_GA NULL
-#define OPTION_VAL_STRETCH_GA NULL
-#define CEMU_THREAD_QUANTUM_LABEL_GA NULL
-#define CEMU_EMULATE_SKYLANDER_PORTAL_LABEL_GA NULL
-#define CEMU_EMULATE_INFINITY_BASE_LABEL_GA NULL
-#define CEMU_EMULATE_DIMENSIONS_TOYPAD_LABEL_GA NULL
-#define CEMU_NUMBER_OF_SCREEN_LAYOUTS_LABEL_GA NULL
-#define CEMU_SCREEN_LAYOUT1_LABEL_GA NULL
-#define OPTION_VAL_DEFAULT_SCREEN_GA NULL
-#define OPTION_VAL_GAMEPAD_SCREEN_GA NULL
-#define OPTION_VAL_SIDE_BY_SIDE_GA NULL
-#define OPTION_VAL_TOP_BOTTOM_GA NULL
-#define OPTION_VAL_PICTURE_IN_PICTURE_GA NULL
-#define CEMU_SCREEN_LAYOUT2_LABEL_GA NULL
-#define CEMU_SCREEN_LAYOUT3_LABEL_GA NULL
-#define CEMU_SCREEN_LAYOUT4_LABEL_GA NULL
-#define CEMU_SCREEN_LAYOUT5_LABEL_GA NULL
-#define CEMU_NEXT_SCREEN_LAYOUT_BUTTON_LABEL_GA NULL
+#define CEMU_FULLSCREEN_SCALING_LABEL_GA "Scálú Lánscáileáin"
+#define OPTION_VAL_KEEP_ASPECT_GA "Coinnigh an t-ionchas"
+#define OPTION_VAL_STRETCH_GA "Sín"
+#define CEMU_THREAD_QUANTUM_LABEL_GA "Snáithe Candamach"
+#define CEMU_EMULATE_SKYLANDER_PORTAL_LABEL_GA "Aithris ar Thairseach Skylanders"
+#define CEMU_EMULATE_INFINITY_BASE_LABEL_GA "Aithris a dhéanamh ar Infinity Base"
+#define CEMU_EMULATE_DIMENSIONS_TOYPAD_LABEL_GA "Aithris a dhéanamh ar an Toypad de chuid Dimensions"
+#define CEMU_NUMBER_OF_SCREEN_LAYOUTS_LABEL_GA "Líon na Leagan Amach Scáileáin"
+#define CEMU_SCREEN_LAYOUT1_LABEL_GA "Leagan Amach 1"
+#define OPTION_VAL_DEFAULT_SCREEN_GA "Scáileán Réamhshocraithe"
+#define OPTION_VAL_GAMEPAD_SCREEN_GA "Scáileán an Cheap Cluiche"
+#define OPTION_VAL_SIDE_BY_SIDE_GA "Taobh le Taobh"
+#define OPTION_VAL_TOP_BOTTOM_GA "Barr Bun"
+#define OPTION_VAL_PICTURE_IN_PICTURE_GA "Pictiúr i bPictiúr"
+#define CEMU_SCREEN_LAYOUT2_LABEL_GA "Leagan amach 2"
+#define CEMU_SCREEN_LAYOUT3_LABEL_GA "Leagan amach 3"
+#define CEMU_SCREEN_LAYOUT4_LABEL_GA "Leagan amach 4"
+#define CEMU_SCREEN_LAYOUT5_LABEL_GA "Leagan amach 5"
+#define CEMU_NEXT_SCREEN_LAYOUT_BUTTON_LABEL_GA "Leagan Amach an Scáileáin Eile"
 #define OPTION_VAL_L_R_L2_R2_L3_R3_GA NULL
-#define OPTION_VAL_SELECT_L3_GA NULL
-#define OPTION_VAL_SELECT_R3_GA NULL
-#define OPTION_VAL_TAB_GA NULL
-#define CEMU_DRC_POSITION_LABEL_GA NULL
+#define OPTION_VAL_SELECT_L3_GA "Roghnaigh + L3"
+#define OPTION_VAL_SELECT_R3_GA "Roghnaigh + R3"
+#define OPTION_VAL_TAB_GA "Táb"
+#define CEMU_DRC_POSITION_LABEL_GA "Seasamh an Cheap Cluiche"
 #define OPTION_VAL_NORMAL_GA "Gnáth"
-#define OPTION_VAL_SWAPPED_GA NULL
-#define CEMU_LOG_TO_FILE_LABEL_GA NULL
-#define CEMU_LOG_FILESYSTEM_LABEL_GA NULL
-#define CEMU_LOG_THREAD_SYNC_LABEL_GA NULL
-#define CEMU_LOG_SYSTEM_API_LABEL_GA NULL
-#define CEMU_LOG_TEXTURE_MEMORY_LABEL_GA NULL
-#define CEMU_LOG_TEXTURE_MEMORY_INFO_0_GA NULL
-#define CEMU_LOG_INPUT_API_LABEL_GA NULL
-#define CEMU_LOG_INPUT_API_INFO_0_GA NULL
-#define CEMU_LOG_AUDIO_LABEL_GA NULL
-#define CEMU_LOG_AUDIO_INFO_0_GA NULL
-#define CEMU_BC1_16BIT_LABEL_GA NULL
-#define CEMU_BC1_16BIT_INFO_0_GA NULL
-#define CEMU_GPU_API_LABEL_GA NULL
-#define CEMU_GPU_API_INFO_0_GA NULL
+#define OPTION_VAL_SWAPPED_GA "Malartaithe"
+#define CEMU_LOG_TO_FILE_LABEL_GA "Scríobh loga Cemu chuig log.txt"
+#define CEMU_LOG_FILESYSTEM_LABEL_GA "Rochtain ar Chomhad Loga (dífhabhtú)"
+#define CEMU_LOG_THREAD_SYNC_LABEL_GA "Sioncrónú Snáitheanna Loga (dífhabhtú)"
+#define CEMU_LOG_SYSTEM_API_LABEL_GA "Logáil Glaonna API an Chórais (dífhabhtú)"
+#define CEMU_LOG_TEXTURE_MEMORY_LABEL_GA "Logáil Cuimhne Uigeachta (dífhabhtú)"
+#define CEMU_LOG_TEXTURE_MEMORY_INFO_0_GA "Tuairiscítear an méid den chuimhne uigeachta atá i bhformáid BC agus a bhí le dídhbhrú toisc nach féidir leis an GPU seo sampláil a dhéanamh air."
+#define CEMU_LOG_INPUT_API_LABEL_GA "Logáil Glaonna API (dífhabhtú)"
+#define CEMU_LOG_INPUT_API_INFO_0_GA "Déanann sé logáil ar gach glao rialaitheora a dhéanann teideal — na pillíní ar rinne sé fiosrú fúthu agus an freagra a fuair sé. Torannach; ar feadh cúpla soicind gach uair."
+#define CEMU_LOG_AUDIO_LABEL_GA "Logáil Luas an Fhuaime (dífhabhtú)"
+#define CEMU_LOG_AUDIO_INFO_0_GA "Gach soicind: cé mhéad sampla a tháirg AX, cé mhéad a bhí ar an bhfáinne a ligean thar ceal, agus cé mhéad a ghlac an ceann tosaigh. Chun a fháil amach ag cén pointe den slabhra sin atá an fuaim ag dul ar iarraidh."
+#define CEMU_BC1_16BIT_LABEL_GA "Laghdaigh Cuimhne Uigeachta BC1"
+#define CEMU_BC1_16BIT_INFO_0_GA "Laghdaítear go leith costas uigeachtaí BC1 ar GPU nach bhfuil in ann sampláil a dhéanamh ar BC, ar chostas giotán amháin den dath glas. Níl aon tionchar aige i gcásanna ina dtacaítear le BC."
+#define CEMU_GPU_API_LABEL_GA "API Grafaice"
+#define CEMU_GPU_API_INFO_0_GA "An API grafaicí a úsáideann Cemu chun rindreáil a dhéanamh. (Teastaíonn atosú)"
 #define OPTION_VAL_OPENGL_GA NULL
 #define OPTION_VAL_VULKAN_GA NULL
-#define CEMU_WUA_OUTPUT_DIR_LABEL_GA NULL
-#define CEMU_WUA_OUTPUT_DIR_INFO_0_GA NULL
-#define CEMU_CONVERT_TO_WUA_LABEL_GA NULL
-#define CEMU_CONVERT_TO_WUA_INFO_0_GA NULL
+#define CEMU_WUA_OUTPUT_DIR_LABEL_GA "Eolaire Aschuir"
+#define CEMU_WUA_OUTPUT_DIR_INFO_0_GA "Áit a bhfuil an .wua scríofa. Teastaíonn spás dó."
+#define CEMU_CONVERT_TO_WUA_LABEL_GA "Tosaigh an t-aistriú go WUA"
+#define CEMU_CONVERT_TO_WUA_INFO_0_GA "Scríobhann sé an teideal chuig an eolaire aschuir mar chomhad .wua. Leanann sé air ag rith fad is atá sé seo ar siúl."
 
 struct retro_core_option_v2_category option_cats_ga[] = {
 	{ "video", CATEGORY_VIDEO_LABEL_GA, CATEGORY_VIDEO_INFO_0_GA },
@@ -23404,107 +23404,107 @@ struct retro_core_options_v2 options_sr = {
 /* RETRO_LANGUAGE_SV */
 
 #define CATEGORY_VIDEO_LABEL_SV NULL
-#define CATEGORY_VIDEO_INFO_0_SV NULL
+#define CATEGORY_VIDEO_INFO_0_SV "Upplösning, skalning och bildrutetakt."
 #define CATEGORY_SHADERS_LABEL_SV NULL
-#define CATEGORY_SHADERS_INFO_0_SV NULL
-#define CATEGORY_SCREEN_LABEL_SV NULL
-#define CATEGORY_SCREEN_INFO_0_SV NULL
+#define CATEGORY_SHADERS_INFO_0_SV "Översättning, cachelagring och kompilering av shader."
+#define CATEGORY_SCREEN_LABEL_SV "Skärm"
+#define CATEGORY_SCREEN_INFO_0_SV "Vilken Wii U-skärm som visas och hur."
 #define CATEGORY_SYSTEM_LABEL_SV NULL
-#define CATEGORY_SYSTEM_INFO_0_SV NULL
-#define CATEGORY_ADDONS_LABEL_SV NULL
-#define CATEGORY_ADDONS_INFO_0_SV NULL
+#define CATEGORY_SYSTEM_INFO_0_SV "Processor, språk och schemaläggning."
+#define CATEGORY_ADDONS_LABEL_SV "Tillägg"
+#define CATEGORY_ADDONS_INFO_0_SV "Portaler för Skylanders, Infinity och Dimensions."
 #define CATEGORY_LOGGING_LABEL_SV "Loggning"
-#define CATEGORY_LOGGING_INFO_0_SV NULL
-#define CATEGORY_CONVERT_LABEL_SV NULL
-#define CATEGORY_CONVERT_INFO_0_SV NULL
-#define CATEGORY_GRAPHIC_PACKS_LABEL_SV NULL
-#define CATEGORY_GRAPHIC_PACKS_INFO_0_SV NULL
-#define CEMU_CPU_MODE_LABEL_SV NULL
-#define CEMU_CPU_MODE_INFO_0_SV NULL
+#define CATEGORY_LOGGING_INFO_0_SV "Extra loggutdata för att felsöka problem."
+#define CATEGORY_CONVERT_LABEL_SV "Konvertera till WUA"
+#define CATEGORY_CONVERT_INFO_0_SV "Skriv den inlästa titeln som ett .wua-arkiv."
+#define CATEGORY_GRAPHIC_PACKS_LABEL_SV "Grafikpaket"
+#define CATEGORY_GRAPHIC_PACKS_INFO_0_SV "Det inlästa spelets grafikpaket och deras förinställningar. Ändringar tillämpas nästa gång spelet läses in."
+#define CEMU_CPU_MODE_LABEL_SV "CPU-läge"
+#define CEMU_CPU_MODE_INFO_0_SV "Hur Wii U:s PowerPC-kärnor emuleras. Automatiskt väljer flerkärnig omkompilerare på en CPU med fyra eller fler fysiska kärnor."
 #define OPTION_VAL_AUTO_SV NULL
-#define OPTION_VAL_SINGLECORE_INTERPRETER_SV NULL
-#define OPTION_VAL_SINGLECORE_RECOMPILER_SV NULL
-#define OPTION_VAL_MULTICORE_RECOMPILER_SV NULL
-#define OPTION_VAL_MULTICORE_INTERPRETER_SV NULL
-#define CEMU_CONSOLE_LANGUAGE_LABEL_SV NULL
+#define OPTION_VAL_SINGLECORE_INTERPRETER_SV "Enkelkärnig tolk"
+#define OPTION_VAL_SINGLECORE_RECOMPILER_SV "Enkelkärnig omkompilerare"
+#define OPTION_VAL_MULTICORE_RECOMPILER_SV "Flerkärnig omkompilerare"
+#define OPTION_VAL_MULTICORE_INTERPRETER_SV "Flerkärnig tolk"
+#define CEMU_CONSOLE_LANGUAGE_LABEL_SV "Konsolspråk"
 #define OPTION_VAL_ENGLISH_SV "Engelska"
 #define OPTION_VAL_JAPANESE_SV "Japanska"
 #define OPTION_VAL_FRENCH_SV "Franska"
 #define OPTION_VAL_GERMAN_SV "Tyska"
 #define OPTION_VAL_ITALIAN_SV "Italienska"
 #define OPTION_VAL_SPANISH_SV "Spanska"
-#define OPTION_VAL_CHINESE_SV NULL
-#define OPTION_VAL_KOREAN_SV NULL
-#define OPTION_VAL_DUTCH_SV NULL
-#define OPTION_VAL_PORTUGUESE_SV NULL
-#define OPTION_VAL_RUSSIAN_SV NULL
-#define OPTION_VAL_TAIWANESE_SV NULL
-#define CEMU_ASYNC_SHADER_COMPILE_LABEL_SV NULL
-#define CEMU_GX2DRAWDONE_SYNC_LABEL_SV NULL
-#define CEMU_PRECOMPILED_SHADERS_LABEL_SV NULL
-#define CEMU_ACCURATE_SHADER_MUL_LABEL_SV NULL
-#define CEMU_UPSCALE_FILTER_LABEL_SV NULL
+#define OPTION_VAL_CHINESE_SV "Kinesiska"
+#define OPTION_VAL_KOREAN_SV "Koreanska"
+#define OPTION_VAL_DUTCH_SV "Nederländska"
+#define OPTION_VAL_PORTUGUESE_SV "Portugisiska"
+#define OPTION_VAL_RUSSIAN_SV "Ryska"
+#define OPTION_VAL_TAIWANESE_SV "Taiwanesiska"
+#define CEMU_ASYNC_SHADER_COMPILE_LABEL_SV "Asynkron shaderkompilering"
+#define CEMU_GX2DRAWDONE_SYNC_LABEL_SV "GX2DrawDone-synkronisering"
+#define CEMU_PRECOMPILED_SHADERS_LABEL_SV "Förkompilerade shaders"
+#define CEMU_ACCURATE_SHADER_MUL_LABEL_SV "Noggrann shadermultiplikation"
+#define CEMU_UPSCALE_FILTER_LABEL_SV "Uppskalningsfilter"
 #define OPTION_VAL_LINEAR_SV "Linjär"
 #define OPTION_VAL_BICUBIC_SV "Bikubisk"
-#define OPTION_VAL_BICUBIC_HERMITE_SV NULL
+#define OPTION_VAL_BICUBIC_HERMITE_SV "Bikubisk Hermite"
 #define OPTION_VAL_NEAREST_SV "Närmsta"
-#define CEMU_SHOW_GAME_FPS_LABEL_SV NULL
-#define CEMU_SHOW_GAME_FPS_INFO_0_SV NULL
-#define CEMU_DOWNSCALE_FILTER_LABEL_SV NULL
+#define CEMU_SHOW_GAME_FPS_LABEL_SV "Visa spelets bildfrekvens"
+#define CEMU_SHOW_GAME_FPS_INFO_0_SV "Visa den bildfrekvens som spelet renderar med. RetroArchs egen FPS-räknare räknar hur ofta kärnan körs och ligger kvar på 60 när spelet tappar bildrutor, eftersom varje körning innehåller ljud för en bildruta."
+#define CEMU_DOWNSCALE_FILTER_LABEL_SV "Nedskalningsfilter"
 #define CEMU_INTERNAL_RESOLUTION_LABEL_SV "Intern upplösning"
-#define CEMU_INTERNAL_RESOLUTION_INFO_0_SV NULL
-#define OPTION_VAL_640X360_SV NULL
-#define OPTION_VAL_960X540_SV NULL
+#define CEMU_INTERNAL_RESOLUTION_INFO_0_SV "En generell reservlösning för spel utan grafikpaket för upplösning: ändrar storlek på varje skärmformat renderingsmål."
+#define OPTION_VAL_640X360_SV "640 × 360"
+#define OPTION_VAL_960X540_SV "960 × 540"
 #define OPTION_VAL_1280X720_SV NULL
 #define OPTION_VAL_1920X1080_SV NULL
 #define OPTION_VAL_2560X1440_SV NULL
 #define OPTION_VAL_3840X2160_SV NULL
-#define CEMU_FULLSCREEN_SCALING_LABEL_SV NULL
-#define OPTION_VAL_KEEP_ASPECT_SV NULL
-#define OPTION_VAL_STRETCH_SV NULL
-#define CEMU_THREAD_QUANTUM_LABEL_SV NULL
-#define CEMU_EMULATE_SKYLANDER_PORTAL_LABEL_SV NULL
-#define CEMU_EMULATE_INFINITY_BASE_LABEL_SV NULL
-#define CEMU_EMULATE_DIMENSIONS_TOYPAD_LABEL_SV NULL
-#define CEMU_NUMBER_OF_SCREEN_LAYOUTS_LABEL_SV NULL
+#define CEMU_FULLSCREEN_SCALING_LABEL_SV "Helskärmsskalning"
+#define OPTION_VAL_KEEP_ASPECT_SV "Behåll proportioner"
+#define OPTION_VAL_STRETCH_SV "Sträck ut"
+#define CEMU_THREAD_QUANTUM_LABEL_SV "Trådkvantum"
+#define CEMU_EMULATE_SKYLANDER_PORTAL_LABEL_SV "Emulera Skylander-portalen"
+#define CEMU_EMULATE_INFINITY_BASE_LABEL_SV "Emulera Infinity-basen"
+#define CEMU_EMULATE_DIMENSIONS_TOYPAD_LABEL_SV "Emulera Dimensions-leksakspanelen"
+#define CEMU_NUMBER_OF_SCREEN_LAYOUTS_LABEL_SV "Antal skärmlayouter"
 #define CEMU_SCREEN_LAYOUT1_LABEL_SV NULL
-#define OPTION_VAL_DEFAULT_SCREEN_SV NULL
-#define OPTION_VAL_GAMEPAD_SCREEN_SV NULL
-#define OPTION_VAL_SIDE_BY_SIDE_SV NULL
-#define OPTION_VAL_TOP_BOTTOM_SV NULL
-#define OPTION_VAL_PICTURE_IN_PICTURE_SV NULL
+#define OPTION_VAL_DEFAULT_SCREEN_SV "Standardskärm"
+#define OPTION_VAL_GAMEPAD_SCREEN_SV "GamePad-skärm"
+#define OPTION_VAL_SIDE_BY_SIDE_SV "Sida vid sida"
+#define OPTION_VAL_TOP_BOTTOM_SV "Överst och nederst"
+#define OPTION_VAL_PICTURE_IN_PICTURE_SV "Bild i bild"
 #define CEMU_SCREEN_LAYOUT2_LABEL_SV NULL
 #define CEMU_SCREEN_LAYOUT3_LABEL_SV NULL
 #define CEMU_SCREEN_LAYOUT4_LABEL_SV NULL
 #define CEMU_SCREEN_LAYOUT5_LABEL_SV NULL
-#define CEMU_NEXT_SCREEN_LAYOUT_BUTTON_LABEL_SV NULL
+#define CEMU_NEXT_SCREEN_LAYOUT_BUTTON_LABEL_SV "Nästa skärmlayout"
 #define OPTION_VAL_L_R_L2_R2_L3_R3_SV NULL
 #define OPTION_VAL_SELECT_L3_SV NULL
 #define OPTION_VAL_SELECT_R3_SV NULL
-#define OPTION_VAL_TAB_SV NULL
-#define CEMU_DRC_POSITION_LABEL_SV NULL
+#define OPTION_VAL_TAB_SV "Tabb"
+#define CEMU_DRC_POSITION_LABEL_SV "GamePad-position"
 #define OPTION_VAL_NORMAL_SV NULL
-#define OPTION_VAL_SWAPPED_SV NULL
-#define CEMU_LOG_TO_FILE_LABEL_SV NULL
-#define CEMU_LOG_FILESYSTEM_LABEL_SV NULL
-#define CEMU_LOG_THREAD_SYNC_LABEL_SV NULL
-#define CEMU_LOG_SYSTEM_API_LABEL_SV NULL
-#define CEMU_LOG_TEXTURE_MEMORY_LABEL_SV NULL
-#define CEMU_LOG_TEXTURE_MEMORY_INFO_0_SV NULL
-#define CEMU_LOG_INPUT_API_LABEL_SV NULL
-#define CEMU_LOG_INPUT_API_INFO_0_SV NULL
-#define CEMU_LOG_AUDIO_LABEL_SV NULL
-#define CEMU_LOG_AUDIO_INFO_0_SV NULL
-#define CEMU_BC1_16BIT_LABEL_SV NULL
-#define CEMU_BC1_16BIT_INFO_0_SV NULL
-#define CEMU_GPU_API_LABEL_SV NULL
-#define CEMU_GPU_API_INFO_0_SV NULL
+#define OPTION_VAL_SWAPPED_SV "Växlade"
+#define CEMU_LOG_TO_FILE_LABEL_SV "Skriv Cemu-loggen till log.txt"
+#define CEMU_LOG_FILESYSTEM_LABEL_SV "Logga filåtkomst (felsökning)"
+#define CEMU_LOG_THREAD_SYNC_LABEL_SV "Logga trådsynkronisering (felsökning)"
+#define CEMU_LOG_SYSTEM_API_LABEL_SV "Logga systemets API-anrop (felsökning)"
+#define CEMU_LOG_TEXTURE_MEMORY_LABEL_SV "Logga texturminne (felsökning)"
+#define CEMU_LOG_TEXTURE_MEMORY_INFO_0_SV "Rapporterar hur mycket av texturminnet som är BC och måste dekomprimeras eftersom denna GPU inte kan sampla det."
+#define CEMU_LOG_INPUT_API_LABEL_SV "Logga handkontrollens API-anrop (felsökning)"
+#define CEMU_LOG_INPUT_API_INFO_0_SV "Loggar varje handkontrollsanrop en titel gör: vilka handkontroller den kontrollerar och vad den får tillbaka. Omfattande; använd några sekunder åt gången."
+#define CEMU_LOG_AUDIO_LABEL_SV "Logga ljudtaktning (felsökning)"
+#define CEMU_LOG_AUDIO_INFO_0_SV "En gång per sekund: hur många samplingar AX skapade, hur många ringen fick släppa och hur många gränssnittet tog."
+#define CEMU_BC1_16BIT_LABEL_SV "Minska BC1-texturminnet"
+#define CEMU_BC1_16BIT_INFO_0_SV "Halverar kostnaden för BC1-texturer på en GPU som inte kan sampla BC, till priset av en grön bit. Ingen effekt där BC stöds."
+#define CEMU_GPU_API_LABEL_SV "Grafik-API"
+#define CEMU_GPU_API_INFO_0_SV "Grafik-API som Cemu renderar med. (Omstart krävs)"
 #define OPTION_VAL_OPENGL_SV NULL
 #define OPTION_VAL_VULKAN_SV NULL
-#define CEMU_WUA_OUTPUT_DIR_LABEL_SV NULL
-#define CEMU_WUA_OUTPUT_DIR_INFO_0_SV NULL
-#define CEMU_CONVERT_TO_WUA_LABEL_SV NULL
-#define CEMU_CONVERT_TO_WUA_INFO_0_SV NULL
+#define CEMU_WUA_OUTPUT_DIR_LABEL_SV "Utdatakatalog"
+#define CEMU_WUA_OUTPUT_DIR_INFO_0_SV "Där .wua-filen skrivs. Kräver utrymme för den."
+#define CEMU_CONVERT_TO_WUA_LABEL_SV "Starta konvertering till WUA"
+#define CEMU_CONVERT_TO_WUA_INFO_0_SV "Skriver titeln som en .wua i utdatakatalogen. Den fortsätter köras under tiden."
 
 struct retro_core_option_v2_category option_cats_sv[] = {
 	{ "video", CATEGORY_VIDEO_LABEL_SV, CATEGORY_VIDEO_INFO_0_SV },
@@ -27313,8 +27313,8 @@ struct retro_core_options_v2 options_val = {
 #define CATEGORY_CONVERT_INFO_0_VN "Ghi tựa game đang được tải thành tệp lưu trữ .wua."
 #define CATEGORY_GRAPHIC_PACKS_LABEL_VN "Gói đồ họa"
 #define CATEGORY_GRAPHIC_PACKS_INFO_0_VN "Các gói đồ họa và thiết lập có sẵn của trò chơi đang được tải. Thay đổi sẽ có hiệu lực vào lần tiếp theo trò chơi được tải."
-#define CEMU_CPU_MODE_LABEL_VN NULL
-#define CEMU_CPU_MODE_INFO_0_VN NULL
+#define CEMU_CPU_MODE_LABEL_VN "Chế độ CPU"
+#define CEMU_CPU_MODE_INFO_0_VN "Cách mô phỏng các lõi PowerPC của Wii U. Tự động sử dụng trình biên dịch lại đa lõi trên CPU có từ bốn lõi vật lý trở lên và sử dụng trình biên dịch lại đơn lõi trong các trường hợp còn lại. Các trình thông dịch chậm hơn rất nhiều và chủ yếu dùng để gỡ lỗi. (Yêu cầu khởi động lại)"
 #define OPTION_VAL_AUTO_VN "Tự động"
 #define OPTION_VAL_SINGLECORE_INTERPRETER_VN "Trình thông dịch đơn luồng"
 #define OPTION_VAL_SINGLECORE_RECOMPILER_VN "Trình biên dịch lại đơn luồng"
@@ -27346,7 +27346,7 @@ struct retro_core_options_v2 options_val = {
 #define CEMU_SHOW_GAME_FPS_INFO_0_VN "Hiển thị tốc độ khung hình mà trò chơi đang kết xuất. Bộ đếm FPS của RetroArch tính số lần lõi được chạy, và con số này vẫn ở mức 60 khi trò chơi bị giảm khung hình, vì mỗi lần chạy đều xử lý lượng âm thanh tương ứng với một khung hình."
 #define CEMU_DOWNSCALE_FILTER_LABEL_VN "Bộ lọc giảm độ phân giải"
 #define CEMU_INTERNAL_RESOLUTION_LABEL_VN "Độ phân giải nội bộ"
-#define CEMU_INTERNAL_RESOLUTION_INFO_0_VN NULL
+#define CEMU_INTERNAL_RESOLUTION_INFO_0_VN "Cơ chế dự phòng chung cho các trò chơi không có gói đồ họa thay đổi độ phân giải: thay đổi kích thước mọi vùng đích kết xuất có hình dạng màn hình, trong khi một số trò chơi sử dụng chúng cho những mục đích sẽ bị lỗi khi thay đổi kích thước. 640x360 chỉ hiển thị một phần tư số điểm ảnh so với 720p. Khi gói độ phân giải được bật cho trò chơi đang tải (Gói đồ họa), gói sẽ thiết lập độ phân giải và tùy chọn này sẽ bị ẩn."
 #define OPTION_VAL_640X360_VN NULL
 #define OPTION_VAL_960X540_VN NULL
 #define OPTION_VAL_1280X720_VN NULL
@@ -27384,21 +27384,21 @@ struct retro_core_options_v2 options_val = {
 #define CEMU_LOG_THREAD_SYNC_LABEL_VN "Ghi đồng bộ hóa luồng vào tệp nhật ký (gỡ lỗi)"
 #define CEMU_LOG_SYSTEM_API_LABEL_VN "Ghi các lệnh gọi API hệ thống vào tệp nhật ký (gỡ lỗi)"
 #define CEMU_LOG_TEXTURE_MEMORY_LABEL_VN "Ghi bộ nhớ kết cấu vào tệp nhật ký (gỡ lỗi)"
-#define CEMU_LOG_TEXTURE_MEMORY_INFO_0_VN NULL
+#define CEMU_LOG_TEXTURE_MEMORY_INFO_0_VN "Báo cáo lượng bộ nhớ kết cấu thuộc loại BC đã phải giải nén vì GPU này không thể lấy mẫu loại dữ liệu đó."
 #define CEMU_LOG_INPUT_API_LABEL_VN "Ghi các lệnh gọi API tay cầm vào tệp nhật ký (gỡ lỗi)"
-#define CEMU_LOG_INPUT_API_INFO_0_VN NULL
+#define CEMU_LOG_INPUT_API_INFO_0_VN "Ghi lại mọi lệnh gọi tay cầm mà trò chơi thực hiện - trò chơi kiểm tra những tay cầm nào và hệ thống đã phản hồi như thế nào. Tạo rất nhiều dữ liệu; chỉ nên bật trong vài giây mỗi lần."
 #define CEMU_LOG_AUDIO_LABEL_VN "Ghi nhịp xử lý âm thanh vào tệp nhật ký (gỡ lỗi)"
-#define CEMU_LOG_AUDIO_INFO_0_VN NULL
+#define CEMU_LOG_AUDIO_INFO_0_VN "Mỗi giây một lần, cho biết AX đã tạo ra bao nhiêu mẫu âm thanh, bộ đệm vòng phải loại bỏ bao nhiêu mẫu và giao diện chính đã lấy bao nhiêu mẫu. Dùng để xác định âm thanh đang bị mất ở đầu nào trong chuỗi xử lý đó."
 #define CEMU_BC1_16BIT_LABEL_VN "Giảm bộ nhớ kết cấu BC1"
-#define CEMU_BC1_16BIT_INFO_0_VN NULL
-#define CEMU_GPU_API_LABEL_VN NULL
-#define CEMU_GPU_API_INFO_0_VN NULL
+#define CEMU_BC1_16BIT_INFO_0_VN "Giảm một nửa dung lượng mà kết cấu BC1 chiếm dụng trên GPU không thể lấy mẫu BC, đổi lại mất một bit màu xanh lá. Không có tác dụng trên GPU hỗ trợ BC."
+#define CEMU_GPU_API_LABEL_VN "Giao diện đồ họa"
+#define CEMU_GPU_API_INFO_0_VN "Giao diện đồ họa mà Cemu sử dụng để kết xuất. (Yêu cầu khởi động lại)"
 #define OPTION_VAL_OPENGL_VN NULL
 #define OPTION_VAL_VULKAN_VN NULL
 #define CEMU_WUA_OUTPUT_DIR_LABEL_VN "Thư mục đầu ra"
 #define CEMU_WUA_OUTPUT_DIR_INFO_0_VN "Nơi tệp .wua được ghi. Cần đủ dung lượng để chứa tệp này."
 #define CEMU_CONVERT_TO_WUA_LABEL_VN "Bắt đầu chuyển đổi sang WUA"
-#define CEMU_CONVERT_TO_WUA_INFO_0_VN NULL
+#define CEMU_CONVERT_TO_WUA_INFO_0_VN "Ghi trò chơi vào thư mục đầu ra dưới dạng tệp .wua. Quá trình này vẫn tiếp tục chạy trong khi thực hiện."
 
 struct retro_core_option_v2_category option_cats_vn[] = {
 	{ "video", CATEGORY_VIDEO_LABEL_VN, CATEGORY_VIDEO_INFO_0_VN },
