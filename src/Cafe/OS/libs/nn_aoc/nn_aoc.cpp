@@ -166,6 +166,16 @@ namespace nn
 				cafeExportRegister("nn_aoc", AOC_CloseTitle, LogType::NN_AOC);
 				cafeExportRegister("nn_aoc", AOC_GetPurchaseInfo, LogType::NN_AOC);
 			};
+
+			void RPLUnmapped() override
+			{
+				// The list is built from /vol on first use. Kept past the title,
+				// the next one would see the previous title's DLC instead of its
+				// own: with the libretro core, which runs several titles in one
+				// process, Mario Kart 8 started after another game lost its DLC.
+				sAocCache.clear();
+				sAocCacheGenerated = false;
+			}
 		}s_COSnnAocModule;
 
 		COSModule* GetModule()
