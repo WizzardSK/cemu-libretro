@@ -20,7 +20,7 @@ void gx2SurfaceCopySoftware(
 
 void LatteSurfaceCopy_CopyInRAM(const LatteSurfaceCopyParam& src, const LatteSurfaceCopyParam& dst, const LatteSurfaceCopyRect& rect)
 {
-	Latte::E_HWSURFFMT dstHwFormat = Latte::GetHWFormat(dst.surfaceFormat);
+	Latte::E_HWFMT dstHwFormat = Latte::GetHWFormat(dst.surfaceFormat);
 
 	sint32 copyWidth = rect.width;
 	sint32 copyHeight = rect.height;
@@ -91,7 +91,10 @@ void LatteSurfaceCopy_copySurfaceNew(const LatteSurfaceCopyParam& src, const Lat
 			dstSurfaceWidth *= 4;
 			dstSurfaceHeight *= 4;
 		}
-		destinationView = LatteTexture_CreateMapping(dst.physDataAddr, MPTR_NULL, dstSurfaceWidth, dstSurfaceHeight, dst.sliceIndex + 1, dst.pitch, Latte::MakeHWTileMode(dst.tilemode), dst.swizzle, 0, 1, dst.sliceIndex, 1, dst.surfaceFormat, dst.dim, Latte::IsMSAA(dst.dim) ? Latte::E_DIM::DIM_2D_MSAA : Latte::E_DIM::DIM_2D, false);
+		auto dimBase = dst.dim;
+		if (dst.dim == Latte::E_DIM::DIM_CUBEMAP)
+			dimBase = dst.sliceIndex > 0 ? Latte::E_DIM::DIM_2D_ARRAY : Latte::E_DIM::DIM_2D; // cubemaps need to have a depth that is a multiple of 6, so instead we create the target as 2D/2D_ARRAY
+		destinationView = LatteTexture_CreateMapping(dst.physDataAddr, MPTR_NULL, dstSurfaceWidth, dstSurfaceHeight, dst.sliceIndex + 1, dst.pitch, Latte::MakeHWTileMode(dst.tilemode), dst.swizzle, 0, 1, dst.sliceIndex, 1, dst.surfaceFormat, dimBase, Latte::IsMSAA(dst.dim) ? Latte::E_DIM::DIM_2D_MSAA : Latte::E_DIM::DIM_2D, false);
 		destinationTexture = destinationView->baseTexture;
 	}
 	// copy texture

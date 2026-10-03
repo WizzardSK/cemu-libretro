@@ -127,7 +127,7 @@ git fetch cemuup main
 git merge cemuup/main
 ```
 
-Last sync: upstream `f6a8883` (18 Aug 2026).
+Last sync: upstream `32e6628a` (2 Oct 2026). The core reports its version as `git describe --tags --match v2.6 cemuup/main` (`2.6-341-g32e6628a`), set in `retro_get_system_info` and `cemu_libretro.info`; update both on every sync.
 
 The fork has no `main` of its own: upstream is merged straight into `libretro`,
 the only long-lived branch here.
