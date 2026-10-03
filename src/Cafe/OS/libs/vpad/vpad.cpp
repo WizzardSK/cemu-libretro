@@ -124,6 +124,9 @@ void _tpRawToResolution(sint32 x, sint32 y, sint32* outX, sint32* outY, sint32 w
 extern bool libretro_get_button_state(uint32_t button_id);
 extern void libretro_get_analog_state(float* lx, float* ly, float* rx, float* ry);
 extern bool libretro_get_touch_state(uint16_t* x, uint16_t* y);
+extern bool libretro_vpad_rumble_push(const uint8* pattern, uint8 length);
+extern void libretro_vpad_rumble_clear();
+extern bool libretro_gamepad_on_port1();
 
 namespace vpad
 {
@@ -241,6 +244,16 @@ namespace vpad
 		status->tpData.validity = VPAD_TP_VALIDITY_INVALID_XY;
 		status->tpProcessed1.validity = VPAD_TP_VALIDITY_INVALID_XY;
 		status->tpProcessed2.validity = VPAD_TP_VALIDITY_INVALID_XY;
+
+		// Port 1 set to the Pro Controller: no GamePad, but channel 0 still
+		// reports an empty sample, because most games expect the GamePad to be
+		// there - the same thing upstream does when none is configured.
+		if (channel == 0 && !libretro_gamepad_on_port1())
+		{
+			if (error)
+				*error = VPAD_READ_ERR_NONE;
+			return 1;
+		}
 
 		// In libretro mode, read input directly from libretro callbacks
 		if (channel == 0)
@@ -871,7 +884,20 @@ void vpadExport_VPADControlMotor(PPCInterpreter_t* hCPU)
 		length = 120;
 	}
 
-	if (const auto controller = InputManager::instance().get_vpad_controller(channel))
+	// The GamePad is read from the frontend directly rather than through an
+	// InputManager controller (see VPADRead), so there is none here to play the
+	// pattern: the core plays it on the RetroPad on port 0.
+	if (channel == 0)
+	{
+		if (length == 0)
+			libretro_vpad_rumble_clear();
+		else if (!libretro_vpad_rumble_push(pattern, length))
+		{
+			osLib_returnFromFunction(hCPU, -1);
+			return;
+		}
+	}
+	else if (const auto controller = InputManager::instance().get_vpad_controller(channel))
 	{
 		// if length is zero -> stop vibration
 		if (length == 0)
@@ -897,7 +923,9 @@ void vpadExport_VPADStopMotor(PPCInterpreter_t* hCPU)
 	ppcDefineParamU32(channel, 0);
 	cemuLog_log(LogType::InputAPI, "VPADStopMotor({})", channel);
 
-	if (const auto controller = InputManager::instance().get_vpad_controller(channel))
+	if (channel == 0)
+		libretro_vpad_rumble_clear();
+	else if (const auto controller = InputManager::instance().get_vpad_controller(channel))
 	{
 		controller->clear_rumble();
 	}

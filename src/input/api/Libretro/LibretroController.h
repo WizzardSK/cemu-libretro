@@ -20,6 +20,12 @@ public:
 
 	bool is_connected() override { return true; }
 
+	// Through the frontend's rumble interface, on this port. The strength is
+	// the core's Rumble Strength option, not the per-controller setting.
+	bool has_rumble() override { return true; }
+	void start_rumble() override;
+	void stop_rumble() override;
+
 	uint32 port() const { return m_port; }
 
 	std::string get_button_name(uint64 button) const override;

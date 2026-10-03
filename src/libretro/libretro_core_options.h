@@ -260,6 +260,23 @@ struct retro_core_option_v2_definition option_defs_us[] = {
 		"45000"
 	},
 	{
+		"cemu_rumble_strength",
+		"Rumble Strength",
+		NULL,
+		"How strongly the controller vibrates when the game asks for it: the GamePad's motor, and the Wii Remote's or Pro Controller's. Off sends the frontend no rumble at all.",
+		NULL,
+		"system",
+		{
+			{ "0", "Off" },
+			{ "25", "25%" },
+			{ "50", "50%" },
+			{ "75", "75%" },
+			{ "100", "100%" },
+			{ NULL, NULL },
+		},
+		"100"
+	},
+	{
 		"cemu_emulate_skylander_portal",
 		"Emulate Skylander Portal",
 		NULL,

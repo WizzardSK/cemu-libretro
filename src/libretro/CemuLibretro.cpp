@@ -1330,6 +1330,124 @@ struct LibretroPortState
 
 static LibretroPortState s_port_state[kLibretroMaxPorts];
 
+// ---- Rumble ----------------------------------------------------------------
+//
+// Through the frontend's rumble interface, from retro_run, only when a port's
+// value changes. Two sources feed it. The Wii Remotes and the Pro and Classic
+// Controllers are InputManager controllers, and Cemu turns their motor on and
+// off through LibretroController::start_rumble/stop_rumble. The GamePad is not:
+// vpad.cpp reads it from port 0 directly, so VPADControlMotor hands its pattern
+// to the core, which plays it the way VPADController::update does - one bit per
+// 1/60 s, at most five patterns queued.
+static retro_set_rumble_state_t s_rumble_cb = nullptr;
+static std::atomic<uint16_t> s_rumble_strength{0xFFFF};
+static std::atomic<bool> s_port_rumble[kLibretroMaxPorts]{};
+static uint16_t s_rumble_sent[kLibretroMaxPorts]{};
+
+static std::mutex s_vpad_rumble_mutex;
+static std::deque<std::vector<bool>> s_vpad_rumble_queue;
+static size_t s_vpad_rumble_bit = 0;
+static bool s_vpad_rumble_on = false;
+static std::chrono::steady_clock::time_point s_vpad_rumble_next{};
+
+void libretro_vpad_rumble_clear();
+
+bool libretro_vpad_rumble_push(const uint8* pattern, uint8 length)
+{
+	if (!pattern || length == 0)
+	{
+		libretro_vpad_rumble_clear();
+		return true;
+	}
+	// As VPADController::push_rumble: two bits of the pattern per step, so the
+	// 120 bits a pattern can have are 60 steps, one second.
+	std::vector<bool> steps;
+	for (int byte = 0, len = length; len > 0; ++byte, len -= 8)
+	{
+		const uint8 p = pattern[byte];
+		for (int j = 0; j < 8 && j < len; j += 2)
+			steps.push_back((p & (3 << j)) != 0);
+	}
+	std::lock_guard lock(s_vpad_rumble_mutex);
+	if (s_vpad_rumble_queue.size() >= 5)
+		return false;
+	if (s_vpad_rumble_queue.empty())
+		s_vpad_rumble_next = {};
+	s_vpad_rumble_queue.push_back(std::move(steps));
+	return true;
+}
+
+void libretro_vpad_rumble_clear()
+{
+	std::lock_guard lock(s_vpad_rumble_mutex);
+	s_vpad_rumble_queue.clear();
+	s_vpad_rumble_bit = 0;
+}
+
+void libretro_set_port_rumble(uint32_t port, bool on)
+{
+	if (port < kLibretroMaxPorts)
+		s_port_rumble[port].store(on, std::memory_order_relaxed);
+}
+
+// The GamePad motor's state for this frame.
+static bool libretro_vpad_rumble_step()
+{
+	std::lock_guard lock(s_vpad_rumble_mutex);
+	if (s_vpad_rumble_queue.empty())
+	{
+		s_vpad_rumble_bit = 0;
+		s_vpad_rumble_on = false;
+		return false;
+	}
+	const auto now = std::chrono::steady_clock::now();
+	if (now < s_vpad_rumble_next)
+		return s_vpad_rumble_on;
+	s_vpad_rumble_next = now + std::chrono::microseconds(1000000 / 60);
+	const auto& steps = s_vpad_rumble_queue.front();
+	s_vpad_rumble_on = steps[s_vpad_rumble_bit];
+	if (++s_vpad_rumble_bit >= steps.size())
+	{
+		s_vpad_rumble_queue.pop_front();
+		s_vpad_rumble_bit = 0;
+	}
+	return s_vpad_rumble_on;
+}
+
+static void libretro_send_rumble(uint32_t port, uint16_t value)
+{
+	if (!s_rumble_cb || s_rumble_sent[port] == value)
+		return;
+	s_rumble_cb(port, RETRO_RUMBLE_STRONG, value);
+	s_rumble_cb(port, RETRO_RUMBLE_WEAK, value);
+	s_rumble_sent[port] = value;
+}
+
+bool libretro_gamepad_on_port1();
+
+static void libretro_update_rumble()
+{
+	const bool vpadOn = libretro_vpad_rumble_step();
+	const uint16_t strength = s_rumble_strength.load(std::memory_order_relaxed);
+	for (uint32_t port = 0; port < kLibretroMaxPorts; ++port)
+	{
+		const bool on = s_port_rumble[port].load(std::memory_order_relaxed) || (port == 0 && vpadOn);
+		libretro_send_rumble(port, on ? strength : 0);
+	}
+}
+
+// A motor left on would keep going after the game is gone, or through the
+// restart of a reset.
+static void libretro_stop_rumble()
+{
+	libretro_vpad_rumble_clear();
+	for (uint32_t port = 0; port < kLibretroMaxPorts; ++port)
+	{
+		s_port_rumble[port].store(false, std::memory_order_relaxed);
+		libretro_send_rumble(port, 0);
+	}
+}
+
 // How many of them are worth asking the frontend about. Every port costs
 // twenty calls into the frontend per frame, and the ones above this are not
 // bound to anything: with Wii Remote input off, ports 2 to 4 drive nothing at
@@ -1348,13 +1466,13 @@ static uint32_t s_polled_ports = kLibretroMaxPorts;
 // what to do with any of them - get_device_type() is what tells the title which
 // one it found, and nothing else in the emulation has to change.
 //
-// Port 1 is the GamePad and stays the GamePad. It is the one port that does not
-// go through InputManager at all: vpad.cpp reads the libretro callbacks
-// directly (see libretro_poll_input), so giving it another profile means
-// teaching VPADRead to report no controller on channel 0, which titles react to
-// in ways worth testing separately. The one thing port 1 can do here is drive a
-// Wii Remote as well as the GamePad, which is not a profile change - it is one
-// pad answering for both.
+// Port 1 is the GamePad, which does not go through InputManager at all:
+// vpad.cpp reads the libretro callbacks directly (see libretro_poll_input).
+// It can drive a Wii Remote as well, which is not a profile change - it is one
+// pad answering for both. Or it can be a Wii U Pro Controller instead, as
+// player 1 can be in standalone: then there is no GamePad, VPADRead hands
+// channel 0 an empty sample rather than reporting it missing, as upstream does
+// when none is configured, and port 1 is the first WPAD channel.
 //
 // A remote held sideways is its own device type rather than a setting, because
 // nothing about it reaches the emulation: a title is never told which way the
@@ -1374,6 +1492,14 @@ static uint32_t s_polled_ports = kLibretroMaxPorts;
 static unsigned s_port_device[kLibretroMaxPorts] = {
 	RETRO_DEVICE_JOYPAD, RETRO_DEVICE_NONE, RETRO_DEVICE_NONE, RETRO_DEVICE_NONE,
 };
+
+// Whether port 1 drives the GamePad. Set to the Pro Controller it does not:
+// VPADRead then hands the title an empty GamePad sample, as standalone does
+// when no GamePad is configured, and port 1 is WPAD channel 1 instead.
+bool libretro_gamepad_on_port1()
+{
+	return s_port_device[0] != RETRO_DEVICE_PRO;
+}
 
 // Defined below, next to the mappings it applies; called from
 // retro_set_controller_port_device, which comes before it.
@@ -2110,6 +2236,12 @@ static void libretro_apply_profile_options()
 
 static void libretro_apply_core_options()
 {
+	if (const char* v = libretro_get_option_value("cemu_rumble_strength"))
+	{
+		const int percent = std::clamp(atoi(v), 0, 100);
+		s_rumble_strength.store((uint16_t)(percent * 0xFFFF / 100), std::memory_order_relaxed);
+	}
+
 	// The conversion switch is not a setting, it is a request, and it is acted
 	// on here rather than remembered: the conversion starts in this same process
 	// and the switch goes straight back off, so nothing about it is ever written
@@ -2397,6 +2529,17 @@ RETRO_API void retro_set_environment(retro_environment_t cb)
 	if (cb(RETRO_ENVIRONMENT_GET_LOG_INTERFACE, &logging))
 		log_cb = logging.log;
 
+	// A refusal keeps what an earlier call got. RetroArch calls
+	// retro_set_environment again whenever it reads the system info - first
+	// with a callback that answers almost nothing, then with its own while
+	// ignoring every request - and clearing the interface there left the core
+	// without rumble for good: the game turned the motor on, nothing vibrated.
+	{
+		struct retro_rumble_interface rumble{};
+		if (cb(RETRO_ENVIRONMENT_GET_RUMBLE_INTERFACE, &rumble) && rumble.set_rumble_state)
+			s_rumble_cb = rumble.set_rumble_state;
+	}
+
 	// Ask for the frontend's file system before anything else looks at a path.
 	// On Android the Play Store build reaches storage through SAF, so the path
 	// handed to retro_load_game is a content:// URI that no open() will take -
@@ -2449,13 +2592,15 @@ RETRO_API void retro_set_environment(retro_environment_t cb)
 	cb(RETRO_ENVIRONMENT_SET_SUPPORT_NO_GAME, &no_game);
 
 	// What each port can be, for the frontend's own device menu (RetroArch:
-	// Controls > Port N > Device Type). Port 1 is the GamePad either way; the
-	// rest start empty and the user plugs in what a title asks for.
+	// Controls > Port N > Device Type). Port 1 is the GamePad unless it is set
+	// to the Pro Controller; the rest start empty and the user plugs in what a
+	// title asks for.
 	{
 		static const struct retro_controller_description port1[] = {
 			{"Wii U GamePad", RETRO_DEVICE_JOYPAD},
 			{"Wii U GamePad + Wii Remote", RETRO_DEVICE_GAMEPAD_WIIMOTE},
 			{"Wii U GamePad + Wii Remote (sideways)", RETRO_DEVICE_GAMEPAD_WIIMOTE_SIDEWAYS},
+			{"Wii U Pro Controller", RETRO_DEVICE_PRO},
 		};
 		static const struct retro_controller_description wpad[] = {
 			{"None", RETRO_DEVICE_NONE},
@@ -3152,18 +3297,19 @@ RETRO_API void retro_get_system_av_info(struct retro_system_av_info* info)
 	info->timing.sample_rate = 48000.0;
 }
 
-// Port 0 is the GamePad (VPAD); ports 1-3 are WPAD channels - a Wii Remote, a
-// Wii U Pro Controller or a Classic Controller. See the device ids near
-// s_port_device for why port 0 does not take the other three.
+// Port 0 is the GamePad (VPAD), or a Wii U Pro Controller in its place; ports
+// 1-3 are WPAD channels - a Wii Remote, a Wii U Pro Controller or a Classic
+// Controller.
 RETRO_API void retro_set_controller_port_device(unsigned port, unsigned device)
 {
 	if (port >= kLibretroMaxPorts)
 		return;
 
-	// The GamePad is not optional and no device type takes it away; all port 0
-	// decides is whether a Wii Remote reads the same pad.
+	// Port 0 is the GamePad, alone or with a Wii Remote reading the same pad,
+	// or the Pro Controller instead of it - what standalone does when player 1
+	// is set to a Pro Controller. Anything else there is the GamePad.
 	if (port == 0 && device != RETRO_DEVICE_GAMEPAD_WIIMOTE &&
-		device != RETRO_DEVICE_GAMEPAD_WIIMOTE_SIDEWAYS)
+		device != RETRO_DEVICE_GAMEPAD_WIIMOTE_SIDEWAYS && device != RETRO_DEVICE_PRO)
 		device = RETRO_DEVICE_JOYPAD;
 
 	if (s_port_device[port] == device)
@@ -3242,6 +3388,9 @@ static bool libretro_stop_title()
 		return true;
 	}
 	s_game_loaded = false;
+
+	// A close and a reset both come through here.
+	libretro_stop_rumble();
 
 	libretro_wake_frame_waiters();
 
@@ -3574,7 +3723,8 @@ static void libretro_setup_controllers()
 							  s_port_device[0] == RETRO_DEVICE_GAMEPAD_WIIMOTE_SIDEWAYS;
 	const bool sharedRemoteSideways = s_port_device[0] == RETRO_DEVICE_GAMEPAD_WIIMOTE_SIDEWAYS;
 
-	// Port 1 is always polled - it is the GamePad. Above it, only the ports
+	// Port 1 is always polled - it is the GamePad or the Pro Controller in its
+	// place. Above it, only the ports
 	// that drive something: each one costs twenty calls into the frontend per
 	// frame, and an unbound port spends them on answers nobody reads.
 	uint32_t polledPorts = 1;
@@ -3586,7 +3736,9 @@ static void libretro_setup_controllers()
 		bool sideways = false;
 		if (port == 0)
 		{
-			if (!sharedRemote)
+			if (s_port_device[0] == RETRO_DEVICE_PRO)
+				type = EmulatedController::Type::Pro;
+			else if (!sharedRemote)
 				continue;
 			sideways = sharedRemoteSideways;
 		}
@@ -5472,6 +5624,7 @@ RETRO_API void retro_run()
 
 	// Poll input
 	libretro_poll_input();
+	libretro_update_rumble();
 
 	using prof_clock = std::chrono::steady_clock;
 	const auto profStart = prof_clock::now();

@@ -6,6 +6,7 @@
 // the VPAD hooks in vpad.cpp.
 extern bool libretro_get_joypad_button(uint32_t port, uint32_t retro_id);
 extern void libretro_get_joypad_analog(uint32_t port, float* lx, float* ly, float* rx, float* ry);
+extern void libretro_set_port_rumble(uint32_t port, bool on);
 
 namespace
 {
@@ -29,6 +30,16 @@ std::string LibretroController::get_button_name(uint64 button) const
 		return std::string(kButtonNames[button - kButton0]);
 
 	return base_type::get_button_name(button);
+}
+
+void LibretroController::start_rumble()
+{
+	libretro_set_port_rumble(m_port, true);
+}
+
+void LibretroController::stop_rumble()
+{
+	libretro_set_port_rumble(m_port, false);
 }
 
 ControllerState LibretroController::raw_state()
