@@ -88,8 +88,19 @@ public:
 		if (m_fscType != FSC_TYPE_DIRECTORY)
 			return false;
 		FSTFileHandle entryItr;
-		if (!m_volume->Next(m_dirIterator, entryItr))
-			return false;
+		// Entries with the link flag are not in this volume: an update's FST
+		// lists the base title's files and folders too, flagged as links, and
+		// opening one fails (fscDeviceOpenByPath refuses them). Listing them
+		// anyway made anything that walks a mounted update - installing it
+		// into mlc01, converting it to .wua - stop at the first one with
+		// "could not read the title" (#23). They are left out, as they are
+		// not part of the update's own content.
+		do
+		{
+			if (!m_volume->Next(m_dirIterator, entryItr))
+				return false;
+		}
+		while (m_volume->HasLinkFlag(entryItr));
 		if (m_volume->IsDirectory(entryItr))
 		{
 			dirEntry->isDirectory = true;

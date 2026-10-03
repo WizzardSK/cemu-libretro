@@ -676,6 +676,17 @@ static constexpr uint32_t SCREEN_WIDTH = 1280;
 static constexpr uint32_t SCREEN_HEIGHT = 720;
 std::vector<uint32_t> s_libretro_framebuffer(SCREEN_WIDTH * SCREEN_HEIGHT);
 static auto& s_framebuffer = s_libretro_framebuffer; // alias for existing OpenGL code
+// The size of the frame in s_framebuffer. retro_run lets the GPU thread go on
+// with the next frame before it uploads this one, so the readback and the
+// upload overlap: both hold this lock. Without it the readback resizing the
+// buffer for a new size freed it under the upload (heap corruption on the
+// first frame a resolution pack sized differently), and at a fixed size a
+// frame could be read half overwritten by the next.
+static std::mutex s_gl_frame_mutex;
+static uint32_t s_gl_frame_width = SCREEN_WIDTH, s_gl_frame_height = SCREEN_HEIGHT;
+// The size of the frame retro_run uploaded last, which is what the frontend is
+// told: the GPU thread may already have read the next one at another size.
+static uint32_t s_gl_shown_width = SCREEN_WIDTH, s_gl_shown_height = SCREEN_HEIGHT;
 static bool s_use_hw_render = false;
 static bool s_hw_render_initialized = false;
 
@@ -687,8 +698,8 @@ static SelectedGraphicsAPI s_graphics_api = SelectedGraphicsAPI::OpenGL;
 // screen at that size rather than scaled down into 1280x720 (NNshi); it is
 // taken when the renderer's presentation image is made, and a change of the
 // option takes effect for the output at the next content load, as the GPU
-// thread draws into that image the whole time. The OpenGL path reads its
-// frames back into a fixed 1280x720 buffer and stays at that.
+// thread draws into that image the whole time. The OpenGL path follows the TV
+// picture instead (libretro_gl_tv_picture_size).
 static uint32_t s_out_width = SCREEN_WIDTH, s_out_height = SCREEN_HEIGHT;
 static bool s_out_size_taken = false;
 static uint32_t s_wanted_out_width = SCREEN_WIDTH, s_wanted_out_height = SCREEN_HEIGHT;
@@ -703,7 +714,7 @@ static uint32_t libretro_out_height();
 // at (VulkanRenderer::UpdatePresentationImageSize).
 static uint32_t libretro_out_width()
 {
-	if (s_graphics_api != SelectedGraphicsAPI::Vulkan) return SCREEN_WIDTH;
+	if (s_graphics_api != SelectedGraphicsAPI::Vulkan) return s_gl_shown_width;
 #ifdef ENABLE_VULKAN
 	if (auto* vk = g_renderer && g_renderer->GetType() == RendererAPI::Vulkan ? VulkanRenderer::GetInstance() : nullptr; vk && vk->m_presentWidth)
 		return vk->m_presentWidth;
@@ -713,7 +724,7 @@ static uint32_t libretro_out_width()
 
 static uint32_t libretro_out_height()
 {
-	if (s_graphics_api != SelectedGraphicsAPI::Vulkan) return SCREEN_HEIGHT;
+	if (s_graphics_api != SelectedGraphicsAPI::Vulkan) return s_gl_shown_height;
 #ifdef ENABLE_VULKAN
 	if (auto* vk = g_renderer && g_renderer->GetType() == RendererAPI::Vulkan ? VulkanRenderer::GetInstance() : nullptr; vk && vk->m_presentHeight)
 		return vk->m_presentHeight;
@@ -741,6 +752,37 @@ static void libretro_report_out_size()
 	environ_cb(RETRO_ENVIRONMENT_SET_GEOMETRY, &geometry);
 	libretro_log(RETRO_LOG_INFO, "output is now %ux%u\n", width, height);
 }
+
+#ifdef ENABLE_OPENGL
+// OpenGL draws the finished picture into a backbuffer the size of the window,
+// which was fixed at 1280x720: a resolution pack rendered the game at 1440p and
+// the result was then scaled down into 720p before it reached the frontend
+// (NNshi, Fast Racing Neo). Called by OpenGLRenderer::DrawBackbufferQuad with
+// the size the TV picture is rendered at; while a resolution pack or the
+// internal resolution option resizes it, the window - and with it the
+// backbuffer and the frame handed over - takes that size, as Vulkan's
+// presentation image does (VulkanRenderer::UpdatePresentationImageSize).
+void libretro_gl_tv_picture_size(int width, int height)
+{
+	extern float g_libretroRenderScale;
+	extern bool LatteTexture_graphicPackSetsResolution();
+	int w = SCREEN_WIDTH, h = SCREEN_HEIGHT;
+	if ((LatteTexture_graphicPackSetsResolution() || g_libretroRenderScale != 1.0f) &&
+		width >= 16 && height >= 16 && width <= (int)SCREEN_WIDTH * 4 && height <= (int)SCREEN_HEIGHT * 4)
+	{
+		w = width;
+		h = height;
+	}
+	auto& windowInfo = WindowSystem::GetWindowInfo();
+	if (windowInfo.phys_width == w && windowInfo.phys_height == h)
+		return;
+	cemuLog_log(LogType::Force, "[libretro] the TV picture is rendered at {}x{}; handing it over at that size", w, h);
+	windowInfo.width = w;
+	windowInfo.height = h;
+	windowInfo.phys_width = w;
+	windowInfo.phys_height = h;
+}
+#endif
 
 // DRC layout state is shared with VulkanRenderer via LibretroDRC.h.
 #include "LibretroDRC.h"
@@ -1387,10 +1429,25 @@ public:
 		if (swapTV || swapDRC)
 		{
 			// Read pixels from our backbuffer FBO on the GPU thread (where GL context is valid)
+			// At the size the backbuffer was drawn at (libretro_gl_tv_picture_size)
 			extern GLuint libretro_getBackbufferFBO(int, int);
-			GLuint fbo = libretro_getBackbufferFBO(SCREEN_WIDTH, SCREEN_HEIGHT);
-			glBindFramebuffer(GL_READ_FRAMEBUFFER_EXT, fbo);
-			glReadPixels(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, GL_BGRA, GL_UNSIGNED_BYTE, s_framebuffer.data());
+			int width, height;
+			WindowSystem::GetWindowPhysSize(width, height);
+			if (width <= 0 || height <= 0)
+			{
+				width = SCREEN_WIDTH;
+				height = SCREEN_HEIGHT;
+			}
+			GLuint fbo = libretro_getBackbufferFBO(width, height);
+			{
+				std::lock_guard lock(s_gl_frame_mutex);
+				if (s_framebuffer.size() != (size_t)width * height)
+					s_framebuffer.resize((size_t)width * height);
+				glBindFramebuffer(GL_READ_FRAMEBUFFER_EXT, fbo);
+				glReadPixels(0, 0, width, height, GL_BGRA, GL_UNSIGNED_BYTE, s_framebuffer.data());
+				s_gl_frame_width = width;
+				s_gl_frame_height = height;
+			}
 
 			libretro_signal_frame_ready();
 
@@ -2134,11 +2191,14 @@ static void libretro_update_screen_layout_visibility()
 // above the configured count have to disappear. Pushing SET_CORE_OPTIONS_DISPLAY
 // when the count changes is not enough on its own: the menu is built from what
 // the frontend knows at the time it builds it.
+static void libretro_handle_install_requests();
 static void libretro_update_resolution_visibility();
 static void libretro_update_pack_visibility();
 
 static bool RETRO_CALLCONV libretro_update_options_display()
 {
+	libretro_handle_install_requests();
+
 	if (const char* v = libretro_get_option_value("cemu_number_of_screen_layouts"))
 	{
 		const int n = atoi(v);
@@ -2235,6 +2295,8 @@ static bool libretro_stop_title();
 static void libretro_prepare_and_launch_title();
 static void libretro_create_renderer();
 static void libretro_set_convert_status(std::string text, int progress = -1);
+static void libretro_request_install();
+static bool libretro_request_uninstall();
 
 // What the conversion has to read, in bytes: the base title plus whatever
 // update and DLC go into the same archive. A .wua ends up smaller than that -
@@ -2342,8 +2404,64 @@ static void libretro_apply_profile_options()
 	}
 }
 
+// Installing and uninstalling are requests. The switch stays on while the
+// request is being carried out - until installing is done, until the game is
+// closed for uninstalling - so that it does not read Off right after being
+// switched on, as if nothing had happened (Shoegzer); a request that cannot
+// be carried out puts it straight back. Called from the menu's display
+// callback too, so that Install Content starts there and then rather than
+// when the menu is closed.
+static bool s_install_switch_on = false;
+static bool s_uninstall_switch_on = false;
+
+static void libretro_handle_install_requests()
+{
+	if (const char* v = libretro_get_option_value("cemu_install_titles"); v && libretro_iequals(v, "enabled") && !s_install_switch_on)
+	{
+		if (s_convert_mode.load())
+			libretro_show_message(RETRO_LOG_WARN, 4000, "Not installing: a conversion or an install is still running");
+		else if (!s_cafe_system_initialized)
+			libretro_show_message(RETRO_LOG_WARN, 4000, "Not installing: the emulator has not started yet");
+		else
+		{
+			s_install_switch_on = true;
+			libretro_request_install();
+		}
+		if (!s_install_switch_on)
+			libretro_set_option_value("cemu_install_titles", "disabled");
+	}
+	if (const char* v = libretro_get_option_value("cemu_uninstall_titles"); v && libretro_iequals(v, "enabled") && !s_uninstall_switch_on)
+	{
+		s_uninstall_switch_on = libretro_request_uninstall();
+		if (!s_uninstall_switch_on)
+			libretro_set_option_value("cemu_uninstall_titles", "disabled");
+	}
+}
+
+// Uninstall Content off: its request is carried out once the title stops,
+// at a close or a reset
+static void libretro_reset_uninstall_switch()
+{
+	s_uninstall_switch_on = false;
+	if (const char* v = libretro_get_option_value("cemu_uninstall_titles"); v && libretro_iequals(v, "enabled"))
+		libretro_set_option_value("cemu_uninstall_titles", "disabled");
+}
+
+// Both switches off: at the end of an install, when the game is closed, and
+// at load, for a switch the frontend saved as on because it was closed while
+// a request was still being carried out
+static void libretro_reset_install_switches()
+{
+	s_install_switch_on = false;
+	if (const char* v = libretro_get_option_value("cemu_install_titles"); v && libretro_iequals(v, "enabled"))
+		libretro_set_option_value("cemu_install_titles", "disabled");
+	libretro_reset_uninstall_switch();
+}
+
 static void libretro_apply_core_options()
 {
+	libretro_handle_install_requests();
+
 	if (const char* v = libretro_get_option_value("cemu_rumble_strength"))
 	{
 		const int percent = std::clamp(atoi(v), 0, 100);
@@ -3555,6 +3673,8 @@ RETRO_API void retro_reset()
 
 // The stop half of a reset, on retro_run's thread. Returns whether the title
 // went down; a title that would not stop is not one to start again on top of.
+static void libretro_run_removals();
+
 static bool libretro_reset_stop_title()
 {
 	libretro_log(RETRO_LOG_INFO, "reset - stopping the title\n");
@@ -3569,6 +3689,15 @@ static bool libretro_reset_stop_title()
 			"Reset failed: the title did not stop cleanly, so it was not restarted");
 		return false;
 	}
+
+	// What the title had in use when it was to be removed or uninstalled can
+	// go now, as at a close - otherwise the restart below would mount the very
+	// update or DLC that was just uninstalled.
+	libretro_run_removals();
+	// The uninstall it asked for is done with that, so its switch goes off as
+	// at a close. Not Install Content's: an install runs on beside the title
+	// and turns its own switch off when it is done.
+	libretro_reset_uninstall_switch();
 
 #ifdef ENABLE_VULKAN
 	// Every pool has to be down before a new device is built. They normally go
@@ -3997,6 +4126,270 @@ static void libretro_start_wua_conversion(TitleId baseTitleId, const fs::path& g
 	});
 }
 
+// Installing what is in system/Cemu/titles into mlc01, the way the wx front
+// end's "Install game update or DLC" does (issue #23). Scanning that folder
+// already made updates and DLC work where they lie; this is for the user who
+// wants them in the emulated console's storage, as upstream keeps them. It
+// runs beside the title, on the conversion's thread and with its progress bar.
+// Files the running title had in use when they were to be removed or
+// uninstalled: deleted once the title has stopped, at a close in
+// retro_unload_game and at a reset before the title starts again.
+static std::mutex s_remove_on_unload_mutex;
+static std::vector<fs::path> s_remove_on_unload;
+
+static void libretro_remove_on_unload(const fs::path& path)
+{
+	std::lock_guard lock(s_remove_on_unload_mutex);
+	if (std::find(s_remove_on_unload.begin(), s_remove_on_unload.end(), path) == s_remove_on_unload.end())
+		s_remove_on_unload.push_back(path);
+}
+
+static void libretro_run_removals()
+{
+	std::vector<fs::path> paths;
+	{
+		std::lock_guard lock(s_remove_on_unload_mutex);
+		paths.swap(s_remove_on_unload);
+	}
+	for (const fs::path& path : paths)
+	{
+		std::error_code ec;
+		fs::remove_all(path, ec);
+		cemuLog_log(LogType::Force, "install: removed {} now that the title is closed{}", _pathToUtf8(path), ec ? " (" + ec.message() + ")" : "");
+	}
+}
+
+// Updates and DLC loaded as content: the title.tmd of one, opened through the
+// frontend, is installed rather than booted - the core's counterpart of
+// standalone's File > Install game update or DLC, from wherever the files are.
+static bool s_install_content = false;
+
+static void libretro_start_install(std::vector<TitleInfo> found, bool removeSource, bool fromContent);
+static void libretro_install_titles(std::vector<TitleInfo> found, bool removeSource, bool fromContent, bool haveRunning, TitleId runningBase);
+static bool libretro_running_base_title(TitleId& runningBase);
+
+static void libretro_request_install()
+{
+	s_convert_finished = false;
+	s_convert_cancel = false;
+	s_convert_mode.store(true);
+	libretro_set_convert_status("Looking for updates and DLC...");
+	libretro_update_convert_visibility();
+
+	const char* removeOption = libretro_get_option_value("cemu_install_remove_source");
+	const bool removeSource = removeOption && libretro_iequals(removeOption, "enabled");
+
+	TitleId runningBase = 0;
+	const bool haveRunning = libretro_running_base_title(runningBase);
+	if (s_convert_thread.joinable())
+		s_convert_thread.join();
+	s_convert_thread = std::thread([removeSource, haveRunning, runningBase]() {
+		SetThreadName("titleInstall");
+		// What the scan found in the titles folder: updates and DLC only, the
+		// newest version of each.
+		const fs::path titlesDir = ActiveSettings::GetUserDataPath("titles");
+		CafeTitleList::WaitForMandatoryScan();
+		std::vector<TitleInfo> found;
+		std::string titlesPrefix = _pathToUtf8(titlesDir.lexically_normal());
+		if (!titlesPrefix.empty() && titlesPrefix.back() != (char)fs::path::preferred_separator)
+			titlesPrefix += (char)fs::path::preferred_separator;
+		for (TitleInfo* title : CafeTitleList::AcquireInternalList())
+		{
+			const std::string p = _pathToUtf8(title->GetPath().lexically_normal());
+			if (!title->IsValid() || p.size() <= titlesPrefix.size() || p.compare(0, titlesPrefix.size(), titlesPrefix) != 0)
+				continue;
+			const auto type = TitleIdParser(title->GetAppTitleId()).GetType();
+			if (type != TitleIdParser::TITLE_TYPE::BASE_TITLE_UPDATE && type != TitleIdParser::TITLE_TYPE::AOC)
+				continue;
+			auto same = std::find_if(found.begin(), found.end(), [&](const TitleInfo& other) {
+				return other.GetAppTitleId() == title->GetAppTitleId();
+			});
+			if (same == found.end())
+				found.emplace_back(*title);
+			else if (title->GetAppTitleVersion() > same->GetAppTitleVersion())
+				*same = *title;
+		}
+		CafeTitleList::ReleaseInternalList();
+		if (found.empty())
+		{
+			libretro_set_convert_status(fmt::format("Nothing to install: no updates or DLC in {}", _pathToUtf8(titlesDir)));
+			s_convert_finished = true;
+			return;
+		}
+		libretro_install_titles(std::move(found), removeSource, false, haveRunning, runningBase);
+	});
+}
+
+// Removes the loaded game's installed update and DLC from mlc01. The title may
+// be running from them, so they go once it is closed.
+static bool libretro_request_uninstall()
+{
+	if (!s_game_loaded || s_game_path.empty())
+	{
+		libretro_show_message(RETRO_LOG_WARN, 4000, "Nothing to uninstall: no game is running");
+		return false;
+	}
+	TitleInfo running{_utf8ToPath(s_game_path)};
+	TitleId base = 0;
+	if (!running.IsValid() || !CafeTitleList::FindBaseTitleId(running.GetAppTitleId(), base))
+	{
+		libretro_show_message(RETRO_LOG_WARN, 4000, "Nothing to uninstall: the running title could not be identified");
+		return false;
+	}
+	uint32 found = 0;
+	// 0005000E is the update of 00050000-xxxxxxxx, 0005000C its DLC
+	for (const uint32 high : {0x0005000Eu, 0x0005000Cu})
+	{
+		const fs::path path = ActiveSettings::GetMlcPath(fmt::format("usr/title/{:08x}/{:08x}", high, (uint32)base));
+		std::error_code ec;
+		if (!fs::exists(path, ec))
+			continue;
+		libretro_remove_on_unload(path);
+		found++;
+	}
+	libretro_show_message(RETRO_LOG_INFO, 6000, found
+		? "The installed update and DLC of this game will be removed from mlc01 when it is closed"
+		: "This game has no update or DLC installed in mlc01");
+	return found != 0;
+}
+
+static void libretro_install_titles(std::vector<TitleInfo> found, bool removeSource, bool fromContent, bool haveRunning, TitleId runningBase)
+{
+	SetThreadName("titleInstall");
+	const fs::path titlesDir = ActiveSettings::GetUserDataPath("titles");
+	std::string titlesPrefix = _pathToUtf8(titlesDir.lexically_normal());
+	if (!titlesPrefix.empty() && titlesPrefix.back() != (char)fs::path::preferred_separator)
+		titlesPrefix += (char)fs::path::preferred_separator;
+	const auto inTitlesDir = [&titlesPrefix](const fs::path& path) {
+		const std::string p = _pathToUtf8(path.lexically_normal());
+		return p.size() > titlesPrefix.size() && p.compare(0, titlesPrefix.size(), titlesPrefix) == 0;
+	};
+
+	uint32 installed = 0, upToDate = 0, failed = 0, kept = 0, deferred = 0;
+	std::string lastError;
+	for (size_t i = 0; i < found.size() && !s_convert_cancel.load(); i++)
+	{
+		TitleInfo& title = found[i];
+		const bool isUpdate = TitleIdParser(title.GetAppTitleId()).GetType() == TitleIdParser::TITLE_TYPE::BASE_TITLE_UPDATE;
+		std::string name = title.ParseXmlInfo() ? title.GetMetaTitleName() : std::string();
+		if (name.empty())
+			name = fmt::format("{:016x}", title.GetAppTitleId());
+		const std::string label = fmt::format("{} {} v{}", isUpdate ? "update" : "DLC", name, title.GetAppTitleVersion());
+		const fs::path target = ActiveSettings::GetMlcPath(title.GetInstallPath());
+
+		// The same or a newer version already installed is left alone, as
+		// the wx installer does unless told to downgrade.
+		bool done = false;
+		{
+			TitleInfo existing{target};
+			if (existing.IsValid() && existing.ParseXmlInfo() && existing.GetAppTitleVersion() >= title.GetAppTitleVersion())
+			{
+				upToDate++;
+				done = true;
+				cemuLog_log(LogType::Force, "install: {} is already installed", label);
+			}
+		}
+		if (!done)
+		{
+			cemuLog_log(LogType::Force, "install: {} from {} to {}", label, _pathToUtf8(title.GetPath()), _pathToUtf8(target));
+			std::string error;
+			const size_t index = i + 1, count = found.size();
+			const bool ok = TitleConverter::InstallTitle(&title, target, s_convert_cancel,
+				[&label, index, count](const TitleConverter::Progress& p) {
+					const uint64 total = p.bytesTotal ? p.bytesTotal : 1;
+					libretro_set_convert_status(fmt::format("Installing {}/{}: {} - {}/{} MiB",
+						index, count, label, p.bytesDone / 1024 / 1024, p.bytesTotal / 1024 / 1024),
+						(int)(p.bytesDone * 100 / total));
+				},
+				error);
+			if (!ok)
+			{
+				failed++;
+				lastError = fmt::format("{}: {}", label, error);
+				cemuLog_log(LogType::Force, "install: {} failed: {}", label, error);
+				continue;
+			}
+			installed++;
+			done = true;
+		}
+
+		// Only what is in its own folder under titles, and only the forms
+		// that are nothing but this title: a .wua or a disc image can hold
+		// the base game too.
+		if (done && removeSource)
+		{
+			TitleId base = 0;
+			const bool inUse = haveRunning && CafeTitleList::FindBaseTitleId(title.GetAppTitleId(), base) && base == runningBase;
+			fs::path source = title.GetPath();
+			if (title.GetFormat() == TitleInfo::TitleDataFormat::NUS)
+				source = source.parent_path();
+			const bool removable = (title.GetFormat() == TitleInfo::TitleDataFormat::NUS ||
+				title.GetFormat() == TitleInfo::TitleDataFormat::HOST_FS) && inTitlesDir(source);
+			if (!removable)
+				kept++;
+			else if (inUse)
+			{
+				libretro_remove_on_unload(source);
+				deferred++;
+			}
+			else
+			{
+				std::error_code ec;
+				fs::remove_all(source, ec);
+				cemuLog_log(LogType::Force, "install: removed {}{}", _pathToUtf8(source), ec ? " (" + ec.message() + ")" : "");
+			}
+		}
+	}
+
+	// So the title list knows the installed copies, without waiting for
+	// the next start.
+	CafeTitleList::Refresh();
+
+	std::string summary;
+	if (s_convert_cancel.load())
+		summary = "Install cancelled. ";
+	summary += fmt::format("Installed {}", installed);
+	if (upToDate)
+		summary += fmt::format(", {} already installed", upToDate);
+	if (deferred)
+		summary += fmt::format(", {} removed from titles when the game is closed (in use)", deferred);
+	if (kept)
+		summary += fmt::format(", {} kept (not a folder of its own in titles)", kept);
+	if (fromContent && !s_convert_cancel.load() && failed == 0)
+		summary += " - close the content and load the game";
+	if (failed)
+		summary += fmt::format(", {} failed - {}", failed, lastError);
+	libretro_set_convert_status(summary);
+	cemuLog_log(LogType::Force, "install: {}", summary);
+	s_convert_finished = true;
+}
+
+// Whether the running title is known, and its base title id: its update and
+// DLC are mounted from where they are, so they are removed only once it closes.
+static bool libretro_running_base_title(TitleId& runningBase)
+{
+	runningBase = 0;
+	if (!s_game_loaded || s_game_path.empty())
+		return false;
+	TitleInfo running{_utf8ToPath(s_game_path)};
+	return running.IsValid() && CafeTitleList::FindBaseTitleId(running.GetAppTitleId(), runningBase);
+}
+
+static void libretro_start_install(std::vector<TitleInfo> found, bool removeSource, bool fromContent)
+{
+	s_convert_finished = false;
+	s_convert_cancel = false;
+	s_convert_mode.store(true);
+	libretro_update_convert_visibility();
+
+	TitleId runningBase = 0;
+	const bool haveRunning = libretro_running_base_title(runningBase);
+
+	if (s_convert_thread.joinable())
+		s_convert_thread.join();
+	s_convert_thread = std::thread(libretro_install_titles, std::move(found), removeSource, fromContent, haveRunning, runningBase);
+}
+
 // Preparing the title and starting it. Split out of libretro_launch_game so
 // that a reset can do it again without CemuCommonInit, which initialises the
 // emulated machine itself and is not something to run twice.
@@ -4119,6 +4512,18 @@ static void libretro_launch_game()
 	}
 
 	libretro_log(RETRO_LOG_INFO, "common init done\n");
+
+	// An update or DLC loaded as content is installed, not booted. The core
+	// stays loaded with the progress on screen until the frontend closes it.
+	if (s_install_content)
+	{
+		libretro_log(RETRO_LOG_INFO, "the content is an update or DLC - installing it into mlc01\n");
+		std::vector<TitleInfo> content;
+		content.emplace_back(_utf8ToPath(s_game_path));
+		libretro_set_convert_status("Installing...");
+		libretro_start_install(std::move(content), false, true);
+		return;
+	}
 
 	// Load graphic packs (includes workarounds like NSMBU crash fix)
 	{
@@ -4738,6 +5143,8 @@ RETRO_API bool retro_load_game(const struct retro_game_info* game)
 	if (!libretro_disc_key_available(_utf8ToPath(game->path)))
 		return false;
 
+	libretro_reset_install_switches();
+
 	// Re-decided below for this load; a stale value from a previous one would
 	// hide a frontend that cannot give this core a context the second time.
 	s_use_hw_render = false;
@@ -4876,6 +5283,21 @@ RETRO_API bool retro_load_game(const struct retro_game_info* game)
 	// context_reset has built a renderer for it to run on.
 	s_game_path = game->path;
 
+	// An update's or DLC's title.tmd is content to install, not to boot.
+	// Reading it decrypts it, and the crypto is otherwise set up only by
+	// CemuCommonInit in the first retro_run; both calls are idempotent.
+	{
+		KeyCache_Prepare();
+		AES128_init();
+		// and it mounts the title, in the emulator's file system that
+		// CafeSystem::Initialize sets up at the first launch in this process
+		if (!s_cafe_system_initialized)
+			fsc_init();
+		TitleInfo content{_utf8ToPath(s_game_path)};
+		const auto type = content.IsValid() ? TitleIdParser(content.GetAppTitleId()).GetType() : TitleIdParser::TITLE_TYPE::BASE_TITLE;
+		s_install_content = type == TitleIdParser::TITLE_TYPE::BASE_TITLE_UPDATE || type == TitleIdParser::TITLE_TYPE::AOC;
+	}
+
 	// Whether the conversion options are declared at all depends on there being
 	// somewhere to write, so the destinations have to be known before the list
 	// is published: an option the core does not declare here is one the
@@ -4994,6 +5416,7 @@ RETRO_API void retro_unload_game()
 {
 	// The next content takes the output size afresh from the option.
 	s_out_size_taken = false;
+	libretro_reset_install_switches();
 
 	// Before anything else: stop handing the frontend audio. This used to be
 	// the line that mattered, back when Cemu's AX thread called the frontend
@@ -5156,6 +5579,16 @@ RETRO_API void retro_unload_game()
 		s_gate_hold_open = 0;
 	}
 	s_ppc_process_exited = false;
+	// An install loaded as content has nothing else to wait for it
+	if (s_install_content && s_convert_thread.joinable())
+	{
+		s_convert_cancel.store(true);
+		s_convert_thread.join();
+		s_convert_mode.store(false);
+	}
+	s_install_content = false;
+	// The title is down, so what it had in use can go now
+	libretro_run_removals();
 	s_game_path.clear();
 	// The destinations belong to the title that just stopped; the next load
 	// works out its own.
@@ -5643,6 +6076,11 @@ RETRO_API void retro_run()
 			s_convert_mode.store(false);
 			s_convert_finished = false;
 			libretro_update_convert_visibility();
+			if (s_install_switch_on)
+			{
+				s_install_switch_on = false;
+				libretro_set_option_value("cemu_install_titles", "disabled");
+			}
 		}
 	}
 
@@ -5706,7 +6144,7 @@ RETRO_API void retro_run()
 			cemuLog_log(LogType::Force, "[libretro] the launch ended with an exception of unknown type");
 			libretro_log(RETRO_LOG_ERROR, "could not launch the title\n");
 		}
-		if (!s_game_loaded)
+		if (!s_game_loaded && !s_install_content)
 		{
 			// The launch is not retried: whatever stopped it - a missing key, a
 			// title that would not prepare - is still true next frame, and a
@@ -5913,9 +6351,18 @@ RETRO_API void retro_run()
 		if (s_frontend_upload_tex && _glBindTexture && _glTexImage2D)
 		{
 			_glBindTexture(0x0DE1 /*GL_TEXTURE_2D*/, s_frontend_upload_tex);
-			// Upload flipped (OpenGL is bottom-up, framebuffer is top-down from glReadPixels)
-			_glTexImage2D(0x0DE1, 0, 0x8058 /*GL_RGBA8*/, SCREEN_WIDTH, SCREEN_HEIGHT, 0,
-				0x80E1 /*GL_BGRA*/, 0x1401 /*GL_UNSIGNED_BYTE*/, s_framebuffer.data());
+			// Upload flipped (OpenGL is bottom-up, framebuffer is top-down from glReadPixels).
+			// glTexImage2D is done with the client memory when it returns.
+			uint32_t frameWidth, frameHeight;
+			{
+				std::lock_guard lock(s_gl_frame_mutex);
+				frameWidth = s_gl_frame_width;
+				frameHeight = s_gl_frame_height;
+				_glTexImage2D(0x0DE1, 0, 0x8058 /*GL_RGBA8*/, frameWidth, frameHeight, 0,
+					0x80E1 /*GL_BGRA*/, 0x1401 /*GL_UNSIGNED_BYTE*/, s_framebuffer.data());
+			}
+			s_gl_shown_width = frameWidth;
+			s_gl_shown_height = frameHeight;
 			_glTexParameteri(0x0DE1, 0x2801 /*GL_TEXTURE_MIN_FILTER*/, 0x2600 /*GL_NEAREST*/);
 			_glTexParameteri(0x0DE1, 0x2800 /*GL_TEXTURE_MAG_FILTER*/, 0x2600 /*GL_NEAREST*/);
 
@@ -5938,8 +6385,8 @@ RETRO_API void retro_run()
 
 				// Blit directly (no flip needed - glReadPixels already gives bottom-up which matches RetroArch)
 				s_glBlitFramebuffer(
-					0, 0, SCREEN_WIDTH, SCREEN_HEIGHT,    // src
-					0, 0, SCREEN_WIDTH, SCREEN_HEIGHT,    // dst
+					0, 0, frameWidth, frameHeight,    // src
+					0, 0, frameWidth, frameHeight,    // dst
 					GL_COLOR_BUFFER_BIT_, GL_NEAREST_);
 
 				s_glBindFramebuffer(GL_READ_FRAMEBUFFER_EXT, 0);
@@ -5948,6 +6395,7 @@ RETRO_API void retro_run()
 	}
 #endif // ENABLE_OPENGL
 
+	libretro_report_out_size();
 	video_cb(RETRO_HW_FRAME_BUFFER_VALID, libretro_out_width(), libretro_out_height(), 0);
 	// Flush audio
 	libretro_finish_run(profStart, profWaited, profTimedOut);

@@ -60,6 +60,7 @@ struct retro_core_option_v2_category option_cats_us[] = {
 	{ "system", "System", "CPU, language and scheduling." },
 	{ "addons", "Add-ons", "Skylanders, Infinity and Dimensions portals." },
 	{ "logging", "Logging", "Extra log output, for diagnosing problems." },
+	{ "install", "Manage Content", "Manage title updates and DLC in saves/Cemu/mlc01, the emulated console's storage." },
 	{ "convert", "Convert to WUA", "Write the loaded title out as a .wua archive." },
 	{ "graphic_packs", "Graphic Packs", "The loaded game's graphic packs and their presets. Changes apply the next time the game is loaded." },
 	{ NULL, NULL, NULL },
@@ -579,6 +580,48 @@ struct retro_core_option_v2_definition option_defs_us[] = {
 		"OpenGL"
 	},
 #endif
+	{
+		"cemu_install_titles",
+		"Install Content",
+		NULL,
+		"Installs every update and DLC in system/Cemu/titles into saves/Cemu/mlc01, the emulated console's storage. Each one goes in a folder of its own there; a NUS download (.app files) needs its title.tmd and its title.tik, the decryption key, next to them. A version already installed that is the same or newer is left alone.\n\nWhen this is ON, installing begins immediately, with its progress shown as a notification, and it turns OFF again when all content is installed. While the menu stays open, RetroArch shows it OFF only once the menu is left or another option is changed. The title keeps running meanwhile, and uses what was installed once it is restarted.\n\nContent from other locations can be installed with RetroArch's Main Menu > Load Content, by selecting the corresponding title.tmd, with its title.tik beside it.",
+		NULL,
+		"install",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_uninstall_titles",
+		"Uninstall Content",
+		NULL,
+		"Uninstalls the running game's update and DLC from saves/Cemu/mlc01, the emulated console's storage, once the game is closed or reset; it stays on until then. Copies in system/Cemu/titles are left alone.",
+		NULL,
+		"install",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_install_remove_source",
+		"Remove Content After Installing",
+		NULL,
+		"Removes downloadable content and title updates from system/Cemu/titles once Install Content has installed them. Content loaded through Load Content is left where it is.\n\nThe running title's update or DLC is in use, so it is removed when the title is closed or reset.\n\n.wua files and disc images are never removed, as they can hold the base game as well.",
+		NULL,
+		"install",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
 	{
 		"cemu_wua_output_dir",
 		"Output Directory",

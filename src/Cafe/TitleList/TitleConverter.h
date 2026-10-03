@@ -30,4 +30,16 @@ namespace TitleConverter
 		const std::atomic_bool& cancel,
 		const std::function<void(const Progress&)>& onProgress,
 		std::string& error);
+
+	// Installs a title - an update or a DLC - into targetDir as the unpacked
+	// code/content/meta folder that mlc01 holds, which is what the wx front
+	// end's "Install game update or DLC" does. That one only takes a folder
+	// that is already unpacked; this takes whatever the title can be mounted
+	// from, the NUS form it is downloaded in included, and decrypts it on the
+	// way. The files go to targetDir.tmp first and are swapped in at the end,
+	// so a failed or cancelled install leaves an earlier version where it was.
+	bool InstallTitle(TitleInfo* title, const fs::path& targetDir,
+		const std::atomic_bool& cancel,
+		const std::function<void(const Progress&)>& onProgress,
+		std::string& error);
 }

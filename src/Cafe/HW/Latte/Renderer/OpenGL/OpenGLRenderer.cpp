@@ -640,6 +640,16 @@ void OpenGLRenderer::DrawBackbufferQuad(LatteTextureView* texView, RendererOutpu
 	catchOpenGLError();
 	GLCanvas_MakeCurrent(padView);
 
+	// The backbuffer takes the size the TV picture is rendered at, before it
+	// is bound below
+	if (!padView)
+	{
+		extern void libretro_gl_tv_picture_size(int width, int height);
+		sint32 tvWidth, tvHeight;
+		texView->baseTexture->GetEffectiveSize(tvWidth, tvHeight, 0);
+		libretro_gl_tv_picture_size(tvWidth, tvHeight);
+	}
+
 	renderstate_resetColorControl();
 	renderstate_resetDepthControl();
 	attributeStream_reset();
