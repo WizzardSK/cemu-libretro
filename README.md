@@ -4,11 +4,7 @@ Cemu (Wii U emulator) as a libretro core for RetroArch.
 
 ## Getting the core
 
-Through RetroArch: **Online Updater → Core Downloader → Cemu**. The libretro
-buildbot builds this branch nightly, for Windows x64, Linux x64 and arm64,
-macOS x64 and arm64, and Android arm64-v8a and x86_64 - which is every target
-there is, and always the current tree. There are no releases here on purpose:
-one more place to download from is one more place to be out of date.
+Through RetroArch: **Online Updater → Core Downloader → Cemu**. The libretro buildbot builds the `libretro` branch nightly for Windows x64, Linux x64 and arm64, macOS x64 and arm64, and Android arm64-v8a and x86_64, so the downloadable core is always the current tree. The CI also builds iOS, tvOS and webOS. There are no releases here on purpose: one more place to download from is one more place to be out of date.
 
 Build it yourself for anything else, or to test a change.
 
@@ -19,9 +15,10 @@ Build it yourself for anything else, or to test a change.
 sudo apt install -y cmake gcc g++ ninja-build nasm libpulse-dev \
   libsecret-1-dev libgcrypt20-dev libsystemd-dev freeglut3-dev
 
-# Clone with submodules - vcpkg lives in one of them, and configure fails with
-# "Could not find toolchain file .../dependencies/vcpkg/..." without it. On an
-# existing clone: git submodule update --init --recursive
+# Clone with submodules - vcpkg and the community graphic packs live in them,
+# and configure fails with "Could not find toolchain file
+# .../dependencies/vcpkg/..." without them. On an existing clone:
+# git submodule update --init --recursive
 git clone --recursive https://github.com/WizzardSK/cemu-libretro.git
 cd cemu-libretro
 
@@ -42,79 +39,67 @@ cmake --build build --target cemu_libretro
 ## Install
 
 ```bash
-cp bin/cemu_libretro.so ~/.config/retroarch/cores/libcemu_libretro.so
-cp cemu_libretro.info ~/.config/retroarch/cores/libcemu_libretro.info
+cp bin/cemu_libretro.so ~/.config/retroarch/cores/
+cp cemu_libretro.info ~/.config/retroarch/info/
 ```
 
 ## Setup
 
-- Place `keys.txt` in RetroArch system directory under `Cemu/` (e.g. `~/.config/retroarch/system/Cemu/keys.txt`)
-- MLC storage is at `<save_dir>/Cemu/mlc01/`
-- Shared fonts: place `CafeStd.ttf`, `CafeCn.ttf`, `CafeKr.ttf`, `CafeTw.ttf` in `<system_dir>/Cemu/resources/sharedFonts/`
-- Graphic packs: place in `<system_dir>/Cemu/graphicPacks/` (symlinks supported)
-  - Packs with `default = 1` are auto-enabled (e.g. NSMBU crash fix)
-- Supported formats: `.wud`, `.wux`, `.wua`, `.rpx`, `.elf`
+Everything the core reads lives under `Cemu/` in RetroArch's system directory (`<system>`), except the emulated NAND, which is in the save directory.
+
+- **Keys:** `keys.txt` in `<system>/Cemu/`. Encrypted `.wud`/`.wux` images and NUS titles need it.
+- **Games:** `.wua`, `.wud`, `.wux`, `.iso`, `.rpx`, `.elf`, or `title.tmd` of an unpacked NUS title.
+- **Updates and DLC:** put them in `<system>/Cemu/titles/`, one folder per update or DLC, either as downloaded (`.app`/`.h3` next to `title.tmd` and `title.tik`) or unpacked (`code`/`content`/`meta`). They are found by title id and used without being copied.
+- **Graphic packs:** the community packs are built into the core and unpacked to `<system>/Cemu/graphicPacks/` when content loads. They are refreshed whenever the core is a newer build. Your own packs can go next to them. Each pack the loaded game has shows up under **Graphic Packs** in the core options, with an Enabled switch and its presets. Changes take effect the next time the game is loaded.
+- **Shared fonts:** `CafeStd.ttf`, `CafeCn.ttf`, `CafeKr.ttf` and `CafeTw.ttf` in `<system>/Cemu/resources/sharedFonts/`. Games need them for Japanese and other CJK text.
+- **NAND (mlc01):** `<save>/Cemu/mlc01/`, created with the default folders on first start, as standalone Cemu does.
+- **Logs:** `<system>/Cemu/log.txt`. Its first lines name the build it came from, so please attach it, with the RetroArch log, to bug reports.
+
+## Controls
+
+Port 1 is the Wii U GamePad by default; ports 2-4 start with nothing plugged in. Pick a device type per port in **Quick Menu → Controls → Port N Controls → Device Type**:
+
+| Port | Device types |
+|---|---|
+| 1 | Wii U GamePad, Wii U GamePad + Wii Remote, Wii U GamePad + Wii Remote (sideways), Wii U Pro Controller |
+| 2-4 | None, Wii Remote, Wii Remote (sideways), Wii U Pro Controller, Classic Controller |
+
+- **Touch screen:** the mouse or a touchscreen acts as the GamePad's touch screen. In the layouts that show both screens, only touches on the GamePad's part count.
+- **Rumble:** the GamePad, Wii Remote and Pro Controller motors go to the frontend's rumble, scaled by **System → Rumble Strength** (100% by default).
+- **Screens:** **Screen → Number of Screen Layouts** and **Layout 1-5** choose which layouts to cycle through (Default Screen, GamePad Screen, Side by Side, Top Bottom, Picture in Picture). **Next Screen Layout** picks the button combination that switches between them.
+- **Portals:** Skylanders, Disney Infinity and LEGO Dimensions portals are emulated under **Add-ons**.
+
+## Status (2026-10-03)
+
+Games boot and run on Vulkan and on OpenGL, with sound, controllers, both screens and graphic packs. The core is synced with upstream Cemu (see below), and its options are translated through libretro's Crowdin.
+
+Known issues:
+
+- **Some games crash or misrender**, as in standalone Cemu, and some only in the core. Reports with `log.txt` and the RetroArch log are welcome on the issue tracker.
+- **No save states.** Cemu cannot serialize its state, so `retro_serialize_size` returns 0.
+- **The core stays loaded between games.** RetroArch unloads it, but the library itself stays in memory (on Linux on purpose, see `-z nodelete` below). Any state Cemu keeps for the whole process can leak from one game into the next. The known cases (DLC list, graphic pack module list, controller callbacks) are fixed.
+- **OpenGL on Wayland renders black.** Use Vulkan there; OpenGL works on X11 (GLX).
+
+Planned: a separate submenu for the Cheats graphic packs, output above 60 fps for games with high frame rate packs, and installing updates and DLC from the core options (branch `install-titles`).
 
 ## Architecture
 
-- Uses OpenGL 4.5 Core Profile HW rendering via `RETRO_ENVIRONMENT_SET_HW_RENDER`
-- Creates a separate shared GL context for Cemu's GPU thread (GLX on X11, EGL fallback on Wayland)
-- Video pipeline: GPU thread renders to custom FBO -> `glReadPixels` to CPU buffer -> frontend thread uploads to texture -> `glBlitFramebuffer` to RetroArch FBO
-- GL_QUADS/GL_QUAD_STRIP converted to triangles for Core Profile compatibility (indexed quads use `glMapBuffer`)
-- Audio routed through `LibretroAudioAPI` (accumulates samples, flushed each frame)
-- Input: libretro joypad -> VPAD (GamePad) buttons + analog sticks + touchscreen (RETRO_DEVICE_POINTER)
-- Graphic packs loaded and auto-enabled (default=1) at startup
-- The Vulkan device belongs to the frontend, so after Cemu's own feature
-  detection the core reconciles the extension flags with the entry points that
-  actually loaded (attachment feedback loop, dynamic rendering,
-  synchronization2). An extension the GPU advertises is not necessarily enabled
-  on a device RetroArch created, and `vkGetDeviceProcAddr` then returns null -
-  the first draw would jump straight through it.
-- When the emulated process exits, `CafePPCProcessExit` only records it; the
-  `RETRO_ENVIRONMENT_SHUTDOWN` request goes out from `retro_run`, because the
-  callback fires on the emulated PPC thread
-- SDL3 (upstream migrated from SDL2); the core links `SDL3::SDL3` behind
-  `ENABLE_SDL`
-
-## Current Status (2026-08-21)
-
-### Working
-- Core loads in RetroArch, games boot and run with full rendering
-- OpenGL 4.5 Core Profile with shared GLX context for GPU thread
-- Vulkan HW context via `RETRO_HW_CONTEXT_VULKAN` + context-negotiation interface; `VulkanRenderer` built on the shared instance/device/queue from RetroArch (Linux path)
-- Video output with correct orientation, and fullscreen toggles during a title
-  are survivable. Three things make that work: `cache_context = true`, so
-  RetroArch keeps the Vulkan context it rebuilds the video driver around -
-  every object the renderer owns lives on that device, and losing it left the
-  driver calling through freed memory; the present path asking the frontend for
-  its render interface every frame instead of caching the one from
-  `context_reset`; and the GPU thread parking at a command boundary while the
-  teardown runs (`Latte_RequestGpuPause`, bounded so a stuck GPU thread cannot
-  freeze the frontend)
-- GL_QUADS -> GL_TRIANGLES conversion with proper index buffer mapping
-- Input: joypad buttons, analog sticks, touchscreen (mouse -> GamePad touch; in SBS/TopBottom/PiP only clicks inside the DRC sub-rect register, mapped sub-rect-relative to the GamePad's 853x479 touch space)
-- Audio routing via lock-free ring-buffer `LibretroAudioAPI` (drains full ring per `retro_run` so the frontend rate-controls)
-- Graphic packs loading with workaround patches (NSMBU crash fix etc.)
-- Shared fonts for Japanese/CJK text
-- Clean exit via Esc key
-- Core options registered via `RETRO_ENVIRONMENT_SET_CORE_OPTIONS_V2` (CPU mode, internal resolution up to 4K, thread quantum, audio latency, vsync, async shader compile, upscale/downscale filter, DRC mode/position, account, network service, USB peripherals, …)
-- DRC (GamePad) screen rendering with multiple layouts: disabled, toggle, side-by-side, top-bottom, picture-in-picture. The OpenGL path composites via `ShouldRenderScreen`/`AdjustScreenViewport` canvas callbacks. The Vulkan path overrides `IsPadWindowActive()` so DRC scan-outs (and the existing libretro auto-mirror fallback) reach `DrawBackbufferQuad`, then blits TV + DRC into different sub-regions of the shared present image using the same `LibretroDRC_ComputeViewport` helper. `LatteRenderTarget_itHLECopyColorBufferToScanBuffer` bypasses the standalone showDRC toggle-swap in composite modes and caches the latest TV/DRC texViews per frame so they always dispatch TV-then-DRC (PiP's DRC overlay would otherwise lose to the full-image TV blit when the game scans DRC first). `DrawBackbufferQuad` clears `m_presentImage` to opaque black on the first blit of each frame (detected via `LatteGPUState.frameCounter`) so SBS/TopBottom gaps are deterministic regardless of TV/DRC scan order.
-
-### Known Issues
-- **Some games may crash** - depends on game complexity and required HLE functions
-- **Save states are not supported** - Cemu has no savestate infrastructure (no serialization of PPC/MMU/GPU/HLE state). `retro_serialize_size` returns 0 by design.
-- **OpenGL path on Wayland renders black (work in progress)** - The core now has an EGL fallback for the shared GPU-thread context (GLX is still used on X11). On a Wayland/EGL session it no longer crashes and gets much further: the EGL frontend context is captured, a shared GL 4.5 context is created, and the GPU thread makes it current surfaceless (`EGL_NO_SURFACE`, since the frontend holds the window surface on another thread). However the video pipeline still produces a black screen on Wayland - frames rendered on the GPU thread aren't reaching the presented framebuffer (cross-context object sharing / blit on EGL is still being investigated). **Use the Vulkan path (`cemu_gpu_api = "Vulkan"`) on Wayland** - it is fully working. The OpenGL path works on X11 (GLX).
-
-### TODO
-1. Test with more games
+- Vulkan renders on the frontend's device (`RETRO_HW_CONTEXT_VULKAN` with the context negotiation interface) and hands RetroArch each finished image. OpenGL uses a 4.5 Core Profile HW context, plus a shared context for Cemu's GPU thread (GLX on X11, EGL elsewhere).
+- The Vulkan device belongs to the frontend, so the core asks it for the extensions and features standalone Cemu enables, and the renderer then uses only what was actually enabled. An extension the GPU advertises is not necessarily enabled on a device RetroArch created, and `vkGetDeviceProcAddr` then returns null.
+- `cache_context = true` keeps the Vulkan context across fullscreen toggles and video driver reinits, the present path asks the frontend for its render interface every frame, and the GPU thread parks at a command boundary while the frontend rebuilds its driver.
+- Audio goes through `LibretroAudioAPI`, a lock-free ring buffer paced by the frames the frontend asks for.
+- Input: libretro joypads drive VPAD (GamePad) and WPAD/KPAD (Wii Remote, Pro Controller, Classic Controller); pointer input is the GamePad touch screen.
+- When the emulated process exits, `CafePPCProcessExit` only records it; `RETRO_ENVIRONMENT_SHUTDOWN` goes out from `retro_run`, because the callback fires on the emulated PPC thread.
+- RetroArch calls the core's Vulkan `destroy_device` after `dlclose`, so on Linux the core is linked with `-z nodelete`.
+- The standalone's GUI, input and audio backends are removed, and `.upstream-excluded` keeps them from coming back with an upstream merge.
 
 ### Key files
-- `src/libretro/CemuLibretro.cpp` - the libretro core on every platform: `retro_*` exports, GL/Vulkan context negotiation, input, video pipeline (the separate `CemuLibretroLinux.cpp` is gone, it was merged into this one)
-- `src/audio/LibretroAudioAPI.{h,cpp}` - Audio backend (lock-free ring buffer)
+
+- `src/libretro/CemuLibretro.cpp` - the libretro core: `retro_*` exports, GL/Vulkan context negotiation, input, video pipeline
+- `src/libretro/libretro_core_options.h` - core option definitions (translations in `libretro_core_options_intl.h`, generated from Crowdin)
+- `src/audio/LibretroAudioAPI.{h,cpp}` - audio backend
 - `src/libretro/LibretroWindowSystem.cpp` - WindowSystem without wxWidgets
-- `src/Cafe/HW/Latte/Renderer/OpenGL/OpenGLRendererCore.cpp` - GL_QUADS to triangles conversion
-- `src/Cafe/OS/libs/vpad/vpad.cpp` - Libretro input integration (buttons + touch)
-- `src/Cafe/GraphicPack/GraphicPack2.cpp` - Symlink-aware graphic pack loading
+- `src/Cafe/OS/libs/vpad/vpad.cpp`, `src/Cafe/OS/libs/padscore/padscore.cpp` - GamePad and Wii Remote/Pro Controller input
 
 ## Syncing with upstream Cemu
 
@@ -141,7 +126,7 @@ What tends to break on a sync, none of which the conflict resolution shows:
 - **Copied functions drifting.** The libretro `VulkanRenderer` constructor is a
   copy of upstream's adapted for the shared device; upstream keeps changing the
   original underneath it.
-- **Extension gating.** See the note above - upstream adds calls guarded by
+- **Extension gating.** See Architecture above - upstream adds calls guarded by
   device extension flags, and those flags cannot be trusted on a device the
   frontend created.
 - **File access.** Upstream code that opens files with `FileStream` has to go
