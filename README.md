@@ -129,10 +129,8 @@ git merge cemuup/main
 
 Last sync: upstream `f6a8883` (18 Aug 2026).
 
-The fork's own `main` is deliberately **not** kept in sync with upstream. It is
-not a mirror - it carries the commits this port started from - and upstream's
-`build_check.yml` triggers on pushes to `main`, which would run Cemu's whole
-build matrix in the fork.
+The fork has no `main` of its own: upstream is merged straight into `libretro`,
+the only long-lived branch here.
 
 What tends to break on a sync, none of which the conflict resolution shows:
 

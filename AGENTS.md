@@ -4,7 +4,7 @@ These apply to any AI agent working in this repository (Claude Code reads them t
 
 ## Branches and history
 
-- The `main` and `libretro` branches are never deleted, and nothing that rewrites their history is run on them: no force-push, no rebase, no amending or squashing of commits that are already pushed.
+- The `libretro` branch is never deleted, and nothing that rewrites its history is run on it: no force-push, no rebase, no amending or squashing of commits that are already pushed. It is the fork's only long-lived branch; there is no `main`.
 - New features and experimental changes go on their own branch (for example `audio-stall`), and testers test builds of that branch. When testing is done, the related commits are squashed and merged into `libretro`, so the main branch does not collect commits that were superseded midway.
 - A fix that users of the `libretro` builds need before the branch is merged is cherry-picked into `libretro`, in a way that does not break the later merge of the branch.
 
