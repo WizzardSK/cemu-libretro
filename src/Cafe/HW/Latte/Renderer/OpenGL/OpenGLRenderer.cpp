@@ -627,17 +627,31 @@ void OpenGLRenderer::DrawBackbufferQuad(LatteTextureView* texView, RendererOutpu
 	// bind back buffer
 	rendertarget_bindFramebufferObject(nullptr);
 
-	// Get window size for viewport calculations
+	// Get window size for viewport calculations. Both screens are drawn into
+	// the one backbuffer the frontend gets, and the core has no pad window, so
+	// the GamePad's place is worked out in that backbuffer too: the pad
+	// window's size is 0x0, which put the GamePad in an empty viewport and left
+	// every layout that shows it - GamePad Screen included - without it on
+	// OpenGL. Vulkan already uses its one presentation image for both.
 	int windowWidth, windowHeight;
-	if (padView)
-		WindowSystem::GetPadWindowPhysSize(windowWidth, windowHeight);
-	else
-		WindowSystem::GetWindowPhysSize(windowWidth, windowHeight);
+	WindowSystem::GetWindowPhysSize(windowWidth, windowHeight);
 
 	// Allow canvas callbacks to adjust viewport for composite DRC modes
 	sint32 adjustedX, adjustedY, adjustedWidth, adjustedHeight;
 	GLCanvas_AdjustScreenViewport(padView, windowWidth, windowHeight,
 		adjustedX, adjustedY, adjustedWidth, adjustedHeight);
+
+	// When both screens are shown (Side by Side, Top Bottom, Picture in
+	// Picture) they share this one backbuffer, and the GamePad blit asks for a
+	// clear: it wiped the TV image drawn just before, so only the GamePad
+	// screen was ever seen. Clear once per frame, before whichever screen comes
+	// first, as the Vulkan path does with its presentation image.
+	if (GLCanvas_ShouldRenderScreen(!padView))
+	{
+		static uint32 s_lastClearedFrame = ~0u;
+		clearBackground = s_lastClearedFrame != LatteGPUState.frameCounter;
+		s_lastClearedFrame = LatteGPUState.frameCounter;
+	}
 
 	if (clearBackground)
 	{
