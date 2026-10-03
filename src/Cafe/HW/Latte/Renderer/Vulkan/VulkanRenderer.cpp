@@ -902,6 +902,55 @@ VulkanRenderer::VulkanRenderer(VkInstance instance, VkPhysicalDevice physDevice,
 	if (!vkCmdPipelineBarrier2KHR)
 		m_featureControl.deviceExtensions.synchronization2 = false;
 
+	// The same for every other extension and extension feature: what the core
+	// enabled on the device decides, not what the GPU could do. Using one that
+	// is supported but not enabled is undefined - Turnip lets it pass, and
+	// Qualcomm's driver failed pipeline creation with it (#29).
+	{
+		extern std::vector<std::string> g_libretroVkDeviceExtensions;
+		extern bool g_libretroVkCustomBorderColorWithoutFormat;
+		extern bool g_libretroVkHasPipelineCreationCacheControl, g_libretroVkHasCustomBorderColors;
+		extern bool g_libretroVkHasPipelineRobustness, g_libretroVkHasDepthClipEnable;
+		const auto enabled = [](const char* name) {
+			return std::find(g_libretroVkDeviceExtensions.begin(), g_libretroVkDeviceExtensions.end(), name) != g_libretroVkDeviceExtensions.end();
+		};
+		auto& ext = m_featureControl.deviceExtensions;
+		const auto keep = [&](bool& flag, const char* name) {
+			if (flag && !enabled(name))
+			{
+				cemuLog_log(LogType::Force, "{} is supported but not enabled on the shared device, not using it", name);
+				flag = false;
+			}
+		};
+		keep(ext.tooling_info, VK_EXT_TOOLING_INFO_EXTENSION_NAME);
+		keep(ext.depth_range_unrestricted, VK_EXT_DEPTH_RANGE_UNRESTRICTED_EXTENSION_NAME);
+		keep(ext.nv_fill_rectangle, VK_NV_FILL_RECTANGLE_EXTENSION_NAME);
+		keep(ext.pipeline_feedback, VK_EXT_PIPELINE_CREATION_FEEDBACK_EXTENSION_NAME);
+		keep(ext.cubic_filter, VK_EXT_FILTER_CUBIC_EXTENSION_NAME);
+		keep(ext.custom_border_color, VK_EXT_CUSTOM_BORDER_COLOR_EXTENSION_NAME);
+		keep(ext.driver_properties, VK_KHR_DRIVER_PROPERTIES_EXTENSION_NAME);
+		keep(ext.external_memory_host, VK_EXT_EXTERNAL_MEMORY_HOST_EXTENSION_NAME);
+		keep(ext.synchronization2, VK_KHR_SYNCHRONIZATION_2_EXTENSION_NAME);
+		keep(ext.dynamic_rendering, VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME);
+		keep(ext.shader_float_controls, VK_KHR_SHADER_FLOAT_CONTROLS_EXTENSION_NAME);
+		keep(ext.depth_clip_enable, VK_EXT_DEPTH_CLIP_ENABLE_EXTENSION_NAME);
+		keep(ext.pipeline_robustness, VK_EXT_PIPELINE_ROBUSTNESS_EXTENSION_NAME);
+		keep(ext.attachment_feedback_loop_layout, VK_EXT_ATTACHMENT_FEEDBACK_LOOP_LAYOUT_EXTENSION_NAME);
+		keep(ext.attachment_feedback_loop_dynamic_state, VK_EXT_ATTACHMENT_FEEDBACK_LOOP_DYNAMIC_STATE_EXTENSION_NAME);
+		if (ext.present_wait && !(enabled(VK_KHR_PRESENT_ID_EXTENSION_NAME) && enabled(VK_KHR_PRESENT_WAIT_EXTENSION_NAME)))
+			ext.present_wait = false;
+		// Enabled, but without its feature
+		if (!g_libretroVkHasPipelineCreationCacheControl)
+			ext.pipeline_creation_cache_control = false;
+		if (!g_libretroVkHasCustomBorderColors)
+			ext.custom_border_color = false;
+		ext.custom_border_color_without_format = ext.custom_border_color && g_libretroVkCustomBorderColorWithoutFormat;
+		if (!g_libretroVkHasPipelineRobustness)
+			ext.pipeline_robustness = false;
+		if (!g_libretroVkHasDepthClipEnable)
+			ext.depth_clip_enable = false;
+	}
+
 	memoryManager.reset(new VKRMemoryManager(this));
 
 	// Same init as normal constructor from here
