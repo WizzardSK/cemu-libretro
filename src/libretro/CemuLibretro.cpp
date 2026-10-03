@@ -817,6 +817,15 @@ static const VkApplicationInfo* libretro_vk_get_application_info()
 	return &app_info;
 }
 
+// The device extensions, and the extension features, the core enabled on the
+// shared device: VulkanRenderer trusts these rather than the GPU's support.
+std::vector<std::string> g_libretroVkDeviceExtensions;
+bool g_libretroVkCustomBorderColorWithoutFormat = false;
+bool g_libretroVkHasPipelineCreationCacheControl = false;
+bool g_libretroVkHasCustomBorderColors = false;
+bool g_libretroVkHasPipelineRobustness = false;
+bool g_libretroVkHasDepthClipEnable = false;
+
 static bool libretro_vk_create_device(
 	struct retro_vulkan_context* context,
 	VkInstance instance,
@@ -891,19 +900,36 @@ static bool libretro_vk_create_device(
 		return false;
 	};
 
+	// The extensions standalone Cemu enables (VulkanRenderer::CreateDeviceCreateInfo)
+	// wherever the renderer would use them. The renderer decides from what the
+	// GPU supports, not from what this device has; before, half of them were
+	// left out, and the renderer used depth clip, pipeline creation feedback and
+	// cubic filtering on a device without them - undefined, which Turnip lets
+	// pass and Qualcomm's own driver answers by failing pipeline creation
+	// (#29, Adreno 840: "Failed to create graphics pipeline. Error -13").
 	const char* cemuExtensions[] = {
 		VK_EXT_TRANSFORM_FEEDBACK_EXTENSION_NAME,
 		VK_EXT_DEPTH_RANGE_UNRESTRICTED_EXTENSION_NAME,
-		"VK_EXT_pipeline_creation_cache_control",
-		"VK_EXT_custom_border_color",
-		"VK_EXT_pipeline_robustness",
-		"VK_KHR_shader_float_controls",
+		VK_EXT_PIPELINE_CREATION_CACHE_CONTROL_EXTENSION_NAME,
+		VK_EXT_CUSTOM_BORDER_COLOR_EXTENSION_NAME,
+		VK_EXT_PIPELINE_ROBUSTNESS_EXTENSION_NAME,
+		VK_KHR_SHADER_FLOAT_CONTROLS_EXTENSION_NAME,
+		VK_EXT_DEPTH_CLIP_ENABLE_EXTENSION_NAME,
+		VK_EXT_PIPELINE_CREATION_FEEDBACK_EXTENSION_NAME,
+		VK_EXT_FILTER_CUBIC_EXTENSION_NAME,
+		VK_KHR_DRIVER_PROPERTIES_EXTENSION_NAME,
 	};
 	for (auto ext : cemuExtensions)
 	{
-		if (hasExt(ext))
+		const bool listed = std::any_of(extensions.begin(), extensions.end(),
+			[&](const char* e) { return strcmp(e, ext) == 0; });
+		if (!listed && hasExt(ext))
 			extensions.push_back(ext);
 	}
+	const auto enabledExt = [&](const char* name) {
+		return std::any_of(extensions.begin(), extensions.end(),
+			[&](const char* e) { return strcmp(e, name) == 0; });
+	};
 
 	// Device features. Asking for one the driver does not have is not a
 	// warning, it is VK_ERROR_FEATURE_NOT_PRESENT and no device at all - and
@@ -920,6 +946,30 @@ static bool libretro_vk_create_device(
 	// safe reading of "cannot tell what this GPU has".
 	VkPhysicalDeviceFeatures2 supportedFeatures2{};
 	supportedFeatures2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
+
+	// The extension features go into the same query, for the chain below
+	VkPhysicalDeviceTransformFeedbackFeaturesEXT tfSupported{VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_TRANSFORM_FEEDBACK_FEATURES_EXT};
+	VkPhysicalDevicePipelineCreationCacheControlFeaturesEXT pccSupported{VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PIPELINE_CREATION_CACHE_CONTROL_FEATURES_EXT};
+	VkPhysicalDeviceCustomBorderColorFeaturesEXT bcfSupported{VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_CUSTOM_BORDER_COLOR_FEATURES_EXT};
+	VkPhysicalDevicePipelineRobustnessFeaturesEXT robustSupported{VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PIPELINE_ROBUSTNESS_FEATURES_EXT};
+	VkPhysicalDeviceDepthClipEnableFeaturesEXT clipSupported{VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DEPTH_CLIP_ENABLE_FEATURES_EXT};
+	{
+		void* chain = nullptr;
+		const auto query = [&](auto& feature, const char* ext) {
+			if (enabledExt(ext))
+			{
+				feature.pNext = chain;
+				chain = &feature;
+			}
+		};
+		query(tfSupported, VK_EXT_TRANSFORM_FEEDBACK_EXTENSION_NAME);
+		query(pccSupported, VK_EXT_PIPELINE_CREATION_CACHE_CONTROL_EXTENSION_NAME);
+		query(bcfSupported, VK_EXT_CUSTOM_BORDER_COLOR_EXTENSION_NAME);
+		query(robustSupported, VK_EXT_PIPELINE_ROBUSTNESS_EXTENSION_NAME);
+		query(clipSupported, VK_EXT_DEPTH_CLIP_ENABLE_EXTENSION_NAME);
+		supportedFeatures2.pNext = chain;
+	}
+
 	if (vkGetPhysicalDeviceFeatures2)
 		vkGetPhysicalDeviceFeatures2(gpu, &supportedFeatures2);
 	else
@@ -949,6 +999,14 @@ static bool libretro_vk_create_device(
 	wantFeature(&VkPhysicalDeviceFeatures::occlusionQueryPrecise, "occlusionQueryPrecise");
 	wantFeature(&VkPhysicalDeviceFeatures::depthClamp, "depthClamp");
 	wantFeature(&VkPhysicalDeviceFeatures::depthBiasClamp, "depthBiasClamp");
+	// Transform feedback (streamout) writes from the vertex stage, which a
+	// shader may do only with this enabled
+	wantFeature(&VkPhysicalDeviceFeatures::vertexPipelineStoresAndAtomics, "vertexPipelineStoresAndAtomics");
+	// As standalone: robust buffer access is the fallback without
+	// VK_EXT_pipeline_robustness
+	if (!(enabledExt(VK_EXT_PIPELINE_ROBUSTNESS_EXTENSION_NAME) && robustSupported.pipelineRobustness) &&
+		supported.robustBufferAccess)
+		features.robustBufferAccess = VK_TRUE;
 	if (!missingFeatures.empty() && log_cb)
 		libretro_log(RETRO_LOG_INFO, "this GPU does not have %s - carrying on without them\n", missingFeatures.c_str());
 
@@ -959,10 +1017,45 @@ static bool libretro_vk_create_device(
 	queueInfo.queueCount = 1;
 	queueInfo.pQueuePriorities = &queuePriority;
 
-	// Enable transform feedback features if available
-	VkPhysicalDeviceTransformFeedbackFeaturesEXT tfFeatures{};
-	tfFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_TRANSFORM_FEEDBACK_FEATURES_EXT;
-	tfFeatures.transformFeedback = VK_TRUE;
+	// The features of the extensions enabled above, those the GPU has - as
+	// standalone's constructor chains them. An extension enabled without its
+	// feature is one the renderer must not use either.
+	VkPhysicalDeviceTransformFeedbackFeaturesEXT tfFeatures{VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_TRANSFORM_FEEDBACK_FEATURES_EXT};
+	VkPhysicalDevicePipelineCreationCacheControlFeaturesEXT pccFeatures{VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PIPELINE_CREATION_CACHE_CONTROL_FEATURES_EXT};
+	VkPhysicalDeviceCustomBorderColorFeaturesEXT bcfFeatures{VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_CUSTOM_BORDER_COLOR_FEATURES_EXT};
+	VkPhysicalDevicePipelineRobustnessFeaturesEXT robustFeatures{VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PIPELINE_ROBUSTNESS_FEATURES_EXT};
+	VkPhysicalDeviceDepthClipEnableFeaturesEXT clipFeatures{VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DEPTH_CLIP_ENABLE_FEATURES_EXT};
+	void* featureChain = nullptr;
+	const auto chainFeature = [&](auto& feature) {
+		feature.pNext = featureChain;
+		featureChain = &feature;
+	};
+	if (enabledExt(VK_EXT_TRANSFORM_FEEDBACK_EXTENSION_NAME) && tfSupported.transformFeedback)
+	{
+		tfFeatures.transformFeedback = VK_TRUE;
+		chainFeature(tfFeatures);
+	}
+	if (enabledExt(VK_EXT_PIPELINE_CREATION_CACHE_CONTROL_EXTENSION_NAME) && pccSupported.pipelineCreationCacheControl)
+	{
+		pccFeatures.pipelineCreationCacheControl = VK_TRUE;
+		chainFeature(pccFeatures);
+	}
+	if (enabledExt(VK_EXT_CUSTOM_BORDER_COLOR_EXTENSION_NAME) && bcfSupported.customBorderColors)
+	{
+		bcfFeatures.customBorderColors = VK_TRUE;
+		bcfFeatures.customBorderColorWithoutFormat = bcfSupported.customBorderColorWithoutFormat;
+		chainFeature(bcfFeatures);
+	}
+	if (enabledExt(VK_EXT_PIPELINE_ROBUSTNESS_EXTENSION_NAME) && robustSupported.pipelineRobustness)
+	{
+		robustFeatures.pipelineRobustness = VK_TRUE;
+		chainFeature(robustFeatures);
+	}
+	if (enabledExt(VK_EXT_DEPTH_CLIP_ENABLE_EXTENSION_NAME) && clipSupported.depthClipEnable)
+	{
+		clipFeatures.depthClipEnable = VK_TRUE;
+		chainFeature(clipFeatures);
+	}
 
 	VkDeviceCreateInfo createInfo{};
 	createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
@@ -971,8 +1064,7 @@ static bool libretro_vk_create_device(
 	createInfo.enabledExtensionCount = (uint32_t)extensions.size();
 	createInfo.ppEnabledExtensionNames = extensions.data();
 	createInfo.pEnabledFeatures = &features;
-	if (hasExt(VK_EXT_TRANSFORM_FEEDBACK_EXTENSION_NAME))
-		createInfo.pNext = &tfFeatures;
+	createInfo.pNext = featureChain;
 
 	VkDevice device;
 	VkResult result = vkCreateDevice(gpu, &createInfo, nullptr, &device);
@@ -983,6 +1075,22 @@ static bool libretro_vk_create_device(
 	}
 
 	InitializeDeviceVulkan(device);
+
+	// What the renderer may use (VulkanRenderer's libretro constructor)
+	g_libretroVkDeviceExtensions.clear();
+	for (const char* ext : extensions)
+		g_libretroVkDeviceExtensions.emplace_back(ext);
+	g_libretroVkCustomBorderColorWithoutFormat = bcfFeatures.customBorderColorWithoutFormat == VK_TRUE;
+	g_libretroVkHasPipelineCreationCacheControl = pccFeatures.pipelineCreationCacheControl == VK_TRUE;
+	g_libretroVkHasCustomBorderColors = bcfFeatures.customBorderColors == VK_TRUE;
+	g_libretroVkHasPipelineRobustness = robustFeatures.pipelineRobustness == VK_TRUE;
+	g_libretroVkHasDepthClipEnable = clipFeatures.depthClipEnable == VK_TRUE;
+	{
+		std::string list;
+		for (const std::string& ext : g_libretroVkDeviceExtensions)
+			list += (list.empty() ? "" : ", ") + ext;
+		libretro_log(RETRO_LOG_INFO, "Vulkan device extensions: %s\n", list.c_str());
+	}
 
 	VkQueue queue;
 	vkGetDeviceQueue(device, graphicsFamily, 0, &queue);
