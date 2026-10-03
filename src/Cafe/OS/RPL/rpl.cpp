@@ -1803,6 +1803,12 @@ void RPLLoader_UnloadModule(RPLDependency* rplDependency, bool skipPPCCalls)
 	RPLLoader_decrementModuleDependencyRefs(rpl);
 	// save module config for this module in the debugger
 	g_debuggerDispatcher.NotifyModuleUnloaded(rpl);
+	// and take it off the graphic packs' list of loaded modules. Standalone
+	// never did: it runs one title per process, so the list died with it. The
+	// libretro core runs title after title, and the next one to activate a
+	// pack with patches walked the previous titles' freed modules
+	// (GraphicPack2::ApplyPatchesForModule, NNshi: Mario Kart 8 after BotW).
+	GraphicPack2::NotifyModuleUnloaded(rpl);
 	// call rpl_entry with reason unload
 	if (!skipPPCCalls)
 	{
