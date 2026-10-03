@@ -2496,9 +2496,12 @@ RETRO_API void retro_set_environment(retro_environment_t cb)
 // frontend that does not speak v2.
 // Graphic packs as core options, the way FBNeo lists a game's DIP switches:
 // when content is loaded, the packs for that title become options in their
-// own category - one per preset group, the first carrying Disabled for the
-// pack as a whole, or Enabled/Disabled for a pack without presets. Cemu
-// activates packs when a title starts, so a change applies at the next load.
+// own category. Each pack has an Enabled/Disabled switch, off unless the pack
+// enables itself - standalone's checkbox - and one option per preset group,
+// shown while the pack is on and while the group has presets the other
+// choices leave visible (a pack's "Advanced Settings" mode shows another set
+// of presets than its normal one). Cemu activates packs when a title starts,
+// so a change applies at the next load.
 //
 // The choices live in the .opt file only. RetroArch rewrites it keeping keys
 // the loaded content does not declare, so what was picked for a game is still
@@ -2519,9 +2522,13 @@ struct LibretroPackOption
 	bool replaced;           // a bundled pack a custom one replaces: declared, hidden, not loaded
 	std::string originalKey; // for a replacement, the same option of the pack it replaces
 	std::string category;    // preset group, empty for packs with a single one
-	bool controlsEnable;     // the pack's first option, which can disable it
+	bool controlsEnable;     // the pack's Enabled/Disabled switch
 	std::vector<std::string> presets;
 	bool setsResolution;     // the pack resizes the game's render targets
+	// The pack as loaded when the options were collected: a copy of its own,
+	// not the one the running title uses, to work out which preset groups
+	// the current choices leave visible.
+	std::shared_ptr<GraphicPack2> pack;
 };
 static std::vector<LibretroPackOption> s_pack_options;
 static std::deque<std::string> s_pack_option_strings;
@@ -2672,16 +2679,23 @@ static void libretro_collect_pack_options(const std::string& gamePath)
 			}
 		}
 
+		// A pack without presets keeps the key its one option always had; a
+		// pack with presets has its switch under a key no preset group can
+		// have, since the group without a name uses the plain one
+		const std::string enableCategory = order.empty() ? std::string() : std::string("\x1e" "enabled");
+
 		auto addOption = [&](const std::string& category, bool controlsEnable, std::vector<std::string> presets) {
-			LibretroPackOption option{libretro_pack_option_key(folder, category, custom), folder, custom, replaced,
-				replacement ? libretro_pack_option_key(folder, category, false) : std::string(),
-				category, controlsEnable, std::move(presets), setsResolution};
+			const std::string keyCategory = controlsEnable ? enableCategory : category;
+			LibretroPackOption option{libretro_pack_option_key(folder, keyCategory, custom), folder, custom, replaced,
+				replacement ? libretro_pack_option_key(folder, keyCategory, false) : std::string(),
+				category, controlsEnable, std::move(presets), setsResolution, gp};
 
 			retro_core_option_v2_definition def{};
 			def.key = keep(option.key);
 			// The name from the pack's [Definition]: the options are the loaded
 			// game's already, so the game in the path adds nothing
-			const std::string name = category.empty() ? gp->GetName() : fmt::format("{}: {}", gp->GetName(), category);
+			const std::string name = controlsEnable ? gp->GetName() :
+				fmt::format("{}: {}", gp->GetName(), category.empty() ? std::string("Preset") : category);
 			def.desc = keep(name);
 			def.desc_categorized = def.desc;
 			def.info = gp->GetDescription().empty() ? nullptr : keep(gp->GetDescription());
@@ -2689,9 +2703,10 @@ static void libretro_collect_pack_options(const std::string& gamePath)
 
 			size_t n = 0;
 			if (controlsEnable)
+			{
 				def.values[n++] = {"disabled", "Disabled"};
-			if (option.presets.empty())
 				def.values[n++] = {"enabled", "Enabled"};
+			}
 			for (const std::string& preset : option.presets)
 			{
 				if (n + 1 >= RETRO_NUM_CORE_OPTION_VALUES_MAX)
@@ -2702,10 +2717,8 @@ static void libretro_collect_pack_options(const std::string& gamePath)
 			}
 			def.values[n] = {nullptr, nullptr};
 
-			if (controlsEnable && !enabled)
-				def.default_value = "disabled";
-			else if (option.presets.empty())
-				def.default_value = "enabled";
+			if (controlsEnable)
+				def.default_value = enabled ? "enabled" : "disabled";
 			else
 			{
 				const std::string active = gp->GetActivePreset(category);
@@ -2717,18 +2730,17 @@ static void libretro_collect_pack_options(const std::string& gamePath)
 			s_pack_option_defs.push_back(def);
 		};
 
-		if (order.empty())
-		{
-			addOption("", true, {});
-			continue;
-		}
+		addOption("", true, {});
 		for (size_t i = 0; i < order.size(); i++)
 		{
+			// A group can list a name more than once, for presets shown under
+			// different conditions; the option offers the name once and the
+			// visible one of them is picked (libretro_select_pack_presets)
 			std::vector<std::string> names;
 			for (const auto& preset : categorized[order[i]])
 				if (std::find(names.begin(), names.end(), preset->name) == names.end())
 					names.push_back(preset->name);
-			addOption(order[i], i == 0, std::move(names));
+			addOption(order[i], false, std::move(names));
 		}
 	}
 	libretro_log(RETRO_LOG_INFO, "%u graphic pack options for title %016llx\n", (unsigned)s_pack_options.size(), (unsigned long long)titleId);
@@ -2766,16 +2778,90 @@ static void libretro_default_replacements_to_originals()
 	}
 }
 
+// Selects in gp the presets that one pack's options name. A group can hold
+// presets of the same name under different conditions - FPS++ has a set of
+// FPS limits for its normal mode and another for its advanced one - and
+// SetActivePreset takes the first of that name, visible or not; Cemu then
+// drops an invisible selection for the group's default, which is how a
+// choice came out as something else (NNshi). So once the choices are in,
+// each group whose selection is hidden moves to the visible preset of the
+// same name, until the choices stop moving one another.
+static void libretro_select_pack_presets(GraphicPack2& gp, const LibretroPackOption& enableOption)
+{
+	std::vector<const LibretroPackOption*> groups;
+	for (const LibretroPackOption& option : s_pack_options)
+		if (!option.controlsEnable && option.pack == enableOption.pack)
+			groups.push_back(&option);
+
+	for (const LibretroPackOption* group : groups)
+		if (const char* value = libretro_get_option_value(group->key.c_str()))
+			gp.SetActivePreset(group->category, value, false);
+
+	for (int pass = 0; pass < 4; pass++)
+	{
+		gp.UpdatePresetVisibility();
+		std::vector<std::string> order;
+		auto categorized = gp.GetCategorizedPresets(order);
+		bool moved = false;
+		for (const LibretroPackOption* group : groups)
+		{
+			const char* value = libretro_get_option_value(group->key.c_str());
+			if (!value)
+				continue;
+			auto& presets = categorized[group->category];
+			const auto active = std::find_if(presets.begin(), presets.end(), [](const auto& p) { return p->active; });
+			if (active == presets.end() || (*active)->visible)
+				continue;
+			const auto visible = std::find_if(presets.begin(), presets.end(),
+				[value](const auto& p) { return p->visible && p->name == value; });
+			if (visible == presets.end())
+				continue;
+			(*active)->active = false;
+			(*visible)->active = true;
+			moved = true;
+		}
+		if (!moved)
+			break;
+	}
+	gp.UpdatePresetVisibility();
+	gp.ValidatePresetSelections();
+}
+
+// Replaced packs are never shown. A pack's preset groups are shown while the
+// pack is on, and while the choices made leave the group a visible preset,
+// as standalone hides a group its other choices rule out.
 static void libretro_update_pack_visibility()
 {
 	if (!environ_cb)
 		return;
-	for (const LibretroPackOption& option : s_pack_options)
+	for (const LibretroPackOption& enableOption : s_pack_options)
 	{
-		if (!option.replaced)
+		if (!enableOption.controlsEnable)
 			continue;
-		struct retro_core_option_display display{option.key.c_str(), false};
-		environ_cb(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &display);
+		const char* value = libretro_get_option_value(enableOption.key.c_str());
+		const bool on = !enableOption.replaced && value && strcmp(value, "disabled") != 0;
+
+		std::unordered_map<std::string, std::vector<GraphicPack2::PresetPtr>> categorized;
+		if (on && enableOption.pack)
+		{
+			libretro_select_pack_presets(*enableOption.pack, enableOption);
+			std::vector<std::string> order;
+			categorized = enableOption.pack->GetCategorizedPresets(order);
+		}
+
+		for (const LibretroPackOption& option : s_pack_options)
+		{
+			if (option.pack != enableOption.pack)
+				continue;
+			bool show = !option.replaced;
+			if (!option.controlsEnable)
+			{
+				const auto& presets = categorized[option.category];
+				show = on && std::any_of(presets.begin(), presets.end(), [](const auto& p) { return p->visible; });
+			}
+			struct retro_core_option_display display{option.key.c_str(), show};
+			environ_cb(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &display);
+		}
 	}
 }
 
@@ -2806,22 +2892,21 @@ static void libretro_apply_pack_options()
 
 	for (const LibretroPackOption& option : s_pack_options)
 	{
-		if (option.replaced)
-			continue; // not loaded; its replacement has options of its own
+		if (!option.controlsEnable || option.replaced)
+			continue; // a replaced pack is not loaded; its replacement has options of its own
 		const char* value = libretro_get_option_value(option.key.c_str());
 		if (!value)
 			continue;
-		const bool disable = option.controlsEnable && strcmp(value, "disabled") == 0;
+		const bool enable = strcmp(value, "disabled") != 0;
 
 		for (const auto& gp : GraphicPack2::GetGraphicPacks())
 		{
 			bool custom = false;
 			if (libretro_pack_folder(*gp, &custom) != option.folder || custom != option.custom)
 				continue;
-			if (option.controlsEnable)
-				gp->SetEnabled(!disable);
-			if (!disable && !option.presets.empty())
-				gp->SetActivePreset(option.category, value);
+			gp->SetEnabled(enable);
+			if (enable)
+				libretro_select_pack_presets(*gp, option);
 		}
 	}
 
