@@ -852,6 +852,24 @@ namespace padscore
 			osLib_addFunction("padscore", "WPADSetCallbackByKPAD", padscore::export_WPADSetCallbackByKPAD);
 		};
 
+		void RPLUnmapped() override
+		{
+			// The callbacks are guest code addresses, and the ring buffer is
+			// guest memory, of the title that set them. Kept past it, the
+			// next title's controller tick called the previous title's
+			// callbacks into its own memory: with the libretro core, which
+			// runs several titles in one process, starting Mario Kart 8
+			// after Fast Racing Neo crashed in TickFunction.
+			for (auto& data : g_padscore.controller_data)
+				data = {};
+			g_padscore.kpad_initialized = false;
+			g_padscore.max_controllers = kWPADMaxControllers;
+			g_kpad_ringbuffer = nullptr;
+			g_kpad_ringbuffer_length = 0;
+			g_wpad_callback_by_kpad = false;
+			g_wpad_state = kWPADStateMaster;
+		}
+
 	}s_COSCoreinitModule;
 
 	COSModule* GetModule()
