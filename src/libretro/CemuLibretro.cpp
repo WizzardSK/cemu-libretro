@@ -1873,6 +1873,38 @@ static bool libretro_directory_is_writable(const std::string& dir)
 // Collected once and kept, rather than on every draw of the options. A
 // destination that goes away in between is caught where it matters: the
 // conversion re-collects before it starts, and fails there if nothing is left.
+// The name the .wua is written under: the content's own, or for a title loaded
+// as title.tmd the game's name from its meta.xml, then what it carries besides
+// the base game (i30817, #23): " (vNN)" for the update, replacing a version
+// already in the name, and " (DLC)". info is null where the title list has not
+// told yet whether there is an update or DLC (the destination labels).
+static std::string libretro_wua_output_name(const fs::path& contentPath, GameInfo2* info)
+{
+	std::string name = _pathToUtf8(contentPath.stem());
+	if (name.empty() || boost::iequals(name, "title"))
+	{
+		TitleInfo base(contentPath);
+		if (base.IsValid() && base.ParseXmlInfo() && !base.GetMetaTitleName().empty())
+			name = base.GetMetaTitleName();
+	}
+	// Names in meta.xml can hold line breaks and characters no file system takes
+	for (char& c : name)
+		if (c == '\n' || c == '\r' || c == '/' || c == '\\' || c == ':' || c == '*' || c == '?' || c == '"' || c == '<' || c == '>' || c == '|')
+			c = (c == '\n' || c == '\r') ? ' ' : '_';
+	if (info && info->HasUpdate())
+	{
+		const std::string version = fmt::format("(v{})", info->GetUpdate().GetAppTitleVersion());
+		static const std::regex versionInName(R"(\(v\d+\))", std::regex::icase);
+		if (std::regex_search(name, versionInName))
+			name = std::regex_replace(name, versionInName, version, std::regex_constants::format_first_only);
+		else
+			name += " " + version;
+	}
+	if (info && !info->GetAOC().empty() && !boost::icontains(name, "(DLC)"))
+		name += " (DLC)";
+	return name + ".wua";
+}
+
 static bool s_wua_destinations_collected = false;
 
 static void libretro_collect_wua_destinations(bool force = false)
@@ -1897,7 +1929,7 @@ static void libretro_collect_wua_destinations(bool force = false)
 		return;
 	}
 
-	const std::string outputName = _pathToUtf8(contentPath.stem()) + ".wua";
+	const std::string outputName = libretro_wua_output_name(contentPath, nullptr);
 
 	std::vector<LibretroWuaDestination> candidates;
 	auto add = [&candidates](std::string path, std::string label) {
@@ -3929,7 +3961,7 @@ static void libretro_start_wua_conversion(TitleId baseTitleId, const fs::path& g
 		return;
 	}
 
-	const std::string outputName = _pathToUtf8(gamePath.stem()) + ".wua";
+	const std::string outputName = libretro_wua_output_name(gamePath, s_convert_game_info.get());
 	const fs::path outputPath = _utf8ToPath(libretro_path_join(outputDir, outputName));
 
 	// The preconditions are checked again here rather than trusted from the
