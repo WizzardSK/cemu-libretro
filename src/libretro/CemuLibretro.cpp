@@ -12,6 +12,8 @@
 #include "libretro.h"
 
 #include "config/CemuConfig.h"
+#include "Cafe/Account/Account.h"
+#include <boost/nowide/convert.hpp>
 #include "config/ActiveSettings.h"
 #include "config/LaunchSettings.h"
 #include "config/NetworkSettings.h"
@@ -2478,9 +2480,42 @@ static void libretro_reset_install_switches()
 	libretro_reset_uninstall_switch();
 }
 
+static void libretro_publish_core_options(retro_environment_t cb, bool withReplacements = true);
+
 static void libretro_apply_core_options()
 {
 	libretro_handle_install_requests();
+
+	// The account the next title start runs as. Create a New Account is a
+	// request, like the conversion switch: the account is made, the option
+	// list is published again with it, and the option is set to it.
+	if (const char* v = libretro_get_option_value("cemu_account"); v && s_initialized)
+	{
+		uint32 persistentId = Account::kMinPersistendId;
+		if (!strcmp(v, "new"))
+		{
+			if (Account::HasFreeAccountSlots())
+			{
+				persistentId = Account::GetNextPersistentId();
+				const std::wstring name = fmt::format(L"Player {}", Account::GetAccounts().size() + 1);
+				Account account(persistentId, name);
+				if (const auto error = account.Save())
+				{
+					libretro_log(RETRO_LOG_ERROR, "could not create the account: %s\n", error.message().c_str());
+					persistentId = GetConfig().account.m_persistent_id;
+				}
+				else
+					libretro_log(RETRO_LOG_INFO, "created account %08x\n", persistentId);
+			}
+			Account::RefreshAccounts();
+			libretro_publish_core_options(environ_cb);
+			libretro_set_option_value("cemu_account", fmt::format("{:08x}", persistentId).c_str());
+		}
+		else
+			persistentId = (uint32)strtoul(v, nullptr, 16);
+		if (Account::GetAccount(persistentId).GetPersistentId() == persistentId)
+			GetConfig().account.m_persistent_id = persistentId;
+	}
 
 	if (const char* v = libretro_get_option_value("cemu_rumble_strength"))
 	{
@@ -2764,7 +2799,7 @@ static void libretro_apply_core_options()
 	}
 }
 
-static void libretro_publish_core_options(retro_environment_t cb, bool withReplacements = true);
+static void libretro_publish_core_options(retro_environment_t cb, bool withReplacements);
 
 RETRO_API void retro_set_environment(retro_environment_t cb)
 {
@@ -3347,6 +3382,30 @@ static void libretro_publish_core_options(retro_environment_t cb, bool withRepla
 		return storage.back().c_str();
 	};
 
+	// Accounts: the ones on the emulated storage, which is only there once
+	// retro_init has set up the paths. Before that the option is not declared
+	// at all - declared with only the first account, the frontend would write
+	// that over a choice of another one in the .opt file.
+	const bool accountsKnown = s_initialized;
+	for (struct retro_core_option_v2_definition& def : option_defs_us)
+	{
+		if (!def.key || strcmp(def.key, "cemu_account") != 0 || !accountsKnown)
+			continue;
+		size_t index = 0;
+		for (const Account& account : Account::RefreshAccounts())
+		{
+			if (index + 2 >= RETRO_NUM_CORE_OPTION_VALUES_MAX)
+				break;
+			def.values[index].value = keep(fmt::format("{:08x}", account.GetPersistentId()));
+			def.values[index].label = keep(fmt::format("{} ({:08x})", boost::nowide::narrow(std::wstring(account.GetMiiName())), account.GetPersistentId()));
+			++index;
+		}
+		if (Account::HasFreeAccountSlots())
+			def.values[index++] = {"new", "Create a New Account"};
+		def.values[index] = {nullptr, nullptr};
+		break;
+	}
+
 	for (struct retro_core_option_v2_definition& def : option_defs_us)
 	{
 		if (!def.key || strcmp(def.key, "cemu_wua_output_dir") != 0)
@@ -3388,6 +3447,8 @@ static void libretro_publish_core_options(retro_environment_t cb, bool withRepla
 	{
 		if (!def.key)
 			break;
+		if (!accountsKnown && !strcmp(def.key, "cemu_account"))
+			continue;
 		all.push_back(def);
 	}
 	for (size_t i = 0; i < s_pack_option_defs.size(); i++)

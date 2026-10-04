@@ -110,6 +110,19 @@ struct retro_core_option_v2_definition option_defs_us[] = {
 		"English"
 	},
 	{
+		"cemu_account",
+		"Account",
+		NULL,
+		"The Wii U account the game runs as, each with its own saves and Mii, as picked in standalone Cemu's account settings. The list is the accounts on the emulated storage (saves/Cemu/mlc01). Create a New Account adds one, named Player 2, Player 3 and so on, and switches to it. A change applies when the game is next started.",
+		NULL,
+		"system",
+		{
+			{ "80000001", NULL },
+			{ NULL, NULL },
+		},
+		"80000001"
+	},
+	{
 		"cemu_async_shader_compile",
 		"Async Shader Compile",
 		NULL,
