@@ -236,6 +236,11 @@ void GraphicPack2::Reset()
 {
 	s_active_graphic_packs.clear();
 	s_isReady = false;
+	// A pack's vsync frequency outlives the title otherwise, and the next
+	// title's pack asking for another one is turned down as a mismatch: FRN
+	// after BotW's 60 fps pack stayed at 60, and FRN's own 120 fps preset
+	// changed to 85 did not apply until the process was restarted (NNshi)
+	LatteTiming_disableCustomVsyncFrequency();
 }
 
 void GraphicPack2::ClearGraphicPacks()
