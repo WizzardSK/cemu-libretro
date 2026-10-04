@@ -650,6 +650,26 @@ std::atomic_bool s_frame_ready{false};
 static std::atomic<uint32_t> s_game_frames{0};
 static bool s_show_game_fps = false;
 
+// The rate retro_run is reported to come at (Frame Rate): each retro_run lets
+// the game render one frame and carries one frame's worth of audio.
+static double s_output_fps = 60.0;
+
+static const char* libretro_get_option_value(const char* key);
+
+static double libretro_wanted_fps()
+{
+	const char* v = libretro_get_option_value("cemu_frame_rate");
+	if (!v || !strcmp(v, "60"))
+		return 60.0;
+	if (!strcmp(v, "auto"))
+	{
+		sint32 frequency = 0;
+		return LatteTiming_getCustomVsyncFrequency(frequency) && frequency > 0 ? (double)frequency : 60.0;
+	}
+	const double fps = atof(v);
+	return fps >= 30.0 && fps <= 480.0 ? fps : 60.0;
+}
+
 void libretro_signal_frame_ready()
 {
 	s_prof_frames_ready.fetch_add(1, std::memory_order_relaxed);
@@ -1569,7 +1589,7 @@ static void libretro_show_message(unsigned level, unsigned durationMs, const std
 
 	struct retro_message msg = {};
 	msg.msg = text.c_str();
-	msg.frames = durationMs * 60 / 1000;
+	msg.frames = (unsigned)(durationMs * s_output_fps / 1000);
 	environ_cb(RETRO_ENVIRONMENT_SET_MESSAGE, &msg);
 }
 
@@ -2824,6 +2844,12 @@ static void libretro_collect_pack_options(const std::string& gamePath)
 			}
 		}
 
+		// Cheats get a submenu of their own rather than coming first among the
+		// graphic packs: a pack whose path is "<game>/Cheats/..."
+		const std::string& virtualPath = gp->GetVirtualPath();
+		const size_t firstSlash = virtualPath.find('/');
+		const bool cheat = firstSlash != std::string::npos && virtualPath.compare(firstSlash + 1, 7, "Cheats/") == 0;
+
 		// A pack without presets keeps the key its one option always had; a
 		// pack with presets has its switch under a key no preset group can
 		// have, since the group without a name uses the plain one
@@ -2844,7 +2870,7 @@ static void libretro_collect_pack_options(const std::string& gamePath)
 			def.desc = keep(name);
 			def.desc_categorized = def.desc;
 			def.info = gp->GetDescription().empty() ? nullptr : keep(gp->GetDescription());
-			def.category_key = "graphic_packs";
+			def.category_key = cheat ? "cheats" : "graphic_packs";
 
 			size_t n = 0;
 			if (controlsEnable)
@@ -3293,8 +3319,24 @@ RETRO_API void retro_get_system_av_info(struct retro_system_av_info* info)
 	info->geometry.max_width = SCREEN_WIDTH * 4;
 	info->geometry.max_height = SCREEN_HEIGHT * 4;
 	info->geometry.aspect_ratio = 16.0f / 9.0f;
-	info->timing.fps = 60.0;
+	if (!s_game_loaded)
+		s_output_fps = libretro_wanted_fps();
+	info->timing.fps = s_output_fps;
 	info->timing.sample_rate = 48000.0;
+}
+
+// Frame Rate changed, or Auto found a graphic pack with a frame rate of its
+// own once the title started (packs are activated then): tell the frontend.
+static void libretro_update_output_fps()
+{
+	const double wanted = libretro_wanted_fps();
+	if (wanted == s_output_fps)
+		return;
+	s_output_fps = wanted;
+	retro_system_av_info av{};
+	retro_get_system_av_info(&av);
+	environ_cb(RETRO_ENVIRONMENT_SET_SYSTEM_AV_INFO, &av);
+	libretro_log(RETRO_LOG_INFO, "frame rate: %g\n", s_output_fps);
 }
 
 // Port 0 is the GamePad (VPAD), or a Wii U Pro Controller in its place; ports
@@ -5606,6 +5648,9 @@ RETRO_API void retro_run()
 			if (environ_cb)
 				environ_cb(RETRO_ENVIRONMENT_SHUTDOWN, nullptr);
 		}
+		// The title's graphic packs are active now, and one may set a frame rate
+		if (s_game_loaded)
+			libretro_update_output_fps();
 		// The first frame belongs to the title, not to the load that just ran.
 		video_cb(NULL, libretro_out_width(), libretro_out_height(), 0);
 		return;
@@ -5620,7 +5665,10 @@ RETRO_API void retro_run()
 	// Check if core options changed
 	bool options_updated = false;
 	if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE_UPDATE, &options_updated) && options_updated)
+	{
 		libretro_apply_core_options();
+		libretro_update_output_fps();
+	}
 
 	// Poll input
 	libretro_poll_input();
@@ -5669,13 +5717,15 @@ RETRO_API void retro_run()
 		static std::chrono::steady_clock::time_point s_last_audio_grant{};
 		static int64_t s_audio_bucket = 0; // in thousandths of a sample, so no fraction is lost
 		const auto now = std::chrono::steady_clock::now();
-		int32_t samples = 800;
+		// One frame's worth at the reported rate: 800 at 60 Hz, 400 at 120
+		const int32_t frameSamples = (int32_t)(48000.0 / s_output_fps);
+		int32_t samples = frameSamples;
 		if (s_last_audio_grant.time_since_epoch().count() != 0)
 		{
 			const int64_t elapsed_us = std::chrono::duration_cast<std::chrono::microseconds>(now - s_last_audio_grant).count();
 			s_audio_bucket = std::min<int64_t>(s_audio_bucket + elapsed_us * 48, 12000 * 1000);
 			const int64_t us = elapsed_us - s_last_audio_wait_us;
-			samples = (int32_t)std::min<int64_t>(std::clamp<int64_t>(us * 48 / 1000, 800, 12000), s_audio_bucket / 1000);
+			samples = (int32_t)std::min<int64_t>(std::clamp<int64_t>(us * 48 / 1000, frameSamples, 12000), s_audio_bucket / 1000);
 			s_audio_bucket -= int64_t(samples) * 1000;
 		}
 		s_last_audio_grant = now;
@@ -5683,15 +5733,16 @@ RETRO_API void retro_run()
 	}
 
 	// Wait for frame from GPU thread - but not for long. retro_run has to keep
-	// coming at the 60 Hz the core reports whatever rate the title renders
-	// at, because each one is one frame's worth of audio: a 30 fps title
-	// waited on for up to 33 ms made retro_run itself 30 Hz and the audio half
-	// speed. 12 ms leaves a 60 fps frame that is a little late its chance;
+	// coming at the rate the core reports (60 Hz unless Frame Rate says
+	// otherwise) whatever rate the title renders at, because each one is one
+	// frame's worth of audio: a 30 fps title waited on for up to 33 ms made
+	// retro_run itself 30 Hz and the audio half speed. Most of a frame - 12 ms
+	// at 60 Hz - leaves a frame that is a little late its chance;
 	// a frame that is not there by then shows up in the next retro_run, and
 	// this one presents the last image again.
 	{
 		std::unique_lock lock(s_frame_mutex);
-		profTimedOut = !s_frame_cv.wait_for(lock, std::chrono::milliseconds(12), [] {
+		profTimedOut = !s_frame_cv.wait_for(lock, std::chrono::microseconds((int64_t)(720000.0 / s_output_fps)), [] {
 			return s_frame_ready.load();
 		});
 		s_frame_ready = false;
