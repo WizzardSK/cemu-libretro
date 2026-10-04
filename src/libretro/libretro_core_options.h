@@ -615,6 +615,34 @@ struct retro_core_option_v2_definition option_defs_us[] = {
 	},
 #endif
 	{
+		"cemu_install_game",
+		"Install Game",
+		NULL,
+		"Installs the running game into saves/Cemu/mlc01, the emulated console's storage, as the console installs a game from its disc: from a disc image (.wud, .wux, .iso) or a .wua, the latter with the update and DLC it holds as well. It stays on until the install is done. The installed game is started by loading the .rpx in its code folder, under mlc01/usr/title/00050000; the disc image is not needed for it any more.\n\nA game disc image in any location can be installed: load it with RetroArch's Main Menu > Load Content, then turn this on.",
+		NULL,
+		"install",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_uninstall_game",
+		"Uninstall Game",
+		NULL,
+		"Uninstalls the running game itself from saves/Cemu/mlc01 once the game is closed or reset; it stays on until then. Its update, DLC and saves are left alone, as are the disc image or .wua it was installed from.",
+		NULL,
+		"install",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
 		"cemu_install_titles",
 		"Install Content",
 		NULL,
@@ -633,34 +661,6 @@ struct retro_core_option_v2_definition option_defs_us[] = {
 		"Uninstall Content",
 		NULL,
 		"Uninstalls the running game's update and DLC from saves/Cemu/mlc01, the emulated console's storage, once the game is closed or reset; it stays on until then. Copies in system/Cemu/titles are left alone.",
-		NULL,
-		"install",
-		{
-			{ "disabled", NULL },
-			{ "enabled", NULL },
-			{ NULL, NULL },
-		},
-		"disabled"
-	},
-	{
-		"cemu_install_game",
-		"Install Game to Storage",
-		NULL,
-		"Installs the running game into saves/Cemu/mlc01, the emulated console's storage, as the console installs a game from its disc: from a disc image (.wud, .wux, .iso) or a .wua, the latter with the update and DLC it holds as well. It stays on until the install is done. The installed game is started by loading the .rpx in its code folder, under mlc01/usr/title/00050000; the disc image is not needed for it any more.",
-		NULL,
-		"install",
-		{
-			{ "disabled", NULL },
-			{ "enabled", NULL },
-			{ NULL, NULL },
-		},
-		"disabled"
-	},
-	{
-		"cemu_uninstall_game",
-		"Uninstall Game from Storage",
-		NULL,
-		"Uninstalls the running game itself from saves/Cemu/mlc01 once the game is closed or reset; it stays on until then. Its update, DLC and saves are left alone, as are the disc image or .wua it was installed from.",
 		NULL,
 		"install",
 		{
