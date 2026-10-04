@@ -124,12 +124,18 @@ void CemuCommonInit()
 		n_config.Load();
 	// parallelize expensive init code
 	CEMU_INIT_STAGE("audio API + graphic packs");
-	std::future<int> futureInitAudioAPI = std::async(std::launch::async, []{ IAudioAPI::InitializeStatic(); IAudioInputAPI::InitializeStatic(); return 0; });
-	std::future<int> futureInitGraphicPacks = std::async(std::launch::async, []{ GraphicPack2::LoadAll(); return 0; });
+	// Threads of their own, joined, rather than std::async. MSVC's std::async
+	// runs the work on a PPL thread pool, and with the static runtime those
+	// pool threads are this library's: each one holds a reference to it for as
+	// long as it lives, and they outlive the work. A libretro core on Windows
+	// was never unloaded because of them - FreeLibrary left the DLL in memory
+	// with one reference still taken (NNshi's module trace).
+	std::thread threadInitAudioAPI([]{ IAudioAPI::InitializeStatic(); IAudioInputAPI::InitializeStatic(); });
+	std::thread threadInitGraphicPacks([]{ GraphicPack2::LoadAll(); });
 	CEMU_INIT_STAGE("input");
 	InputManager::instance().load();
-	futureInitAudioAPI.wait();
-	futureInitGraphicPacks.wait();
+	threadInitAudioAPI.join();
+	threadInitGraphicPacks.join();
 	// init Cafe system
 	CEMU_INIT_STAGE("Cafe system");
 	CafeSystem::Initialize();
