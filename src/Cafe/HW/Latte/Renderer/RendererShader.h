@@ -13,6 +13,8 @@ public:
 	virtual ~RendererShader() = default;
 
 	ShaderType GetType() const { return m_type; }
+	uint64 GetBaseHash() const { return m_baseHash; }
+	uint64 GetAuxHash() const { return m_auxHash; }
 	
 	virtual void PreponeCompilation(bool isRenderThread) = 0; // if shader not yet compiled, compile it synchronously (if possible) or alternatively wait for compilation. After this function IsCompiled() is guaranteed to be true
 	virtual bool IsCompiled() = 0;

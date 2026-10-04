@@ -1010,7 +1010,20 @@ bool PipelineCompiler::Compile(bool forceCompile, bool isRenderThread, bool show
 	}
 	else
 	{
-		cemuLog_log(LogType::Force, "Failed to create graphics pipeline. Error {}", (sint32)result);
+		// Which pipeline, so that a failure on one driver can be told apart
+		// from the rest: the shaders by the hashes their dumps are named by,
+		// and the render pass's formats
+		auto shaderName = [](RendererShaderVk* shader) {
+			return shader ? fmt::format("{:016x}_{:016x}", shader->GetBaseHash(), shader->GetAuxHash()) : std::string("-");
+		};
+		std::string colorFormats;
+		for (size_t i = 0; m_renderPassObj && i < Latte::GPU_LIMITS::NUM_COLOR_ATTACHMENTS; i++)
+			if (m_renderPassObj->m_colorAttachmentFormat[i] != VK_FORMAT_UNDEFINED)
+				colorFormats += fmt::format("{}{}:{}", colorFormats.empty() ? "" : " ", i, (sint32)m_renderPassObj->m_colorAttachmentFormat[i]);
+		cemuLog_log(LogType::Force, "Failed to create graphics pipeline. Error {} (VS {} GS {} PS {}, color formats [{}], depth format {}, topology {})",
+			(sint32)result, shaderName(m_vkVertexShader), shaderName(m_vkGeometryShader), shaderName(m_vkPixelShader), colorFormats,
+			m_renderPassObj ? (sint32)m_renderPassObj->m_depthAttachmentFormat : -1,
+			pipelineInfo.pInputAssemblyState ? (sint32)pipelineInfo.pInputAssemblyState->topology : -1);
 		cemu_assert_debug(false);
 		return true; // true indicates that caller should no longer attempt to compile this pipeline again
 	}
