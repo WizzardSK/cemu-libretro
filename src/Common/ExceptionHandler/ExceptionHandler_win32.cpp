@@ -279,9 +279,23 @@ LONG WINAPI cemu_unhandledExceptionFilter(EXCEPTION_POINTERS* pExceptionInfo)
 	return EXCEPTION_NONCONTINUABLE_EXCEPTION;
 }
 
+static LPTOP_LEVEL_EXCEPTION_FILTER s_previousExceptionFilter = nullptr;
+static PVOID s_vectoredHandler = nullptr;
+
 void ExceptionHandler_Init()
 {
-	SetUnhandledExceptionFilter(cemu_unhandledExceptionFilter);
-	AddVectoredExceptionHandler(1, VectoredExceptionHandler);
+	s_previousExceptionFilter = SetUnhandledExceptionFilter(cemu_unhandledExceptionFilter);
+	s_vectoredHandler = AddVectoredExceptionHandler(1, VectoredExceptionHandler);
 	SetErrorMode(SEM_FAILCRITICALERRORS);
+}
+
+void ExceptionHandler_Shutdown()
+{
+	if (s_vectoredHandler)
+	{
+		RemoveVectoredExceptionHandler(s_vectoredHandler);
+		s_vectoredHandler = nullptr;
+	}
+	SetUnhandledExceptionFilter(s_previousExceptionFilter);
+	s_previousExceptionFilter = nullptr;
 }

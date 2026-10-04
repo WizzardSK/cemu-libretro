@@ -13,6 +13,7 @@
 
 #include "config/CemuConfig.h"
 #include "Cafe/Account/Account.h"
+#include <openssl/crypto.h>
 #include <boost/nowide/convert.hpp>
 #include "config/ActiveSettings.h"
 #include "config/LaunchSettings.h"
@@ -867,7 +868,6 @@ static retro_hw_render_callback s_hw_render{};
 static const struct retro_hw_render_interface_vulkan* s_vk_interface = nullptr;
 static struct retro_vulkan_image s_vk_present_image{};
 static retro_vulkan_context s_vk_context{};
-static bool s_vk_device_created = false;
 
 static const VkApplicationInfo* libretro_vk_get_application_info()
 {
@@ -1167,16 +1167,9 @@ static bool libretro_vk_create_device(
 	context->presentation_queue_family_index = graphicsFamily;
 
 	s_vk_context = *context;
-	s_vk_device_created = true;
 
 	libretro_log(RETRO_LOG_INFO, "Vulkan device created (queue family %u)\n", graphicsFamily);
 	return true;
-}
-
-static void libretro_vk_destroy_device()
-{
-	libretro_log(RETRO_LOG_INFO, "Vulkan destroy_device called\n");
-	s_vk_device_created = false;
 }
 
 static struct retro_hw_render_context_negotiation_interface_vulkan s_vk_negotiation{
@@ -1184,7 +1177,10 @@ static struct retro_hw_render_context_negotiation_interface_vulkan s_vk_negotiat
 	RETRO_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE_VULKAN_VERSION,
 	libretro_vk_get_application_info,
 	libretro_vk_create_device,
-	libretro_vk_destroy_device,
+	// No destroy_device: RetroArch calls it after it has unloaded the core,
+	// when this library is no longer there to answer. Without one it destroys
+	// the device it got from create_device itself.
+	nullptr,
 };
 #endif
 
@@ -5878,6 +5874,14 @@ RETRO_API void retro_deinit()
 	// static's destructor, it is joined inside FreeLibrary under the loader
 	// lock, which the thread needs in order to exit: the frontend hangs.
 	FileCache_StopAsyncWriter();
+
+	// What would otherwise keep this library loaded, or point into it once it
+	// is gone. OpenSSL is built with no-pinshared (the overlay port), so it
+	// no longer pins the library, and its cleanup runs here instead of at
+	// process exit, when the code would not be there any more. The crash
+	// handlers go back to the frontend's.
+	OPENSSL_cleanup();
+	ExceptionHandler_Shutdown();
 
 	s_initialized = false;
 }

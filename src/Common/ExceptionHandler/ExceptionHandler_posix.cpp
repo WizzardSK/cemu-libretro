@@ -312,8 +312,18 @@ void handler_SIGINT(int sig)
 	_Exit(0);
 }
 
+// The signals ExceptionHandler_Init takes over, and what was installed for them
+// before, so that ExceptionHandler_Shutdown can put it back
+static const int s_handledSignals[] = { SIGINT, SIGTERM, SIGABRT, SIGBUS, SIGFPE, SIGILL, SIGIOT, SIGQUIT, SIGSEGV, SIGSYS, SIGTRAP };
+static struct sigaction s_previousActions[std::size(s_handledSignals)];
+static bool s_handlersInstalled = false;
+
 void ExceptionHandler_Init()
 {
+	for (size_t i = 0; i < std::size(s_handledSignals); i++)
+		sigaction(s_handledSignals[i], nullptr, &s_previousActions[i]);
+	s_handlersInstalled = true;
+
 	struct sigaction action;
 	action.sa_flags = 0;
 	sigfillset(&action.sa_mask); // don't allow signals to be interrupted
@@ -334,4 +344,13 @@ void ExceptionHandler_Init()
 	sigaction(SIGSEGV, &action, nullptr);
 	sigaction(SIGSYS, &action, nullptr);
 	sigaction(SIGTRAP, &action, nullptr);
+}
+
+void ExceptionHandler_Shutdown()
+{
+	if (!s_handlersInstalled)
+		return;
+	for (size_t i = 0; i < std::size(s_handledSignals); i++)
+		sigaction(s_handledSignals[i], &s_previousActions[i], nullptr);
+	s_handlersInstalled = false;
 }
