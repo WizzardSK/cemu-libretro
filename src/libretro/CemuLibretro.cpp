@@ -2583,13 +2583,19 @@ static void libretro_apply_core_options()
 		}
 		else
 			persistentId = (uint32)strtoul(v, nullptr, 16);
-		if (Account::GetAccount(persistentId).GetPersistentId() == persistentId)
+		if (Account::GetAccount(persistentId).GetPersistentId() == persistentId && s_pending_account != persistentId)
+		{
 			s_pending_account = persistentId;
+			// Remove an Account leaves out the picked account, so its list
+			// follows the pick (Shoegzer: switched back to the first account,
+			// the one picked before was still missing from it).
+			libretro_publish_core_options(environ_cb);
+		}
 	}
 
 	// Remove an Account is a request too: the account's folder goes, the list
 	// is published again without it, and the option goes back to Nothing.
-	if (const char* v = libretro_get_option_value("cemu_remove_account"); v && s_initialized && strcmp(v, "none") != 0)
+	if (const char* v = libretro_get_option_value("cemu_remove_account"); v && s_initialized && strcmp(v, "disabled") != 0)
 	{
 		const uint32 persistentId = (uint32)strtoul(v, nullptr, 16);
 		if (Account::GetAccount(persistentId).GetPersistentId() == persistentId && libretro_account_removable(persistentId))
@@ -2600,10 +2606,30 @@ static void libretro_apply_core_options()
 				libretro_log(RETRO_LOG_ERROR, "could not remove account %08x: %s\n", persistentId, ec.message().c_str());
 			else
 				libretro_log(RETRO_LOG_INFO, "removed account %08x\n", persistentId);
+			// And its saves, as the console deletes a user's: each title keeps
+			// them in usr/save/<id high>/<id low>/user/<persistent id>.
+			const std::string userDir = fmt::format("{:08x}", persistentId);
+			const fs::path saveRoot = ActiveSettings::GetMlcPath("usr/save");
+			int removedSaves = 0;
+			for (const auto& high : fs::directory_iterator(saveRoot, ec))
+			{
+				std::error_code ecHigh;
+				if (!high.is_directory(ecHigh) || high.path().filename() == "system")
+					continue;
+				std::error_code ecLow;
+				for (const auto& low : fs::directory_iterator(high.path(), ecLow))
+				{
+					const fs::path dir = low.path() / "user" / userDir;
+					std::error_code ecDir;
+					if (fs::is_directory(dir, ecDir) && fs::remove_all(dir, ecDir) > 0 && !ecDir)
+						removedSaves++;
+				}
+			}
+			libretro_log(RETRO_LOG_INFO, "removed the save data of account %08x in %d titles\n", persistentId, removedSaves);
 			Account::RefreshAccounts();
 		}
 		libretro_publish_core_options(environ_cb);
-		libretro_set_option_value("cemu_remove_account", "none");
+		libretro_set_option_value("cemu_remove_account", "disabled");
 	}
 
 	if (const char* v = libretro_get_option_value("cemu_rumble_strength"))
@@ -3499,7 +3525,7 @@ static void libretro_publish_core_options(retro_environment_t cb, bool withRepla
 		if (!def.key || strcmp(def.key, "cemu_remove_account") != 0 || !accountsKnown)
 			continue;
 		size_t index = 0;
-		def.values[index++] = {"none", "Nothing"};
+		def.values[index++] = {"disabled", nullptr};
 		for (const Account& account : Account::GetAccounts())
 		{
 			if (index + 1 >= RETRO_NUM_CORE_OPTION_VALUES_MAX)
@@ -6389,6 +6415,18 @@ RETRO_API void retro_run()
 		// LatteThread_Exit deletes it and releases g_renderer, and the Latte
 		// thread this starts dereferences that pointer before anything else it
 		// does.
+		//
+		// Options changed in the menu are read first. The menu stops retro_run,
+		// so a change made there and the reset that follows it reach this run
+		// together, and the check further down came too late for the start
+		// below: it ran with the old account (Shoegzer), and anything else
+		// that applies at a start.
+		bool options_updated = false;
+		if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE_UPDATE, &options_updated) && options_updated)
+		{
+			libretro_apply_core_options();
+			libretro_update_output_fps();
+		}
 		if (libretro_reset_stop_title())
 		{
 			libretro_create_renderer();

@@ -60,8 +60,8 @@ struct retro_core_option_v2_category option_cats_us[] = {
 	{ "system", "System", "CPU, language and scheduling." },
 	{ "addons", "Add-ons", "Skylanders, Infinity and Dimensions portals." },
 	{ "logging", "Logging", "Extra log output, for diagnosing problems." },
-	{ "accounts", "Manage Accounts", "The Wii U accounts in the account directory (saves/Cemu/mlc01/usr/save/system/act): which one the game runs as, and creating and removing them." },
-	{ "install", "Manage Content", "Manage games, title updates and DLC in saves/Cemu/mlc01, the emulated console's storage." },
+	{ "accounts", "Accounts", "Manage accounts in the Wii U's account directory (saves/Cemu/mlc01/usr/save/system/act)." },
+	{ "install", "Content", "Manage games, title updates and DLC in saves/Cemu/mlc01, the emulated console's storage." },
 	{ "convert", "Convert to WUA", "Write the loaded title out as a .wua archive." },
 	{ "graphic_packs", "Graphic Packs", "The loaded game's graphic packs and their presets. Changes apply the next time the game is loaded." },
 	{ "cheats", "Cheats", "The loaded game's cheat packs, from the graphic packs' Cheats folder. Changes apply the next time the game is loaded." },
@@ -127,14 +127,14 @@ struct retro_core_option_v2_definition option_defs_us[] = {
 		"cemu_remove_account",
 		"Remove an Account",
 		NULL,
-		"Removes the chosen account from the account directory, and the option goes back to Nothing. The account picked above and the one the running title uses are not offered. The account's save data in the title save folders is kept.",
+		"Removes the chosen account, as deleting a user on the console does: the account goes from the account directory, and its save data from every title's save folder. Then this goes back to OFF. The account picked above and the one the running title uses are not offered, so the last account cannot be removed.",
 		NULL,
 		"accounts",
 		{
-			{ "none", "Nothing" },
+			{ "disabled", NULL },
 			{ NULL, NULL },
 		},
-		"none"
+		"disabled"
 	},
 	{
 		"cemu_async_shader_compile",
