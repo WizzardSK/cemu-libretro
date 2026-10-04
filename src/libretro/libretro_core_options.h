@@ -60,6 +60,7 @@ struct retro_core_option_v2_category option_cats_us[] = {
 	{ "system", "System", "CPU, language and scheduling." },
 	{ "addons", "Add-ons", "Skylanders, Infinity and Dimensions portals." },
 	{ "logging", "Logging", "Extra log output, for diagnosing problems." },
+	{ "accounts", "Manage Accounts", "The Wii U accounts in the account directory (saves/Cemu/mlc01/usr/save/system/act): which one the game runs as, and creating and removing them." },
 	{ "install", "Manage Content", "Manage games, title updates and DLC in saves/Cemu/mlc01, the emulated console's storage." },
 	{ "convert", "Convert to WUA", "Write the loaded title out as a .wua archive." },
 	{ "graphic_packs", "Graphic Packs", "The loaded game's graphic packs and their presets. Changes apply the next time the game is loaded." },
@@ -113,14 +114,27 @@ struct retro_core_option_v2_definition option_defs_us[] = {
 		"cemu_account",
 		"Account",
 		NULL,
-		"The Wii U account the game runs as, each with its own saves and Mii, as picked in standalone Cemu's account settings. The list is the accounts on the emulated storage (saves/Cemu/mlc01). Create a New Account adds one, named Player 2, Player 3 and so on, and switches to it. A change applies when the game is next started.",
+		"The Wii U account the game runs as, each with its own saves and Mii. The list is the accounts in the account directory. Create a New Account adds one, named Player 2, Player 3 and so on, and switches to it.\n\nA change applies when the title is closed and started again, or reset. Until then the running title keeps saving to the account it was started with.",
 		NULL,
-		"system",
+		"accounts",
 		{
 			{ "80000001", NULL },
 			{ NULL, NULL },
 		},
 		"80000001"
+	},
+	{
+		"cemu_remove_account",
+		"Remove an Account",
+		NULL,
+		"Removes the chosen account from the account directory, and the option goes back to Nothing. The account picked above and the one the running title uses are not offered. The account's save data in the title save folders is kept.",
+		NULL,
+		"accounts",
+		{
+			{ "none", "Nothing" },
+			{ NULL, NULL },
+		},
+		"none"
 	},
 	{
 		"cemu_async_shader_compile",

@@ -19,6 +19,7 @@
 #include "config/NetworkSettings.h"
 
 #include "Cafe/CafeSystem.h"
+#include "Cafe/IOSU/legacy/iosu_act.h"
 #include "Cafe/HW/Espresso/Recompiler/PPCRecompiler.h"
 #include "Cafe/OS/libs/coreinit/coreinit_Thread.h"
 #include "Cafe/OS/common/OSCommon.h"
@@ -2539,13 +2540,25 @@ static void libretro_reset_install_switches()
 
 static void libretro_publish_core_options(retro_environment_t cb, bool withReplacements = true);
 
+// The account picked in the options, for the next title start; 0 for none.
+static uint32 s_pending_account = 0;
+
+// Neither the account picked for the next start nor the one in use now: the
+// running title may still write to that one.
+static bool libretro_account_removable(uint32 persistentId)
+{
+	return persistentId != s_pending_account && persistentId != GetConfig().account.m_persistent_id;
+}
+
 static void libretro_apply_core_options()
 {
 	libretro_handle_install_requests();
 
 	// The account the next title start runs as. Create a New Account is a
 	// request, like the conversion switch: the account is made, the option
-	// list is published again with it, and the option is set to it.
+	// list is published again with it, and the option is set to it. The pick
+	// waits for that start (libretro_prepare_and_launch_title): set at once,
+	// a running title's saves would go to the new account from then on.
 	if (const char* v = libretro_get_option_value("cemu_account"); v && s_initialized)
 	{
 		uint32 persistentId = Account::kMinPersistendId;
@@ -2571,7 +2584,26 @@ static void libretro_apply_core_options()
 		else
 			persistentId = (uint32)strtoul(v, nullptr, 16);
 		if (Account::GetAccount(persistentId).GetPersistentId() == persistentId)
-			GetConfig().account.m_persistent_id = persistentId;
+			s_pending_account = persistentId;
+	}
+
+	// Remove an Account is a request too: the account's folder goes, the list
+	// is published again without it, and the option goes back to Nothing.
+	if (const char* v = libretro_get_option_value("cemu_remove_account"); v && s_initialized && strcmp(v, "none") != 0)
+	{
+		const uint32 persistentId = (uint32)strtoul(v, nullptr, 16);
+		if (Account::GetAccount(persistentId).GetPersistentId() == persistentId && libretro_account_removable(persistentId))
+		{
+			std::error_code ec;
+			fs::remove_all(Account::GetFileName(persistentId).parent_path(), ec);
+			if (ec)
+				libretro_log(RETRO_LOG_ERROR, "could not remove account %08x: %s\n", persistentId, ec.message().c_str());
+			else
+				libretro_log(RETRO_LOG_INFO, "removed account %08x\n", persistentId);
+			Account::RefreshAccounts();
+		}
+		libretro_publish_core_options(environ_cb);
+		libretro_set_option_value("cemu_remove_account", "none");
 	}
 
 	if (const char* v = libretro_get_option_value("cemu_rumble_strength"))
@@ -3462,6 +3494,25 @@ static void libretro_publish_core_options(retro_environment_t cb, bool withRepla
 		def.values[index] = {nullptr, nullptr};
 		break;
 	}
+	for (struct retro_core_option_v2_definition& def : option_defs_us)
+	{
+		if (!def.key || strcmp(def.key, "cemu_remove_account") != 0 || !accountsKnown)
+			continue;
+		size_t index = 0;
+		def.values[index++] = {"none", "Nothing"};
+		for (const Account& account : Account::GetAccounts())
+		{
+			if (index + 1 >= RETRO_NUM_CORE_OPTION_VALUES_MAX)
+				break;
+			if (!libretro_account_removable(account.GetPersistentId()))
+				continue;
+			def.values[index].value = keep(fmt::format("{:08x}", account.GetPersistentId()));
+			def.values[index].label = keep(fmt::format("{} ({:08x})", boost::nowide::narrow(std::wstring(account.GetMiiName())), account.GetPersistentId()));
+			++index;
+		}
+		def.values[index] = {nullptr, nullptr};
+		break;
+	}
 
 	for (struct retro_core_option_v2_definition& def : option_defs_us)
 	{
@@ -3504,7 +3555,7 @@ static void libretro_publish_core_options(retro_environment_t cb, bool withRepla
 	{
 		if (!def.key)
 			break;
-		if (!accountsKnown && !strcmp(def.key, "cemu_account"))
+		if (!accountsKnown && (!strcmp(def.key, "cemu_account") || !strcmp(def.key, "cemu_remove_account")))
 			continue;
 		all.push_back(def);
 	}
@@ -4637,6 +4688,13 @@ static void libretro_frame_gate_rearm()
 static void libretro_prepare_and_launch_title()
 {
 	libretro_frame_gate_rearm();
+	// The account comes in here, on a reset as on a start. act read the
+	// accounts once per process before, at the first title's first request,
+	// so a reset - and on Windows, where the library stays loaded, every later
+	// start too - kept the account the first title ran as.
+	if (s_pending_account)
+		GetConfig().account.m_persistent_id = s_pending_account;
+	iosuAct_forgetAccounts();
 	fs::path gamePath = _utf8ToPath(s_game_path);
 	CafeSystem::PREPARE_STATUS_CODE status;
 
