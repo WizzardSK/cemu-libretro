@@ -584,7 +584,7 @@ struct retro_core_option_v2_definition option_defs_us[] = {
 		"cemu_install_titles",
 		"Install Content",
 		NULL,
-		"Installs every update and DLC in system/Cemu/titles into saves/Cemu/mlc01, the emulated console's storage. Each one goes in a folder of its own there; a NUS download (.app files) needs its title.tmd and its title.tik, the decryption key, next to them. A version already installed that is the same or newer is left alone.\n\nWhen this is ON, installing begins immediately, with its progress shown as a notification, and it turns OFF again when all content is installed. While the menu stays open, RetroArch shows it OFF only once the menu is left or another option is changed. The title keeps running meanwhile, and uses what was installed once it is restarted.\n\nContent from other locations can be installed with RetroArch's Main Menu > Load Content, by selecting the corresponding title.tmd, with its title.tik beside it.",
+		"Installs every update and DLC in system/Cemu/titles into saves/Cemu/mlc01, the emulated console's storage. Each one goes in a folder of its own there; a NUS download (.app files) needs its title.tmd and its title.tik, the decryption key, next to them. A version already installed that is the same or newer is left alone.\n\nWhen this is ON, installing begins immediately, with its progress shown as a notification, and it turns OFF again when all content is installed and this menu is exited or another option is changed. The title will use the installed content once it is restarted.\n\nContent from other locations can be installed with RetroArch's Main Menu > Load Content, by selecting the corresponding title.tmd, with its title.tik beside it.",
 		NULL,
 		"install",
 		{
