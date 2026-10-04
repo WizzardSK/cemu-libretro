@@ -471,3 +471,32 @@ namespace TitleConverter
 		return true;
 	}
 } // namespace TitleConverter
+
+std::vector<TitleInfo> TitleConverter::TitlesInContent(const fs::path& path)
+{
+	std::vector<TitleInfo> titles;
+	if (path.has_extension() && boost::iequals(_pathToUtf8(path.extension()), ".wua"))
+	{
+		std::unique_ptr<ZArchiveReader> zar(ZArchive_OpenFromPath(path));
+		if (!zar)
+			return titles;
+		const ZArchiveNodeHandle rootDir = zar->LookUp("", false, true);
+		for (uint32 i = 0; rootDir != ZARCHIVE_INVALID_NODE && i < zar->GetDirEntryCount(rootDir); i++)
+		{
+			ZArchiveReader::DirEntry dirEntry;
+			TitleId parsedId;
+			uint16 parsedVersion;
+			if (!zar->GetDirEntry(rootDir, i, dirEntry) || !dirEntry.isDirectory ||
+				!TitleInfo::ParseWuaTitleFolderName(dirEntry.name, parsedId, parsedVersion))
+				continue;
+			TitleInfo title(path, dirEntry.name);
+			if (title.IsValid())
+				titles.emplace_back(title);
+		}
+		return titles;
+	}
+	TitleInfo title(path);
+	if (title.IsValid())
+		titles.emplace_back(title);
+	return titles;
+}

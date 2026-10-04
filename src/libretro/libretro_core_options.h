@@ -60,7 +60,7 @@ struct retro_core_option_v2_category option_cats_us[] = {
 	{ "system", "System", "CPU, language and scheduling." },
 	{ "addons", "Add-ons", "Skylanders, Infinity and Dimensions portals." },
 	{ "logging", "Logging", "Extra log output, for diagnosing problems." },
-	{ "install", "Manage Content", "Manage title updates and DLC in saves/Cemu/mlc01, the emulated console's storage." },
+	{ "install", "Manage Content", "Manage games, title updates and DLC in saves/Cemu/mlc01, the emulated console's storage." },
 	{ "convert", "Convert to WUA", "Write the loaded title out as a .wua archive." },
 	{ "graphic_packs", "Graphic Packs", "The loaded game's graphic packs and their presets. Changes apply the next time the game is loaded." },
 	{ "cheats", "Cheats", "The loaded game's cheat packs, from the graphic packs' Cheats folder. Changes apply the next time the game is loaded." },
@@ -633,6 +633,34 @@ struct retro_core_option_v2_definition option_defs_us[] = {
 		"Uninstall Content",
 		NULL,
 		"Uninstalls the running game's update and DLC from saves/Cemu/mlc01, the emulated console's storage, once the game is closed or reset; it stays on until then. Copies in system/Cemu/titles are left alone.",
+		NULL,
+		"install",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_install_game",
+		"Install Game to Storage",
+		NULL,
+		"Installs the running game into saves/Cemu/mlc01, the emulated console's storage, as the console installs a game from its disc: from a disc image (.wud, .wux, .iso) or a .wua, the latter with the update and DLC it holds as well. It stays on until the install is done. The installed game is started by loading the .rpx in its code folder, under mlc01/usr/title/00050000; the disc image is not needed for it any more.",
+		NULL,
+		"install",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_uninstall_game",
+		"Uninstall Game from Storage",
+		NULL,
+		"Uninstalls the running game itself from saves/Cemu/mlc01 once the game is closed or reset; it stays on until then. Its update, DLC and saves are left alone, as are the disc image or .wua it was installed from.",
 		NULL,
 		"install",
 		{

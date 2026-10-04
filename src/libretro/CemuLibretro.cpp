@@ -2319,6 +2319,8 @@ static void libretro_create_renderer();
 static void libretro_set_convert_status(std::string text, int progress = -1);
 static void libretro_request_install();
 static bool libretro_request_uninstall();
+static bool libretro_request_install_game();
+static bool libretro_request_uninstall_game();
 
 // What the conversion has to read, in bytes: the base title plus whatever
 // update and DLC go into the same archive. A .wua ends up smaller than that -
@@ -2435,6 +2437,8 @@ static void libretro_apply_profile_options()
 // when the menu is closed.
 static bool s_install_switch_on = false;
 static bool s_uninstall_switch_on = false;
+static bool s_install_game_switch_on = false;
+static bool s_uninstall_game_switch_on = false;
 
 static void libretro_handle_install_requests()
 {
@@ -2458,6 +2462,21 @@ static void libretro_handle_install_requests()
 		if (!s_uninstall_switch_on)
 			libretro_set_option_value("cemu_uninstall_titles", "disabled");
 	}
+	if (const char* v = libretro_get_option_value("cemu_install_game"); v && libretro_iequals(v, "enabled") && !s_install_game_switch_on)
+	{
+		if (s_convert_mode.load())
+			libretro_show_message(RETRO_LOG_WARN, 4000, "Not installing: a conversion or an install is still running");
+		else
+			s_install_game_switch_on = libretro_request_install_game();
+		if (!s_install_game_switch_on)
+			libretro_set_option_value("cemu_install_game", "disabled");
+	}
+	if (const char* v = libretro_get_option_value("cemu_uninstall_game"); v && libretro_iequals(v, "enabled") && !s_uninstall_game_switch_on)
+	{
+		s_uninstall_game_switch_on = libretro_request_uninstall_game();
+		if (!s_uninstall_game_switch_on)
+			libretro_set_option_value("cemu_uninstall_game", "disabled");
+	}
 }
 
 // Uninstall Content off: its request is carried out once the title stops,
@@ -2467,6 +2486,9 @@ static void libretro_reset_uninstall_switch()
 	s_uninstall_switch_on = false;
 	if (const char* v = libretro_get_option_value("cemu_uninstall_titles"); v && libretro_iequals(v, "enabled"))
 		libretro_set_option_value("cemu_uninstall_titles", "disabled");
+	s_uninstall_game_switch_on = false;
+	if (const char* v = libretro_get_option_value("cemu_uninstall_game"); v && libretro_iequals(v, "enabled"))
+		libretro_set_option_value("cemu_uninstall_game", "disabled");
 }
 
 // Both switches off: at the end of an install, when the game is closed, and
@@ -2477,6 +2499,9 @@ static void libretro_reset_install_switches()
 	s_install_switch_on = false;
 	if (const char* v = libretro_get_option_value("cemu_install_titles"); v && libretro_iequals(v, "enabled"))
 		libretro_set_option_value("cemu_install_titles", "disabled");
+	s_install_game_switch_on = false;
+	if (const char* v = libretro_get_option_value("cemu_install_game"); v && libretro_iequals(v, "enabled"))
+		libretro_set_option_value("cemu_install_game", "disabled");
 	libretro_reset_uninstall_switch();
 }
 
@@ -4356,6 +4381,67 @@ static bool libretro_request_uninstall()
 	return found != 0;
 }
 
+// Installs the running game into mlc01, as the console installs a game from
+// its disc: the base title from whatever it was loaded from, and from a .wua
+// the update and DLC it holds besides. Not when it already runs from mlc01.
+static bool libretro_request_install_game()
+{
+	if (!s_game_loaded || s_game_path.empty())
+	{
+		libretro_show_message(RETRO_LOG_WARN, 4000, "Nothing to install: no game is running");
+		return false;
+	}
+	const fs::path gamePath = _utf8ToPath(s_game_path);
+	std::vector<TitleInfo> found = TitleConverter::TitlesInContent(gamePath);
+	auto base = std::find_if(found.begin(), found.end(), [](const TitleInfo& title) {
+		return TitleIdParser(title.GetAppTitleId()).GetType() == TitleIdParser::TITLE_TYPE::BASE_TITLE;
+	});
+	if (base == found.end())
+	{
+		libretro_show_message(RETRO_LOG_WARN, 4000, "Nothing to install: the running content is not a game");
+		return false;
+	}
+	// A game started from its installed copy is installed already
+	const fs::path installed = ActiveSettings::GetMlcPath(base->GetInstallPath());
+	std::error_code ec;
+	if (fs::exists(installed, ec) && fs::equivalent(installed, gamePath.parent_path().parent_path(), ec))
+	{
+		libretro_show_message(RETRO_LOG_INFO, 4000, "This game runs from its installed copy in mlc01 already");
+		return false;
+	}
+	libretro_set_convert_status("Installing the game...");
+	libretro_start_install(std::move(found), false, false);
+	return true;
+}
+
+// Removes the running game's installed copy from mlc01 once it is closed: it
+// may be running from it. Update, DLC and saves stay.
+static bool libretro_request_uninstall_game()
+{
+	if (!s_game_loaded || s_game_path.empty())
+	{
+		libretro_show_message(RETRO_LOG_WARN, 4000, "Nothing to uninstall: no game is running");
+		return false;
+	}
+	TitleInfo running{_utf8ToPath(s_game_path)};
+	TitleId base = 0;
+	if (!running.IsValid() || !CafeTitleList::FindBaseTitleId(running.GetAppTitleId(), base))
+	{
+		libretro_show_message(RETRO_LOG_WARN, 4000, "Nothing to uninstall: the running title could not be identified");
+		return false;
+	}
+	const fs::path path = ActiveSettings::GetMlcPath(fmt::format("usr/title/{:08x}/{:08x}", (uint32)(base >> 32), (uint32)base));
+	std::error_code ec;
+	if (!fs::exists(path, ec))
+	{
+		libretro_show_message(RETRO_LOG_INFO, 6000, "This game is not installed in mlc01");
+		return false;
+	}
+	libretro_remove_on_unload(path);
+	libretro_show_message(RETRO_LOG_INFO, 6000, "The installed copy of this game will be removed from mlc01 when it is closed");
+	return true;
+}
+
 static void libretro_install_titles(std::vector<TitleInfo> found, bool removeSource, bool fromContent, bool haveRunning, TitleId runningBase)
 {
 	SetThreadName("titleInstall");
@@ -4373,11 +4459,13 @@ static void libretro_install_titles(std::vector<TitleInfo> found, bool removeSou
 	for (size_t i = 0; i < found.size() && !s_convert_cancel.load(); i++)
 	{
 		TitleInfo& title = found[i];
-		const bool isUpdate = TitleIdParser(title.GetAppTitleId()).GetType() == TitleIdParser::TITLE_TYPE::BASE_TITLE_UPDATE;
+		const auto titleType = TitleIdParser(title.GetAppTitleId()).GetType();
+		const bool isUpdate = titleType == TitleIdParser::TITLE_TYPE::BASE_TITLE_UPDATE;
+		const bool isBase = titleType == TitleIdParser::TITLE_TYPE::BASE_TITLE;
 		std::string name = title.ParseXmlInfo() ? title.GetMetaTitleName() : std::string();
 		if (name.empty())
 			name = fmt::format("{:016x}", title.GetAppTitleId());
-		const std::string label = fmt::format("{} {} v{}", isUpdate ? "update" : "DLC", name, title.GetAppTitleVersion());
+		const std::string label = fmt::format("{} {} v{}", isBase ? "game" : isUpdate ? "update" : "DLC", name, title.GetAppTitleVersion());
 		const fs::path target = ActiveSettings::GetMlcPath(title.GetInstallPath());
 
 		// The same or a newer version already installed is left alone, as
@@ -6183,6 +6271,11 @@ RETRO_API void retro_run()
 			{
 				s_install_switch_on = false;
 				libretro_set_option_value("cemu_install_titles", "disabled");
+			}
+			if (s_install_game_switch_on)
+			{
+				s_install_game_switch_on = false;
+				libretro_set_option_value("cemu_install_game", "disabled");
 			}
 		}
 	}

@@ -6,6 +6,7 @@
 #include <functional>
 #include <span>
 #include <string>
+#include <vector>
 
 // Writing a title out as a compressed Wii U archive (.wua). The wx front end
 // has done this from its title manager for years; this is the same work with
@@ -38,6 +39,10 @@ namespace TitleConverter
 	// from, the NUS form it is downloaded in included, and decrypts it on the
 	// way. The files go to targetDir.tmp first and are swapped in at the end,
 	// so a failed or cancelled install leaves an earlier version where it was.
+	// Every title a piece of content holds: all of them for a .wua, which can
+	// carry a base game with its update and DLC, the one title otherwise.
+	std::vector<TitleInfo> TitlesInContent(const fs::path& path);
+
 	bool InstallTitle(TitleInfo* title, const fs::path& targetDir,
 		const std::atomic_bool& cancel,
 		const std::function<void(const Progress&)>& onProgress,
