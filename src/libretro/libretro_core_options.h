@@ -487,6 +487,20 @@ struct retro_core_option_v2_definition option_defs_us[] = {
 		"normal"
 	},
 	{
+		"cemu_dump_shaders",
+		"Dump Shaders (debugging)",
+		NULL,
+		"Writes the source of every shader the game uses to system/Cemu/dump/shaders, named by its hashes as they appear in log.txt. For reporting a shader that fails or draws wrongly on a particular GPU. Slows shader compilation down and fills the folder quickly, so turn it off again afterwards.",
+		NULL,
+		"logging",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
 		"cemu_log_to_file",
 		"Write Cemu Log to log.txt",
 		NULL,

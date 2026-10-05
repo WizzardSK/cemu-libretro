@@ -2714,6 +2714,18 @@ static void libretro_apply_core_options()
 		// the user data folder - and off hands them to the frontend, which has
 		// a log of its own and its own switch for writing that to disk.
 		bool toFile = true;
+		if (const char* v = libretro_get_option_value("cemu_dump_shaders"))
+		{
+			bool dump = false;
+			libretro_parse_enabled_disabled(v, dump);
+			if (dump)
+			{
+				// LatteShader_DumpShader writes into it without creating it.
+				std::error_code ec;
+				fs::create_directories(ActiveSettings::GetUserDataPath("dump/shaders"), ec);
+			}
+			ActiveSettings::EnableDumpShaders(dump);
+		}
 		if (const char* v = libretro_get_option_value("cemu_log_to_file"))
 			libretro_parse_enabled_disabled(v, toFile);
 		libretro_set_log_to_file(toFile);
