@@ -1,5 +1,8 @@
 #include <condition_variable>
 #include <mutex>
+#ifdef _WIN32
+#include <process.h> // _endthreadex
+#endif
 #include "Cafe/HW/Latte/ISA/RegDefines.h"
 #include "Cafe/OS/libs/gx2/GX2.h" // todo - remove dependency
 #include "Cafe/HW/Latte/Core/Latte.h"
@@ -687,7 +690,13 @@ void LatteThread_Exit()
 	// reset GPU7 state
 	std::memset(&LatteGPUState, 0, sizeof(LatteGPUState));
 	#if BOOST_OS_WINDOWS
-	ExitThread(0);
+	// _endthreadex, not ExitThread: this is a std::thread, started by the C
+	// runtime, which took a reference to the module holding the thread's code
+	// and gives it back only on its own way out. ExitThread went past that,
+	// so every title left one reference behind and a libretro core's DLL was
+	// never unloaded (NNshi's module trace: one more after each game, with
+	// none of the threads still running).
+	_endthreadex(0);
 	#else
 	pthread_exit(nullptr);
 	#endif
