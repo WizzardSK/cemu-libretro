@@ -196,26 +196,6 @@ struct retro_core_option_v2_definition option_defs_us[] = {
 		"linear"
 	},
 	{
-		"cemu_frame_rate",
-		"Frame Rate",
-		NULL,
-		"How many frames a second the core gives RetroArch, and so how many the game may render. 60 is what the Wii U does. A graphic pack that unlocks a game's frame rate (an FPS++ preset at 120, say) needs the same rate here, or the game runs at 60/120 of its speed; Auto takes it from the active graphic packs. Above 60 only makes sense on a display that refreshes that fast.",
-		NULL,
-		"video",
-		{
-			{ "60", NULL },
-			{ "auto", "Auto (from graphic packs)" },
-			{ "75", NULL },
-			{ "90", NULL },
-			{ "120", NULL },
-			{ "144", NULL },
-			{ "165", NULL },
-			{ "240", NULL },
-			{ NULL, NULL },
-		},
-		"60"
-	},
-	{
 		"cemu_show_game_fps",
 		"Show Game FPS",
 		NULL,

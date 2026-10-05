@@ -653,24 +653,21 @@ std::atomic_bool s_frame_ready{false};
 static std::atomic<uint32_t> s_game_frames{0};
 static bool s_show_game_fps = false;
 
-// The rate retro_run is reported to come at (Frame Rate): each retro_run lets
-// the game render one frame and carries one frame's worth of audio.
+// The rate retro_run is reported to come at: each retro_run lets the game
+// render one frame and carries one frame's worth of audio.
 static double s_output_fps = 60.0;
 
 static const char* libretro_get_option_value(const char* key);
 
+// 60, as on the Wii U, unless an active graphic pack sets another vsync rate
+// (an FPS++ preset at 120, say), which the game then renders at. This used to
+// be the Frame Rate option's Auto, beside fixed rates that only had to match
+// such a pack by hand; NNshi and sco agreed the pack's rate is the only one
+// that makes sense, so it is the behaviour now and the option is gone.
 static double libretro_wanted_fps()
 {
-	const char* v = libretro_get_option_value("cemu_frame_rate");
-	if (!v || !strcmp(v, "60"))
-		return 60.0;
-	if (!strcmp(v, "auto"))
-	{
-		sint32 frequency = 0;
-		return LatteTiming_getCustomVsyncFrequency(frequency) && frequency > 0 ? (double)frequency : 60.0;
-	}
-	const double fps = atof(v);
-	return fps >= 30.0 && fps <= 480.0 ? fps : 60.0;
+	sint32 frequency = 0;
+	return LatteTiming_getCustomVsyncFrequency(frequency) && frequency > 0 ? (double)frequency : 60.0;
 }
 
 void libretro_signal_frame_ready()
@@ -3677,8 +3674,9 @@ RETRO_API void retro_get_system_av_info(struct retro_system_av_info* info)
 	info->timing.sample_rate = 48000.0;
 }
 
-// Frame Rate changed, or Auto found a graphic pack with a frame rate of its
-// own once the title started (packs are activated then): tell the frontend.
+// A graphic pack with a frame rate of its own turned out to be active once the
+// title started (packs are activated then), or stopped being: tell the
+// frontend.
 static void libretro_update_output_fps()
 {
 	const double wanted = libretro_wanted_fps();
@@ -6481,7 +6479,7 @@ RETRO_API void retro_run()
 	}
 
 	// Wait for frame from GPU thread - but not for long. retro_run has to keep
-	// coming at the rate the core reports (60 Hz unless Frame Rate says
+	// coming at the rate the core reports (60 Hz unless a graphic pack says
 	// otherwise) whatever rate the title renders at, because each one is one
 	// frame's worth of audio: a 30 fps title waited on for up to 33 ms made
 	// retro_run itself 30 Hz and the audio half speed. Most of a frame - 12 ms
