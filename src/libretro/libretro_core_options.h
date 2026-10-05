@@ -111,32 +111,6 @@ struct retro_core_option_v2_definition option_defs_us[] = {
 		"English"
 	},
 	{
-		"cemu_account",
-		"Account",
-		NULL,
-		"The Wii U account the game runs as, each with its own saves and Mii. The list is the accounts in the account directory. Create a New Account adds one, named Player 2, Player 3 and so on, and switches to it.\n\nA change applies when the title is closed and started again, or reset. Until then the running title keeps saving to the account it was started with.",
-		NULL,
-		"accounts",
-		{
-			{ "80000001", NULL },
-			{ NULL, NULL },
-		},
-		"80000001"
-	},
-	{
-		"cemu_remove_account",
-		"Remove an Account",
-		NULL,
-		"Removes the chosen account, as deleting a user on the console does: the account goes from the account directory, and its save data from every title's save folder. Then this goes back to OFF. The account picked above and the one the running title uses are not offered, so the last account cannot be removed.",
-		NULL,
-		"accounts",
-		{
-			{ "disabled", NULL },
-			{ NULL, NULL },
-		},
-		"disabled"
-	},
-	{
 		"cemu_async_shader_compile",
 		"Async Shader Compile",
 		NULL,
@@ -652,6 +626,46 @@ struct retro_core_option_v2_definition option_defs_us[] = {
 		{
 			{ "disabled", NULL },
 			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_account",
+		"Active Account",
+		NULL,
+		"The Wii U account the game runs as, each with its own saves and Mii. The list is the accounts in the account directory.\n\nA change applies when the title is closed and started again, or reset. Until then the running title keeps saving to the account it was started with.",
+		NULL,
+		"accounts",
+		{
+			{ "80000001", NULL },
+			{ NULL, NULL },
+		},
+		"80000001"
+	},
+	{
+		"cemu_create_account",
+		"Create Account",
+		NULL,
+		"Creates a new account, named Player 2, Player 3 and so on, and makes it the Active Account. Then this goes back to OFF. The console holds up to 12 accounts.",
+		NULL,
+		"accounts",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_remove_account",
+		"Remove Account",
+		NULL,
+		"WARNING: removing an account also deletes its save data in every game, and this cannot be undone.\n\nRemoves the chosen account, as deleting a user on the console does: the account goes from the account directory, and its saves from every title's save folder. Then this goes back to OFF.\n\nNot offered: the Active Account, and the account the running game was started with, until that game is closed - so the last account cannot be removed.",
+		NULL,
+		"accounts",
+		{
+			{ "disabled", NULL },
 			{ NULL, NULL },
 		},
 		"disabled"
