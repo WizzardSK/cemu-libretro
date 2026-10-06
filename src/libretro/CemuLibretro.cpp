@@ -13,6 +13,7 @@
 
 #include "config/CemuConfig.h"
 #include "Cafe/Account/Account.h"
+#include "Cafe/OS/libs/swkbd/swkbd.h"
 #include <openssl/crypto.h>
 #include <boost/nowide/convert.hpp>
 #include "config/ActiveSettings.h"
@@ -5540,6 +5541,8 @@ static bool libretro_disc_key_available(const fs::path& gamePath)
 	return false;
 }
 
+static void RETRO_CALLCONV libretro_keyboard_event(bool down, unsigned keycode, uint32_t character, uint16_t modifiers);
+
 RETRO_API bool retro_load_game(const struct retro_game_info* game)
 {
 	if (!game || !game->path)
@@ -5552,6 +5555,11 @@ RETRO_API bool retro_load_game(const struct retro_game_info* game)
 		return false;
 
 	libretro_reset_install_switches();
+
+	{
+		struct retro_keyboard_callback keyboard{libretro_keyboard_event};
+		environ_cb(RETRO_ENVIRONMENT_SET_KEYBOARD_CALLBACK, &keyboard);
+	}
 
 	// Re-decided below for this load; a stale value from a previous one would
 	// hide a frontend that cannot give this core a context the second time.
@@ -6066,6 +6074,68 @@ RETRO_API void retro_deinit()
 // ============================================================================
 // Input mapping
 // ============================================================================
+
+// The Wii U's software keyboard (a name to type in Wind Waker HD, say). Cemu
+// draws it with imgui, which never reaches the screen in this core (see
+// cfg.notification.position), so the title sat waiting on a keyboard nobody
+// could see or use (NNshi). Its input, though, is Cemu's own: standalone
+// feeds it the host keyboard, and so does this, from RetroArch's keyboard
+// callback - with the text so far shown in RetroArch's OSD. Keys reach the
+// core only with Game Focus on (Scroll Lock by default) where the keyboard
+// also has hotkeys bound. For a setup with only a pad, Start accepts, and
+// types the account's Mii name first if nothing has been typed.
+static std::atomic_bool s_swkbd_text_changed{false};
+
+static void RETRO_CALLCONV libretro_keyboard_event(bool down, unsigned keycode, uint32_t character, uint16_t /*modifiers*/)
+{
+	if (!down || !s_game_loaded || !swkbd_hasKeyboardInputHook())
+		return;
+	if (keycode == RETROK_BACKSPACE)
+		swkbd_keyInput(8);
+	else if (keycode == RETROK_RETURN || keycode == RETROK_KP_ENTER)
+		swkbd_keyInput(13);
+	else if (character >= 32 && character != 127)
+		swkbd_keyInput(character);
+	else
+		return;
+	s_swkbd_text_changed = true;
+}
+
+static void libretro_update_software_keyboard()
+{
+	static bool s_was_active = false;
+	static bool s_start_held = false;
+	const bool active = s_game_loaded && swkbd_hasKeyboardInputHook();
+	const bool start = s_port_state[0].buttons[RETRO_DEVICE_ID_JOYPAD_START] != 0;
+	const bool start_pressed = start && !s_start_held;
+	s_start_held = start;
+
+	if (!active)
+	{
+		s_was_active = false;
+		return;
+	}
+	if (!s_was_active)
+	{
+		s_was_active = true;
+		s_swkbd_text_changed = false;
+		libretro_show_message(RETRO_LOG_INFO, 6000,
+			"Software keyboard: type with the keyboard (Game Focus on), Enter accepts. Start on the pad accepts, with the account's name if nothing is typed.");
+	}
+	if (start_pressed)
+	{
+		if (swkbd_getInputText().empty())
+		{
+			const uint32 persistentId = GetConfig().account.m_persistent_id;
+			for (wchar_t c : Account::GetAccount(persistentId).GetMiiName())
+				swkbd_keyInput((uint32)c);
+		}
+		swkbd_keyInput(13);
+		s_swkbd_text_changed = true;
+	}
+	if (s_swkbd_text_changed.exchange(false))
+		libretro_show_message(RETRO_LOG_INFO, 3000, "Keyboard: " + boost::nowide::narrow(swkbd_getInputText()) + "_");
+}
 
 static void libretro_poll_input()
 {
@@ -6613,6 +6683,7 @@ RETRO_API void retro_run()
 	// Poll input
 	libretro_poll_input();
 	libretro_update_rumble();
+	libretro_update_software_keyboard();
 
 	using prof_clock = std::chrono::steady_clock;
 	const auto profStart = prof_clock::now();
