@@ -579,6 +579,20 @@ struct retro_core_option_v2_definition option_defs_us[] = {
 		"disabled"
 	},
 	{
+		"cemu_render_ahead",
+		"Render Ahead One Frame",
+		NULL,
+		"Lets Cemu start drawing the next frame while RetroArch shows the last one, as standalone Cemu does. Smoother where frames take most of the frame time to draw, with one frame more input latency. Disabled, a frame not drawn within 12 ms is shown as the previous one again.",
+		NULL,
+		"video",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
 		"cemu_bc1_16bit",
 		"Reduce BC1 Texture Memory",
 		NULL,

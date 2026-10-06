@@ -3665,6 +3665,17 @@ void VulkanRenderer::SwapBuffers(bool swapTV, bool swapDRC)
 
 	SubmitCommandBuffer();
 
+	// The blit into the presentation image is on the queue now, ahead of
+	// whatever the frontend submits to draw it. Through the core's signal, not
+	// a flag on its own: retro_run waits on a condition variable with a
+	// timeout, and a store nobody notifies arrives when that runs out.
+	if (m_libretroFramePending)
+	{
+		m_libretroFramePending = false;
+		extern void libretro_signal_frame_ready();
+		libretro_signal_frame_ready();
+	}
+
 	// The work is submitted and the frame is the frontend's; park here until it
 	// asks for the next one. After the submit, so nothing is held open while we
 	// wait, and only for the TV frame - the DRC swap is part of the same frame.
@@ -3891,13 +3902,12 @@ void VulkanRenderer::DrawBackbufferQuad(LatteTextureView* texView, RendererOutpu
 			barrier_image<TRANSFER_READ, ANY_TRANSFER | IMAGE_WRITE>(baseTexture, srcLayers, VK_IMAGE_LAYOUT_GENERAL);
 		}
 
-		// Through the core's signal, not the flag on its own: retro_run is
-		// waiting on a condition variable with a timeout, so a store nobody
-		// notifies makes the frame arrive when the timeout runs out instead of
-		// when it is ready - half the frame rate of the OpenGL path, which
-		// signalled properly.
-		extern void libretro_signal_frame_ready();
-		libretro_signal_frame_ready();
+		// The frame is signalled from SwapBuffers, once this is submitted.
+		// Signalled here, at recording, retro_run could hand the image to the
+		// frontend before the blit was on the queue at all; the frontend's
+		// draw went in ahead of it, sampled the previous frame, and the new
+		// one never showed - a repeated frame and a dropped one (NNshi, MK8).
+		m_libretroFramePending = true;
 	}
 	return;
 

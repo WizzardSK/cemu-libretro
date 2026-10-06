@@ -661,6 +661,9 @@ public:
 	// was created. Its memory is undefined until the first blit, and a frontend
 	// handed it before that draws whatever the driver left there.
 	bool m_presentImageHasContent = false;
+	// A frame composited into the presentation image and not yet signalled to
+	// retro_run, which SwapBuffers does once it is submitted.
+	bool m_libretroFramePending = false;
 	uint32 m_presentWidth = 0;
 	uint32 m_presentHeight = 0;
 	// Tracks the LatteGPUState.frameCounter value at which m_presentImage was

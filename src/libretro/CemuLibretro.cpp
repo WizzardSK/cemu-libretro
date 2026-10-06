@@ -476,6 +476,10 @@ static unsigned int s_frontend_read_fbo = 0;
 static unsigned int s_frontend_read_rbo_attached = 0;
 static unsigned int s_frontend_upload_tex = 0;
 
+// Render Ahead (cemu_render_ahead): the GPU thread is let into the next frame
+// at the end of retro_run rather than at its start.
+static bool s_render_ahead = false;
+
 // Frame gate.
 //
 // RetroArch pauses a core by not calling retro_run, but this emulator runs on
@@ -2676,6 +2680,12 @@ static void libretro_apply_core_options()
 				g_libretroNarrowBC1 = b;
 		}
 #endif
+		if (const char* v = libretro_get_option_value("cemu_render_ahead"))
+		{
+			bool b;
+			if (libretro_parse_enabled_disabled(v, b))
+				s_render_ahead = b;
+		}
 		if (const char* v = libretro_get_option_value("cemu_log_audio"))
 		{
 			bool b;
@@ -6194,6 +6204,14 @@ static void libretro_finish_run(std::chrono::steady_clock::time_point start,
 	const auto presented = prof_clock::now();
 	libretro_report_game_fps(presented);
 
+	// Rendering ahead: the frame is handed over, so the next one may start
+	// now, while the frontend presents this one and waits for the vsync, and
+	// not only when the next retro_run comes. That gives it the whole frame
+	// interval instead of the most of a frame retro_run waits, at the cost of
+	// one frame of latency - what standalone Cemu's swapchain does anyway.
+	if (s_render_ahead)
+		libretro_frame_gate_grant();
+
 	LibretroAudioAPI::FlushAudio();
 	s_last_audio_wait_us = std::chrono::duration_cast<std::chrono::microseconds>(prof_clock::now() - presented).count();
 
@@ -6425,7 +6443,9 @@ RETRO_API void retro_run()
 	bool profTimedOut = false;
 
 	// Ask for a frame: the GPU thread is parked at the gate after the last swap.
-	libretro_frame_gate_grant();
+	// Rendering ahead, it was asked at the end of the last retro_run instead.
+	if (!s_render_ahead)
+		libretro_frame_gate_grant();
 	// And for the audio of the time since the last retro_run, at 48000 Hz,
 	// less what of it went on waiting in the frontend's audio callback.
 	//
