@@ -184,6 +184,20 @@ struct retro_core_option_v2_definition option_defs_us[] = {
 		"linear"
 	},
 	{
+		"cemu_frame_wait",
+		"Frame Wait",
+		NULL,
+		"How long each run waits for the game's frame before showing the last one again. 'Whole Frame' gives the GPU the whole frame time, as standalone Cemu does; a frame later than that slows the run, and the audio with it. 'Most of a Frame' waits 72 % of it, so a late frame is a repeated frame instead and the audio keeps its pace, at the cost of the last 28 % of the frame time.",
+		NULL,
+		"video",
+		{
+			{ "whole", "Whole Frame" },
+			{ "most", "Most of a Frame" },
+			{ NULL, NULL },
+		},
+		"whole"
+	},
+	{
 		"cemu_show_game_fps",
 		"Show Game FPS",
 		NULL,
