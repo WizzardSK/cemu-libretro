@@ -4495,6 +4495,9 @@ static bool libretro_request_uninstall_game()
 		libretro_show_message(RETRO_LOG_WARN, 4000, "Nothing to uninstall: the running title could not be identified");
 		return false;
 	}
+	// The game and, as Install Game installs them with it from a .wua, its
+	// update (0005000e) and DLC (0005000c): the same title, with the high
+	// half of the ID telling them apart
 	const fs::path path = ActiveSettings::GetMlcPath(fmt::format("usr/title/{:08x}/{:08x}", (uint32)(base >> 32), (uint32)base));
 	std::error_code ec;
 	if (!fs::exists(path, ec))
@@ -4503,7 +4506,19 @@ static bool libretro_request_uninstall_game()
 		return false;
 	}
 	libretro_remove_on_unload(path);
-	libretro_show_message(RETRO_LOG_INFO, 6000, "The installed copy of this game will be removed from mlc01 when it is closed");
+	bool withMore = false;
+	for (const uint32 high : {0x0005000eu, 0x0005000cu})
+	{
+		const fs::path more = ActiveSettings::GetMlcPath(fmt::format("usr/title/{:08x}/{:08x}", high, (uint32)base));
+		if (fs::exists(more, ec))
+		{
+			libretro_remove_on_unload(more);
+			withMore = true;
+		}
+	}
+	libretro_show_message(RETRO_LOG_INFO, 6000, withMore ?
+		"The installed copy of this game, its update and DLC will be removed from mlc01 when it is closed" :
+		"The installed copy of this game will be removed from mlc01 when it is closed");
 	return true;
 }
 

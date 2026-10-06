@@ -632,7 +632,7 @@ struct retro_core_option_v2_definition option_defs_us[] = {
 		"cemu_uninstall_game",
 		"Uninstall Game",
 		NULL,
-		"Uninstalls the running game itself from saves/Cemu/mlc01 once the game is closed or reset; it stays on until then. Its update, DLC and saves are left alone, as are the disc image or .wua it was installed from.",
+		"Uninstalls the running game from saves/Cemu/mlc01 once the game is closed or reset, together with its installed update and DLC; it stays on until then. Its saves are left alone, as are the disc image or .wua it was installed from.",
 		NULL,
 		"install",
 		{
