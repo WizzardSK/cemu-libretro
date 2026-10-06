@@ -130,6 +130,11 @@ void iosuAct_loadAccounts()
 	_actAccountDataInitialized = true;
 }
 
+void iosuAct_forgetAccounts()
+{
+	_actAccountDataInitialized = false;
+}
+
 bool iosuAct_isAccountDataLoaded()
 {
 	return _actAccountDataInitialized;

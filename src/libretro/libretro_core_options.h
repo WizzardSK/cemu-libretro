@@ -60,7 +60,8 @@ struct retro_core_option_v2_category option_cats_us[] = {
 	{ "system", "System", "CPU, language and scheduling." },
 	{ "addons", "Add-ons", "Skylanders, Infinity and Dimensions portals." },
 	{ "logging", "Logging", "Extra log output, for diagnosing problems." },
-	{ "install", "Manage Content", "Manage games, title updates and DLC in saves/Cemu/mlc01, the emulated console's storage." },
+	{ "accounts", "Accounts", "Manage accounts in the Wii U's account directory (saves/Cemu/mlc01/usr/save/system/act)." },
+	{ "install", "Content", "Manage games, title updates and DLC in saves/Cemu/mlc01, the emulated console's storage." },
 	{ "convert", "Convert to WUA", "Write the loaded title out as a .wua archive." },
 	{ "graphic_packs", "Graphic Packs", "The loaded game's graphic packs and their presets. Changes apply the next time the game is loaded." },
 	{ "cheats", "Cheats", "The loaded game's cheat packs, from the graphic packs' Cheats folder. Changes apply the next time the game is loaded." },
@@ -108,19 +109,6 @@ struct retro_core_option_v2_definition option_defs_us[] = {
 			{ NULL, NULL },
 		},
 		"English"
-	},
-	{
-		"cemu_account",
-		"Account",
-		NULL,
-		"The Wii U account the game runs as, each with its own saves and Mii, as picked in standalone Cemu's account settings. The list is the accounts on the emulated storage (saves/Cemu/mlc01). Create a New Account adds one, named Player 2, Player 3 and so on, and switches to it. A change applies when the game is next started.",
-		NULL,
-		"system",
-		{
-			{ "80000001", NULL },
-			{ NULL, NULL },
-		},
-		"80000001"
 	},
 	{
 		"cemu_async_shader_compile",
@@ -608,6 +596,46 @@ struct retro_core_option_v2_definition option_defs_us[] = {
 		"OpenGL"
 	},
 #endif
+	{
+		"cemu_account",
+		"Active Account",
+		NULL,
+		"The Wii U account the game runs as, each with its own saves and Mii. The list is the accounts in the account directory.\n\nA change applies when the title is closed and started again, or reset. Until then the running title keeps saving to the account it was started with.",
+		NULL,
+		"accounts",
+		{
+			{ "80000001", NULL },
+			{ NULL, NULL },
+		},
+		"80000001"
+	},
+	{
+		"cemu_create_account",
+		"Create Account",
+		NULL,
+		"Creates a new account, named Player 2, Player 3 and so on, and makes it the Active Account. Then this goes back to OFF. The console holds up to 12 accounts.",
+		NULL,
+		"accounts",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_remove_account",
+		"Remove Account",
+		NULL,
+		"WARNING: removing an account also deletes its save data in every game, and this cannot be undone.\n\nRemoves the chosen account, as deleting a user on the console does: the account goes from the account directory, and its saves from every title's save folder. The account is removed when you leave the menu, and this then goes back to OFF.\n\nNot offered: the Active Account, and the account the running game was started with, which can be removed only once that game is closed. So the last account cannot be removed.",
+		NULL,
+		"accounts",
+		{
+			{ "disabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
 	{
 		"cemu_install_game",
 		"Install Game",
