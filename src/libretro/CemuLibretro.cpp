@@ -660,15 +660,29 @@ static double s_output_fps = 60.0;
 
 static const char* libretro_get_option_value(const char* key);
 
-// 60, as on the Wii U, unless an active graphic pack sets another vsync rate
-// (an FPS++ preset at 120, say), which the game then renders at. This used to
-// be the Frame Rate option's Auto, beside fixed rates that only had to match
-// such a pack by hand; NNshi and sco agreed the pack's rate is the only one
-// that makes sense, so it is the behaviour now and the option is gone.
+// The rate the title presents at: the vsync rate - 60, as on the Wii U,
+// unless an active graphic pack sets another (an FPS++ preset at 120, say) -
+// divided by the swap interval the title asks for with GX2SetSwapInterval, so
+// a 30 fps title (interval 2) is reported as 30. Reported as 60 instead, every
+// other retro_run waited out its 12 ms for a frame that was never coming and
+// showed the last one again, and the frames that did come had 12 ms where the
+// title gives itself 33 (NNshi). This used to be the Frame Rate option's Auto,
+// beside fixed rates that only had to match such a pack by hand; NNshi and sco
+// agreed the title's own rate is the only one that makes sense, so it is the
+// behaviour now and the option is gone.
 static double libretro_wanted_fps()
 {
 	sint32 frequency = 0;
-	return LatteTiming_getCustomVsyncFrequency(frequency) && frequency > 0 ? (double)frequency : 60.0;
+	double fps = LatteTiming_getCustomVsyncFrequency(frequency) && frequency > 0 ? (double)frequency : 60.0;
+	// 0 is vsync off, which Cemu flips on every vsync anyway. The shared area
+	// is the running title's, so only while one runs.
+	if (s_game_loaded && LatteGPUState.sharedArea)
+	{
+		const uint32 interval = std::min<uint32>(uint32(LatteGPUState.sharedArea->swapInterval), 4);
+		if (interval > 1)
+			fps /= interval;
+	}
+	return fps;
 }
 
 void libretro_signal_frame_ready()
@@ -3766,11 +3780,34 @@ RETRO_API void retro_get_system_av_info(struct retro_system_av_info* info)
 // A graphic pack with a frame rate of its own turned out to be active once the
 // title started (packs are activated then), or stopped being: tell the
 // frontend.
-static void libretro_update_output_fps()
+//
+// steady: the title may change its swap interval while it runs - a 60 fps menu
+// in front of a 30 fps game, a loading screen - and a new rate reinitialises
+// RetroArch's audio, so from retro_run a rate is taken once it has held for
+// a second. Option changes and the start of a title take it at once.
+static void libretro_update_output_fps(bool steady = false)
 {
+	static double s_pending_fps = 0.0;
+	static std::chrono::steady_clock::time_point s_pending_since{};
 	const double wanted = libretro_wanted_fps();
 	if (wanted == s_output_fps)
+	{
+		s_pending_fps = 0.0;
 		return;
+	}
+	if (steady)
+	{
+		const auto now = std::chrono::steady_clock::now();
+		if (wanted != s_pending_fps)
+		{
+			s_pending_fps = wanted;
+			s_pending_since = now;
+			return;
+		}
+		if (now - s_pending_since < std::chrono::seconds(1))
+			return;
+	}
+	s_pending_fps = 0.0;
 	s_output_fps = wanted;
 	retro_system_av_info av{};
 	retro_get_system_av_info(&av);
@@ -6569,6 +6606,9 @@ RETRO_API void retro_run()
 		libretro_apply_core_options();
 		libretro_update_output_fps();
 	}
+
+	// The title's swap interval
+	libretro_update_output_fps(true);
 
 	// Poll input
 	libretro_poll_input();
