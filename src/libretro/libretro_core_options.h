@@ -661,7 +661,7 @@ struct retro_core_option_v2_definition option_defs_us[] = {
 		"cemu_remove_account",
 		"Remove Account",
 		NULL,
-		"WARNING: removing an account also deletes its save data in every game, and this cannot be undone.\n\nRemoves the chosen account, as deleting a user on the console does: the account goes from the account directory, and its saves from every title's save folder. Then this goes back to OFF.\n\nNot offered: the Active Account, and the account the running game was started with, until that game is closed - so the last account cannot be removed.",
+		"WARNING: removing an account also deletes its save data in every game, and this cannot be undone.\n\nRemoves the chosen account, as deleting a user on the console does: the account goes from the account directory, and its saves from every title's save folder. The account is removed when you leave the menu, and this then goes back to OFF.\n\nNot offered: the Active Account, and the account the running game was started with, which can be removed only once that game is closed. So the last account cannot be removed.",
 		NULL,
 		"accounts",
 		{
