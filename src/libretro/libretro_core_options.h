@@ -612,7 +612,7 @@ struct retro_core_option_v2_definition option_defs_us[] = {
 		"cemu_install_game",
 		"Install Game",
 		NULL,
-		"Installs the running game into saves/Cemu/mlc01, the emulated console's storage, as the console installs a game from its disc: from a disc image (.wud, .wux, .iso) or a .wua, the latter with the update and DLC it holds as well. It stays on until the install is done. The installed game is started by loading the .rpx in its code folder, under mlc01/usr/title/00050000; the disc image is not needed for it any more.\n\nA game disc image in any location can be installed: load it with RetroArch's Main Menu > Load Content, then turn this on.",
+		"Installs every game in system/Cemu/titles into saves/Cemu/mlc01, the emulated console's storage, as the console installs a game from its disc. A game is a disc image (.wud, .wux, .iso) or a .wua, and from a .wua the update and DLC it holds are installed with it. A game installed already in the same or a newer version is left alone.\n\nWhen this is ON, installing begins immediately, with its progress shown as a notification, and it turns OFF again when all games are installed. The installed game is started by loading the .rpx in its code folder, under mlc01/usr/title/00050000; the disc image is not needed for it any more.",
 		NULL,
 		"install",
 		{
@@ -626,7 +626,7 @@ struct retro_core_option_v2_definition option_defs_us[] = {
 		"cemu_uninstall_game",
 		"Uninstall Game",
 		NULL,
-		"Uninstalls the running game itself from saves/Cemu/mlc01 once the game is closed or reset; it stays on until then. Its update, DLC and saves are left alone, as are the disc image or .wua it was installed from.",
+		"Uninstalls the running game from saves/Cemu/mlc01 once the game is closed or reset, together with its installed update and DLC; it stays on until then. Its saves are left alone, as are the disc image or .wua it was installed from.",
 		NULL,
 		"install",
 		{

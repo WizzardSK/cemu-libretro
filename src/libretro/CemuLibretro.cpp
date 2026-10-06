@@ -2491,6 +2491,8 @@ static void libretro_handle_install_requests()
 	{
 		if (s_convert_mode.load())
 			libretro_show_message(RETRO_LOG_WARN, 4000, "Not installing: a conversion or an install is still running");
+		else if (!s_cafe_system_initialized)
+			libretro_show_message(RETRO_LOG_WARN, 4000, "Not installing: the emulator has not started yet");
 		else
 			s_install_game_switch_on = libretro_request_install_game();
 		if (!s_install_game_switch_on)
@@ -4419,36 +4421,67 @@ static bool libretro_request_uninstall()
 	return found != 0;
 }
 
-// Installs the running game into mlc01, as the console installs a game from
-// its disc: the base title from whatever it was loaded from, and from a .wua
-// the update and DLC it holds besides. Not when it already runs from mlc01.
+// Installs every game in system/Cemu/titles into mlc01, as the console installs
+// a game from its disc - never the one running, which a console does not
+// install either (Shoegzer). A game is a disc image (.wud, .wux, .iso) or a
+// .wua, and from a .wua the update and DLC it holds go in with it. Like
+// Install Content it runs on the conversion's thread with its progress shown,
+// and a game installed in the same or a newer version is left alone.
 static bool libretro_request_install_game()
 {
-	if (!s_game_loaded || s_game_path.empty())
-	{
-		libretro_show_message(RETRO_LOG_WARN, 4000, "Nothing to install: no game is running");
-		return false;
-	}
-	const fs::path gamePath = _utf8ToPath(s_game_path);
-	std::vector<TitleInfo> found = TitleConverter::TitlesInContent(gamePath);
-	auto base = std::find_if(found.begin(), found.end(), [](const TitleInfo& title) {
-		return TitleIdParser(title.GetAppTitleId()).GetType() == TitleIdParser::TITLE_TYPE::BASE_TITLE;
+	s_convert_finished = false;
+	s_convert_cancel = false;
+	s_convert_mode.store(true);
+	libretro_set_convert_status("Looking for games...");
+	libretro_update_convert_visibility();
+
+	TitleId runningBase = 0;
+	const bool haveRunning = libretro_running_base_title(runningBase);
+	if (s_convert_thread.joinable())
+		s_convert_thread.join();
+	s_convert_thread = std::thread([haveRunning, runningBase]() {
+		SetThreadName("gameInstall");
+		const fs::path titlesDir = ActiveSettings::GetUserDataPath("titles");
+		CafeTitleList::WaitForMandatoryScan();
+		std::string titlesPrefix = _pathToUtf8(titlesDir.lexically_normal());
+		if (!titlesPrefix.empty() && titlesPrefix.back() != (char)fs::path::preferred_separator)
+			titlesPrefix += (char)fs::path::preferred_separator;
+		std::vector<fs::path> gamePaths;
+		for (TitleInfo* title : CafeTitleList::AcquireInternalList())
+		{
+			const std::string p = _pathToUtf8(title->GetPath().lexically_normal());
+			if (!title->IsValid() || p.size() <= titlesPrefix.size() || p.compare(0, titlesPrefix.size(), titlesPrefix) != 0)
+				continue;
+			if (TitleIdParser(title->GetAppTitleId()).GetType() != TitleIdParser::TITLE_TYPE::BASE_TITLE)
+				continue;
+			if (std::find(gamePaths.begin(), gamePaths.end(), title->GetPath()) == gamePaths.end())
+				gamePaths.push_back(title->GetPath());
+		}
+		CafeTitleList::ReleaseInternalList();
+
+		// Everything each one holds, the newest version of each title.
+		std::vector<TitleInfo> found;
+		for (const fs::path& path : gamePaths)
+		{
+			for (TitleInfo& title : TitleConverter::TitlesInContent(path))
+			{
+				auto same = std::find_if(found.begin(), found.end(), [&](const TitleInfo& other) {
+					return other.GetAppTitleId() == title.GetAppTitleId();
+				});
+				if (same == found.end())
+					found.emplace_back(std::move(title));
+				else if (title.GetAppTitleVersion() > same->GetAppTitleVersion())
+					*same = std::move(title);
+			}
+		}
+		if (found.empty())
+		{
+			libretro_set_convert_status(fmt::format("Nothing to install: no games in {}", _pathToUtf8(titlesDir)));
+			s_convert_finished = true;
+			return;
+		}
+		libretro_install_titles(std::move(found), false, false, haveRunning, runningBase);
 	});
-	if (base == found.end())
-	{
-		libretro_show_message(RETRO_LOG_WARN, 4000, "Nothing to install: the running content is not a game");
-		return false;
-	}
-	// A game started from its installed copy is installed already
-	const fs::path installed = ActiveSettings::GetMlcPath(base->GetInstallPath());
-	std::error_code ec;
-	if (fs::exists(installed, ec) && fs::equivalent(installed, gamePath.parent_path().parent_path(), ec))
-	{
-		libretro_show_message(RETRO_LOG_INFO, 4000, "This game runs from its installed copy in mlc01 already");
-		return false;
-	}
-	libretro_set_convert_status("Installing the game...");
-	libretro_start_install(std::move(found), false, false);
 	return true;
 }
 
@@ -4468,6 +4501,9 @@ static bool libretro_request_uninstall_game()
 		libretro_show_message(RETRO_LOG_WARN, 4000, "Nothing to uninstall: the running title could not be identified");
 		return false;
 	}
+	// The game and, as Install Game installs them with it from a .wua, its
+	// update (0005000e) and DLC (0005000c): the same title, with the high
+	// half of the ID telling them apart
 	const fs::path path = ActiveSettings::GetMlcPath(fmt::format("usr/title/{:08x}/{:08x}", (uint32)(base >> 32), (uint32)base));
 	std::error_code ec;
 	if (!fs::exists(path, ec))
@@ -4476,7 +4512,19 @@ static bool libretro_request_uninstall_game()
 		return false;
 	}
 	libretro_remove_on_unload(path);
-	libretro_show_message(RETRO_LOG_INFO, 6000, "The installed copy of this game will be removed from mlc01 when it is closed");
+	bool withMore = false;
+	for (const uint32 high : {0x0005000eu, 0x0005000cu})
+	{
+		const fs::path more = ActiveSettings::GetMlcPath(fmt::format("usr/title/{:08x}/{:08x}", high, (uint32)base));
+		if (fs::exists(more, ec))
+		{
+			libretro_remove_on_unload(more);
+			withMore = true;
+		}
+	}
+	libretro_show_message(RETRO_LOG_INFO, 6000, withMore ?
+		"The installed copy of this game, its update and DLC will be removed from mlc01 when it is closed" :
+		"The installed copy of this game will be removed from mlc01 when it is closed");
 	return true;
 }
 
