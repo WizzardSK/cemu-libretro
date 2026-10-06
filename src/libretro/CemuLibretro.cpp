@@ -4588,7 +4588,7 @@ static bool libretro_request_uninstall_game()
 		libretro_show_message(RETRO_LOG_WARN, 4000, "Nothing to uninstall: the running title could not be identified");
 		return false;
 	}
-	// The game and, as Install Game installs them with it from a .wua, its
+	// The game and, as Install Games installs them with it from a .wua, its
 	// update (0005000e) and DLC (0005000c): the same title, with the high
 	// half of the ID telling them apart
 	const fs::path path = ActiveSettings::GetMlcPath(fmt::format("usr/title/{:08x}/{:08x}", (uint32)(base >> 32), (uint32)base));

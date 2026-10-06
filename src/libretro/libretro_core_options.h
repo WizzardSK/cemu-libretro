@@ -281,7 +281,7 @@ struct retro_core_option_v2_definition option_defs_us[] = {
 	},
 	{
 		"cemu_emulate_skylander_portal",
-		"Emulate Skylander Portal",
+		"Emulate Skylanders Portal of Power",
 		NULL,
 		NULL,
 		NULL,
@@ -309,7 +309,7 @@ struct retro_core_option_v2_definition option_defs_us[] = {
 	},
 	{
 		"cemu_emulate_dimensions_toypad",
-		"Emulate Dimensions Toypad",
+		"Emulate Dimensions Toy Pad",
 		NULL,
 		NULL,
 		NULL,
@@ -638,9 +638,9 @@ struct retro_core_option_v2_definition option_defs_us[] = {
 	},
 	{
 		"cemu_install_game",
-		"Install Game",
+		"Install Games",
 		NULL,
-		"Installs every game in system/Cemu/titles into saves/Cemu/mlc01, the emulated console's storage, as the console installs a game from its disc. A game is a disc image (.wud, .wux, .iso) or a .wua, and from a .wua the update and DLC it holds are installed with it. A game installed already in the same or a newer version is left alone.\n\nWhen this is ON, installing begins immediately, with its progress shown as a notification, and it turns OFF again when all games are installed. The installed game is started by loading the .rpx in its code folder, under mlc01/usr/title/00050000; the disc image is not needed for it any more.",
+		"Installs every game in system/Cemu/titles into saves/Cemu/mlc01, the emulated console's storage, as the console installs a game from its disc. A game is a disc image (.wud, .wux, .iso) or a .wua, and from a .wua the update and DLC it holds are installed with it. A game installed already in the same or a newer version is left alone.\n\nWhen this is ON, installing begins immediately, with its progress shown as a notification, and it turns OFF again when all games are installed. An installed game is started by loading the .rpx in its code folder, under mlc01/usr/title/00050000; its disc image is not needed any more.",
 		NULL,
 		"install",
 		{
