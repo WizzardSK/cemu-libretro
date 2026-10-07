@@ -166,6 +166,13 @@ void VulkanPipelineStableCache::Close()
 		delete m_pipelineCacheStoreThread;
 		m_pipelineCacheStoreThread = nullptr;
 	}
+	// What the writer handed to the cache file goes through the async file
+	// writer, and the file itself is kept open past this (see BeginLoading),
+	// so in a core whose library is unloaded after this both have to be
+	// written out now: whatever a stream still buffers is lost with it.
+	FileCache_StopAsyncWriter();
+	if (s_cache)
+		s_cache->Flush();
 	// Every hash in here names a pipeline built against the device that is
 	// going away. Kept across titles, the next one believes its pipelines are
 	// already accounted for and never writes them again.
@@ -481,11 +488,16 @@ void VulkanPipelineStableCache::WorkerThread()
 		g_pipelineCachingQueue.pop(job);
 		// Upstream's loop has no way out: the thread is detached and the
 		// process ends under it. Close() pushes an empty job with this set, and
-		// this is where the thread leaves so it can be joined.
-		if (m_stopCacheStoreThread)
+		// this is where the thread leaves so it can be joined - at that empty
+		// job, after every pipeline queued before it. Leaving at the first pop
+		// that saw the flag dropped them, and a pipeline compiled shortly
+		// before the game was closed was compiled again on every start
+		// (NNshi: the same stutters in BotW and MK8 each session).
+		if (!job)
 		{
-			delete job;
-			return;
+			if (m_stopCacheStoreThread)
+				return;
+			continue;
 		}
 		if (!s_cache)
 		{

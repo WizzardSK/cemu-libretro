@@ -47,6 +47,8 @@ public:
 	bool GetFile(const FileName&& name, std::vector<uint8>& dataOut);
 	bool GetFileByIndex(sint32 index, uint64* name1, uint64* name2, std::vector<uint8>& dataOut);
 	bool HasFile(const FileName&& name);
+	// Writes out what the stream still buffers, without closing the file
+	void Flush();
 
 	sint32 GetFileCount();
 
