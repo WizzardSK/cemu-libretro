@@ -4476,6 +4476,39 @@ static void libretro_start_install(std::vector<TitleInfo> found, bool removeSour
 static void libretro_install_titles(std::vector<TitleInfo> found, bool removeSource, bool fromContent, bool haveRunning, TitleId runningBase);
 static bool libretro_running_base_title(TitleId& runningBase);
 
+// The active account's name from a text file, as a core option cannot hold
+// free text (NNshi): system/Cemu/account_name.txt, its first line, up to the
+// console's ten characters, given to the account a title starts with.
+static void libretro_apply_account_name_file()
+{
+	std::ifstream in(ActiveSettings::GetUserDataPath("account_name.txt"));
+	std::string line;
+	if (!in || !std::getline(in, line))
+		return;
+	while (!line.empty() && std::isspace((unsigned char)line.back()))
+		line.pop_back();
+	size_t start = 0;
+	while (start < line.size() && std::isspace((unsigned char)line[start]))
+		start++;
+	std::wstring name = boost::nowide::widen(line.substr(start));
+	if (name.empty())
+		return;
+	if (name.size() > 10)
+		name.resize(10);
+	const uint32 persistentId = GetConfig().account.m_persistent_id;
+	Account account = Account::GetAccount(persistentId);
+	if (account.GetPersistentId() != persistentId || account.GetMiiName() == name)
+		return;
+	account.SetMiiName(name);
+	if (const std::error_code ec = account.Save())
+		libretro_log(RETRO_LOG_WARN, "could not save the account name from account_name.txt: %s\n", ec.message().c_str());
+	else
+	{
+		Account::RefreshAccounts();
+		libretro_log(RETRO_LOG_INFO, "account %08x named from account_name.txt\n", persistentId);
+	}
+}
+
 static void libretro_request_install()
 {
 	s_convert_finished = false;
@@ -4837,6 +4870,7 @@ static void libretro_prepare_and_launch_title()
 	// start too - kept the account the first title ran as.
 	if (s_pending_account)
 		GetConfig().account.m_persistent_id = s_pending_account;
+	libretro_apply_account_name_file();
 	iosuAct_forgetAccounts();
 	fs::path gamePath = _utf8ToPath(s_game_path);
 	CafeSystem::PREPARE_STATUS_CODE status;

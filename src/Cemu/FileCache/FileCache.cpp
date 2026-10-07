@@ -508,9 +508,13 @@ void FileCache::AddFile(const FileName&& name, const uint8* fileData, sint32 fil
 
 void FileCache::Flush()
 {
+#ifndef _WIN32
+	// Windows' FileStream writes with WriteFile, which buffers nothing in the
+	// process, and has no Flush
 	std::unique_lock lock(this->mutex);
 	if (fileStream)
 		fileStream->Flush();
+#endif
 }
 
 bool FileCache::DeleteFile(const FileName&& name)
