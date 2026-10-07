@@ -158,6 +158,11 @@ void VulkanPipelineStableCache::Close()
 	// The writer only touches the cache file, but Close is also where a title
 	// hands that file back, so it goes the same way: wake it, let it see the
 	// flag, join it.
+	// There is no deadline on any of this: a pipeline dropped here is compiled
+	// again, with its stutter, at every start, so the close waits for it. How
+	// long that took is logged, for slow devices where it could be noticed.
+	const auto writeStart = std::chrono::steady_clock::now();
+	const size_t queuedAtClose = g_pipelineCachingQueue.size();
 	if (m_pipelineCacheStoreThread)
 	{
 		m_stopCacheStoreThread = true;
@@ -173,6 +178,8 @@ void VulkanPipelineStableCache::Close()
 	FileCache_StopAsyncWriter();
 	if (s_cache)
 		s_cache->Flush();
+	cemuLog_log(LogType::Force, "Pipeline cache: {} pipelines still queued at close, written in {} ms",
+		queuedAtClose, std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - writeStart).count());
 	// Every hash in here names a pipeline built against the device that is
 	// going away. Kept across titles, the next one believes its pipelines are
 	// already accounted for and never writes them again.

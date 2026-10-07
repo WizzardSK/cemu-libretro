@@ -63,7 +63,7 @@ struct retro_core_option_v2_category option_cats_us[] = {
 	{ "accounts", "Accounts", "Manage accounts in the Wii U's account directory (saves/Cemu/mlc01/usr/save/system/act)." },
 	{ "install", "Content", "Manage games, title updates and DLC in saves/Cemu/mlc01, the emulated console's storage." },
 	{ "convert", "Convert to WUA", "Write the loaded title out as a .wua archive." },
-	{ "graphic_packs", "Graphic Packs", "The loaded game's graphic packs and their presets. Changes apply the next time the game is loaded." },
+	{ "graphic_packs", "Graphic Packs", "The loaded game's graphic packs and their presets. Changes apply the next time the game is loaded. Your own packs, or changed copies of the built-in ones, go in system/Cemu/customGraphicPacks." },
 	{ "cheats", "Cheats", "The loaded game's cheat packs, from the graphic packs' Cheats folder. Changes apply the next time the game is loaded." },
 	{ NULL, NULL, NULL },
 };
