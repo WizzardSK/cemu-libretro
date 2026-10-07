@@ -4423,12 +4423,23 @@ static void libretro_start_install(std::vector<TitleInfo> found, bool removeSour
 static void libretro_install_titles(std::vector<TitleInfo> found, bool removeSource, bool fromContent, bool haveRunning, TitleId runningBase);
 static bool libretro_running_base_title(TitleId& runningBase);
 
+// A fresh scan of the game paths, waited for. WaitForMandatoryScan returns at
+// once whenever the title list was read from its cache file, so a game put
+// into the titles folder since the last scan was simply not in the list, and
+// Install Games found nothing to install (Shoegzer).
+static void libretro_rescan_titles()
+{
+	CafeTitleList::Refresh();
+	while (CafeTitleList::IsScanning())
+		std::this_thread::sleep_for(std::chrono::milliseconds(100));
+}
+
 static void libretro_request_install()
 {
 	s_convert_finished = false;
 	s_convert_cancel = false;
 	s_convert_mode.store(true);
-	libretro_set_convert_status("Looking for updates and DLC...");
+	libretro_set_convert_status("Looking for title updates and DLC...");
 	libretro_update_convert_visibility();
 
 	const char* removeOption = libretro_get_option_value("cemu_install_remove_source");
@@ -4443,7 +4454,7 @@ static void libretro_request_install()
 		// What the scan found in the titles folder: updates and DLC only, the
 		// newest version of each.
 		const fs::path titlesDir = ActiveSettings::GetUserDataPath("titles");
-		CafeTitleList::WaitForMandatoryScan();
+		libretro_rescan_titles();
 		std::vector<TitleInfo> found;
 		std::string titlesPrefix = _pathToUtf8(titlesDir.lexically_normal());
 		if (!titlesPrefix.empty() && titlesPrefix.back() != (char)fs::path::preferred_separator)
@@ -4467,7 +4478,7 @@ static void libretro_request_install()
 		CafeTitleList::ReleaseInternalList();
 		if (found.empty())
 		{
-			libretro_set_convert_status(fmt::format("Nothing to install: no updates or DLC in {}", _pathToUtf8(titlesDir)));
+			libretro_set_convert_status(fmt::format("Nothing to install: no title updates or DLC in {}", _pathToUtf8(titlesDir)));
 			s_convert_finished = true;
 			return;
 		}
@@ -4522,14 +4533,17 @@ static bool libretro_request_install_game()
 	libretro_set_convert_status("Looking for games...");
 	libretro_update_convert_visibility();
 
+	const char* removeOption = libretro_get_option_value("cemu_install_remove_source");
+	const bool removeSource = removeOption && libretro_iequals(removeOption, "enabled");
+
 	TitleId runningBase = 0;
 	const bool haveRunning = libretro_running_base_title(runningBase);
 	if (s_convert_thread.joinable())
 		s_convert_thread.join();
-	s_convert_thread = std::thread([haveRunning, runningBase]() {
+	s_convert_thread = std::thread([removeSource, haveRunning, runningBase]() {
 		SetThreadName("gameInstall");
 		const fs::path titlesDir = ActiveSettings::GetUserDataPath("titles");
-		CafeTitleList::WaitForMandatoryScan();
+		libretro_rescan_titles();
 		std::string titlesPrefix = _pathToUtf8(titlesDir.lexically_normal());
 		if (!titlesPrefix.empty() && titlesPrefix.back() != (char)fs::path::preferred_separator)
 			titlesPrefix += (char)fs::path::preferred_separator;
@@ -4567,7 +4581,7 @@ static bool libretro_request_install_game()
 			s_convert_finished = true;
 			return;
 		}
-		libretro_install_titles(std::move(found), false, false, haveRunning, runningBase);
+		libretro_install_titles(std::move(found), removeSource, false, haveRunning, runningBase);
 	});
 	return true;
 }
@@ -4610,7 +4624,7 @@ static bool libretro_request_uninstall_game()
 		}
 	}
 	libretro_show_message(RETRO_LOG_INFO, 6000, withMore ?
-		"The installed copy of this game, its update and DLC will be removed from mlc01 when it is closed" :
+		"The installed copy of this game, its title update and DLC will be removed from mlc01 when it is closed" :
 		"The installed copy of this game will be removed from mlc01 when it is closed");
 	return true;
 }
@@ -4629,6 +4643,12 @@ static void libretro_install_titles(std::vector<TitleInfo> found, bool removeSou
 
 	uint32 installed = 0, upToDate = 0, failed = 0, kept = 0, deferred = 0;
 	std::string lastError;
+	// Disc images and .wua files in titles, and which of their titles are now
+	// installed: one goes once everything it holds is
+	std::map<fs::path, std::set<uint64>> archives;
+	const auto isArchive = [](const TitleInfo& t) {
+		return t.GetFormat() == TitleInfo::TitleDataFormat::WUD || t.GetFormat() == TitleInfo::TitleDataFormat::WIIU_ARCHIVE;
+	};
 	for (size_t i = 0; i < found.size() && !s_convert_cancel.load(); i++)
 	{
 		TitleInfo& title = found[i];
@@ -4638,7 +4658,7 @@ static void libretro_install_titles(std::vector<TitleInfo> found, bool removeSou
 		std::string name = title.ParseXmlInfo() ? title.GetMetaTitleName() : std::string();
 		if (name.empty())
 			name = fmt::format("{:016x}", title.GetAppTitleId());
-		const std::string label = fmt::format("{} {} v{}", isBase ? "game" : isUpdate ? "update" : "DLC", name, title.GetAppTitleVersion());
+		const std::string label = fmt::format("{} {} v{}", isBase ? "game" : isUpdate ? "title update" : "DLC", name, title.GetAppTitleVersion());
 		const fs::path target = ActiveSettings::GetMlcPath(title.GetInstallPath());
 
 		// The same or a newer version already installed is left alone, as
@@ -4676,6 +4696,11 @@ static void libretro_install_titles(std::vector<TitleInfo> found, bool removeSou
 			installed++;
 			done = true;
 		}
+		if (done && removeSource && isArchive(title) && inTitlesDir(title.GetPath()))
+		{
+			archives[title.GetPath()].insert(title.GetAppTitleId());
+			continue;
+		}
 
 		// Only what is in its own folder under titles, and only the forms
 		// that are nothing but this title: a .wua or a disc image can hold
@@ -4705,6 +4730,30 @@ static void libretro_install_titles(std::vector<TitleInfo> found, bool removeSou
 		}
 	}
 
+	// A disc image or .wua goes only when every title it holds is installed:
+	// Install Content takes the update and DLC out of a .wua that holds the
+	// game as well, and that one stays
+	for (const auto& [archive, doneIds] : archives)
+	{
+		bool all = true;
+		for (const TitleInfo& t : TitleConverter::TitlesInContent(archive))
+			all = all && doneIds.count(t.GetAppTitleId()) != 0;
+		if (!all)
+		{
+			kept++;
+			continue;
+		}
+		if (haveRunning && _utf8ToPath(s_game_path).lexically_normal() == archive.lexically_normal())
+		{
+			libretro_remove_on_unload(archive);
+			deferred++;
+			continue;
+		}
+		std::error_code ec;
+		fs::remove(archive, ec);
+		cemuLog_log(LogType::Force, "install: removed {}{}", _pathToUtf8(archive), ec ? " (" + ec.message() + ")" : "");
+	}
+
 	// So the title list knows the installed copies, without waiting for
 	// the next start.
 	CafeTitleList::Refresh();
@@ -4718,7 +4767,7 @@ static void libretro_install_titles(std::vector<TitleInfo> found, bool removeSou
 	if (deferred)
 		summary += fmt::format(", {} removed from titles when the game is closed (in use)", deferred);
 	if (kept)
-		summary += fmt::format(", {} kept (not a folder of its own in titles)", kept);
+		summary += fmt::format(", {} kept in titles", kept);
 	if (fromContent && !s_convert_cancel.load() && failed == 0)
 		summary += " - close the content and load the game";
 	if (failed)

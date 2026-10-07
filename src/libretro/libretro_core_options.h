@@ -627,7 +627,7 @@ struct retro_core_option_v2_definition option_defs_us[] = {
 		"cemu_remove_account",
 		"Remove Account",
 		NULL,
-		"WARNING: removing an account also deletes its save data in every game, and this cannot be undone.\n\nRemoves the chosen account, as deleting a user on the console does: the account goes from the account directory, and its saves from every title's save folder. The account is removed when you leave the menu, and this then goes back to OFF.\n\nNot offered: the Active Account, and the account the running game was started with, which can be removed only once that game is closed. So the last account cannot be removed.",
+		"WARNING: removing an account also deletes its save data in every game, and this cannot be undone.\n\nRemoves the chosen account, as deleting a user on the console does: the account goes from the account directory, and its saves from every title's save folder. The account is removed when you leave the menu, and this then goes back to OFF.\n\nThe active account cannot be removed, and neither can the account the running game was started with until that game is closed. So the last account cannot be removed.",
 		NULL,
 		"accounts",
 		{
@@ -640,7 +640,7 @@ struct retro_core_option_v2_definition option_defs_us[] = {
 		"cemu_install_game",
 		"Install Games",
 		NULL,
-		"Installs every game in system/Cemu/titles into saves/Cemu/mlc01, the emulated console's storage, as the console installs a game from its disc. A game is a disc image (.wud, .wux, .iso) or a .wua, and from a .wua the update and DLC it holds are installed with it. A game installed already in the same or a newer version is left alone.\n\nWhen this is ON, installing begins immediately, with its progress shown as a notification, and it turns OFF again when all games are installed. An installed game is started by loading the .rpx in its code folder, under mlc01/usr/title/00050000; its disc image is not needed any more.",
+		"Installs every game in system/Cemu/titles, subfolders included, into the emulated Wii U's installed game directory (saves/Cemu/mlc01/usr/title/00050000), as the console installs a game from its disc. A game is a disc image (.wud, .wux, .iso) or a .wua; the title update and DLC a .wua holds are installed with it. A game already installed in the same or a newer version is left alone.\n\nWhen this is ON, installing begins immediately, with its progress shown as a notification, and it turns OFF again when all games are installed. An installed game is started by loading the .rpx in its code folder in the installed game directory; its disc image is not needed any more.",
 		NULL,
 		"install",
 		{
@@ -654,7 +654,7 @@ struct retro_core_option_v2_definition option_defs_us[] = {
 		"cemu_uninstall_game",
 		"Uninstall Game",
 		NULL,
-		"Uninstalls the running game from saves/Cemu/mlc01 once the game is closed or reset, together with its installed update and DLC; it stays on until then. Its saves are left alone, as are the disc image or .wua it was installed from.",
+		"Uninstalls the running game from the installed game directory (saves/Cemu/mlc01/usr/title/00050000) once the game is closed or reset, together with its installed title update and DLC; it stays ON until then. Its saves are left alone, as are the disc image or .wua it was installed from.",
 		NULL,
 		"install",
 		{
@@ -668,7 +668,7 @@ struct retro_core_option_v2_definition option_defs_us[] = {
 		"cemu_install_titles",
 		"Install Content",
 		NULL,
-		"Installs every update and DLC in system/Cemu/titles into saves/Cemu/mlc01, the emulated console's storage. Each one goes in a folder of its own there; a NUS download (.app files) needs its title.tmd and its title.tik, the decryption key, next to them. A version already installed that is the same or newer is left alone.\n\nWhen this is ON, installing begins immediately, with its progress shown as a notification, and it turns OFF again when all content is installed and this menu is exited or another option is changed. The title will use the installed content once it is restarted.\n\nContent from other locations can be installed with RetroArch's Main Menu > Load Content, by selecting the corresponding title.tmd, with its title.tik beside it.",
+		"Installs every title update and DLC in system/Cemu/titles, subfolders included, into the emulated Wii U's storage (saves/Cemu/mlc01/usr/title). Each one goes in a folder of its own in system/Cemu/titles; a NUS download (.app files) needs its title.tmd and its title.tik, the decryption key, next to them. A version already installed that is the same or newer is left alone.\n\nWhen this is ON, installing begins immediately, with its progress shown as a notification, and it turns OFF again when all content is installed and this menu is exited or another option is changed. The game uses the installed content once it is restarted.\n\nContent from other locations can be installed with RetroArch's Main Menu > Load Content, by selecting the corresponding title.tmd, with its title.tik beside it.",
 		NULL,
 		"install",
 		{
@@ -682,7 +682,7 @@ struct retro_core_option_v2_definition option_defs_us[] = {
 		"cemu_uninstall_titles",
 		"Uninstall Content",
 		NULL,
-		"Uninstalls the running game's update and DLC from saves/Cemu/mlc01, the emulated console's storage, once the game is closed or reset; it stays on until then. Copies in system/Cemu/titles are left alone.",
+		"Uninstalls the running game's title update and DLC from the emulated Wii U's storage (saves/Cemu/mlc01/usr/title) once the game is closed or reset; it stays ON until then. Copies in system/Cemu/titles are left alone.",
 		NULL,
 		"install",
 		{
@@ -694,9 +694,9 @@ struct retro_core_option_v2_definition option_defs_us[] = {
 	},
 	{
 		"cemu_install_remove_source",
-		"Remove Content After Installing",
+		"Remove Files After Installing",
 		NULL,
-		"Removes downloadable content and title updates from system/Cemu/titles once Install Content has installed them. Content loaded through Load Content is left where it is.\n\nThe running title's update or DLC is in use, so it is removed when the title is closed or reset.\n\n.wua files and disc images are never removed, as they can hold the base game as well.",
+		"WARNING: this deletes files from system/Cemu/titles, and that cannot be undone. system/Cemu/titles is a folder for the core to manage; keep the only copy of a dump elsewhere.\n\nDeletes what Install Games and Install Content have installed from system/Cemu/titles: a title update or DLC folder once it is installed, and a disc image or .wua once everything it holds is installed (Install Content alone leaves a .wua that also holds the game). Files in use by the running game go when it is closed or reset. Content loaded through Load Content is left where it is.",
 		NULL,
 		"install",
 		{
