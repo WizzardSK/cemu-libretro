@@ -456,20 +456,6 @@ struct retro_core_option_v2_definition option_defs_us[] = {
 		"normal"
 	},
 	{
-		"cemu_dump_shaders",
-		"Dump Shaders (debugging)",
-		NULL,
-		"Writes the source of every shader the game uses to system/Cemu/dump/shaders, named by its hashes as they appear in log.txt. For reporting a shader that fails or draws wrongly on a particular GPU. Slows shader compilation down and fills the folder quickly, so turn it off again afterwards.",
-		NULL,
-		"logging",
-		{
-			{ "disabled", NULL },
-			{ "enabled", NULL },
-			{ NULL, NULL },
-		},
-		"disabled"
-	},
-	{
 		"cemu_log_to_file",
 		"Write Cemu Log to log.txt",
 		NULL,
@@ -558,6 +544,34 @@ struct retro_core_option_v2_definition option_defs_us[] = {
 		"Log Audio and Frame Pacing (debugging)",
 		NULL,
 		"Once a second, how many samples AX produced, how many the ring had to drop, and how many the frontend took; and how many times the frontend ran the core, how many frames the title finished, and where the time went (waiting for the GPU thread, presenting, audio). For working out whether a slow game is held up by the emulated CPU, the GPU or the frontend.",
+		NULL,
+		"logging",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_log_thread_time",
+		"Log Thread CPU Time (debugging)",
+		NULL,
+		"Once a second, how busy each emulated PowerPC core's thread, the GPU thread and the frontend's thread were, as a share of one host core. A thread near 100% is the one a slow game is waiting on.",
+		NULL,
+		"logging",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_dump_shaders",
+		"Dump Shaders (debugging)",
+		NULL,
+		"Writes the source of every shader the game uses to system/Cemu/dump/shaders, named by its hashes as they appear in log.txt. For reporting a shader that fails or draws wrongly on a particular GPU. Slows shader compilation down and fills the folder quickly, so turn it off again afterwards.",
 		NULL,
 		"logging",
 		{

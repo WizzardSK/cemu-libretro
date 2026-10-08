@@ -26,6 +26,10 @@
 #include "Cafe/OS/common/OSCommon.h"
 #include "Cafe/OS/RPL/rpl_structs.h"
 #include <fstream>
+#if BOOST_OS_MACOS
+#include <mach/mach.h>
+#include <pthread.h>
+#endif
 #include "Cemu/ncrypto/ncrypto.h"
 #include "Cemu/FileCache/FileCache.h"
 #include "Cafe/TitleList/TitleList.h"
@@ -2758,6 +2762,13 @@ static void libretro_apply_core_options()
 			bool b;
 			if (libretro_parse_enabled_disabled(v, b))
 				LibretroAudioAPI::SetStatsLogging(b);
+		}
+
+		if (const char* v = libretro_get_option_value("cemu_log_thread_time"))
+		{
+			bool b;
+			if (libretro_parse_enabled_disabled(v, b))
+				s_log_thread_time = b;
 		}
 
 		if (const char* v = libretro_get_option_value("cemu_log_texture_memory"))
@@ -6394,12 +6405,96 @@ static void libretro_report_game_fps(std::chrono::steady_clock::time_point now)
 	}
 }
 
+// How busy each thread that can hold a frame up was (cemu_log_thread_time):
+// CPU time each spent in the last second, against the wall clock. The PPC core
+// threads and the GPU thread are read from outside by their handles; they
+// live between OSSchedulerBegin/Latte_Start and the stop, which never runs
+// during retro_run.
+static bool s_log_thread_time = false;
+
+namespace coreinit
+{
+	std::vector<std::thread::native_handle_type>& OSGetSchedulerThreads();
+}
+extern std::thread sLatteThread;
+
+static int64_t libretro_thread_cpu_us(std::thread::native_handle_type h)
+{
+#if BOOST_OS_WINDOWS
+	FILETIME created, exited, kernel, user;
+	if (!GetThreadTimes((HANDLE)h, &created, &exited, &kernel, &user))
+		return -1;
+	auto ticks = [](const FILETIME& f) { return ((int64_t)f.dwHighDateTime << 32) | f.dwLowDateTime; };
+	return (ticks(kernel) + ticks(user)) / 10;
+#elif BOOST_OS_MACOS
+	thread_basic_info_data_t info;
+	mach_msg_type_number_t count = THREAD_BASIC_INFO_COUNT;
+	if (thread_info(pthread_mach_thread_np(h), THREAD_BASIC_INFO, (thread_info_t)&info, &count) != KERN_SUCCESS)
+		return -1;
+	return (int64_t)(info.user_time.seconds + info.system_time.seconds) * 1000000 +
+		info.user_time.microseconds + info.system_time.microseconds;
+#else
+	clockid_t clock;
+	struct timespec ts;
+	if (pthread_getcpuclockid(h, &clock) != 0 || clock_gettime(clock, &ts) != 0)
+		return -1;
+	return (int64_t)ts.tv_sec * 1000000 + ts.tv_nsec / 1000;
+#endif
+}
+
+static void libretro_log_thread_time(std::chrono::steady_clock::time_point now)
+{
+	static std::chrono::steady_clock::time_point s_since{};
+	static std::vector<int64_t> s_last;
+	if (!s_log_thread_time || !s_game_loaded)
+	{
+		s_since = {};
+		return;
+	}
+
+	std::vector<std::thread::native_handle_type> threads = coreinit::OSGetSchedulerThreads();
+	const size_t cores = threads.size();
+	threads.push_back(sLatteThread.native_handle());
+#if BOOST_OS_WINDOWS
+	threads.push_back(GetCurrentThread());
+#else
+	threads.push_back(pthread_self());
+#endif
+	std::vector<int64_t> cpu(threads.size());
+	for (size_t i = 0; i < threads.size(); i++)
+		cpu[i] = libretro_thread_cpu_us(threads[i]);
+
+	if (s_since == std::chrono::steady_clock::time_point{} || s_last.size() != cpu.size())
+	{
+		s_since = now;
+		s_last = cpu;
+		return;
+	}
+	const int64_t wall = std::chrono::duration_cast<std::chrono::microseconds>(now - s_since).count();
+	if (wall < 1000000)
+		return;
+
+	auto busy = [&](size_t i) -> std::string {
+		if (cpu[i] < 0 || s_last[i] < 0)
+			return "?";
+		return fmt::format("{}%", (cpu[i] - s_last[i]) * 100 / wall);
+	};
+	std::string line = "threads, % of one host core:";
+	for (size_t i = 0; i < cores; i++)
+		line += fmt::format(" PPC core {} {},", i, busy(i));
+	line += fmt::format(" GPU {}, frontend {}", busy(cores), busy(cores + 1));
+	cemuLog_log(LogType::Force, "{}", line);
+	s_since = now;
+	s_last = cpu;
+}
+
 static void libretro_finish_run(std::chrono::steady_clock::time_point start,
 	std::chrono::steady_clock::time_point waited, bool timedOut)
 {
 	using prof_clock = std::chrono::steady_clock;
 	const auto presented = prof_clock::now();
 	libretro_report_game_fps(presented);
+	libretro_log_thread_time(presented);
 
 	LibretroAudioAPI::FlushAudio();
 	s_last_audio_wait_us = std::chrono::duration_cast<std::chrono::microseconds>(prof_clock::now() - presented).count();
