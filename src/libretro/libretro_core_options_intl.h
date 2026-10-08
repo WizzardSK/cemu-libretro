@@ -319,20 +319,6 @@ struct retro_core_option_v2_definition option_defs_ar[] = {
 		"1280x720"
 	},
 	{
-		"cemu_fullscreen_scaling",
-		CEMU_FULLSCREEN_SCALING_LABEL_AR,
-		NULL,
-		NULL,
-		NULL,
-		"video",
-		{
-			{ "keep_aspect", OPTION_VAL_KEEP_ASPECT_AR },
-			{ "stretch", OPTION_VAL_STRETCH_AR },
-			{ NULL, NULL },
-		},
-		"keep_aspect"
-	},
-	{
 		"cemu_thread_quantum",
 		CEMU_THREAD_QUANTUM_LABEL_AR,
 		NULL,
@@ -966,20 +952,6 @@ struct retro_core_option_v2_definition option_defs_ast[] = {
 			{ NULL, NULL },
 		},
 		"1280x720"
-	},
-	{
-		"cemu_fullscreen_scaling",
-		CEMU_FULLSCREEN_SCALING_LABEL_AST,
-		NULL,
-		NULL,
-		NULL,
-		"video",
-		{
-			{ "keep_aspect", OPTION_VAL_KEEP_ASPECT_AST },
-			{ "stretch", OPTION_VAL_STRETCH_AST },
-			{ NULL, NULL },
-		},
-		"keep_aspect"
 	},
 	{
 		"cemu_thread_quantum",
@@ -1617,20 +1589,6 @@ struct retro_core_option_v2_definition option_defs_be[] = {
 		"1280x720"
 	},
 	{
-		"cemu_fullscreen_scaling",
-		CEMU_FULLSCREEN_SCALING_LABEL_BE,
-		NULL,
-		NULL,
-		NULL,
-		"video",
-		{
-			{ "keep_aspect", OPTION_VAL_KEEP_ASPECT_BE },
-			{ "stretch", OPTION_VAL_STRETCH_BE },
-			{ NULL, NULL },
-		},
-		"keep_aspect"
-	},
-	{
 		"cemu_thread_quantum",
 		CEMU_THREAD_QUANTUM_LABEL_BE,
 		NULL,
@@ -2264,20 +2222,6 @@ struct retro_core_option_v2_definition option_defs_bg[] = {
 			{ NULL, NULL },
 		},
 		"1280x720"
-	},
-	{
-		"cemu_fullscreen_scaling",
-		CEMU_FULLSCREEN_SCALING_LABEL_BG,
-		NULL,
-		NULL,
-		NULL,
-		"video",
-		{
-			{ "keep_aspect", OPTION_VAL_KEEP_ASPECT_BG },
-			{ "stretch", OPTION_VAL_STRETCH_BG },
-			{ NULL, NULL },
-		},
-		"keep_aspect"
 	},
 	{
 		"cemu_thread_quantum",
@@ -2915,20 +2859,6 @@ struct retro_core_option_v2_definition option_defs_ca[] = {
 		"1280x720"
 	},
 	{
-		"cemu_fullscreen_scaling",
-		CEMU_FULLSCREEN_SCALING_LABEL_CA,
-		NULL,
-		NULL,
-		NULL,
-		"video",
-		{
-			{ "keep_aspect", OPTION_VAL_KEEP_ASPECT_CA },
-			{ "stretch", OPTION_VAL_STRETCH_CA },
-			{ NULL, NULL },
-		},
-		"keep_aspect"
-	},
-	{
 		"cemu_thread_quantum",
 		CEMU_THREAD_QUANTUM_LABEL_CA,
 		NULL,
@@ -3562,20 +3492,6 @@ struct retro_core_option_v2_definition option_defs_chs[] = {
 			{ NULL, NULL },
 		},
 		"1280x720"
-	},
-	{
-		"cemu_fullscreen_scaling",
-		CEMU_FULLSCREEN_SCALING_LABEL_CHS,
-		NULL,
-		NULL,
-		NULL,
-		"video",
-		{
-			{ "keep_aspect", OPTION_VAL_KEEP_ASPECT_CHS },
-			{ "stretch", OPTION_VAL_STRETCH_CHS },
-			{ NULL, NULL },
-		},
-		"keep_aspect"
 	},
 	{
 		"cemu_thread_quantum",
@@ -4213,20 +4129,6 @@ struct retro_core_option_v2_definition option_defs_cht[] = {
 		"1280x720"
 	},
 	{
-		"cemu_fullscreen_scaling",
-		CEMU_FULLSCREEN_SCALING_LABEL_CHT,
-		NULL,
-		NULL,
-		NULL,
-		"video",
-		{
-			{ "keep_aspect", OPTION_VAL_KEEP_ASPECT_CHT },
-			{ "stretch", OPTION_VAL_STRETCH_CHT },
-			{ NULL, NULL },
-		},
-		"keep_aspect"
-	},
-	{
 		"cemu_thread_quantum",
 		CEMU_THREAD_QUANTUM_LABEL_CHT,
 		NULL,
@@ -4860,20 +4762,6 @@ struct retro_core_option_v2_definition option_defs_cs[] = {
 			{ NULL, NULL },
 		},
 		"1280x720"
-	},
-	{
-		"cemu_fullscreen_scaling",
-		CEMU_FULLSCREEN_SCALING_LABEL_CS,
-		NULL,
-		NULL,
-		NULL,
-		"video",
-		{
-			{ "keep_aspect", OPTION_VAL_KEEP_ASPECT_CS },
-			{ "stretch", OPTION_VAL_STRETCH_CS },
-			{ NULL, NULL },
-		},
-		"keep_aspect"
 	},
 	{
 		"cemu_thread_quantum",
@@ -5511,20 +5399,6 @@ struct retro_core_option_v2_definition option_defs_cy[] = {
 		"1280x720"
 	},
 	{
-		"cemu_fullscreen_scaling",
-		CEMU_FULLSCREEN_SCALING_LABEL_CY,
-		NULL,
-		NULL,
-		NULL,
-		"video",
-		{
-			{ "keep_aspect", OPTION_VAL_KEEP_ASPECT_CY },
-			{ "stretch", OPTION_VAL_STRETCH_CY },
-			{ NULL, NULL },
-		},
-		"keep_aspect"
-	},
-	{
 		"cemu_thread_quantum",
 		CEMU_THREAD_QUANTUM_LABEL_CY,
 		NULL,
@@ -6158,20 +6032,6 @@ struct retro_core_option_v2_definition option_defs_da[] = {
 			{ NULL, NULL },
 		},
 		"1280x720"
-	},
-	{
-		"cemu_fullscreen_scaling",
-		CEMU_FULLSCREEN_SCALING_LABEL_DA,
-		NULL,
-		NULL,
-		NULL,
-		"video",
-		{
-			{ "keep_aspect", OPTION_VAL_KEEP_ASPECT_DA },
-			{ "stretch", OPTION_VAL_STRETCH_DA },
-			{ NULL, NULL },
-		},
-		"keep_aspect"
 	},
 	{
 		"cemu_thread_quantum",
@@ -6809,20 +6669,6 @@ struct retro_core_option_v2_definition option_defs_de[] = {
 		"1280x720"
 	},
 	{
-		"cemu_fullscreen_scaling",
-		CEMU_FULLSCREEN_SCALING_LABEL_DE,
-		NULL,
-		NULL,
-		NULL,
-		"video",
-		{
-			{ "keep_aspect", OPTION_VAL_KEEP_ASPECT_DE },
-			{ "stretch", OPTION_VAL_STRETCH_DE },
-			{ NULL, NULL },
-		},
-		"keep_aspect"
-	},
-	{
 		"cemu_thread_quantum",
 		CEMU_THREAD_QUANTUM_LABEL_DE,
 		NULL,
@@ -7456,20 +7302,6 @@ struct retro_core_option_v2_definition option_defs_el[] = {
 			{ NULL, NULL },
 		},
 		"1280x720"
-	},
-	{
-		"cemu_fullscreen_scaling",
-		CEMU_FULLSCREEN_SCALING_LABEL_EL,
-		NULL,
-		NULL,
-		NULL,
-		"video",
-		{
-			{ "keep_aspect", OPTION_VAL_KEEP_ASPECT_EL },
-			{ "stretch", OPTION_VAL_STRETCH_EL },
-			{ NULL, NULL },
-		},
-		"keep_aspect"
 	},
 	{
 		"cemu_thread_quantum",
@@ -8107,20 +7939,6 @@ struct retro_core_option_v2_definition option_defs_en[] = {
 		"1280x720"
 	},
 	{
-		"cemu_fullscreen_scaling",
-		CEMU_FULLSCREEN_SCALING_LABEL_EN,
-		NULL,
-		NULL,
-		NULL,
-		"video",
-		{
-			{ "keep_aspect", OPTION_VAL_KEEP_ASPECT_EN },
-			{ "stretch", OPTION_VAL_STRETCH_EN },
-			{ NULL, NULL },
-		},
-		"keep_aspect"
-	},
-	{
 		"cemu_thread_quantum",
 		CEMU_THREAD_QUANTUM_LABEL_EN,
 		NULL,
@@ -8754,20 +8572,6 @@ struct retro_core_option_v2_definition option_defs_eo[] = {
 			{ NULL, NULL },
 		},
 		"1280x720"
-	},
-	{
-		"cemu_fullscreen_scaling",
-		CEMU_FULLSCREEN_SCALING_LABEL_EO,
-		NULL,
-		NULL,
-		NULL,
-		"video",
-		{
-			{ "keep_aspect", OPTION_VAL_KEEP_ASPECT_EO },
-			{ "stretch", OPTION_VAL_STRETCH_EO },
-			{ NULL, NULL },
-		},
-		"keep_aspect"
 	},
 	{
 		"cemu_thread_quantum",
@@ -9405,20 +9209,6 @@ struct retro_core_option_v2_definition option_defs_es[] = {
 		"1280x720"
 	},
 	{
-		"cemu_fullscreen_scaling",
-		CEMU_FULLSCREEN_SCALING_LABEL_ES,
-		NULL,
-		NULL,
-		NULL,
-		"video",
-		{
-			{ "keep_aspect", OPTION_VAL_KEEP_ASPECT_ES },
-			{ "stretch", OPTION_VAL_STRETCH_ES },
-			{ NULL, NULL },
-		},
-		"keep_aspect"
-	},
-	{
 		"cemu_thread_quantum",
 		CEMU_THREAD_QUANTUM_LABEL_ES,
 		NULL,
@@ -10052,20 +9842,6 @@ struct retro_core_option_v2_definition option_defs_fa[] = {
 			{ NULL, NULL },
 		},
 		"1280x720"
-	},
-	{
-		"cemu_fullscreen_scaling",
-		CEMU_FULLSCREEN_SCALING_LABEL_FA,
-		NULL,
-		NULL,
-		NULL,
-		"video",
-		{
-			{ "keep_aspect", OPTION_VAL_KEEP_ASPECT_FA },
-			{ "stretch", OPTION_VAL_STRETCH_FA },
-			{ NULL, NULL },
-		},
-		"keep_aspect"
 	},
 	{
 		"cemu_thread_quantum",
@@ -10703,20 +10479,6 @@ struct retro_core_option_v2_definition option_defs_fi[] = {
 		"1280x720"
 	},
 	{
-		"cemu_fullscreen_scaling",
-		CEMU_FULLSCREEN_SCALING_LABEL_FI,
-		NULL,
-		NULL,
-		NULL,
-		"video",
-		{
-			{ "keep_aspect", OPTION_VAL_KEEP_ASPECT_FI },
-			{ "stretch", OPTION_VAL_STRETCH_FI },
-			{ NULL, NULL },
-		},
-		"keep_aspect"
-	},
-	{
 		"cemu_thread_quantum",
 		CEMU_THREAD_QUANTUM_LABEL_FI,
 		NULL,
@@ -11350,20 +11112,6 @@ struct retro_core_option_v2_definition option_defs_fr[] = {
 			{ NULL, NULL },
 		},
 		"1280x720"
-	},
-	{
-		"cemu_fullscreen_scaling",
-		CEMU_FULLSCREEN_SCALING_LABEL_FR,
-		NULL,
-		NULL,
-		NULL,
-		"video",
-		{
-			{ "keep_aspect", OPTION_VAL_KEEP_ASPECT_FR },
-			{ "stretch", OPTION_VAL_STRETCH_FR },
-			{ NULL, NULL },
-		},
-		"keep_aspect"
 	},
 	{
 		"cemu_thread_quantum",
@@ -12001,20 +11749,6 @@ struct retro_core_option_v2_definition option_defs_ga[] = {
 		"1280x720"
 	},
 	{
-		"cemu_fullscreen_scaling",
-		CEMU_FULLSCREEN_SCALING_LABEL_GA,
-		NULL,
-		NULL,
-		NULL,
-		"video",
-		{
-			{ "keep_aspect", OPTION_VAL_KEEP_ASPECT_GA },
-			{ "stretch", OPTION_VAL_STRETCH_GA },
-			{ NULL, NULL },
-		},
-		"keep_aspect"
-	},
-	{
 		"cemu_thread_quantum",
 		CEMU_THREAD_QUANTUM_LABEL_GA,
 		NULL,
@@ -12648,20 +12382,6 @@ struct retro_core_option_v2_definition option_defs_gl[] = {
 			{ NULL, NULL },
 		},
 		"1280x720"
-	},
-	{
-		"cemu_fullscreen_scaling",
-		CEMU_FULLSCREEN_SCALING_LABEL_GL,
-		NULL,
-		NULL,
-		NULL,
-		"video",
-		{
-			{ "keep_aspect", OPTION_VAL_KEEP_ASPECT_GL },
-			{ "stretch", OPTION_VAL_STRETCH_GL },
-			{ NULL, NULL },
-		},
-		"keep_aspect"
 	},
 	{
 		"cemu_thread_quantum",
@@ -13299,20 +13019,6 @@ struct retro_core_option_v2_definition option_defs_he[] = {
 		"1280x720"
 	},
 	{
-		"cemu_fullscreen_scaling",
-		CEMU_FULLSCREEN_SCALING_LABEL_HE,
-		NULL,
-		NULL,
-		NULL,
-		"video",
-		{
-			{ "keep_aspect", OPTION_VAL_KEEP_ASPECT_HE },
-			{ "stretch", OPTION_VAL_STRETCH_HE },
-			{ NULL, NULL },
-		},
-		"keep_aspect"
-	},
-	{
 		"cemu_thread_quantum",
 		CEMU_THREAD_QUANTUM_LABEL_HE,
 		NULL,
@@ -13946,20 +13652,6 @@ struct retro_core_option_v2_definition option_defs_hr[] = {
 			{ NULL, NULL },
 		},
 		"1280x720"
-	},
-	{
-		"cemu_fullscreen_scaling",
-		CEMU_FULLSCREEN_SCALING_LABEL_HR,
-		NULL,
-		NULL,
-		NULL,
-		"video",
-		{
-			{ "keep_aspect", OPTION_VAL_KEEP_ASPECT_HR },
-			{ "stretch", OPTION_VAL_STRETCH_HR },
-			{ NULL, NULL },
-		},
-		"keep_aspect"
 	},
 	{
 		"cemu_thread_quantum",
@@ -14597,20 +14289,6 @@ struct retro_core_option_v2_definition option_defs_hu[] = {
 		"1280x720"
 	},
 	{
-		"cemu_fullscreen_scaling",
-		CEMU_FULLSCREEN_SCALING_LABEL_HU,
-		NULL,
-		NULL,
-		NULL,
-		"video",
-		{
-			{ "keep_aspect", OPTION_VAL_KEEP_ASPECT_HU },
-			{ "stretch", OPTION_VAL_STRETCH_HU },
-			{ NULL, NULL },
-		},
-		"keep_aspect"
-	},
-	{
 		"cemu_thread_quantum",
 		CEMU_THREAD_QUANTUM_LABEL_HU,
 		NULL,
@@ -15244,20 +14922,6 @@ struct retro_core_option_v2_definition option_defs_id[] = {
 			{ NULL, NULL },
 		},
 		"1280x720"
-	},
-	{
-		"cemu_fullscreen_scaling",
-		CEMU_FULLSCREEN_SCALING_LABEL_ID,
-		NULL,
-		NULL,
-		NULL,
-		"video",
-		{
-			{ "keep_aspect", OPTION_VAL_KEEP_ASPECT_ID },
-			{ "stretch", OPTION_VAL_STRETCH_ID },
-			{ NULL, NULL },
-		},
-		"keep_aspect"
 	},
 	{
 		"cemu_thread_quantum",
@@ -15895,20 +15559,6 @@ struct retro_core_option_v2_definition option_defs_it[] = {
 		"1280x720"
 	},
 	{
-		"cemu_fullscreen_scaling",
-		CEMU_FULLSCREEN_SCALING_LABEL_IT,
-		NULL,
-		NULL,
-		NULL,
-		"video",
-		{
-			{ "keep_aspect", OPTION_VAL_KEEP_ASPECT_IT },
-			{ "stretch", OPTION_VAL_STRETCH_IT },
-			{ NULL, NULL },
-		},
-		"keep_aspect"
-	},
-	{
 		"cemu_thread_quantum",
 		CEMU_THREAD_QUANTUM_LABEL_IT,
 		NULL,
@@ -16542,20 +16192,6 @@ struct retro_core_option_v2_definition option_defs_ja[] = {
 			{ NULL, NULL },
 		},
 		"1280x720"
-	},
-	{
-		"cemu_fullscreen_scaling",
-		CEMU_FULLSCREEN_SCALING_LABEL_JA,
-		NULL,
-		NULL,
-		NULL,
-		"video",
-		{
-			{ "keep_aspect", OPTION_VAL_KEEP_ASPECT_JA },
-			{ "stretch", OPTION_VAL_STRETCH_JA },
-			{ NULL, NULL },
-		},
-		"keep_aspect"
 	},
 	{
 		"cemu_thread_quantum",
@@ -17193,20 +16829,6 @@ struct retro_core_option_v2_definition option_defs_ko[] = {
 		"1280x720"
 	},
 	{
-		"cemu_fullscreen_scaling",
-		CEMU_FULLSCREEN_SCALING_LABEL_KO,
-		NULL,
-		NULL,
-		NULL,
-		"video",
-		{
-			{ "keep_aspect", OPTION_VAL_KEEP_ASPECT_KO },
-			{ "stretch", OPTION_VAL_STRETCH_KO },
-			{ NULL, NULL },
-		},
-		"keep_aspect"
-	},
-	{
 		"cemu_thread_quantum",
 		CEMU_THREAD_QUANTUM_LABEL_KO,
 		NULL,
@@ -17840,20 +17462,6 @@ struct retro_core_option_v2_definition option_defs_nl[] = {
 			{ NULL, NULL },
 		},
 		"1280x720"
-	},
-	{
-		"cemu_fullscreen_scaling",
-		CEMU_FULLSCREEN_SCALING_LABEL_NL,
-		NULL,
-		NULL,
-		NULL,
-		"video",
-		{
-			{ "keep_aspect", OPTION_VAL_KEEP_ASPECT_NL },
-			{ "stretch", OPTION_VAL_STRETCH_NL },
-			{ NULL, NULL },
-		},
-		"keep_aspect"
 	},
 	{
 		"cemu_thread_quantum",
@@ -18491,20 +18099,6 @@ struct retro_core_option_v2_definition option_defs_no[] = {
 		"1280x720"
 	},
 	{
-		"cemu_fullscreen_scaling",
-		CEMU_FULLSCREEN_SCALING_LABEL_NO,
-		NULL,
-		NULL,
-		NULL,
-		"video",
-		{
-			{ "keep_aspect", OPTION_VAL_KEEP_ASPECT_NO },
-			{ "stretch", OPTION_VAL_STRETCH_NO },
-			{ NULL, NULL },
-		},
-		"keep_aspect"
-	},
-	{
 		"cemu_thread_quantum",
 		CEMU_THREAD_QUANTUM_LABEL_NO,
 		NULL,
@@ -19138,20 +18732,6 @@ struct retro_core_option_v2_definition option_defs_or[] = {
 			{ NULL, NULL },
 		},
 		"1280x720"
-	},
-	{
-		"cemu_fullscreen_scaling",
-		CEMU_FULLSCREEN_SCALING_LABEL_OR,
-		NULL,
-		NULL,
-		NULL,
-		"video",
-		{
-			{ "keep_aspect", OPTION_VAL_KEEP_ASPECT_OR },
-			{ "stretch", OPTION_VAL_STRETCH_OR },
-			{ NULL, NULL },
-		},
-		"keep_aspect"
 	},
 	{
 		"cemu_thread_quantum",
@@ -19789,20 +19369,6 @@ struct retro_core_option_v2_definition option_defs_pl[] = {
 		"1280x720"
 	},
 	{
-		"cemu_fullscreen_scaling",
-		CEMU_FULLSCREEN_SCALING_LABEL_PL,
-		NULL,
-		NULL,
-		NULL,
-		"video",
-		{
-			{ "keep_aspect", OPTION_VAL_KEEP_ASPECT_PL },
-			{ "stretch", OPTION_VAL_STRETCH_PL },
-			{ NULL, NULL },
-		},
-		"keep_aspect"
-	},
-	{
 		"cemu_thread_quantum",
 		CEMU_THREAD_QUANTUM_LABEL_PL,
 		NULL,
@@ -20436,20 +20002,6 @@ struct retro_core_option_v2_definition option_defs_pt_br[] = {
 			{ NULL, NULL },
 		},
 		"1280x720"
-	},
-	{
-		"cemu_fullscreen_scaling",
-		CEMU_FULLSCREEN_SCALING_LABEL_PT_BR,
-		NULL,
-		NULL,
-		NULL,
-		"video",
-		{
-			{ "keep_aspect", OPTION_VAL_KEEP_ASPECT_PT_BR },
-			{ "stretch", OPTION_VAL_STRETCH_PT_BR },
-			{ NULL, NULL },
-		},
-		"keep_aspect"
 	},
 	{
 		"cemu_thread_quantum",
@@ -21087,20 +20639,6 @@ struct retro_core_option_v2_definition option_defs_pt_pt[] = {
 		"1280x720"
 	},
 	{
-		"cemu_fullscreen_scaling",
-		CEMU_FULLSCREEN_SCALING_LABEL_PT_PT,
-		NULL,
-		NULL,
-		NULL,
-		"video",
-		{
-			{ "keep_aspect", OPTION_VAL_KEEP_ASPECT_PT_PT },
-			{ "stretch", OPTION_VAL_STRETCH_PT_PT },
-			{ NULL, NULL },
-		},
-		"keep_aspect"
-	},
-	{
 		"cemu_thread_quantum",
 		CEMU_THREAD_QUANTUM_LABEL_PT_PT,
 		NULL,
@@ -21734,20 +21272,6 @@ struct retro_core_option_v2_definition option_defs_ru[] = {
 			{ NULL, NULL },
 		},
 		"1280x720"
-	},
-	{
-		"cemu_fullscreen_scaling",
-		CEMU_FULLSCREEN_SCALING_LABEL_RU,
-		NULL,
-		NULL,
-		NULL,
-		"video",
-		{
-			{ "keep_aspect", OPTION_VAL_KEEP_ASPECT_RU },
-			{ "stretch", OPTION_VAL_STRETCH_RU },
-			{ NULL, NULL },
-		},
-		"keep_aspect"
 	},
 	{
 		"cemu_thread_quantum",
@@ -22385,20 +21909,6 @@ struct retro_core_option_v2_definition option_defs_sk[] = {
 		"1280x720"
 	},
 	{
-		"cemu_fullscreen_scaling",
-		CEMU_FULLSCREEN_SCALING_LABEL_SK,
-		NULL,
-		NULL,
-		NULL,
-		"video",
-		{
-			{ "keep_aspect", OPTION_VAL_KEEP_ASPECT_SK },
-			{ "stretch", OPTION_VAL_STRETCH_SK },
-			{ NULL, NULL },
-		},
-		"keep_aspect"
-	},
-	{
 		"cemu_thread_quantum",
 		CEMU_THREAD_QUANTUM_LABEL_SK,
 		NULL,
@@ -23032,20 +22542,6 @@ struct retro_core_option_v2_definition option_defs_sr[] = {
 			{ NULL, NULL },
 		},
 		"1280x720"
-	},
-	{
-		"cemu_fullscreen_scaling",
-		CEMU_FULLSCREEN_SCALING_LABEL_SR,
-		NULL,
-		NULL,
-		NULL,
-		"video",
-		{
-			{ "keep_aspect", OPTION_VAL_KEEP_ASPECT_SR },
-			{ "stretch", OPTION_VAL_STRETCH_SR },
-			{ NULL, NULL },
-		},
-		"keep_aspect"
 	},
 	{
 		"cemu_thread_quantum",
@@ -23683,20 +23179,6 @@ struct retro_core_option_v2_definition option_defs_sv[] = {
 		"1280x720"
 	},
 	{
-		"cemu_fullscreen_scaling",
-		CEMU_FULLSCREEN_SCALING_LABEL_SV,
-		NULL,
-		NULL,
-		NULL,
-		"video",
-		{
-			{ "keep_aspect", OPTION_VAL_KEEP_ASPECT_SV },
-			{ "stretch", OPTION_VAL_STRETCH_SV },
-			{ NULL, NULL },
-		},
-		"keep_aspect"
-	},
-	{
 		"cemu_thread_quantum",
 		CEMU_THREAD_QUANTUM_LABEL_SV,
 		NULL,
@@ -24330,20 +23812,6 @@ struct retro_core_option_v2_definition option_defs_th[] = {
 			{ NULL, NULL },
 		},
 		"1280x720"
-	},
-	{
-		"cemu_fullscreen_scaling",
-		CEMU_FULLSCREEN_SCALING_LABEL_TH,
-		NULL,
-		NULL,
-		NULL,
-		"video",
-		{
-			{ "keep_aspect", OPTION_VAL_KEEP_ASPECT_TH },
-			{ "stretch", OPTION_VAL_STRETCH_TH },
-			{ NULL, NULL },
-		},
-		"keep_aspect"
 	},
 	{
 		"cemu_thread_quantum",
@@ -24981,20 +24449,6 @@ struct retro_core_option_v2_definition option_defs_tr[] = {
 		"1280x720"
 	},
 	{
-		"cemu_fullscreen_scaling",
-		CEMU_FULLSCREEN_SCALING_LABEL_TR,
-		NULL,
-		NULL,
-		NULL,
-		"video",
-		{
-			{ "keep_aspect", OPTION_VAL_KEEP_ASPECT_TR },
-			{ "stretch", OPTION_VAL_STRETCH_TR },
-			{ NULL, NULL },
-		},
-		"keep_aspect"
-	},
-	{
 		"cemu_thread_quantum",
 		CEMU_THREAD_QUANTUM_LABEL_TR,
 		NULL,
@@ -25628,20 +25082,6 @@ struct retro_core_option_v2_definition option_defs_tt[] = {
 			{ NULL, NULL },
 		},
 		"1280x720"
-	},
-	{
-		"cemu_fullscreen_scaling",
-		CEMU_FULLSCREEN_SCALING_LABEL_TT,
-		NULL,
-		NULL,
-		NULL,
-		"video",
-		{
-			{ "keep_aspect", OPTION_VAL_KEEP_ASPECT_TT },
-			{ "stretch", OPTION_VAL_STRETCH_TT },
-			{ NULL, NULL },
-		},
-		"keep_aspect"
 	},
 	{
 		"cemu_thread_quantum",
@@ -26279,20 +25719,6 @@ struct retro_core_option_v2_definition option_defs_uk[] = {
 		"1280x720"
 	},
 	{
-		"cemu_fullscreen_scaling",
-		CEMU_FULLSCREEN_SCALING_LABEL_UK,
-		NULL,
-		NULL,
-		NULL,
-		"video",
-		{
-			{ "keep_aspect", OPTION_VAL_KEEP_ASPECT_UK },
-			{ "stretch", OPTION_VAL_STRETCH_UK },
-			{ NULL, NULL },
-		},
-		"keep_aspect"
-	},
-	{
 		"cemu_thread_quantum",
 		CEMU_THREAD_QUANTUM_LABEL_UK,
 		NULL,
@@ -26928,20 +26354,6 @@ struct retro_core_option_v2_definition option_defs_val[] = {
 		"1280x720"
 	},
 	{
-		"cemu_fullscreen_scaling",
-		CEMU_FULLSCREEN_SCALING_LABEL_VAL,
-		NULL,
-		NULL,
-		NULL,
-		"video",
-		{
-			{ "keep_aspect", OPTION_VAL_KEEP_ASPECT_VAL },
-			{ "stretch", OPTION_VAL_STRETCH_VAL },
-			{ NULL, NULL },
-		},
-		"keep_aspect"
-	},
-	{
 		"cemu_thread_quantum",
 		CEMU_THREAD_QUANTUM_LABEL_VAL,
 		NULL,
@@ -27575,20 +26987,6 @@ struct retro_core_option_v2_definition option_defs_vn[] = {
 			{ NULL, NULL },
 		},
 		"1280x720"
-	},
-	{
-		"cemu_fullscreen_scaling",
-		CEMU_FULLSCREEN_SCALING_LABEL_VN,
-		NULL,
-		NULL,
-		NULL,
-		"video",
-		{
-			{ "keep_aspect", OPTION_VAL_KEEP_ASPECT_VN },
-			{ "stretch", OPTION_VAL_STRETCH_VN },
-			{ NULL, NULL },
-		},
-		"keep_aspect"
 	},
 	{
 		"cemu_thread_quantum",

@@ -233,20 +233,6 @@ struct retro_core_option_v2_definition option_defs_us[] = {
 		"native"
 	},
 	{
-		"cemu_fullscreen_scaling",
-		"Fullscreen Scaling",
-		NULL,
-		NULL,
-		NULL,
-		"video",
-		{
-			{ "keep_aspect", "Keep Aspect" },
-			{ "stretch", "Stretch" },
-			{ NULL, NULL },
-		},
-		"keep_aspect"
-	},
-	{
 		"cemu_thread_quantum",
 		"Thread Quantum",
 		NULL,
