@@ -376,6 +376,9 @@ namespace LatteDecompiler
 
 	void _emitVSExports(LatteDecompilerShaderContext* shaderContext)
 	{
+#ifdef __ANDROID__
+		std::array<bool, 32> activePassParams{};
+#endif
 		auto* src = shaderContext->shaderSource;
 		LatteShaderPSInputTable* psInputTable = LatteSHRC_GetPSInputTable();
 		auto parameterMask = shaderContext->shader->outputParameterMask;
@@ -399,6 +402,9 @@ namespace LatteDecompiler
 			if (psInputIndex == -1)
 				continue; // no ps input
 
+#ifdef __ANDROID__
+			activePassParams.at(psInputIndex) = true;
+#endif
 			src->addFmt("layout(location = {}) ", psInputIndex);
 			if (psInputTable->import[psInputIndex].isFlat)
 				src->add("flat ");
@@ -407,6 +413,24 @@ namespace LatteDecompiler
 			src->add("out");
 			src->addFmt(" vec4 passParameterSem{};" _CRLF, psInputTable->import[psInputIndex].semanticId);
 		}
+#ifdef __ANDROID__
+		// Every output location written, the unused ones with zero, as the
+		// Android ports of Cemu do: Qualcomm's driver fails to create a pipeline
+		// whose vertex shader leaves a location unwritten - a streamout-only
+		// vertex shader leaves them all - with VK_ERROR_UNKNOWN (#29)
+		for (uint32 i = 0; i < 32; i++)
+		{
+			if (!activePassParams[i])
+				src->addFmt("layout(location = {0}) out vec4 dummyPassParameterSem{0};" _CRLF, i);
+		}
+		src->add("void dummyPassParamInit() {" _CRLF);
+		for (uint32 i = 0; i < 32; i++)
+		{
+			if (!activePassParams[i])
+				src->addFmt("dummyPassParameterSem{} = vec4(0.0, 0.0, 0.0, 0.0);" _CRLF, i);
+		}
+		src->add("}" _CRLF);
+#endif
 	}
 
 	void _emitPSImports(LatteDecompilerShaderContext* shaderContext)

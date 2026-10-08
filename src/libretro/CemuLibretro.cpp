@@ -969,8 +969,11 @@ static bool libretro_vk_create_device(
 	// cubic filtering on a device without them - undefined, which Turnip lets
 	// pass and Qualcomm's own driver answers by failing pipeline creation
 	// (#29, Adreno 840: "Failed to create graphics pipeline. Error -13").
+	// Transform feedback is not among them: upstream dropped that path
+	// (#1919), streamout goes through a storage buffer the vertex shader
+	// writes, and nothing uses the extension any more - while Qualcomm's
+	// driver still failed exactly the pipelines with such a vertex shader (#29).
 	const char* cemuExtensions[] = {
-		VK_EXT_TRANSFORM_FEEDBACK_EXTENSION_NAME,
 		VK_EXT_DEPTH_RANGE_UNRESTRICTED_EXTENSION_NAME,
 		VK_EXT_PIPELINE_CREATION_CACHE_CONTROL_EXTENSION_NAME,
 		VK_EXT_CUSTOM_BORDER_COLOR_EXTENSION_NAME,
@@ -1010,7 +1013,6 @@ static bool libretro_vk_create_device(
 	supportedFeatures2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
 
 	// The extension features go into the same query, for the chain below
-	VkPhysicalDeviceTransformFeedbackFeaturesEXT tfSupported{VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_TRANSFORM_FEEDBACK_FEATURES_EXT};
 	VkPhysicalDevicePipelineCreationCacheControlFeaturesEXT pccSupported{VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PIPELINE_CREATION_CACHE_CONTROL_FEATURES_EXT};
 	VkPhysicalDeviceCustomBorderColorFeaturesEXT bcfSupported{VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_CUSTOM_BORDER_COLOR_FEATURES_EXT};
 	VkPhysicalDevicePipelineRobustnessFeaturesEXT robustSupported{VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PIPELINE_ROBUSTNESS_FEATURES_EXT};
@@ -1024,7 +1026,6 @@ static bool libretro_vk_create_device(
 				chain = &feature;
 			}
 		};
-		query(tfSupported, VK_EXT_TRANSFORM_FEEDBACK_EXTENSION_NAME);
 		query(pccSupported, VK_EXT_PIPELINE_CREATION_CACHE_CONTROL_EXTENSION_NAME);
 		query(bcfSupported, VK_EXT_CUSTOM_BORDER_COLOR_EXTENSION_NAME);
 		query(robustSupported, VK_EXT_PIPELINE_ROBUSTNESS_EXTENSION_NAME);
@@ -1082,7 +1083,6 @@ static bool libretro_vk_create_device(
 	// The features of the extensions enabled above, those the GPU has - as
 	// standalone's constructor chains them. An extension enabled without its
 	// feature is one the renderer must not use either.
-	VkPhysicalDeviceTransformFeedbackFeaturesEXT tfFeatures{VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_TRANSFORM_FEEDBACK_FEATURES_EXT};
 	VkPhysicalDevicePipelineCreationCacheControlFeaturesEXT pccFeatures{VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PIPELINE_CREATION_CACHE_CONTROL_FEATURES_EXT};
 	VkPhysicalDeviceCustomBorderColorFeaturesEXT bcfFeatures{VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_CUSTOM_BORDER_COLOR_FEATURES_EXT};
 	VkPhysicalDevicePipelineRobustnessFeaturesEXT robustFeatures{VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PIPELINE_ROBUSTNESS_FEATURES_EXT};
@@ -1092,11 +1092,6 @@ static bool libretro_vk_create_device(
 		feature.pNext = featureChain;
 		featureChain = &feature;
 	};
-	if (enabledExt(VK_EXT_TRANSFORM_FEEDBACK_EXTENSION_NAME) && tfSupported.transformFeedback)
-	{
-		tfFeatures.transformFeedback = VK_TRUE;
-		chainFeature(tfFeatures);
-	}
 	if (enabledExt(VK_EXT_PIPELINE_CREATION_CACHE_CONTROL_EXTENSION_NAME) && pccSupported.pipelineCreationCacheControl)
 	{
 		pccFeatures.pipelineCreationCacheControl = VK_TRUE;

@@ -3880,6 +3880,11 @@ void LatteDecompiler_emitGLSLShader(LatteDecompilerShaderContext* shaderContext,
 	// start of main
 	src->add("void main()" _CRLF);
 	src->add("{" _CRLF);
+#ifdef __ANDROID__
+	// the unused output locations, declared by _emitVSExports
+	if (shaderContext->options->usesGeometryShader == false && shaderContext->shaderType == LatteConst::ShaderType::Vertex)
+		src->add("dummyPassParamInit();" _CRLF);
+#endif
 	// variable definition
 	if (shaderContext->typeTracker.useArrayGPRs == false)
 	{
