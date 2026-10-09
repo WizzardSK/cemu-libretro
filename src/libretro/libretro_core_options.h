@@ -59,12 +59,12 @@ struct retro_core_option_v2_category option_cats_us[] = {
 	// a core option, and an empty submenu is worse than no submenu.
 	{ "system", "System", "CPU, language and scheduling." },
 	{ "addons", "Add-ons", "Skylanders, Infinity and Dimensions portals." },
-	{ "logging", "Logging", "Extra log output, for diagnosing problems." },
 	{ "accounts", "Accounts", "Manage accounts in the Wii U's account directory (saves/Cemu/mlc01/usr/save/system/act)." },
 	{ "install", "Content", "Manage games, title updates and DLC in saves/Cemu/mlc01, the emulated console's storage." },
 	{ "convert", "Convert to WUA", "Write the loaded title out as a .wua archive." },
 	{ "graphic_packs", "Graphic Packs", "The loaded game's graphic packs and their presets. Changes apply the next time the game is loaded." },
 	{ "cheats", "Cheats", "The loaded game's cheat packs, from the graphic packs' Cheats folder. Changes apply the next time the game is loaded." },
+	{ "logging", "Logging", "Extra log output, for diagnosing problems." },
 	{ NULL, NULL, NULL },
 };
 
@@ -168,6 +168,20 @@ struct retro_core_option_v2_definition option_defs_us[] = {
 		"enabled"
 	},
 	{
+		"cemu_show_game_fps",
+		"Show Game FPS",
+		NULL,
+		"Show the frame rate the game renders at. RetroArch's own FPS counter counts how often the core runs, and that stays at 60 when the game drops frames, because every run carries a frame's worth of audio.",
+		NULL,
+		"video",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
 		"cemu_upscale_filter",
 		"Upscale Filter",
 		NULL,
@@ -182,20 +196,6 @@ struct retro_core_option_v2_definition option_defs_us[] = {
 			{ NULL, NULL },
 		},
 		"linear"
-	},
-	{
-		"cemu_show_game_fps",
-		"Show Game FPS",
-		NULL,
-		"Show the frame rate the game renders at. RetroArch's own FPS counter counts how often the core runs, and that stays at 60 when the game drops frames, because every run carries a frame's worth of audio.",
-		NULL,
-		"video",
-		{
-			{ "disabled", NULL },
-			{ "enabled", NULL },
-			{ NULL, NULL },
-		},
-		"disabled"
 	},
 	{
 		"cemu_downscale_filter",
@@ -231,20 +231,6 @@ struct retro_core_option_v2_definition option_defs_us[] = {
 			{ NULL, NULL },
 		},
 		"native"
-	},
-	{
-		"cemu_fullscreen_scaling",
-		"Fullscreen Scaling",
-		NULL,
-		NULL,
-		NULL,
-		"video",
-		{
-			{ "keep_aspect", "Keep Aspect" },
-			{ "stretch", "Stretch" },
-			{ NULL, NULL },
-		},
-		"keep_aspect"
 	},
 	{
 		"cemu_thread_quantum",
@@ -470,20 +456,6 @@ struct retro_core_option_v2_definition option_defs_us[] = {
 		"normal"
 	},
 	{
-		"cemu_dump_shaders",
-		"Dump Shaders (debugging)",
-		NULL,
-		"Writes the source of every shader the game uses to system/Cemu/dump/shaders, named by its hashes as they appear in log.txt. For reporting a shader that fails or draws wrongly on a particular GPU. Slows shader compilation down and fills the folder quickly, so turn it off again afterwards.",
-		NULL,
-		"logging",
-		{
-			{ "disabled", NULL },
-			{ "enabled", NULL },
-			{ NULL, NULL },
-		},
-		"disabled"
-	},
-	{
 		"cemu_log_to_file",
 		"Write Cemu Log to log.txt",
 		NULL,
@@ -572,6 +544,34 @@ struct retro_core_option_v2_definition option_defs_us[] = {
 		"Log Audio and Frame Pacing (debugging)",
 		NULL,
 		"Once a second, how many samples AX produced, how many the ring had to drop, and how many the frontend took; and how many times the frontend ran the core, how many frames the title finished, and where the time went (waiting for the GPU thread, presenting, audio). For working out whether a slow game is held up by the emulated CPU, the GPU or the frontend.",
+		NULL,
+		"logging",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_log_thread_time",
+		"Log Thread CPU Time (debugging)",
+		NULL,
+		"Once a second, how busy each emulated PowerPC core's thread, the GPU thread and the frontend's thread were, as a share of one host core. A thread near 100% is the one a slow game is waiting on.",
+		NULL,
+		"logging",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_dump_shaders",
+		"Dump Shaders (debugging)",
+		NULL,
+		"Writes the source of every shader the game uses to system/Cemu/dump/shaders, named by its hashes as they appear in log.txt. For reporting a shader that fails or draws wrongly on a particular GPU. Slows shader compilation down and fills the folder quickly, so turn it off again afterwards.",
 		NULL,
 		"logging",
 		{

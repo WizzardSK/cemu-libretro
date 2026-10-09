@@ -26,6 +26,10 @@
 #include "Cafe/OS/common/OSCommon.h"
 #include "Cafe/OS/RPL/rpl_structs.h"
 #include <fstream>
+#if BOOST_OS_MACOS
+#include <mach/mach.h>
+#include <pthread.h>
+#endif
 #include "Cemu/ncrypto/ncrypto.h"
 #include "Cemu/FileCache/FileCache.h"
 #include "Cafe/TitleList/TitleList.h"
@@ -760,19 +764,34 @@ static uint32_t libretro_out_height()
 // Tells the frontend when the output size changes, e.g. when a resolution
 // pack's size takes over from the core option's.
 static uint32_t s_reported_out_width = 0, s_reported_out_height = 0; // what the frontend was last told
+// The largest frame the frontend was told to expect. 4x 720p covers every
+// Internal Resolution step of a 720p game, but 3x of a 1080p game (5760x3240)
+// or a big resolution pack goes past it, and SET_GEOMETRY must not exceed the
+// max: then the max grows through SET_SYSTEM_AV_INFO.
+static uint32_t s_max_out_width = SCREEN_WIDTH * 4, s_max_out_height = SCREEN_HEIGHT * 4;
 
 static void libretro_report_out_size()
 {
 	const uint32_t width = libretro_out_width(), height = libretro_out_height();
 	if (width == s_reported_out_width && height == s_reported_out_height)
 		return;
+	if (width > s_max_out_width || height > s_max_out_height)
+	{
+		s_max_out_width = std::max<uint32_t>(s_max_out_width, width);
+		s_max_out_height = std::max<uint32_t>(s_max_out_height, height);
+		retro_system_av_info av{};
+		retro_get_system_av_info(&av);
+		environ_cb(RETRO_ENVIRONMENT_SET_SYSTEM_AV_INFO, &av);
+		libretro_log(RETRO_LOG_INFO, "output is now %ux%u (max raised to %ux%u)\n", width, height, s_max_out_width, s_max_out_height);
+		return;
+	}
 	s_reported_out_width = width;
 	s_reported_out_height = height;
 	retro_game_geometry geometry{};
 	geometry.base_width = width;
 	geometry.base_height = height;
-	geometry.max_width = SCREEN_WIDTH * 4;
-	geometry.max_height = SCREEN_HEIGHT * 4;
+	geometry.max_width = s_max_out_width;
+	geometry.max_height = s_max_out_height;
 	geometry.aspect_ratio = 16.0f / 9.0f;
 	environ_cb(RETRO_ENVIRONMENT_SET_GEOMETRY, &geometry);
 	libretro_log(RETRO_LOG_INFO, "output is now %ux%u\n", width, height);
@@ -793,7 +812,7 @@ void libretro_gl_tv_picture_size(int width, int height)
 	extern bool LatteTexture_graphicPackSetsResolution();
 	int w = SCREEN_WIDTH, h = SCREEN_HEIGHT;
 	if ((LatteTexture_graphicPackSetsResolution() || g_libretroRenderScale != 1.0f) &&
-		width >= 16 && height >= 16 && width <= (int)SCREEN_WIDTH * 4 && height <= (int)SCREEN_HEIGHT * 4)
+		width >= 16 && height >= 16 && width <= 8192 && height <= 8192)
 	{
 		w = width;
 		h = height;
@@ -2636,6 +2655,9 @@ void LibretroPinToFastCores(const char* who)
 #endif
 }
 
+// cemu_log_thread_time; the logging itself is further down, next to retro_run.
+static bool s_log_thread_time = false;
+
 static void libretro_apply_core_options()
 {
 	libretro_handle_install_requests();
@@ -2836,6 +2858,13 @@ static void libretro_apply_core_options()
 				LibretroAudioAPI::SetStatsLogging(b);
 		}
 
+		if (const char* v = libretro_get_option_value("cemu_log_thread_time"))
+		{
+			bool b;
+			if (libretro_parse_enabled_disabled(v, b))
+				s_log_thread_time = b;
+		}
+
 		if (const char* v = libretro_get_option_value("cemu_log_texture_memory"))
 		{
 			bool b;
@@ -2946,12 +2975,10 @@ static void libretro_apply_core_options()
 		else if (libretro_iequals(v, "nearest")) cfg.downscale_filter = kNearestNeighborFilter;
 	}
 
-	// Fullscreen scaling
-	if (const char* v = libretro_get_option_value("cemu_fullscreen_scaling"))
-	{
-		if (libretro_iequals(v, "keep_aspect")) cfg.fullscreen_scaling = 0;
-		else if (libretro_iequals(v, "stretch")) cfg.fullscreen_scaling = 1;
-	}
+	// Fullscreen Scaling was an option once, but did nothing here: the frame
+	// handed over is the TV picture's own size, so there are no borders to keep
+	// or stretch away - the aspect is RetroArch's (Video > Scaling).
+	cfg.fullscreen_scaling = kKeepAspectRatio;
 
 	// CPU mode & precompiled shaders (ActiveSettings overrides)
 	const char* cpuModeValue = libretro_get_option_value("cemu_cpu_mode");
@@ -3846,8 +3873,8 @@ RETRO_API void retro_get_system_av_info(struct retro_system_av_info* info)
 		}
 	info->geometry.base_width = s_reported_out_width = libretro_out_width();
 	info->geometry.base_height = s_reported_out_height = libretro_out_height();
-	info->geometry.max_width = SCREEN_WIDTH * 4;
-	info->geometry.max_height = SCREEN_HEIGHT * 4;
+	info->geometry.max_width = std::max(s_max_out_width, info->geometry.base_width);
+	info->geometry.max_height = std::max(s_max_out_height, info->geometry.base_height);
 	info->geometry.aspect_ratio = 16.0f / 9.0f;
 	if (!s_game_loaded)
 		s_output_fps = libretro_wanted_fps();
@@ -6470,12 +6497,95 @@ static void libretro_report_game_fps(std::chrono::steady_clock::time_point now)
 	}
 }
 
+// How busy each thread that can hold a frame up was (cemu_log_thread_time):
+// CPU time each spent in the last second, against the wall clock. The PPC core
+// threads and the GPU thread are read from outside by their handles; they
+// live between OSSchedulerBegin/Latte_Start and the stop, which never runs
+// during retro_run. s_log_thread_time is declared above libretro_apply_core_options.
+
+namespace coreinit
+{
+	std::vector<std::thread::native_handle_type>& OSGetSchedulerThreads();
+}
+extern std::thread sLatteThread;
+
+static int64_t libretro_thread_cpu_us(std::thread::native_handle_type h)
+{
+#if BOOST_OS_WINDOWS
+	FILETIME created, exited, kernel, user;
+	if (!GetThreadTimes((HANDLE)h, &created, &exited, &kernel, &user))
+		return -1;
+	auto ticks = [](const FILETIME& f) { return ((int64_t)f.dwHighDateTime << 32) | f.dwLowDateTime; };
+	return (ticks(kernel) + ticks(user)) / 10;
+#elif BOOST_OS_MACOS
+	thread_basic_info_data_t info;
+	mach_msg_type_number_t count = THREAD_BASIC_INFO_COUNT;
+	if (thread_info(pthread_mach_thread_np(h), THREAD_BASIC_INFO, (thread_info_t)&info, &count) != KERN_SUCCESS)
+		return -1;
+	return (int64_t)(info.user_time.seconds + info.system_time.seconds) * 1000000 +
+		info.user_time.microseconds + info.system_time.microseconds;
+#else
+	clockid_t clock;
+	struct timespec ts;
+	if (pthread_getcpuclockid(h, &clock) != 0 || clock_gettime(clock, &ts) != 0)
+		return -1;
+	return (int64_t)ts.tv_sec * 1000000 + ts.tv_nsec / 1000;
+#endif
+}
+
+static void libretro_log_thread_time(std::chrono::steady_clock::time_point now)
+{
+	static std::chrono::steady_clock::time_point s_since{};
+	static std::vector<int64_t> s_last;
+	if (!s_log_thread_time || !s_game_loaded)
+	{
+		s_since = {};
+		return;
+	}
+
+	std::vector<std::thread::native_handle_type> threads = coreinit::OSGetSchedulerThreads();
+	const size_t cores = threads.size();
+	threads.push_back(sLatteThread.native_handle());
+#if BOOST_OS_WINDOWS
+	threads.push_back(GetCurrentThread());
+#else
+	threads.push_back(pthread_self());
+#endif
+	std::vector<int64_t> cpu(threads.size());
+	for (size_t i = 0; i < threads.size(); i++)
+		cpu[i] = libretro_thread_cpu_us(threads[i]);
+
+	if (s_since == std::chrono::steady_clock::time_point{} || s_last.size() != cpu.size())
+	{
+		s_since = now;
+		s_last = cpu;
+		return;
+	}
+	const int64_t wall = std::chrono::duration_cast<std::chrono::microseconds>(now - s_since).count();
+	if (wall < 1000000)
+		return;
+
+	auto busy = [&](size_t i) -> std::string {
+		if (cpu[i] < 0 || s_last[i] < 0)
+			return "?";
+		return fmt::format("{}%", (cpu[i] - s_last[i]) * 100 / wall);
+	};
+	std::string line = "threads, % of one host core:";
+	for (size_t i = 0; i < cores; i++)
+		line += fmt::format(" PPC core {} {},", i, busy(i));
+	line += fmt::format(" GPU {}, frontend {}", busy(cores), busy(cores + 1));
+	cemuLog_log(LogType::Force, "{}", line);
+	s_since = now;
+	s_last = cpu;
+}
+
 static void libretro_finish_run(std::chrono::steady_clock::time_point start,
 	std::chrono::steady_clock::time_point waited, bool timedOut)
 {
 	using prof_clock = std::chrono::steady_clock;
 	const auto presented = prof_clock::now();
 	libretro_report_game_fps(presented);
+	libretro_log_thread_time(presented);
 
 	LibretroAudioAPI::FlushAudio();
 	s_last_audio_wait_us = std::chrono::duration_cast<std::chrono::microseconds>(prof_clock::now() - presented).count();
