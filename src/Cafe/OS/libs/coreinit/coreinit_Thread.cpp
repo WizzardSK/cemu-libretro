@@ -1522,6 +1522,8 @@ namespace coreinit
 	void OSSchedulerCoreEmulationThread(void* _assignedCoreIndex)
 	{
 		SetThreadName(fmt::format("OSSched[core={}]", (uintptr_t)_assignedCoreIndex).c_str());
+		extern void LibretroPinToFastCores(const char* who);
+		LibretroPinToFastCores(fmt::format("PPC core {}", (uintptr_t)_assignedCoreIndex).c_str());
 		t_assignedCoreIndex = (sint32)(uintptr_t)_assignedCoreIndex;
 		if (t_assignedCoreIndex >= 0 && t_assignedCoreIndex < 3)
 		{
