@@ -357,8 +357,8 @@ void LatteThread_HandleOSScreen()
 int Latte_ThreadEntry()
 {
 	SetThreadName("LatteThread");
-	extern void LibretroPinToFastCores(const char* who);
-	LibretroPinToFastCores("GPU thread");
+	extern void LibretroPinToFastCores(const char* who, int rank);
+	LibretroPinToFastCores("GPU thread", 0);
 	// renderer
 	LatteThread_SetPhase("renderer init");
 	Latte_InitRendererState();

@@ -2594,9 +2594,14 @@ static bool libretro_account_removable(uint32 persistentId)
 // to the cores whose maximum frequency is above the slowest cluster's. Each
 // thread pins itself when it starts (OSSchedulerCoreEmulationThread,
 // Latte_ThreadEntry). A CPU whose cores are all alike is left alone.
+// Only as many threads as there are fast cores are pinned, in order of rank
+// (0 the GPU thread, 1 PPC core 1 - the game's main thread, 2 PPC core 0,
+// 3 PPC core 2); the others stay free to run anywhere. Four busy threads held
+// to a phone's two fast cores ran slower than with no pinning at all
+// (sco8487's Deus Ex on cores 6 and 7, 9 fps where it had been smoother).
 bool g_libretroFastCores = true;
 
-void LibretroPinToFastCores(const char* who)
+void LibretroPinToFastCores(const char* who, int rank)
 {
 #if defined(__linux__)
 	if (!g_libretroFastCores)
@@ -2604,6 +2609,7 @@ void LibretroPinToFastCores(const char* who)
 	static std::once_flag s_once;
 	static cpu_set_t s_fast;
 	static bool s_heterogeneous = false;
+	static int s_fastCount = 0;
 	std::call_once(s_once, []() {
 		CPU_ZERO(&s_fast);
 		const long count = sysconf(_SC_NPROCESSORS_CONF);
@@ -2638,6 +2644,7 @@ void LibretroPinToFastCores(const char* who)
 			if (freq[i] > lo)
 			{
 				CPU_SET(i, &s_fast);
+				s_fastCount++;
 				list += fmt::format("{}{} ({} MHz)", list.empty() ? "" : ", ", i, freq[i] / 1000);
 			}
 		}
@@ -2646,12 +2653,18 @@ void LibretroPinToFastCores(const char* who)
 	});
 	if (!s_heterogeneous)
 		return;
+	if (rank >= s_fastCount)
+	{
+		cemuLog_log(LogType::Force, "[libretro] {} left to the system: {} fast cores, taken by the threads before it", who, s_fastCount);
+		return;
+	}
 	if (sched_setaffinity(0, sizeof(s_fast), &s_fast) == 0)
 		cemuLog_log(LogType::Force, "[libretro] {} pinned to the performance cores", who);
 	else
 		cemuLog_log(LogType::Force, "[libretro] {} could not be pinned to the performance cores (errno {})", who, errno);
 #else
 	(void)who;
+	(void)rank;
 #endif
 }
 
