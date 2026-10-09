@@ -6522,6 +6522,72 @@ namespace coreinit
 }
 extern std::thread sLatteThread;
 
+#if defined(__linux__)
+#include <unistd.h>
+
+// Whether the CPU throttles (sco8487: heat with the charger in): each core's
+// clock now, and which core each PPC thread last ran on, from /sys and /proc
+namespace coreinit
+{
+	std::vector<pid_t>& OSGetSchedulerThreadIds();
+}
+
+static long libretro_read_long(const std::string& path)
+{
+	long value = -1;
+	if (FILE* file = fopen(path.c_str(), "r"))
+	{
+		if (fscanf(file, "%ld", &value) != 1)
+			value = -1;
+		fclose(file);
+	}
+	return value;
+}
+
+// Field 39 of /proc/self/task/<tid>/stat: the CPU it last ran on
+static int libretro_thread_last_cpu(pid_t tid)
+{
+	FILE* file = fopen(fmt::format("/proc/self/task/{}/stat", tid).c_str(), "r");
+	if (!file)
+		return -1;
+	char buf[1024];
+	const size_t n = fread(buf, 1, sizeof(buf) - 1, file);
+	fclose(file);
+	buf[n] = 0;
+	const char* p = strrchr(buf, ')');
+	if (!p)
+		return -1;
+	// After the name come fields 3 on; the CPU is the 37th of them
+	int field = 2;
+	for (; *p && field < 39; p++)
+		if (*p == ' ')
+			field++;
+	return field == 39 ? atoi(p) : -1;
+}
+
+static std::string libretro_cpu_clocks()
+{
+	std::string line = "cpu MHz now:";
+	const long count = sysconf(_SC_NPROCESSORS_CONF);
+	for (long i = 0; i < count; i++)
+	{
+		const long cur = libretro_read_long(fmt::format("/sys/devices/system/cpu/cpu{}/cpufreq/scaling_cur_freq", i));
+		const long max = libretro_read_long(fmt::format("/sys/devices/system/cpu/cpu{}/cpufreq/cpuinfo_max_freq", i));
+		if (cur < 0)
+			line += fmt::format(" {}:?", i);
+		else if (max > 0)
+			line += fmt::format(" {}:{}/{}", i, cur / 1000, max / 1000);
+		else
+			line += fmt::format(" {}:{}", i, cur / 1000);
+	}
+	line += "; PPC cores last ran on cpu";
+	const auto& ids = coreinit::OSGetSchedulerThreadIds();
+	for (size_t i = 0; i < ids.size(); i++)
+		line += fmt::format("{}{}", i ? ", " : " ", libretro_thread_last_cpu(ids[i]));
+	return line;
+}
+#endif
+
 static int64_t libretro_thread_cpu_us(std::thread::native_handle_type h)
 {
 #if BOOST_OS_WINDOWS
@@ -6588,6 +6654,9 @@ static void libretro_log_thread_time(std::chrono::steady_clock::time_point now)
 		line += fmt::format(" PPC core {} {},", i, busy(i));
 	line += fmt::format(" GPU {}, frontend {}", busy(cores), busy(cores + 1));
 	cemuLog_log(LogType::Force, "{}", line);
+#if defined(__linux__)
+	cemuLog_log(LogType::Force, "{}", libretro_cpu_clocks());
+#endif
 	s_since = now;
 	s_last = cpu;
 }
