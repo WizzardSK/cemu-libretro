@@ -150,9 +150,9 @@ struct retro_core_option_v2_category option_cats_ar[] = {
 	// a core option, and an empty submenu is worse than no submenu.
 	{ "system", CATEGORY_SYSTEM_LABEL_AR, CATEGORY_SYSTEM_INFO_0_AR },
 	{ "addons", CATEGORY_ADDONS_LABEL_AR, CATEGORY_ADDONS_INFO_0_AR },
-	{ "logging", CATEGORY_LOGGING_LABEL_AR, CATEGORY_LOGGING_INFO_0_AR },
 	{ "convert", CATEGORY_CONVERT_LABEL_AR, CATEGORY_CONVERT_INFO_0_AR },
 	{ "graphic_packs", CATEGORY_GRAPHIC_PACKS_LABEL_AR, CATEGORY_GRAPHIC_PACKS_INFO_0_AR },
+	{ "logging", CATEGORY_LOGGING_LABEL_AR, CATEGORY_LOGGING_INFO_0_AR },
 	{ NULL, NULL, NULL },
 };
 struct retro_core_option_v2_definition option_defs_ar[] = {
@@ -255,6 +255,20 @@ struct retro_core_option_v2_definition option_defs_ar[] = {
 		"enabled"
 	},
 	{
+		"cemu_show_game_fps",
+		CEMU_SHOW_GAME_FPS_LABEL_AR,
+		NULL,
+		CEMU_SHOW_GAME_FPS_INFO_0_AR,
+		NULL,
+		"video",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
 		"cemu_upscale_filter",
 		CEMU_UPSCALE_FILTER_LABEL_AR,
 		NULL,
@@ -269,20 +283,6 @@ struct retro_core_option_v2_definition option_defs_ar[] = {
 			{ NULL, NULL },
 		},
 		"linear"
-	},
-	{
-		"cemu_show_game_fps",
-		CEMU_SHOW_GAME_FPS_LABEL_AR,
-		NULL,
-		CEMU_SHOW_GAME_FPS_INFO_0_AR,
-		NULL,
-		"video",
-		{
-			{ "disabled", NULL },
-			{ "enabled", NULL },
-			{ NULL, NULL },
-		},
-		"disabled"
 	},
 	{
 		"cemu_downscale_filter",
@@ -785,9 +785,9 @@ struct retro_core_option_v2_category option_cats_ast[] = {
 	// a core option, and an empty submenu is worse than no submenu.
 	{ "system", CATEGORY_SYSTEM_LABEL_AST, CATEGORY_SYSTEM_INFO_0_AST },
 	{ "addons", CATEGORY_ADDONS_LABEL_AST, CATEGORY_ADDONS_INFO_0_AST },
-	{ "logging", CATEGORY_LOGGING_LABEL_AST, CATEGORY_LOGGING_INFO_0_AST },
 	{ "convert", CATEGORY_CONVERT_LABEL_AST, CATEGORY_CONVERT_INFO_0_AST },
 	{ "graphic_packs", CATEGORY_GRAPHIC_PACKS_LABEL_AST, CATEGORY_GRAPHIC_PACKS_INFO_0_AST },
+	{ "logging", CATEGORY_LOGGING_LABEL_AST, CATEGORY_LOGGING_INFO_0_AST },
 	{ NULL, NULL, NULL },
 };
 struct retro_core_option_v2_definition option_defs_ast[] = {
@@ -890,6 +890,20 @@ struct retro_core_option_v2_definition option_defs_ast[] = {
 		"enabled"
 	},
 	{
+		"cemu_show_game_fps",
+		CEMU_SHOW_GAME_FPS_LABEL_AST,
+		NULL,
+		CEMU_SHOW_GAME_FPS_INFO_0_AST,
+		NULL,
+		"video",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
 		"cemu_upscale_filter",
 		CEMU_UPSCALE_FILTER_LABEL_AST,
 		NULL,
@@ -904,20 +918,6 @@ struct retro_core_option_v2_definition option_defs_ast[] = {
 			{ NULL, NULL },
 		},
 		"linear"
-	},
-	{
-		"cemu_show_game_fps",
-		CEMU_SHOW_GAME_FPS_LABEL_AST,
-		NULL,
-		CEMU_SHOW_GAME_FPS_INFO_0_AST,
-		NULL,
-		"video",
-		{
-			{ "disabled", NULL },
-			{ "enabled", NULL },
-			{ NULL, NULL },
-		},
-		"disabled"
 	},
 	{
 		"cemu_downscale_filter",
@@ -1420,9 +1420,9 @@ struct retro_core_option_v2_category option_cats_be[] = {
 	// a core option, and an empty submenu is worse than no submenu.
 	{ "system", CATEGORY_SYSTEM_LABEL_BE, CATEGORY_SYSTEM_INFO_0_BE },
 	{ "addons", CATEGORY_ADDONS_LABEL_BE, CATEGORY_ADDONS_INFO_0_BE },
-	{ "logging", CATEGORY_LOGGING_LABEL_BE, CATEGORY_LOGGING_INFO_0_BE },
 	{ "convert", CATEGORY_CONVERT_LABEL_BE, CATEGORY_CONVERT_INFO_0_BE },
 	{ "graphic_packs", CATEGORY_GRAPHIC_PACKS_LABEL_BE, CATEGORY_GRAPHIC_PACKS_INFO_0_BE },
+	{ "logging", CATEGORY_LOGGING_LABEL_BE, CATEGORY_LOGGING_INFO_0_BE },
 	{ NULL, NULL, NULL },
 };
 struct retro_core_option_v2_definition option_defs_be[] = {
@@ -1525,6 +1525,20 @@ struct retro_core_option_v2_definition option_defs_be[] = {
 		"enabled"
 	},
 	{
+		"cemu_show_game_fps",
+		CEMU_SHOW_GAME_FPS_LABEL_BE,
+		NULL,
+		CEMU_SHOW_GAME_FPS_INFO_0_BE,
+		NULL,
+		"video",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
 		"cemu_upscale_filter",
 		CEMU_UPSCALE_FILTER_LABEL_BE,
 		NULL,
@@ -1539,20 +1553,6 @@ struct retro_core_option_v2_definition option_defs_be[] = {
 			{ NULL, NULL },
 		},
 		"linear"
-	},
-	{
-		"cemu_show_game_fps",
-		CEMU_SHOW_GAME_FPS_LABEL_BE,
-		NULL,
-		CEMU_SHOW_GAME_FPS_INFO_0_BE,
-		NULL,
-		"video",
-		{
-			{ "disabled", NULL },
-			{ "enabled", NULL },
-			{ NULL, NULL },
-		},
-		"disabled"
 	},
 	{
 		"cemu_downscale_filter",
@@ -2055,9 +2055,9 @@ struct retro_core_option_v2_category option_cats_bg[] = {
 	// a core option, and an empty submenu is worse than no submenu.
 	{ "system", CATEGORY_SYSTEM_LABEL_BG, CATEGORY_SYSTEM_INFO_0_BG },
 	{ "addons", CATEGORY_ADDONS_LABEL_BG, CATEGORY_ADDONS_INFO_0_BG },
-	{ "logging", CATEGORY_LOGGING_LABEL_BG, CATEGORY_LOGGING_INFO_0_BG },
 	{ "convert", CATEGORY_CONVERT_LABEL_BG, CATEGORY_CONVERT_INFO_0_BG },
 	{ "graphic_packs", CATEGORY_GRAPHIC_PACKS_LABEL_BG, CATEGORY_GRAPHIC_PACKS_INFO_0_BG },
+	{ "logging", CATEGORY_LOGGING_LABEL_BG, CATEGORY_LOGGING_INFO_0_BG },
 	{ NULL, NULL, NULL },
 };
 struct retro_core_option_v2_definition option_defs_bg[] = {
@@ -2160,6 +2160,20 @@ struct retro_core_option_v2_definition option_defs_bg[] = {
 		"enabled"
 	},
 	{
+		"cemu_show_game_fps",
+		CEMU_SHOW_GAME_FPS_LABEL_BG,
+		NULL,
+		CEMU_SHOW_GAME_FPS_INFO_0_BG,
+		NULL,
+		"video",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
 		"cemu_upscale_filter",
 		CEMU_UPSCALE_FILTER_LABEL_BG,
 		NULL,
@@ -2174,20 +2188,6 @@ struct retro_core_option_v2_definition option_defs_bg[] = {
 			{ NULL, NULL },
 		},
 		"linear"
-	},
-	{
-		"cemu_show_game_fps",
-		CEMU_SHOW_GAME_FPS_LABEL_BG,
-		NULL,
-		CEMU_SHOW_GAME_FPS_INFO_0_BG,
-		NULL,
-		"video",
-		{
-			{ "disabled", NULL },
-			{ "enabled", NULL },
-			{ NULL, NULL },
-		},
-		"disabled"
 	},
 	{
 		"cemu_downscale_filter",
@@ -2690,9 +2690,9 @@ struct retro_core_option_v2_category option_cats_ca[] = {
 	// a core option, and an empty submenu is worse than no submenu.
 	{ "system", CATEGORY_SYSTEM_LABEL_CA, CATEGORY_SYSTEM_INFO_0_CA },
 	{ "addons", CATEGORY_ADDONS_LABEL_CA, CATEGORY_ADDONS_INFO_0_CA },
-	{ "logging", CATEGORY_LOGGING_LABEL_CA, CATEGORY_LOGGING_INFO_0_CA },
 	{ "convert", CATEGORY_CONVERT_LABEL_CA, CATEGORY_CONVERT_INFO_0_CA },
 	{ "graphic_packs", CATEGORY_GRAPHIC_PACKS_LABEL_CA, CATEGORY_GRAPHIC_PACKS_INFO_0_CA },
+	{ "logging", CATEGORY_LOGGING_LABEL_CA, CATEGORY_LOGGING_INFO_0_CA },
 	{ NULL, NULL, NULL },
 };
 struct retro_core_option_v2_definition option_defs_ca[] = {
@@ -2795,6 +2795,20 @@ struct retro_core_option_v2_definition option_defs_ca[] = {
 		"enabled"
 	},
 	{
+		"cemu_show_game_fps",
+		CEMU_SHOW_GAME_FPS_LABEL_CA,
+		NULL,
+		CEMU_SHOW_GAME_FPS_INFO_0_CA,
+		NULL,
+		"video",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
 		"cemu_upscale_filter",
 		CEMU_UPSCALE_FILTER_LABEL_CA,
 		NULL,
@@ -2809,20 +2823,6 @@ struct retro_core_option_v2_definition option_defs_ca[] = {
 			{ NULL, NULL },
 		},
 		"linear"
-	},
-	{
-		"cemu_show_game_fps",
-		CEMU_SHOW_GAME_FPS_LABEL_CA,
-		NULL,
-		CEMU_SHOW_GAME_FPS_INFO_0_CA,
-		NULL,
-		"video",
-		{
-			{ "disabled", NULL },
-			{ "enabled", NULL },
-			{ NULL, NULL },
-		},
-		"disabled"
 	},
 	{
 		"cemu_downscale_filter",
@@ -3325,9 +3325,9 @@ struct retro_core_option_v2_category option_cats_chs[] = {
 	// a core option, and an empty submenu is worse than no submenu.
 	{ "system", CATEGORY_SYSTEM_LABEL_CHS, CATEGORY_SYSTEM_INFO_0_CHS },
 	{ "addons", CATEGORY_ADDONS_LABEL_CHS, CATEGORY_ADDONS_INFO_0_CHS },
-	{ "logging", CATEGORY_LOGGING_LABEL_CHS, CATEGORY_LOGGING_INFO_0_CHS },
 	{ "convert", CATEGORY_CONVERT_LABEL_CHS, CATEGORY_CONVERT_INFO_0_CHS },
 	{ "graphic_packs", CATEGORY_GRAPHIC_PACKS_LABEL_CHS, CATEGORY_GRAPHIC_PACKS_INFO_0_CHS },
+	{ "logging", CATEGORY_LOGGING_LABEL_CHS, CATEGORY_LOGGING_INFO_0_CHS },
 	{ NULL, NULL, NULL },
 };
 struct retro_core_option_v2_definition option_defs_chs[] = {
@@ -3430,6 +3430,20 @@ struct retro_core_option_v2_definition option_defs_chs[] = {
 		"enabled"
 	},
 	{
+		"cemu_show_game_fps",
+		CEMU_SHOW_GAME_FPS_LABEL_CHS,
+		NULL,
+		CEMU_SHOW_GAME_FPS_INFO_0_CHS,
+		NULL,
+		"video",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
 		"cemu_upscale_filter",
 		CEMU_UPSCALE_FILTER_LABEL_CHS,
 		NULL,
@@ -3444,20 +3458,6 @@ struct retro_core_option_v2_definition option_defs_chs[] = {
 			{ NULL, NULL },
 		},
 		"linear"
-	},
-	{
-		"cemu_show_game_fps",
-		CEMU_SHOW_GAME_FPS_LABEL_CHS,
-		NULL,
-		CEMU_SHOW_GAME_FPS_INFO_0_CHS,
-		NULL,
-		"video",
-		{
-			{ "disabled", NULL },
-			{ "enabled", NULL },
-			{ NULL, NULL },
-		},
-		"disabled"
 	},
 	{
 		"cemu_downscale_filter",
@@ -3960,9 +3960,9 @@ struct retro_core_option_v2_category option_cats_cht[] = {
 	// a core option, and an empty submenu is worse than no submenu.
 	{ "system", CATEGORY_SYSTEM_LABEL_CHT, CATEGORY_SYSTEM_INFO_0_CHT },
 	{ "addons", CATEGORY_ADDONS_LABEL_CHT, CATEGORY_ADDONS_INFO_0_CHT },
-	{ "logging", CATEGORY_LOGGING_LABEL_CHT, CATEGORY_LOGGING_INFO_0_CHT },
 	{ "convert", CATEGORY_CONVERT_LABEL_CHT, CATEGORY_CONVERT_INFO_0_CHT },
 	{ "graphic_packs", CATEGORY_GRAPHIC_PACKS_LABEL_CHT, CATEGORY_GRAPHIC_PACKS_INFO_0_CHT },
+	{ "logging", CATEGORY_LOGGING_LABEL_CHT, CATEGORY_LOGGING_INFO_0_CHT },
 	{ NULL, NULL, NULL },
 };
 struct retro_core_option_v2_definition option_defs_cht[] = {
@@ -4065,6 +4065,20 @@ struct retro_core_option_v2_definition option_defs_cht[] = {
 		"enabled"
 	},
 	{
+		"cemu_show_game_fps",
+		CEMU_SHOW_GAME_FPS_LABEL_CHT,
+		NULL,
+		CEMU_SHOW_GAME_FPS_INFO_0_CHT,
+		NULL,
+		"video",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
 		"cemu_upscale_filter",
 		CEMU_UPSCALE_FILTER_LABEL_CHT,
 		NULL,
@@ -4079,20 +4093,6 @@ struct retro_core_option_v2_definition option_defs_cht[] = {
 			{ NULL, NULL },
 		},
 		"linear"
-	},
-	{
-		"cemu_show_game_fps",
-		CEMU_SHOW_GAME_FPS_LABEL_CHT,
-		NULL,
-		CEMU_SHOW_GAME_FPS_INFO_0_CHT,
-		NULL,
-		"video",
-		{
-			{ "disabled", NULL },
-			{ "enabled", NULL },
-			{ NULL, NULL },
-		},
-		"disabled"
 	},
 	{
 		"cemu_downscale_filter",
@@ -4595,9 +4595,9 @@ struct retro_core_option_v2_category option_cats_cs[] = {
 	// a core option, and an empty submenu is worse than no submenu.
 	{ "system", CATEGORY_SYSTEM_LABEL_CS, CATEGORY_SYSTEM_INFO_0_CS },
 	{ "addons", CATEGORY_ADDONS_LABEL_CS, CATEGORY_ADDONS_INFO_0_CS },
-	{ "logging", CATEGORY_LOGGING_LABEL_CS, CATEGORY_LOGGING_INFO_0_CS },
 	{ "convert", CATEGORY_CONVERT_LABEL_CS, CATEGORY_CONVERT_INFO_0_CS },
 	{ "graphic_packs", CATEGORY_GRAPHIC_PACKS_LABEL_CS, CATEGORY_GRAPHIC_PACKS_INFO_0_CS },
+	{ "logging", CATEGORY_LOGGING_LABEL_CS, CATEGORY_LOGGING_INFO_0_CS },
 	{ NULL, NULL, NULL },
 };
 struct retro_core_option_v2_definition option_defs_cs[] = {
@@ -4700,6 +4700,20 @@ struct retro_core_option_v2_definition option_defs_cs[] = {
 		"enabled"
 	},
 	{
+		"cemu_show_game_fps",
+		CEMU_SHOW_GAME_FPS_LABEL_CS,
+		NULL,
+		CEMU_SHOW_GAME_FPS_INFO_0_CS,
+		NULL,
+		"video",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
 		"cemu_upscale_filter",
 		CEMU_UPSCALE_FILTER_LABEL_CS,
 		NULL,
@@ -4714,20 +4728,6 @@ struct retro_core_option_v2_definition option_defs_cs[] = {
 			{ NULL, NULL },
 		},
 		"linear"
-	},
-	{
-		"cemu_show_game_fps",
-		CEMU_SHOW_GAME_FPS_LABEL_CS,
-		NULL,
-		CEMU_SHOW_GAME_FPS_INFO_0_CS,
-		NULL,
-		"video",
-		{
-			{ "disabled", NULL },
-			{ "enabled", NULL },
-			{ NULL, NULL },
-		},
-		"disabled"
 	},
 	{
 		"cemu_downscale_filter",
@@ -5230,9 +5230,9 @@ struct retro_core_option_v2_category option_cats_cy[] = {
 	// a core option, and an empty submenu is worse than no submenu.
 	{ "system", CATEGORY_SYSTEM_LABEL_CY, CATEGORY_SYSTEM_INFO_0_CY },
 	{ "addons", CATEGORY_ADDONS_LABEL_CY, CATEGORY_ADDONS_INFO_0_CY },
-	{ "logging", CATEGORY_LOGGING_LABEL_CY, CATEGORY_LOGGING_INFO_0_CY },
 	{ "convert", CATEGORY_CONVERT_LABEL_CY, CATEGORY_CONVERT_INFO_0_CY },
 	{ "graphic_packs", CATEGORY_GRAPHIC_PACKS_LABEL_CY, CATEGORY_GRAPHIC_PACKS_INFO_0_CY },
+	{ "logging", CATEGORY_LOGGING_LABEL_CY, CATEGORY_LOGGING_INFO_0_CY },
 	{ NULL, NULL, NULL },
 };
 struct retro_core_option_v2_definition option_defs_cy[] = {
@@ -5335,6 +5335,20 @@ struct retro_core_option_v2_definition option_defs_cy[] = {
 		"enabled"
 	},
 	{
+		"cemu_show_game_fps",
+		CEMU_SHOW_GAME_FPS_LABEL_CY,
+		NULL,
+		CEMU_SHOW_GAME_FPS_INFO_0_CY,
+		NULL,
+		"video",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
 		"cemu_upscale_filter",
 		CEMU_UPSCALE_FILTER_LABEL_CY,
 		NULL,
@@ -5349,20 +5363,6 @@ struct retro_core_option_v2_definition option_defs_cy[] = {
 			{ NULL, NULL },
 		},
 		"linear"
-	},
-	{
-		"cemu_show_game_fps",
-		CEMU_SHOW_GAME_FPS_LABEL_CY,
-		NULL,
-		CEMU_SHOW_GAME_FPS_INFO_0_CY,
-		NULL,
-		"video",
-		{
-			{ "disabled", NULL },
-			{ "enabled", NULL },
-			{ NULL, NULL },
-		},
-		"disabled"
 	},
 	{
 		"cemu_downscale_filter",
@@ -5865,9 +5865,9 @@ struct retro_core_option_v2_category option_cats_da[] = {
 	// a core option, and an empty submenu is worse than no submenu.
 	{ "system", CATEGORY_SYSTEM_LABEL_DA, CATEGORY_SYSTEM_INFO_0_DA },
 	{ "addons", CATEGORY_ADDONS_LABEL_DA, CATEGORY_ADDONS_INFO_0_DA },
-	{ "logging", CATEGORY_LOGGING_LABEL_DA, CATEGORY_LOGGING_INFO_0_DA },
 	{ "convert", CATEGORY_CONVERT_LABEL_DA, CATEGORY_CONVERT_INFO_0_DA },
 	{ "graphic_packs", CATEGORY_GRAPHIC_PACKS_LABEL_DA, CATEGORY_GRAPHIC_PACKS_INFO_0_DA },
+	{ "logging", CATEGORY_LOGGING_LABEL_DA, CATEGORY_LOGGING_INFO_0_DA },
 	{ NULL, NULL, NULL },
 };
 struct retro_core_option_v2_definition option_defs_da[] = {
@@ -5970,6 +5970,20 @@ struct retro_core_option_v2_definition option_defs_da[] = {
 		"enabled"
 	},
 	{
+		"cemu_show_game_fps",
+		CEMU_SHOW_GAME_FPS_LABEL_DA,
+		NULL,
+		CEMU_SHOW_GAME_FPS_INFO_0_DA,
+		NULL,
+		"video",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
 		"cemu_upscale_filter",
 		CEMU_UPSCALE_FILTER_LABEL_DA,
 		NULL,
@@ -5984,20 +5998,6 @@ struct retro_core_option_v2_definition option_defs_da[] = {
 			{ NULL, NULL },
 		},
 		"linear"
-	},
-	{
-		"cemu_show_game_fps",
-		CEMU_SHOW_GAME_FPS_LABEL_DA,
-		NULL,
-		CEMU_SHOW_GAME_FPS_INFO_0_DA,
-		NULL,
-		"video",
-		{
-			{ "disabled", NULL },
-			{ "enabled", NULL },
-			{ NULL, NULL },
-		},
-		"disabled"
 	},
 	{
 		"cemu_downscale_filter",
@@ -6500,9 +6500,9 @@ struct retro_core_option_v2_category option_cats_de[] = {
 	// a core option, and an empty submenu is worse than no submenu.
 	{ "system", CATEGORY_SYSTEM_LABEL_DE, CATEGORY_SYSTEM_INFO_0_DE },
 	{ "addons", CATEGORY_ADDONS_LABEL_DE, CATEGORY_ADDONS_INFO_0_DE },
-	{ "logging", CATEGORY_LOGGING_LABEL_DE, CATEGORY_LOGGING_INFO_0_DE },
 	{ "convert", CATEGORY_CONVERT_LABEL_DE, CATEGORY_CONVERT_INFO_0_DE },
 	{ "graphic_packs", CATEGORY_GRAPHIC_PACKS_LABEL_DE, CATEGORY_GRAPHIC_PACKS_INFO_0_DE },
+	{ "logging", CATEGORY_LOGGING_LABEL_DE, CATEGORY_LOGGING_INFO_0_DE },
 	{ NULL, NULL, NULL },
 };
 struct retro_core_option_v2_definition option_defs_de[] = {
@@ -6605,6 +6605,20 @@ struct retro_core_option_v2_definition option_defs_de[] = {
 		"enabled"
 	},
 	{
+		"cemu_show_game_fps",
+		CEMU_SHOW_GAME_FPS_LABEL_DE,
+		NULL,
+		CEMU_SHOW_GAME_FPS_INFO_0_DE,
+		NULL,
+		"video",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
 		"cemu_upscale_filter",
 		CEMU_UPSCALE_FILTER_LABEL_DE,
 		NULL,
@@ -6619,20 +6633,6 @@ struct retro_core_option_v2_definition option_defs_de[] = {
 			{ NULL, NULL },
 		},
 		"linear"
-	},
-	{
-		"cemu_show_game_fps",
-		CEMU_SHOW_GAME_FPS_LABEL_DE,
-		NULL,
-		CEMU_SHOW_GAME_FPS_INFO_0_DE,
-		NULL,
-		"video",
-		{
-			{ "disabled", NULL },
-			{ "enabled", NULL },
-			{ NULL, NULL },
-		},
-		"disabled"
 	},
 	{
 		"cemu_downscale_filter",
@@ -7135,9 +7135,9 @@ struct retro_core_option_v2_category option_cats_el[] = {
 	// a core option, and an empty submenu is worse than no submenu.
 	{ "system", CATEGORY_SYSTEM_LABEL_EL, CATEGORY_SYSTEM_INFO_0_EL },
 	{ "addons", CATEGORY_ADDONS_LABEL_EL, CATEGORY_ADDONS_INFO_0_EL },
-	{ "logging", CATEGORY_LOGGING_LABEL_EL, CATEGORY_LOGGING_INFO_0_EL },
 	{ "convert", CATEGORY_CONVERT_LABEL_EL, CATEGORY_CONVERT_INFO_0_EL },
 	{ "graphic_packs", CATEGORY_GRAPHIC_PACKS_LABEL_EL, CATEGORY_GRAPHIC_PACKS_INFO_0_EL },
+	{ "logging", CATEGORY_LOGGING_LABEL_EL, CATEGORY_LOGGING_INFO_0_EL },
 	{ NULL, NULL, NULL },
 };
 struct retro_core_option_v2_definition option_defs_el[] = {
@@ -7240,6 +7240,20 @@ struct retro_core_option_v2_definition option_defs_el[] = {
 		"enabled"
 	},
 	{
+		"cemu_show_game_fps",
+		CEMU_SHOW_GAME_FPS_LABEL_EL,
+		NULL,
+		CEMU_SHOW_GAME_FPS_INFO_0_EL,
+		NULL,
+		"video",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
 		"cemu_upscale_filter",
 		CEMU_UPSCALE_FILTER_LABEL_EL,
 		NULL,
@@ -7254,20 +7268,6 @@ struct retro_core_option_v2_definition option_defs_el[] = {
 			{ NULL, NULL },
 		},
 		"linear"
-	},
-	{
-		"cemu_show_game_fps",
-		CEMU_SHOW_GAME_FPS_LABEL_EL,
-		NULL,
-		CEMU_SHOW_GAME_FPS_INFO_0_EL,
-		NULL,
-		"video",
-		{
-			{ "disabled", NULL },
-			{ "enabled", NULL },
-			{ NULL, NULL },
-		},
-		"disabled"
 	},
 	{
 		"cemu_downscale_filter",
@@ -7770,9 +7770,9 @@ struct retro_core_option_v2_category option_cats_en[] = {
 	// a core option, and an empty submenu is worse than no submenu.
 	{ "system", CATEGORY_SYSTEM_LABEL_EN, CATEGORY_SYSTEM_INFO_0_EN },
 	{ "addons", CATEGORY_ADDONS_LABEL_EN, CATEGORY_ADDONS_INFO_0_EN },
-	{ "logging", CATEGORY_LOGGING_LABEL_EN, CATEGORY_LOGGING_INFO_0_EN },
 	{ "convert", CATEGORY_CONVERT_LABEL_EN, CATEGORY_CONVERT_INFO_0_EN },
 	{ "graphic_packs", CATEGORY_GRAPHIC_PACKS_LABEL_EN, CATEGORY_GRAPHIC_PACKS_INFO_0_EN },
+	{ "logging", CATEGORY_LOGGING_LABEL_EN, CATEGORY_LOGGING_INFO_0_EN },
 	{ NULL, NULL, NULL },
 };
 struct retro_core_option_v2_definition option_defs_en[] = {
@@ -7875,6 +7875,20 @@ struct retro_core_option_v2_definition option_defs_en[] = {
 		"enabled"
 	},
 	{
+		"cemu_show_game_fps",
+		CEMU_SHOW_GAME_FPS_LABEL_EN,
+		NULL,
+		CEMU_SHOW_GAME_FPS_INFO_0_EN,
+		NULL,
+		"video",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
 		"cemu_upscale_filter",
 		CEMU_UPSCALE_FILTER_LABEL_EN,
 		NULL,
@@ -7889,20 +7903,6 @@ struct retro_core_option_v2_definition option_defs_en[] = {
 			{ NULL, NULL },
 		},
 		"linear"
-	},
-	{
-		"cemu_show_game_fps",
-		CEMU_SHOW_GAME_FPS_LABEL_EN,
-		NULL,
-		CEMU_SHOW_GAME_FPS_INFO_0_EN,
-		NULL,
-		"video",
-		{
-			{ "disabled", NULL },
-			{ "enabled", NULL },
-			{ NULL, NULL },
-		},
-		"disabled"
 	},
 	{
 		"cemu_downscale_filter",
@@ -8405,9 +8405,9 @@ struct retro_core_option_v2_category option_cats_eo[] = {
 	// a core option, and an empty submenu is worse than no submenu.
 	{ "system", CATEGORY_SYSTEM_LABEL_EO, CATEGORY_SYSTEM_INFO_0_EO },
 	{ "addons", CATEGORY_ADDONS_LABEL_EO, CATEGORY_ADDONS_INFO_0_EO },
-	{ "logging", CATEGORY_LOGGING_LABEL_EO, CATEGORY_LOGGING_INFO_0_EO },
 	{ "convert", CATEGORY_CONVERT_LABEL_EO, CATEGORY_CONVERT_INFO_0_EO },
 	{ "graphic_packs", CATEGORY_GRAPHIC_PACKS_LABEL_EO, CATEGORY_GRAPHIC_PACKS_INFO_0_EO },
+	{ "logging", CATEGORY_LOGGING_LABEL_EO, CATEGORY_LOGGING_INFO_0_EO },
 	{ NULL, NULL, NULL },
 };
 struct retro_core_option_v2_definition option_defs_eo[] = {
@@ -8510,6 +8510,20 @@ struct retro_core_option_v2_definition option_defs_eo[] = {
 		"enabled"
 	},
 	{
+		"cemu_show_game_fps",
+		CEMU_SHOW_GAME_FPS_LABEL_EO,
+		NULL,
+		CEMU_SHOW_GAME_FPS_INFO_0_EO,
+		NULL,
+		"video",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
 		"cemu_upscale_filter",
 		CEMU_UPSCALE_FILTER_LABEL_EO,
 		NULL,
@@ -8524,20 +8538,6 @@ struct retro_core_option_v2_definition option_defs_eo[] = {
 			{ NULL, NULL },
 		},
 		"linear"
-	},
-	{
-		"cemu_show_game_fps",
-		CEMU_SHOW_GAME_FPS_LABEL_EO,
-		NULL,
-		CEMU_SHOW_GAME_FPS_INFO_0_EO,
-		NULL,
-		"video",
-		{
-			{ "disabled", NULL },
-			{ "enabled", NULL },
-			{ NULL, NULL },
-		},
-		"disabled"
 	},
 	{
 		"cemu_downscale_filter",
@@ -9040,9 +9040,9 @@ struct retro_core_option_v2_category option_cats_es[] = {
 	// a core option, and an empty submenu is worse than no submenu.
 	{ "system", CATEGORY_SYSTEM_LABEL_ES, CATEGORY_SYSTEM_INFO_0_ES },
 	{ "addons", CATEGORY_ADDONS_LABEL_ES, CATEGORY_ADDONS_INFO_0_ES },
-	{ "logging", CATEGORY_LOGGING_LABEL_ES, CATEGORY_LOGGING_INFO_0_ES },
 	{ "convert", CATEGORY_CONVERT_LABEL_ES, CATEGORY_CONVERT_INFO_0_ES },
 	{ "graphic_packs", CATEGORY_GRAPHIC_PACKS_LABEL_ES, CATEGORY_GRAPHIC_PACKS_INFO_0_ES },
+	{ "logging", CATEGORY_LOGGING_LABEL_ES, CATEGORY_LOGGING_INFO_0_ES },
 	{ NULL, NULL, NULL },
 };
 struct retro_core_option_v2_definition option_defs_es[] = {
@@ -9145,6 +9145,20 @@ struct retro_core_option_v2_definition option_defs_es[] = {
 		"enabled"
 	},
 	{
+		"cemu_show_game_fps",
+		CEMU_SHOW_GAME_FPS_LABEL_ES,
+		NULL,
+		CEMU_SHOW_GAME_FPS_INFO_0_ES,
+		NULL,
+		"video",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
 		"cemu_upscale_filter",
 		CEMU_UPSCALE_FILTER_LABEL_ES,
 		NULL,
@@ -9159,20 +9173,6 @@ struct retro_core_option_v2_definition option_defs_es[] = {
 			{ NULL, NULL },
 		},
 		"linear"
-	},
-	{
-		"cemu_show_game_fps",
-		CEMU_SHOW_GAME_FPS_LABEL_ES,
-		NULL,
-		CEMU_SHOW_GAME_FPS_INFO_0_ES,
-		NULL,
-		"video",
-		{
-			{ "disabled", NULL },
-			{ "enabled", NULL },
-			{ NULL, NULL },
-		},
-		"disabled"
 	},
 	{
 		"cemu_downscale_filter",
@@ -9675,9 +9675,9 @@ struct retro_core_option_v2_category option_cats_fa[] = {
 	// a core option, and an empty submenu is worse than no submenu.
 	{ "system", CATEGORY_SYSTEM_LABEL_FA, CATEGORY_SYSTEM_INFO_0_FA },
 	{ "addons", CATEGORY_ADDONS_LABEL_FA, CATEGORY_ADDONS_INFO_0_FA },
-	{ "logging", CATEGORY_LOGGING_LABEL_FA, CATEGORY_LOGGING_INFO_0_FA },
 	{ "convert", CATEGORY_CONVERT_LABEL_FA, CATEGORY_CONVERT_INFO_0_FA },
 	{ "graphic_packs", CATEGORY_GRAPHIC_PACKS_LABEL_FA, CATEGORY_GRAPHIC_PACKS_INFO_0_FA },
+	{ "logging", CATEGORY_LOGGING_LABEL_FA, CATEGORY_LOGGING_INFO_0_FA },
 	{ NULL, NULL, NULL },
 };
 struct retro_core_option_v2_definition option_defs_fa[] = {
@@ -9780,6 +9780,20 @@ struct retro_core_option_v2_definition option_defs_fa[] = {
 		"enabled"
 	},
 	{
+		"cemu_show_game_fps",
+		CEMU_SHOW_GAME_FPS_LABEL_FA,
+		NULL,
+		CEMU_SHOW_GAME_FPS_INFO_0_FA,
+		NULL,
+		"video",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
 		"cemu_upscale_filter",
 		CEMU_UPSCALE_FILTER_LABEL_FA,
 		NULL,
@@ -9794,20 +9808,6 @@ struct retro_core_option_v2_definition option_defs_fa[] = {
 			{ NULL, NULL },
 		},
 		"linear"
-	},
-	{
-		"cemu_show_game_fps",
-		CEMU_SHOW_GAME_FPS_LABEL_FA,
-		NULL,
-		CEMU_SHOW_GAME_FPS_INFO_0_FA,
-		NULL,
-		"video",
-		{
-			{ "disabled", NULL },
-			{ "enabled", NULL },
-			{ NULL, NULL },
-		},
-		"disabled"
 	},
 	{
 		"cemu_downscale_filter",
@@ -10310,9 +10310,9 @@ struct retro_core_option_v2_category option_cats_fi[] = {
 	// a core option, and an empty submenu is worse than no submenu.
 	{ "system", CATEGORY_SYSTEM_LABEL_FI, CATEGORY_SYSTEM_INFO_0_FI },
 	{ "addons", CATEGORY_ADDONS_LABEL_FI, CATEGORY_ADDONS_INFO_0_FI },
-	{ "logging", CATEGORY_LOGGING_LABEL_FI, CATEGORY_LOGGING_INFO_0_FI },
 	{ "convert", CATEGORY_CONVERT_LABEL_FI, CATEGORY_CONVERT_INFO_0_FI },
 	{ "graphic_packs", CATEGORY_GRAPHIC_PACKS_LABEL_FI, CATEGORY_GRAPHIC_PACKS_INFO_0_FI },
+	{ "logging", CATEGORY_LOGGING_LABEL_FI, CATEGORY_LOGGING_INFO_0_FI },
 	{ NULL, NULL, NULL },
 };
 struct retro_core_option_v2_definition option_defs_fi[] = {
@@ -10415,6 +10415,20 @@ struct retro_core_option_v2_definition option_defs_fi[] = {
 		"enabled"
 	},
 	{
+		"cemu_show_game_fps",
+		CEMU_SHOW_GAME_FPS_LABEL_FI,
+		NULL,
+		CEMU_SHOW_GAME_FPS_INFO_0_FI,
+		NULL,
+		"video",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
 		"cemu_upscale_filter",
 		CEMU_UPSCALE_FILTER_LABEL_FI,
 		NULL,
@@ -10429,20 +10443,6 @@ struct retro_core_option_v2_definition option_defs_fi[] = {
 			{ NULL, NULL },
 		},
 		"linear"
-	},
-	{
-		"cemu_show_game_fps",
-		CEMU_SHOW_GAME_FPS_LABEL_FI,
-		NULL,
-		CEMU_SHOW_GAME_FPS_INFO_0_FI,
-		NULL,
-		"video",
-		{
-			{ "disabled", NULL },
-			{ "enabled", NULL },
-			{ NULL, NULL },
-		},
-		"disabled"
 	},
 	{
 		"cemu_downscale_filter",
@@ -10945,9 +10945,9 @@ struct retro_core_option_v2_category option_cats_fr[] = {
 	// a core option, and an empty submenu is worse than no submenu.
 	{ "system", CATEGORY_SYSTEM_LABEL_FR, CATEGORY_SYSTEM_INFO_0_FR },
 	{ "addons", CATEGORY_ADDONS_LABEL_FR, CATEGORY_ADDONS_INFO_0_FR },
-	{ "logging", CATEGORY_LOGGING_LABEL_FR, CATEGORY_LOGGING_INFO_0_FR },
 	{ "convert", CATEGORY_CONVERT_LABEL_FR, CATEGORY_CONVERT_INFO_0_FR },
 	{ "graphic_packs", CATEGORY_GRAPHIC_PACKS_LABEL_FR, CATEGORY_GRAPHIC_PACKS_INFO_0_FR },
+	{ "logging", CATEGORY_LOGGING_LABEL_FR, CATEGORY_LOGGING_INFO_0_FR },
 	{ NULL, NULL, NULL },
 };
 struct retro_core_option_v2_definition option_defs_fr[] = {
@@ -11050,6 +11050,20 @@ struct retro_core_option_v2_definition option_defs_fr[] = {
 		"enabled"
 	},
 	{
+		"cemu_show_game_fps",
+		CEMU_SHOW_GAME_FPS_LABEL_FR,
+		NULL,
+		CEMU_SHOW_GAME_FPS_INFO_0_FR,
+		NULL,
+		"video",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
 		"cemu_upscale_filter",
 		CEMU_UPSCALE_FILTER_LABEL_FR,
 		NULL,
@@ -11064,20 +11078,6 @@ struct retro_core_option_v2_definition option_defs_fr[] = {
 			{ NULL, NULL },
 		},
 		"linear"
-	},
-	{
-		"cemu_show_game_fps",
-		CEMU_SHOW_GAME_FPS_LABEL_FR,
-		NULL,
-		CEMU_SHOW_GAME_FPS_INFO_0_FR,
-		NULL,
-		"video",
-		{
-			{ "disabled", NULL },
-			{ "enabled", NULL },
-			{ NULL, NULL },
-		},
-		"disabled"
 	},
 	{
 		"cemu_downscale_filter",
@@ -11580,9 +11580,9 @@ struct retro_core_option_v2_category option_cats_ga[] = {
 	// a core option, and an empty submenu is worse than no submenu.
 	{ "system", CATEGORY_SYSTEM_LABEL_GA, CATEGORY_SYSTEM_INFO_0_GA },
 	{ "addons", CATEGORY_ADDONS_LABEL_GA, CATEGORY_ADDONS_INFO_0_GA },
-	{ "logging", CATEGORY_LOGGING_LABEL_GA, CATEGORY_LOGGING_INFO_0_GA },
 	{ "convert", CATEGORY_CONVERT_LABEL_GA, CATEGORY_CONVERT_INFO_0_GA },
 	{ "graphic_packs", CATEGORY_GRAPHIC_PACKS_LABEL_GA, CATEGORY_GRAPHIC_PACKS_INFO_0_GA },
+	{ "logging", CATEGORY_LOGGING_LABEL_GA, CATEGORY_LOGGING_INFO_0_GA },
 	{ NULL, NULL, NULL },
 };
 struct retro_core_option_v2_definition option_defs_ga[] = {
@@ -11685,6 +11685,20 @@ struct retro_core_option_v2_definition option_defs_ga[] = {
 		"enabled"
 	},
 	{
+		"cemu_show_game_fps",
+		CEMU_SHOW_GAME_FPS_LABEL_GA,
+		NULL,
+		CEMU_SHOW_GAME_FPS_INFO_0_GA,
+		NULL,
+		"video",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
 		"cemu_upscale_filter",
 		CEMU_UPSCALE_FILTER_LABEL_GA,
 		NULL,
@@ -11699,20 +11713,6 @@ struct retro_core_option_v2_definition option_defs_ga[] = {
 			{ NULL, NULL },
 		},
 		"linear"
-	},
-	{
-		"cemu_show_game_fps",
-		CEMU_SHOW_GAME_FPS_LABEL_GA,
-		NULL,
-		CEMU_SHOW_GAME_FPS_INFO_0_GA,
-		NULL,
-		"video",
-		{
-			{ "disabled", NULL },
-			{ "enabled", NULL },
-			{ NULL, NULL },
-		},
-		"disabled"
 	},
 	{
 		"cemu_downscale_filter",
@@ -12215,9 +12215,9 @@ struct retro_core_option_v2_category option_cats_gl[] = {
 	// a core option, and an empty submenu is worse than no submenu.
 	{ "system", CATEGORY_SYSTEM_LABEL_GL, CATEGORY_SYSTEM_INFO_0_GL },
 	{ "addons", CATEGORY_ADDONS_LABEL_GL, CATEGORY_ADDONS_INFO_0_GL },
-	{ "logging", CATEGORY_LOGGING_LABEL_GL, CATEGORY_LOGGING_INFO_0_GL },
 	{ "convert", CATEGORY_CONVERT_LABEL_GL, CATEGORY_CONVERT_INFO_0_GL },
 	{ "graphic_packs", CATEGORY_GRAPHIC_PACKS_LABEL_GL, CATEGORY_GRAPHIC_PACKS_INFO_0_GL },
+	{ "logging", CATEGORY_LOGGING_LABEL_GL, CATEGORY_LOGGING_INFO_0_GL },
 	{ NULL, NULL, NULL },
 };
 struct retro_core_option_v2_definition option_defs_gl[] = {
@@ -12320,6 +12320,20 @@ struct retro_core_option_v2_definition option_defs_gl[] = {
 		"enabled"
 	},
 	{
+		"cemu_show_game_fps",
+		CEMU_SHOW_GAME_FPS_LABEL_GL,
+		NULL,
+		CEMU_SHOW_GAME_FPS_INFO_0_GL,
+		NULL,
+		"video",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
 		"cemu_upscale_filter",
 		CEMU_UPSCALE_FILTER_LABEL_GL,
 		NULL,
@@ -12334,20 +12348,6 @@ struct retro_core_option_v2_definition option_defs_gl[] = {
 			{ NULL, NULL },
 		},
 		"linear"
-	},
-	{
-		"cemu_show_game_fps",
-		CEMU_SHOW_GAME_FPS_LABEL_GL,
-		NULL,
-		CEMU_SHOW_GAME_FPS_INFO_0_GL,
-		NULL,
-		"video",
-		{
-			{ "disabled", NULL },
-			{ "enabled", NULL },
-			{ NULL, NULL },
-		},
-		"disabled"
 	},
 	{
 		"cemu_downscale_filter",
@@ -12850,9 +12850,9 @@ struct retro_core_option_v2_category option_cats_he[] = {
 	// a core option, and an empty submenu is worse than no submenu.
 	{ "system", CATEGORY_SYSTEM_LABEL_HE, CATEGORY_SYSTEM_INFO_0_HE },
 	{ "addons", CATEGORY_ADDONS_LABEL_HE, CATEGORY_ADDONS_INFO_0_HE },
-	{ "logging", CATEGORY_LOGGING_LABEL_HE, CATEGORY_LOGGING_INFO_0_HE },
 	{ "convert", CATEGORY_CONVERT_LABEL_HE, CATEGORY_CONVERT_INFO_0_HE },
 	{ "graphic_packs", CATEGORY_GRAPHIC_PACKS_LABEL_HE, CATEGORY_GRAPHIC_PACKS_INFO_0_HE },
+	{ "logging", CATEGORY_LOGGING_LABEL_HE, CATEGORY_LOGGING_INFO_0_HE },
 	{ NULL, NULL, NULL },
 };
 struct retro_core_option_v2_definition option_defs_he[] = {
@@ -12955,6 +12955,20 @@ struct retro_core_option_v2_definition option_defs_he[] = {
 		"enabled"
 	},
 	{
+		"cemu_show_game_fps",
+		CEMU_SHOW_GAME_FPS_LABEL_HE,
+		NULL,
+		CEMU_SHOW_GAME_FPS_INFO_0_HE,
+		NULL,
+		"video",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
 		"cemu_upscale_filter",
 		CEMU_UPSCALE_FILTER_LABEL_HE,
 		NULL,
@@ -12969,20 +12983,6 @@ struct retro_core_option_v2_definition option_defs_he[] = {
 			{ NULL, NULL },
 		},
 		"linear"
-	},
-	{
-		"cemu_show_game_fps",
-		CEMU_SHOW_GAME_FPS_LABEL_HE,
-		NULL,
-		CEMU_SHOW_GAME_FPS_INFO_0_HE,
-		NULL,
-		"video",
-		{
-			{ "disabled", NULL },
-			{ "enabled", NULL },
-			{ NULL, NULL },
-		},
-		"disabled"
 	},
 	{
 		"cemu_downscale_filter",
@@ -13485,9 +13485,9 @@ struct retro_core_option_v2_category option_cats_hr[] = {
 	// a core option, and an empty submenu is worse than no submenu.
 	{ "system", CATEGORY_SYSTEM_LABEL_HR, CATEGORY_SYSTEM_INFO_0_HR },
 	{ "addons", CATEGORY_ADDONS_LABEL_HR, CATEGORY_ADDONS_INFO_0_HR },
-	{ "logging", CATEGORY_LOGGING_LABEL_HR, CATEGORY_LOGGING_INFO_0_HR },
 	{ "convert", CATEGORY_CONVERT_LABEL_HR, CATEGORY_CONVERT_INFO_0_HR },
 	{ "graphic_packs", CATEGORY_GRAPHIC_PACKS_LABEL_HR, CATEGORY_GRAPHIC_PACKS_INFO_0_HR },
+	{ "logging", CATEGORY_LOGGING_LABEL_HR, CATEGORY_LOGGING_INFO_0_HR },
 	{ NULL, NULL, NULL },
 };
 struct retro_core_option_v2_definition option_defs_hr[] = {
@@ -13590,6 +13590,20 @@ struct retro_core_option_v2_definition option_defs_hr[] = {
 		"enabled"
 	},
 	{
+		"cemu_show_game_fps",
+		CEMU_SHOW_GAME_FPS_LABEL_HR,
+		NULL,
+		CEMU_SHOW_GAME_FPS_INFO_0_HR,
+		NULL,
+		"video",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
 		"cemu_upscale_filter",
 		CEMU_UPSCALE_FILTER_LABEL_HR,
 		NULL,
@@ -13604,20 +13618,6 @@ struct retro_core_option_v2_definition option_defs_hr[] = {
 			{ NULL, NULL },
 		},
 		"linear"
-	},
-	{
-		"cemu_show_game_fps",
-		CEMU_SHOW_GAME_FPS_LABEL_HR,
-		NULL,
-		CEMU_SHOW_GAME_FPS_INFO_0_HR,
-		NULL,
-		"video",
-		{
-			{ "disabled", NULL },
-			{ "enabled", NULL },
-			{ NULL, NULL },
-		},
-		"disabled"
 	},
 	{
 		"cemu_downscale_filter",
@@ -14120,9 +14120,9 @@ struct retro_core_option_v2_category option_cats_hu[] = {
 	// a core option, and an empty submenu is worse than no submenu.
 	{ "system", CATEGORY_SYSTEM_LABEL_HU, CATEGORY_SYSTEM_INFO_0_HU },
 	{ "addons", CATEGORY_ADDONS_LABEL_HU, CATEGORY_ADDONS_INFO_0_HU },
-	{ "logging", CATEGORY_LOGGING_LABEL_HU, CATEGORY_LOGGING_INFO_0_HU },
 	{ "convert", CATEGORY_CONVERT_LABEL_HU, CATEGORY_CONVERT_INFO_0_HU },
 	{ "graphic_packs", CATEGORY_GRAPHIC_PACKS_LABEL_HU, CATEGORY_GRAPHIC_PACKS_INFO_0_HU },
+	{ "logging", CATEGORY_LOGGING_LABEL_HU, CATEGORY_LOGGING_INFO_0_HU },
 	{ NULL, NULL, NULL },
 };
 struct retro_core_option_v2_definition option_defs_hu[] = {
@@ -14225,6 +14225,20 @@ struct retro_core_option_v2_definition option_defs_hu[] = {
 		"enabled"
 	},
 	{
+		"cemu_show_game_fps",
+		CEMU_SHOW_GAME_FPS_LABEL_HU,
+		NULL,
+		CEMU_SHOW_GAME_FPS_INFO_0_HU,
+		NULL,
+		"video",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
 		"cemu_upscale_filter",
 		CEMU_UPSCALE_FILTER_LABEL_HU,
 		NULL,
@@ -14239,20 +14253,6 @@ struct retro_core_option_v2_definition option_defs_hu[] = {
 			{ NULL, NULL },
 		},
 		"linear"
-	},
-	{
-		"cemu_show_game_fps",
-		CEMU_SHOW_GAME_FPS_LABEL_HU,
-		NULL,
-		CEMU_SHOW_GAME_FPS_INFO_0_HU,
-		NULL,
-		"video",
-		{
-			{ "disabled", NULL },
-			{ "enabled", NULL },
-			{ NULL, NULL },
-		},
-		"disabled"
 	},
 	{
 		"cemu_downscale_filter",
@@ -14755,9 +14755,9 @@ struct retro_core_option_v2_category option_cats_id[] = {
 	// a core option, and an empty submenu is worse than no submenu.
 	{ "system", CATEGORY_SYSTEM_LABEL_ID, CATEGORY_SYSTEM_INFO_0_ID },
 	{ "addons", CATEGORY_ADDONS_LABEL_ID, CATEGORY_ADDONS_INFO_0_ID },
-	{ "logging", CATEGORY_LOGGING_LABEL_ID, CATEGORY_LOGGING_INFO_0_ID },
 	{ "convert", CATEGORY_CONVERT_LABEL_ID, CATEGORY_CONVERT_INFO_0_ID },
 	{ "graphic_packs", CATEGORY_GRAPHIC_PACKS_LABEL_ID, CATEGORY_GRAPHIC_PACKS_INFO_0_ID },
+	{ "logging", CATEGORY_LOGGING_LABEL_ID, CATEGORY_LOGGING_INFO_0_ID },
 	{ NULL, NULL, NULL },
 };
 struct retro_core_option_v2_definition option_defs_id[] = {
@@ -14860,6 +14860,20 @@ struct retro_core_option_v2_definition option_defs_id[] = {
 		"enabled"
 	},
 	{
+		"cemu_show_game_fps",
+		CEMU_SHOW_GAME_FPS_LABEL_ID,
+		NULL,
+		CEMU_SHOW_GAME_FPS_INFO_0_ID,
+		NULL,
+		"video",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
 		"cemu_upscale_filter",
 		CEMU_UPSCALE_FILTER_LABEL_ID,
 		NULL,
@@ -14874,20 +14888,6 @@ struct retro_core_option_v2_definition option_defs_id[] = {
 			{ NULL, NULL },
 		},
 		"linear"
-	},
-	{
-		"cemu_show_game_fps",
-		CEMU_SHOW_GAME_FPS_LABEL_ID,
-		NULL,
-		CEMU_SHOW_GAME_FPS_INFO_0_ID,
-		NULL,
-		"video",
-		{
-			{ "disabled", NULL },
-			{ "enabled", NULL },
-			{ NULL, NULL },
-		},
-		"disabled"
 	},
 	{
 		"cemu_downscale_filter",
@@ -15390,9 +15390,9 @@ struct retro_core_option_v2_category option_cats_it[] = {
 	// a core option, and an empty submenu is worse than no submenu.
 	{ "system", CATEGORY_SYSTEM_LABEL_IT, CATEGORY_SYSTEM_INFO_0_IT },
 	{ "addons", CATEGORY_ADDONS_LABEL_IT, CATEGORY_ADDONS_INFO_0_IT },
-	{ "logging", CATEGORY_LOGGING_LABEL_IT, CATEGORY_LOGGING_INFO_0_IT },
 	{ "convert", CATEGORY_CONVERT_LABEL_IT, CATEGORY_CONVERT_INFO_0_IT },
 	{ "graphic_packs", CATEGORY_GRAPHIC_PACKS_LABEL_IT, CATEGORY_GRAPHIC_PACKS_INFO_0_IT },
+	{ "logging", CATEGORY_LOGGING_LABEL_IT, CATEGORY_LOGGING_INFO_0_IT },
 	{ NULL, NULL, NULL },
 };
 struct retro_core_option_v2_definition option_defs_it[] = {
@@ -15495,6 +15495,20 @@ struct retro_core_option_v2_definition option_defs_it[] = {
 		"enabled"
 	},
 	{
+		"cemu_show_game_fps",
+		CEMU_SHOW_GAME_FPS_LABEL_IT,
+		NULL,
+		CEMU_SHOW_GAME_FPS_INFO_0_IT,
+		NULL,
+		"video",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
 		"cemu_upscale_filter",
 		CEMU_UPSCALE_FILTER_LABEL_IT,
 		NULL,
@@ -15509,20 +15523,6 @@ struct retro_core_option_v2_definition option_defs_it[] = {
 			{ NULL, NULL },
 		},
 		"linear"
-	},
-	{
-		"cemu_show_game_fps",
-		CEMU_SHOW_GAME_FPS_LABEL_IT,
-		NULL,
-		CEMU_SHOW_GAME_FPS_INFO_0_IT,
-		NULL,
-		"video",
-		{
-			{ "disabled", NULL },
-			{ "enabled", NULL },
-			{ NULL, NULL },
-		},
-		"disabled"
 	},
 	{
 		"cemu_downscale_filter",
@@ -16025,9 +16025,9 @@ struct retro_core_option_v2_category option_cats_ja[] = {
 	// a core option, and an empty submenu is worse than no submenu.
 	{ "system", CATEGORY_SYSTEM_LABEL_JA, CATEGORY_SYSTEM_INFO_0_JA },
 	{ "addons", CATEGORY_ADDONS_LABEL_JA, CATEGORY_ADDONS_INFO_0_JA },
-	{ "logging", CATEGORY_LOGGING_LABEL_JA, CATEGORY_LOGGING_INFO_0_JA },
 	{ "convert", CATEGORY_CONVERT_LABEL_JA, CATEGORY_CONVERT_INFO_0_JA },
 	{ "graphic_packs", CATEGORY_GRAPHIC_PACKS_LABEL_JA, CATEGORY_GRAPHIC_PACKS_INFO_0_JA },
+	{ "logging", CATEGORY_LOGGING_LABEL_JA, CATEGORY_LOGGING_INFO_0_JA },
 	{ NULL, NULL, NULL },
 };
 struct retro_core_option_v2_definition option_defs_ja[] = {
@@ -16130,6 +16130,20 @@ struct retro_core_option_v2_definition option_defs_ja[] = {
 		"enabled"
 	},
 	{
+		"cemu_show_game_fps",
+		CEMU_SHOW_GAME_FPS_LABEL_JA,
+		NULL,
+		CEMU_SHOW_GAME_FPS_INFO_0_JA,
+		NULL,
+		"video",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
 		"cemu_upscale_filter",
 		CEMU_UPSCALE_FILTER_LABEL_JA,
 		NULL,
@@ -16144,20 +16158,6 @@ struct retro_core_option_v2_definition option_defs_ja[] = {
 			{ NULL, NULL },
 		},
 		"linear"
-	},
-	{
-		"cemu_show_game_fps",
-		CEMU_SHOW_GAME_FPS_LABEL_JA,
-		NULL,
-		CEMU_SHOW_GAME_FPS_INFO_0_JA,
-		NULL,
-		"video",
-		{
-			{ "disabled", NULL },
-			{ "enabled", NULL },
-			{ NULL, NULL },
-		},
-		"disabled"
 	},
 	{
 		"cemu_downscale_filter",
@@ -16660,9 +16660,9 @@ struct retro_core_option_v2_category option_cats_ko[] = {
 	// a core option, and an empty submenu is worse than no submenu.
 	{ "system", CATEGORY_SYSTEM_LABEL_KO, CATEGORY_SYSTEM_INFO_0_KO },
 	{ "addons", CATEGORY_ADDONS_LABEL_KO, CATEGORY_ADDONS_INFO_0_KO },
-	{ "logging", CATEGORY_LOGGING_LABEL_KO, CATEGORY_LOGGING_INFO_0_KO },
 	{ "convert", CATEGORY_CONVERT_LABEL_KO, CATEGORY_CONVERT_INFO_0_KO },
 	{ "graphic_packs", CATEGORY_GRAPHIC_PACKS_LABEL_KO, CATEGORY_GRAPHIC_PACKS_INFO_0_KO },
+	{ "logging", CATEGORY_LOGGING_LABEL_KO, CATEGORY_LOGGING_INFO_0_KO },
 	{ NULL, NULL, NULL },
 };
 struct retro_core_option_v2_definition option_defs_ko[] = {
@@ -16765,6 +16765,20 @@ struct retro_core_option_v2_definition option_defs_ko[] = {
 		"enabled"
 	},
 	{
+		"cemu_show_game_fps",
+		CEMU_SHOW_GAME_FPS_LABEL_KO,
+		NULL,
+		CEMU_SHOW_GAME_FPS_INFO_0_KO,
+		NULL,
+		"video",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
 		"cemu_upscale_filter",
 		CEMU_UPSCALE_FILTER_LABEL_KO,
 		NULL,
@@ -16779,20 +16793,6 @@ struct retro_core_option_v2_definition option_defs_ko[] = {
 			{ NULL, NULL },
 		},
 		"linear"
-	},
-	{
-		"cemu_show_game_fps",
-		CEMU_SHOW_GAME_FPS_LABEL_KO,
-		NULL,
-		CEMU_SHOW_GAME_FPS_INFO_0_KO,
-		NULL,
-		"video",
-		{
-			{ "disabled", NULL },
-			{ "enabled", NULL },
-			{ NULL, NULL },
-		},
-		"disabled"
 	},
 	{
 		"cemu_downscale_filter",
@@ -17295,9 +17295,9 @@ struct retro_core_option_v2_category option_cats_nl[] = {
 	// a core option, and an empty submenu is worse than no submenu.
 	{ "system", CATEGORY_SYSTEM_LABEL_NL, CATEGORY_SYSTEM_INFO_0_NL },
 	{ "addons", CATEGORY_ADDONS_LABEL_NL, CATEGORY_ADDONS_INFO_0_NL },
-	{ "logging", CATEGORY_LOGGING_LABEL_NL, CATEGORY_LOGGING_INFO_0_NL },
 	{ "convert", CATEGORY_CONVERT_LABEL_NL, CATEGORY_CONVERT_INFO_0_NL },
 	{ "graphic_packs", CATEGORY_GRAPHIC_PACKS_LABEL_NL, CATEGORY_GRAPHIC_PACKS_INFO_0_NL },
+	{ "logging", CATEGORY_LOGGING_LABEL_NL, CATEGORY_LOGGING_INFO_0_NL },
 	{ NULL, NULL, NULL },
 };
 struct retro_core_option_v2_definition option_defs_nl[] = {
@@ -17400,6 +17400,20 @@ struct retro_core_option_v2_definition option_defs_nl[] = {
 		"enabled"
 	},
 	{
+		"cemu_show_game_fps",
+		CEMU_SHOW_GAME_FPS_LABEL_NL,
+		NULL,
+		CEMU_SHOW_GAME_FPS_INFO_0_NL,
+		NULL,
+		"video",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
 		"cemu_upscale_filter",
 		CEMU_UPSCALE_FILTER_LABEL_NL,
 		NULL,
@@ -17414,20 +17428,6 @@ struct retro_core_option_v2_definition option_defs_nl[] = {
 			{ NULL, NULL },
 		},
 		"linear"
-	},
-	{
-		"cemu_show_game_fps",
-		CEMU_SHOW_GAME_FPS_LABEL_NL,
-		NULL,
-		CEMU_SHOW_GAME_FPS_INFO_0_NL,
-		NULL,
-		"video",
-		{
-			{ "disabled", NULL },
-			{ "enabled", NULL },
-			{ NULL, NULL },
-		},
-		"disabled"
 	},
 	{
 		"cemu_downscale_filter",
@@ -17930,9 +17930,9 @@ struct retro_core_option_v2_category option_cats_no[] = {
 	// a core option, and an empty submenu is worse than no submenu.
 	{ "system", CATEGORY_SYSTEM_LABEL_NO, CATEGORY_SYSTEM_INFO_0_NO },
 	{ "addons", CATEGORY_ADDONS_LABEL_NO, CATEGORY_ADDONS_INFO_0_NO },
-	{ "logging", CATEGORY_LOGGING_LABEL_NO, CATEGORY_LOGGING_INFO_0_NO },
 	{ "convert", CATEGORY_CONVERT_LABEL_NO, CATEGORY_CONVERT_INFO_0_NO },
 	{ "graphic_packs", CATEGORY_GRAPHIC_PACKS_LABEL_NO, CATEGORY_GRAPHIC_PACKS_INFO_0_NO },
+	{ "logging", CATEGORY_LOGGING_LABEL_NO, CATEGORY_LOGGING_INFO_0_NO },
 	{ NULL, NULL, NULL },
 };
 struct retro_core_option_v2_definition option_defs_no[] = {
@@ -18035,6 +18035,20 @@ struct retro_core_option_v2_definition option_defs_no[] = {
 		"enabled"
 	},
 	{
+		"cemu_show_game_fps",
+		CEMU_SHOW_GAME_FPS_LABEL_NO,
+		NULL,
+		CEMU_SHOW_GAME_FPS_INFO_0_NO,
+		NULL,
+		"video",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
 		"cemu_upscale_filter",
 		CEMU_UPSCALE_FILTER_LABEL_NO,
 		NULL,
@@ -18049,20 +18063,6 @@ struct retro_core_option_v2_definition option_defs_no[] = {
 			{ NULL, NULL },
 		},
 		"linear"
-	},
-	{
-		"cemu_show_game_fps",
-		CEMU_SHOW_GAME_FPS_LABEL_NO,
-		NULL,
-		CEMU_SHOW_GAME_FPS_INFO_0_NO,
-		NULL,
-		"video",
-		{
-			{ "disabled", NULL },
-			{ "enabled", NULL },
-			{ NULL, NULL },
-		},
-		"disabled"
 	},
 	{
 		"cemu_downscale_filter",
@@ -18565,9 +18565,9 @@ struct retro_core_option_v2_category option_cats_or[] = {
 	// a core option, and an empty submenu is worse than no submenu.
 	{ "system", CATEGORY_SYSTEM_LABEL_OR, CATEGORY_SYSTEM_INFO_0_OR },
 	{ "addons", CATEGORY_ADDONS_LABEL_OR, CATEGORY_ADDONS_INFO_0_OR },
-	{ "logging", CATEGORY_LOGGING_LABEL_OR, CATEGORY_LOGGING_INFO_0_OR },
 	{ "convert", CATEGORY_CONVERT_LABEL_OR, CATEGORY_CONVERT_INFO_0_OR },
 	{ "graphic_packs", CATEGORY_GRAPHIC_PACKS_LABEL_OR, CATEGORY_GRAPHIC_PACKS_INFO_0_OR },
+	{ "logging", CATEGORY_LOGGING_LABEL_OR, CATEGORY_LOGGING_INFO_0_OR },
 	{ NULL, NULL, NULL },
 };
 struct retro_core_option_v2_definition option_defs_or[] = {
@@ -18670,6 +18670,20 @@ struct retro_core_option_v2_definition option_defs_or[] = {
 		"enabled"
 	},
 	{
+		"cemu_show_game_fps",
+		CEMU_SHOW_GAME_FPS_LABEL_OR,
+		NULL,
+		CEMU_SHOW_GAME_FPS_INFO_0_OR,
+		NULL,
+		"video",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
 		"cemu_upscale_filter",
 		CEMU_UPSCALE_FILTER_LABEL_OR,
 		NULL,
@@ -18684,20 +18698,6 @@ struct retro_core_option_v2_definition option_defs_or[] = {
 			{ NULL, NULL },
 		},
 		"linear"
-	},
-	{
-		"cemu_show_game_fps",
-		CEMU_SHOW_GAME_FPS_LABEL_OR,
-		NULL,
-		CEMU_SHOW_GAME_FPS_INFO_0_OR,
-		NULL,
-		"video",
-		{
-			{ "disabled", NULL },
-			{ "enabled", NULL },
-			{ NULL, NULL },
-		},
-		"disabled"
 	},
 	{
 		"cemu_downscale_filter",
@@ -19200,9 +19200,9 @@ struct retro_core_option_v2_category option_cats_pl[] = {
 	// a core option, and an empty submenu is worse than no submenu.
 	{ "system", CATEGORY_SYSTEM_LABEL_PL, CATEGORY_SYSTEM_INFO_0_PL },
 	{ "addons", CATEGORY_ADDONS_LABEL_PL, CATEGORY_ADDONS_INFO_0_PL },
-	{ "logging", CATEGORY_LOGGING_LABEL_PL, CATEGORY_LOGGING_INFO_0_PL },
 	{ "convert", CATEGORY_CONVERT_LABEL_PL, CATEGORY_CONVERT_INFO_0_PL },
 	{ "graphic_packs", CATEGORY_GRAPHIC_PACKS_LABEL_PL, CATEGORY_GRAPHIC_PACKS_INFO_0_PL },
+	{ "logging", CATEGORY_LOGGING_LABEL_PL, CATEGORY_LOGGING_INFO_0_PL },
 	{ NULL, NULL, NULL },
 };
 struct retro_core_option_v2_definition option_defs_pl[] = {
@@ -19305,6 +19305,20 @@ struct retro_core_option_v2_definition option_defs_pl[] = {
 		"enabled"
 	},
 	{
+		"cemu_show_game_fps",
+		CEMU_SHOW_GAME_FPS_LABEL_PL,
+		NULL,
+		CEMU_SHOW_GAME_FPS_INFO_0_PL,
+		NULL,
+		"video",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
 		"cemu_upscale_filter",
 		CEMU_UPSCALE_FILTER_LABEL_PL,
 		NULL,
@@ -19319,20 +19333,6 @@ struct retro_core_option_v2_definition option_defs_pl[] = {
 			{ NULL, NULL },
 		},
 		"linear"
-	},
-	{
-		"cemu_show_game_fps",
-		CEMU_SHOW_GAME_FPS_LABEL_PL,
-		NULL,
-		CEMU_SHOW_GAME_FPS_INFO_0_PL,
-		NULL,
-		"video",
-		{
-			{ "disabled", NULL },
-			{ "enabled", NULL },
-			{ NULL, NULL },
-		},
-		"disabled"
 	},
 	{
 		"cemu_downscale_filter",
@@ -19835,9 +19835,9 @@ struct retro_core_option_v2_category option_cats_pt_br[] = {
 	// a core option, and an empty submenu is worse than no submenu.
 	{ "system", CATEGORY_SYSTEM_LABEL_PT_BR, CATEGORY_SYSTEM_INFO_0_PT_BR },
 	{ "addons", CATEGORY_ADDONS_LABEL_PT_BR, CATEGORY_ADDONS_INFO_0_PT_BR },
-	{ "logging", CATEGORY_LOGGING_LABEL_PT_BR, CATEGORY_LOGGING_INFO_0_PT_BR },
 	{ "convert", CATEGORY_CONVERT_LABEL_PT_BR, CATEGORY_CONVERT_INFO_0_PT_BR },
 	{ "graphic_packs", CATEGORY_GRAPHIC_PACKS_LABEL_PT_BR, CATEGORY_GRAPHIC_PACKS_INFO_0_PT_BR },
+	{ "logging", CATEGORY_LOGGING_LABEL_PT_BR, CATEGORY_LOGGING_INFO_0_PT_BR },
 	{ NULL, NULL, NULL },
 };
 struct retro_core_option_v2_definition option_defs_pt_br[] = {
@@ -19940,6 +19940,20 @@ struct retro_core_option_v2_definition option_defs_pt_br[] = {
 		"enabled"
 	},
 	{
+		"cemu_show_game_fps",
+		CEMU_SHOW_GAME_FPS_LABEL_PT_BR,
+		NULL,
+		CEMU_SHOW_GAME_FPS_INFO_0_PT_BR,
+		NULL,
+		"video",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
 		"cemu_upscale_filter",
 		CEMU_UPSCALE_FILTER_LABEL_PT_BR,
 		NULL,
@@ -19954,20 +19968,6 @@ struct retro_core_option_v2_definition option_defs_pt_br[] = {
 			{ NULL, NULL },
 		},
 		"linear"
-	},
-	{
-		"cemu_show_game_fps",
-		CEMU_SHOW_GAME_FPS_LABEL_PT_BR,
-		NULL,
-		CEMU_SHOW_GAME_FPS_INFO_0_PT_BR,
-		NULL,
-		"video",
-		{
-			{ "disabled", NULL },
-			{ "enabled", NULL },
-			{ NULL, NULL },
-		},
-		"disabled"
 	},
 	{
 		"cemu_downscale_filter",
@@ -20470,9 +20470,9 @@ struct retro_core_option_v2_category option_cats_pt_pt[] = {
 	// a core option, and an empty submenu is worse than no submenu.
 	{ "system", CATEGORY_SYSTEM_LABEL_PT_PT, CATEGORY_SYSTEM_INFO_0_PT_PT },
 	{ "addons", CATEGORY_ADDONS_LABEL_PT_PT, CATEGORY_ADDONS_INFO_0_PT_PT },
-	{ "logging", CATEGORY_LOGGING_LABEL_PT_PT, CATEGORY_LOGGING_INFO_0_PT_PT },
 	{ "convert", CATEGORY_CONVERT_LABEL_PT_PT, CATEGORY_CONVERT_INFO_0_PT_PT },
 	{ "graphic_packs", CATEGORY_GRAPHIC_PACKS_LABEL_PT_PT, CATEGORY_GRAPHIC_PACKS_INFO_0_PT_PT },
+	{ "logging", CATEGORY_LOGGING_LABEL_PT_PT, CATEGORY_LOGGING_INFO_0_PT_PT },
 	{ NULL, NULL, NULL },
 };
 struct retro_core_option_v2_definition option_defs_pt_pt[] = {
@@ -20575,6 +20575,20 @@ struct retro_core_option_v2_definition option_defs_pt_pt[] = {
 		"enabled"
 	},
 	{
+		"cemu_show_game_fps",
+		CEMU_SHOW_GAME_FPS_LABEL_PT_PT,
+		NULL,
+		CEMU_SHOW_GAME_FPS_INFO_0_PT_PT,
+		NULL,
+		"video",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
 		"cemu_upscale_filter",
 		CEMU_UPSCALE_FILTER_LABEL_PT_PT,
 		NULL,
@@ -20589,20 +20603,6 @@ struct retro_core_option_v2_definition option_defs_pt_pt[] = {
 			{ NULL, NULL },
 		},
 		"linear"
-	},
-	{
-		"cemu_show_game_fps",
-		CEMU_SHOW_GAME_FPS_LABEL_PT_PT,
-		NULL,
-		CEMU_SHOW_GAME_FPS_INFO_0_PT_PT,
-		NULL,
-		"video",
-		{
-			{ "disabled", NULL },
-			{ "enabled", NULL },
-			{ NULL, NULL },
-		},
-		"disabled"
 	},
 	{
 		"cemu_downscale_filter",
@@ -21105,9 +21105,9 @@ struct retro_core_option_v2_category option_cats_ru[] = {
 	// a core option, and an empty submenu is worse than no submenu.
 	{ "system", CATEGORY_SYSTEM_LABEL_RU, CATEGORY_SYSTEM_INFO_0_RU },
 	{ "addons", CATEGORY_ADDONS_LABEL_RU, CATEGORY_ADDONS_INFO_0_RU },
-	{ "logging", CATEGORY_LOGGING_LABEL_RU, CATEGORY_LOGGING_INFO_0_RU },
 	{ "convert", CATEGORY_CONVERT_LABEL_RU, CATEGORY_CONVERT_INFO_0_RU },
 	{ "graphic_packs", CATEGORY_GRAPHIC_PACKS_LABEL_RU, CATEGORY_GRAPHIC_PACKS_INFO_0_RU },
+	{ "logging", CATEGORY_LOGGING_LABEL_RU, CATEGORY_LOGGING_INFO_0_RU },
 	{ NULL, NULL, NULL },
 };
 struct retro_core_option_v2_definition option_defs_ru[] = {
@@ -21210,6 +21210,20 @@ struct retro_core_option_v2_definition option_defs_ru[] = {
 		"enabled"
 	},
 	{
+		"cemu_show_game_fps",
+		CEMU_SHOW_GAME_FPS_LABEL_RU,
+		NULL,
+		CEMU_SHOW_GAME_FPS_INFO_0_RU,
+		NULL,
+		"video",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
 		"cemu_upscale_filter",
 		CEMU_UPSCALE_FILTER_LABEL_RU,
 		NULL,
@@ -21224,20 +21238,6 @@ struct retro_core_option_v2_definition option_defs_ru[] = {
 			{ NULL, NULL },
 		},
 		"linear"
-	},
-	{
-		"cemu_show_game_fps",
-		CEMU_SHOW_GAME_FPS_LABEL_RU,
-		NULL,
-		CEMU_SHOW_GAME_FPS_INFO_0_RU,
-		NULL,
-		"video",
-		{
-			{ "disabled", NULL },
-			{ "enabled", NULL },
-			{ NULL, NULL },
-		},
-		"disabled"
 	},
 	{
 		"cemu_downscale_filter",
@@ -21740,9 +21740,9 @@ struct retro_core_option_v2_category option_cats_sk[] = {
 	// a core option, and an empty submenu is worse than no submenu.
 	{ "system", CATEGORY_SYSTEM_LABEL_SK, CATEGORY_SYSTEM_INFO_0_SK },
 	{ "addons", CATEGORY_ADDONS_LABEL_SK, CATEGORY_ADDONS_INFO_0_SK },
-	{ "logging", CATEGORY_LOGGING_LABEL_SK, CATEGORY_LOGGING_INFO_0_SK },
 	{ "convert", CATEGORY_CONVERT_LABEL_SK, CATEGORY_CONVERT_INFO_0_SK },
 	{ "graphic_packs", CATEGORY_GRAPHIC_PACKS_LABEL_SK, CATEGORY_GRAPHIC_PACKS_INFO_0_SK },
+	{ "logging", CATEGORY_LOGGING_LABEL_SK, CATEGORY_LOGGING_INFO_0_SK },
 	{ NULL, NULL, NULL },
 };
 struct retro_core_option_v2_definition option_defs_sk[] = {
@@ -21845,6 +21845,20 @@ struct retro_core_option_v2_definition option_defs_sk[] = {
 		"enabled"
 	},
 	{
+		"cemu_show_game_fps",
+		CEMU_SHOW_GAME_FPS_LABEL_SK,
+		NULL,
+		CEMU_SHOW_GAME_FPS_INFO_0_SK,
+		NULL,
+		"video",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
 		"cemu_upscale_filter",
 		CEMU_UPSCALE_FILTER_LABEL_SK,
 		NULL,
@@ -21859,20 +21873,6 @@ struct retro_core_option_v2_definition option_defs_sk[] = {
 			{ NULL, NULL },
 		},
 		"linear"
-	},
-	{
-		"cemu_show_game_fps",
-		CEMU_SHOW_GAME_FPS_LABEL_SK,
-		NULL,
-		CEMU_SHOW_GAME_FPS_INFO_0_SK,
-		NULL,
-		"video",
-		{
-			{ "disabled", NULL },
-			{ "enabled", NULL },
-			{ NULL, NULL },
-		},
-		"disabled"
 	},
 	{
 		"cemu_downscale_filter",
@@ -22375,9 +22375,9 @@ struct retro_core_option_v2_category option_cats_sr[] = {
 	// a core option, and an empty submenu is worse than no submenu.
 	{ "system", CATEGORY_SYSTEM_LABEL_SR, CATEGORY_SYSTEM_INFO_0_SR },
 	{ "addons", CATEGORY_ADDONS_LABEL_SR, CATEGORY_ADDONS_INFO_0_SR },
-	{ "logging", CATEGORY_LOGGING_LABEL_SR, CATEGORY_LOGGING_INFO_0_SR },
 	{ "convert", CATEGORY_CONVERT_LABEL_SR, CATEGORY_CONVERT_INFO_0_SR },
 	{ "graphic_packs", CATEGORY_GRAPHIC_PACKS_LABEL_SR, CATEGORY_GRAPHIC_PACKS_INFO_0_SR },
+	{ "logging", CATEGORY_LOGGING_LABEL_SR, CATEGORY_LOGGING_INFO_0_SR },
 	{ NULL, NULL, NULL },
 };
 struct retro_core_option_v2_definition option_defs_sr[] = {
@@ -22480,6 +22480,20 @@ struct retro_core_option_v2_definition option_defs_sr[] = {
 		"enabled"
 	},
 	{
+		"cemu_show_game_fps",
+		CEMU_SHOW_GAME_FPS_LABEL_SR,
+		NULL,
+		CEMU_SHOW_GAME_FPS_INFO_0_SR,
+		NULL,
+		"video",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
 		"cemu_upscale_filter",
 		CEMU_UPSCALE_FILTER_LABEL_SR,
 		NULL,
@@ -22494,20 +22508,6 @@ struct retro_core_option_v2_definition option_defs_sr[] = {
 			{ NULL, NULL },
 		},
 		"linear"
-	},
-	{
-		"cemu_show_game_fps",
-		CEMU_SHOW_GAME_FPS_LABEL_SR,
-		NULL,
-		CEMU_SHOW_GAME_FPS_INFO_0_SR,
-		NULL,
-		"video",
-		{
-			{ "disabled", NULL },
-			{ "enabled", NULL },
-			{ NULL, NULL },
-		},
-		"disabled"
 	},
 	{
 		"cemu_downscale_filter",
@@ -23010,9 +23010,9 @@ struct retro_core_option_v2_category option_cats_sv[] = {
 	// a core option, and an empty submenu is worse than no submenu.
 	{ "system", CATEGORY_SYSTEM_LABEL_SV, CATEGORY_SYSTEM_INFO_0_SV },
 	{ "addons", CATEGORY_ADDONS_LABEL_SV, CATEGORY_ADDONS_INFO_0_SV },
-	{ "logging", CATEGORY_LOGGING_LABEL_SV, CATEGORY_LOGGING_INFO_0_SV },
 	{ "convert", CATEGORY_CONVERT_LABEL_SV, CATEGORY_CONVERT_INFO_0_SV },
 	{ "graphic_packs", CATEGORY_GRAPHIC_PACKS_LABEL_SV, CATEGORY_GRAPHIC_PACKS_INFO_0_SV },
+	{ "logging", CATEGORY_LOGGING_LABEL_SV, CATEGORY_LOGGING_INFO_0_SV },
 	{ NULL, NULL, NULL },
 };
 struct retro_core_option_v2_definition option_defs_sv[] = {
@@ -23115,6 +23115,20 @@ struct retro_core_option_v2_definition option_defs_sv[] = {
 		"enabled"
 	},
 	{
+		"cemu_show_game_fps",
+		CEMU_SHOW_GAME_FPS_LABEL_SV,
+		NULL,
+		CEMU_SHOW_GAME_FPS_INFO_0_SV,
+		NULL,
+		"video",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
 		"cemu_upscale_filter",
 		CEMU_UPSCALE_FILTER_LABEL_SV,
 		NULL,
@@ -23129,20 +23143,6 @@ struct retro_core_option_v2_definition option_defs_sv[] = {
 			{ NULL, NULL },
 		},
 		"linear"
-	},
-	{
-		"cemu_show_game_fps",
-		CEMU_SHOW_GAME_FPS_LABEL_SV,
-		NULL,
-		CEMU_SHOW_GAME_FPS_INFO_0_SV,
-		NULL,
-		"video",
-		{
-			{ "disabled", NULL },
-			{ "enabled", NULL },
-			{ NULL, NULL },
-		},
-		"disabled"
 	},
 	{
 		"cemu_downscale_filter",
@@ -23645,9 +23645,9 @@ struct retro_core_option_v2_category option_cats_th[] = {
 	// a core option, and an empty submenu is worse than no submenu.
 	{ "system", CATEGORY_SYSTEM_LABEL_TH, CATEGORY_SYSTEM_INFO_0_TH },
 	{ "addons", CATEGORY_ADDONS_LABEL_TH, CATEGORY_ADDONS_INFO_0_TH },
-	{ "logging", CATEGORY_LOGGING_LABEL_TH, CATEGORY_LOGGING_INFO_0_TH },
 	{ "convert", CATEGORY_CONVERT_LABEL_TH, CATEGORY_CONVERT_INFO_0_TH },
 	{ "graphic_packs", CATEGORY_GRAPHIC_PACKS_LABEL_TH, CATEGORY_GRAPHIC_PACKS_INFO_0_TH },
+	{ "logging", CATEGORY_LOGGING_LABEL_TH, CATEGORY_LOGGING_INFO_0_TH },
 	{ NULL, NULL, NULL },
 };
 struct retro_core_option_v2_definition option_defs_th[] = {
@@ -23750,6 +23750,20 @@ struct retro_core_option_v2_definition option_defs_th[] = {
 		"enabled"
 	},
 	{
+		"cemu_show_game_fps",
+		CEMU_SHOW_GAME_FPS_LABEL_TH,
+		NULL,
+		CEMU_SHOW_GAME_FPS_INFO_0_TH,
+		NULL,
+		"video",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
 		"cemu_upscale_filter",
 		CEMU_UPSCALE_FILTER_LABEL_TH,
 		NULL,
@@ -23764,20 +23778,6 @@ struct retro_core_option_v2_definition option_defs_th[] = {
 			{ NULL, NULL },
 		},
 		"linear"
-	},
-	{
-		"cemu_show_game_fps",
-		CEMU_SHOW_GAME_FPS_LABEL_TH,
-		NULL,
-		CEMU_SHOW_GAME_FPS_INFO_0_TH,
-		NULL,
-		"video",
-		{
-			{ "disabled", NULL },
-			{ "enabled", NULL },
-			{ NULL, NULL },
-		},
-		"disabled"
 	},
 	{
 		"cemu_downscale_filter",
@@ -24280,9 +24280,9 @@ struct retro_core_option_v2_category option_cats_tr[] = {
 	// a core option, and an empty submenu is worse than no submenu.
 	{ "system", CATEGORY_SYSTEM_LABEL_TR, CATEGORY_SYSTEM_INFO_0_TR },
 	{ "addons", CATEGORY_ADDONS_LABEL_TR, CATEGORY_ADDONS_INFO_0_TR },
-	{ "logging", CATEGORY_LOGGING_LABEL_TR, CATEGORY_LOGGING_INFO_0_TR },
 	{ "convert", CATEGORY_CONVERT_LABEL_TR, CATEGORY_CONVERT_INFO_0_TR },
 	{ "graphic_packs", CATEGORY_GRAPHIC_PACKS_LABEL_TR, CATEGORY_GRAPHIC_PACKS_INFO_0_TR },
+	{ "logging", CATEGORY_LOGGING_LABEL_TR, CATEGORY_LOGGING_INFO_0_TR },
 	{ NULL, NULL, NULL },
 };
 struct retro_core_option_v2_definition option_defs_tr[] = {
@@ -24385,6 +24385,20 @@ struct retro_core_option_v2_definition option_defs_tr[] = {
 		"enabled"
 	},
 	{
+		"cemu_show_game_fps",
+		CEMU_SHOW_GAME_FPS_LABEL_TR,
+		NULL,
+		CEMU_SHOW_GAME_FPS_INFO_0_TR,
+		NULL,
+		"video",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
 		"cemu_upscale_filter",
 		CEMU_UPSCALE_FILTER_LABEL_TR,
 		NULL,
@@ -24399,20 +24413,6 @@ struct retro_core_option_v2_definition option_defs_tr[] = {
 			{ NULL, NULL },
 		},
 		"linear"
-	},
-	{
-		"cemu_show_game_fps",
-		CEMU_SHOW_GAME_FPS_LABEL_TR,
-		NULL,
-		CEMU_SHOW_GAME_FPS_INFO_0_TR,
-		NULL,
-		"video",
-		{
-			{ "disabled", NULL },
-			{ "enabled", NULL },
-			{ NULL, NULL },
-		},
-		"disabled"
 	},
 	{
 		"cemu_downscale_filter",
@@ -24915,9 +24915,9 @@ struct retro_core_option_v2_category option_cats_tt[] = {
 	// a core option, and an empty submenu is worse than no submenu.
 	{ "system", CATEGORY_SYSTEM_LABEL_TT, CATEGORY_SYSTEM_INFO_0_TT },
 	{ "addons", CATEGORY_ADDONS_LABEL_TT, CATEGORY_ADDONS_INFO_0_TT },
-	{ "logging", CATEGORY_LOGGING_LABEL_TT, CATEGORY_LOGGING_INFO_0_TT },
 	{ "convert", CATEGORY_CONVERT_LABEL_TT, CATEGORY_CONVERT_INFO_0_TT },
 	{ "graphic_packs", CATEGORY_GRAPHIC_PACKS_LABEL_TT, CATEGORY_GRAPHIC_PACKS_INFO_0_TT },
+	{ "logging", CATEGORY_LOGGING_LABEL_TT, CATEGORY_LOGGING_INFO_0_TT },
 	{ NULL, NULL, NULL },
 };
 struct retro_core_option_v2_definition option_defs_tt[] = {
@@ -25020,6 +25020,20 @@ struct retro_core_option_v2_definition option_defs_tt[] = {
 		"enabled"
 	},
 	{
+		"cemu_show_game_fps",
+		CEMU_SHOW_GAME_FPS_LABEL_TT,
+		NULL,
+		CEMU_SHOW_GAME_FPS_INFO_0_TT,
+		NULL,
+		"video",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
 		"cemu_upscale_filter",
 		CEMU_UPSCALE_FILTER_LABEL_TT,
 		NULL,
@@ -25034,20 +25048,6 @@ struct retro_core_option_v2_definition option_defs_tt[] = {
 			{ NULL, NULL },
 		},
 		"linear"
-	},
-	{
-		"cemu_show_game_fps",
-		CEMU_SHOW_GAME_FPS_LABEL_TT,
-		NULL,
-		CEMU_SHOW_GAME_FPS_INFO_0_TT,
-		NULL,
-		"video",
-		{
-			{ "disabled", NULL },
-			{ "enabled", NULL },
-			{ NULL, NULL },
-		},
-		"disabled"
 	},
 	{
 		"cemu_downscale_filter",
@@ -25550,9 +25550,9 @@ struct retro_core_option_v2_category option_cats_uk[] = {
 	// a core option, and an empty submenu is worse than no submenu.
 	{ "system", CATEGORY_SYSTEM_LABEL_UK, CATEGORY_SYSTEM_INFO_0_UK },
 	{ "addons", CATEGORY_ADDONS_LABEL_UK, CATEGORY_ADDONS_INFO_0_UK },
-	{ "logging", CATEGORY_LOGGING_LABEL_UK, CATEGORY_LOGGING_INFO_0_UK },
 	{ "convert", CATEGORY_CONVERT_LABEL_UK, CATEGORY_CONVERT_INFO_0_UK },
 	{ "graphic_packs", CATEGORY_GRAPHIC_PACKS_LABEL_UK, CATEGORY_GRAPHIC_PACKS_INFO_0_UK },
+	{ "logging", CATEGORY_LOGGING_LABEL_UK, CATEGORY_LOGGING_INFO_0_UK },
 	{ NULL, NULL, NULL },
 };
 struct retro_core_option_v2_definition option_defs_uk[] = {
@@ -25655,6 +25655,20 @@ struct retro_core_option_v2_definition option_defs_uk[] = {
 		"enabled"
 	},
 	{
+		"cemu_show_game_fps",
+		CEMU_SHOW_GAME_FPS_LABEL_UK,
+		NULL,
+		CEMU_SHOW_GAME_FPS_INFO_0_UK,
+		NULL,
+		"video",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
 		"cemu_upscale_filter",
 		CEMU_UPSCALE_FILTER_LABEL_UK,
 		NULL,
@@ -25669,20 +25683,6 @@ struct retro_core_option_v2_definition option_defs_uk[] = {
 			{ NULL, NULL },
 		},
 		"linear"
-	},
-	{
-		"cemu_show_game_fps",
-		CEMU_SHOW_GAME_FPS_LABEL_UK,
-		NULL,
-		CEMU_SHOW_GAME_FPS_INFO_0_UK,
-		NULL,
-		"video",
-		{
-			{ "disabled", NULL },
-			{ "enabled", NULL },
-			{ NULL, NULL },
-		},
-		"disabled"
 	},
 	{
 		"cemu_downscale_filter",
@@ -26185,9 +26185,9 @@ struct retro_core_option_v2_category option_cats_val[] = {
 	// a core option, and an empty submenu is worse than no submenu.
 	{ "system", CATEGORY_SYSTEM_LABEL_VAL, CATEGORY_SYSTEM_INFO_0_VAL },
 	{ "addons", CATEGORY_ADDONS_LABEL_VAL, CATEGORY_ADDONS_INFO_0_VAL },
-	{ "logging", CATEGORY_LOGGING_LABEL_VAL, CATEGORY_LOGGING_INFO_0_VAL },
 	{ "convert", CATEGORY_CONVERT_LABEL_VAL, CATEGORY_CONVERT_INFO_0_VAL },
 	{ "graphic_packs", CATEGORY_GRAPHIC_PACKS_LABEL_VAL, CATEGORY_GRAPHIC_PACKS_INFO_0_VAL },
+	{ "logging", CATEGORY_LOGGING_LABEL_VAL, CATEGORY_LOGGING_INFO_0_VAL },
 	{ NULL, NULL, NULL },
 };
 struct retro_core_option_v2_definition option_defs_val[] = {
@@ -26290,6 +26290,20 @@ struct retro_core_option_v2_definition option_defs_val[] = {
 		"enabled"
 	},
 	{
+		"cemu_show_game_fps",
+		CEMU_SHOW_GAME_FPS_LABEL_VAL,
+		NULL,
+		CEMU_SHOW_GAME_FPS_INFO_0_VAL,
+		NULL,
+		"video",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
 		"cemu_upscale_filter",
 		CEMU_UPSCALE_FILTER_LABEL_VAL,
 		NULL,
@@ -26304,20 +26318,6 @@ struct retro_core_option_v2_definition option_defs_val[] = {
 			{ NULL, NULL },
 		},
 		"linear"
-	},
-	{
-		"cemu_show_game_fps",
-		CEMU_SHOW_GAME_FPS_LABEL_VAL,
-		NULL,
-		CEMU_SHOW_GAME_FPS_INFO_0_VAL,
-		NULL,
-		"video",
-		{
-			{ "disabled", NULL },
-			{ "enabled", NULL },
-			{ NULL, NULL },
-		},
-		"disabled"
 	},
 	{
 		"cemu_downscale_filter",
@@ -26820,9 +26820,9 @@ struct retro_core_option_v2_category option_cats_vn[] = {
 	// a core option, and an empty submenu is worse than no submenu.
 	{ "system", CATEGORY_SYSTEM_LABEL_VN, CATEGORY_SYSTEM_INFO_0_VN },
 	{ "addons", CATEGORY_ADDONS_LABEL_VN, CATEGORY_ADDONS_INFO_0_VN },
-	{ "logging", CATEGORY_LOGGING_LABEL_VN, CATEGORY_LOGGING_INFO_0_VN },
 	{ "convert", CATEGORY_CONVERT_LABEL_VN, CATEGORY_CONVERT_INFO_0_VN },
 	{ "graphic_packs", CATEGORY_GRAPHIC_PACKS_LABEL_VN, CATEGORY_GRAPHIC_PACKS_INFO_0_VN },
+	{ "logging", CATEGORY_LOGGING_LABEL_VN, CATEGORY_LOGGING_INFO_0_VN },
 	{ NULL, NULL, NULL },
 };
 struct retro_core_option_v2_definition option_defs_vn[] = {
@@ -26925,6 +26925,20 @@ struct retro_core_option_v2_definition option_defs_vn[] = {
 		"enabled"
 	},
 	{
+		"cemu_show_game_fps",
+		CEMU_SHOW_GAME_FPS_LABEL_VN,
+		NULL,
+		CEMU_SHOW_GAME_FPS_INFO_0_VN,
+		NULL,
+		"video",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
 		"cemu_upscale_filter",
 		CEMU_UPSCALE_FILTER_LABEL_VN,
 		NULL,
@@ -26939,20 +26953,6 @@ struct retro_core_option_v2_definition option_defs_vn[] = {
 			{ NULL, NULL },
 		},
 		"linear"
-	},
-	{
-		"cemu_show_game_fps",
-		CEMU_SHOW_GAME_FPS_LABEL_VN,
-		NULL,
-		CEMU_SHOW_GAME_FPS_INFO_0_VN,
-		NULL,
-		"video",
-		{
-			{ "disabled", NULL },
-			{ "enabled", NULL },
-			{ NULL, NULL },
-		},
-		"disabled"
 	},
 	{
 		"cemu_downscale_filter",

@@ -59,12 +59,12 @@ struct retro_core_option_v2_category option_cats_us[] = {
 	// a core option, and an empty submenu is worse than no submenu.
 	{ "system", "System", "CPU, language and scheduling." },
 	{ "addons", "Add-ons", "Skylanders, Infinity and Dimensions portals." },
-	{ "logging", "Logging", "Extra log output, for diagnosing problems." },
 	{ "accounts", "Accounts", "Manage accounts in the Wii U's account directory (saves/Cemu/mlc01/usr/save/system/act)." },
 	{ "install", "Content", "Manage games, title updates and DLC in saves/Cemu/mlc01, the emulated console's storage." },
 	{ "convert", "Convert to WUA", "Write the loaded title out as a .wua archive." },
 	{ "graphic_packs", "Graphic Packs", "The loaded game's graphic packs and their presets. Changes apply the next time the game is loaded." },
 	{ "cheats", "Cheats", "The loaded game's cheat packs, from the graphic packs' Cheats folder. Changes apply the next time the game is loaded." },
+	{ "logging", "Logging", "Extra log output, for diagnosing problems." },
 	{ NULL, NULL, NULL },
 };
 
@@ -168,6 +168,20 @@ struct retro_core_option_v2_definition option_defs_us[] = {
 		"enabled"
 	},
 	{
+		"cemu_show_game_fps",
+		"Show Game FPS",
+		NULL,
+		"Show the frame rate the game renders at. RetroArch's own FPS counter counts how often the core runs, and that stays at 60 when the game drops frames, because every run carries a frame's worth of audio.",
+		NULL,
+		"video",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
 		"cemu_upscale_filter",
 		"Upscale Filter",
 		NULL,
@@ -182,20 +196,6 @@ struct retro_core_option_v2_definition option_defs_us[] = {
 			{ NULL, NULL },
 		},
 		"linear"
-	},
-	{
-		"cemu_show_game_fps",
-		"Show Game FPS",
-		NULL,
-		"Show the frame rate the game renders at. RetroArch's own FPS counter counts how often the core runs, and that stays at 60 when the game drops frames, because every run carries a frame's worth of audio.",
-		NULL,
-		"video",
-		{
-			{ "disabled", NULL },
-			{ "enabled", NULL },
-			{ NULL, NULL },
-		},
-		"disabled"
 	},
 	{
 		"cemu_downscale_filter",
