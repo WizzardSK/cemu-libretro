@@ -84,6 +84,7 @@ if(ENABLE_LIBRETRO)
 		mainLLE.cpp
 		libretro/CemuLibretro.cpp
 		libretro/LibretroAudioAPI.cpp
+		libretro/LibretroProfiler.cpp
 		libretro/LibretroWindowSystem.cpp
 		libretro/LibretroGraphicPacks.cpp
 		${CMAKE_CURRENT_BINARY_DIR}/libretro_graphic_packs.cpp

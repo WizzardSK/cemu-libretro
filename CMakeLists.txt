@@ -122,6 +122,12 @@ endif()
 
 project(Cemu VERSION 2.0.0)
 
+# Branch flamegraph: frame pointers everywhere, for the sampling profiler's
+# stack walks (src/libretro/LibretroProfiler.cpp)
+if(NOT MSVC)
+	add_compile_options(-fno-omit-frame-pointer)
+endif()
+
 # vcpkg hangs an applocal.ps1 post-build step on every Windows target, to copy
 # the DLLs it built next to the binary. That is a PowerShell script, and the
 # MinGW job cross-compiles on Linux, where linking cemu_libretro.dll then ends

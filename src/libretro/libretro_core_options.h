@@ -554,6 +554,20 @@ struct retro_core_option_v2_definition option_defs_us[] = {
 		"disabled"
 	},
 	{
+		"cemu_profiler",
+		"Sampling Profiler (debugging)",
+		NULL,
+		"Samples the busiest threads 250 times a second and writes where they spend their time to system/Cemu/profile.folded every 10 s and when the game is closed, for a flamegraph. Costs a few percent of speed while on.",
+		NULL,
+		"logging",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
 		"cemu_dump_shaders",
 		"Dump Shaders (debugging)",
 		NULL,

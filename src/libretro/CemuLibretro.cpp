@@ -77,6 +77,7 @@
 #include "interface/WindowSystem.h"
 
 #include "LibretroAudioAPI.h"
+#include "LibretroProfiler.h"
 
 #include "Cafe/HW/MMU/MMU.h"
 #include "LibretroVkQueue.h"
@@ -2789,6 +2790,18 @@ static void libretro_apply_core_options()
 			bool b;
 			if (libretro_parse_enabled_disabled(v, b))
 				s_log_thread_time = b;
+		}
+
+		if (const char* v = libretro_get_option_value("cemu_profiler"))
+		{
+			bool b;
+			if (libretro_parse_enabled_disabled(v, b))
+			{
+				if (b)
+					LibretroProfiler_Start(_pathToUtf8(ActiveSettings::GetUserDataPath("profile.folded")));
+				else
+					LibretroProfiler_Stop();
+			}
 		}
 
 		if (const char* v = libretro_get_option_value("cemu_log_texture_memory"))
@@ -5879,6 +5892,7 @@ static void libretro_stop_system_services()
 
 RETRO_API void retro_unload_game()
 {
+	LibretroProfiler_Stop();
 	// The next content takes the output size afresh from the option.
 	s_out_size_taken = false;
 	libretro_reset_install_switches();
