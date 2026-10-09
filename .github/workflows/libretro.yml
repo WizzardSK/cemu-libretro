@@ -13,10 +13,18 @@ on:
     paths-ignore:
       - '**.md'
   workflow_dispatch:
+    inputs:
+      platforms:
+        description: 'Platforms to build besides Linux, comma-separated (windows, android, macos), or all'
+        type: string
+        default: all
 
 env:
   VCPKG_ROOT: "${{github.workspace}}/dependencies/vcpkg"
 
+# Test builds can be limited to the platforms their testers use: the
+# platforms input (workflow_dispatch) lists them; Linux is always built, as a
+# quick check that it compiles. Pushes and "all" build everything.
 jobs:
   linux:
     name: linux-${{ matrix.arch }}
@@ -76,6 +84,7 @@ jobs:
           path: ./bin/cemu_libretro.so
 
   macos:
+    if: github.event_name != 'workflow_dispatch' || inputs.platforms == 'all' || contains(inputs.platforms, 'macos')
     name: macos-${{ matrix.arch }}
     runs-on: macos-14
     # First macOS build of the core: src/CMakeLists.txt already keeps the X11/GL
@@ -141,6 +150,7 @@ jobs:
           path: ./bin/cemu_libretro.dylib
 
   windows:
+    if: github.event_name != 'workflow_dispatch' || inputs.platforms == 'all' || contains(inputs.platforms, 'windows')
     name: windows-x64
     runs-on: windows-2022
     # The WGL path in the glue layer has never been through a compiler; give it
@@ -188,6 +198,7 @@ jobs:
           path: ./bin/cemu_libretro.pdb
 
   android:
+    if: github.event_name != 'workflow_dispatch' || inputs.platforms == 'all' || contains(inputs.platforms, 'android')
     name: android-${{ matrix.abi }}
     runs-on: ubuntu-22.04
     # This target has never been built: the whole vcpkg set has to come up for a
