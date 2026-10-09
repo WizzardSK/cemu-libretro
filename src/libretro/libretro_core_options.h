@@ -217,19 +217,20 @@ struct retro_core_option_v2_definition option_defs_us[] = {
 		"cemu_internal_resolution",
 		"Internal Resolution",
 		NULL,
-		"A generic fallback for games without a resolution graphic pack: resizes every screen-shaped render target, which some games use for things that break when resized. 640x360 draws a quarter of the pixels of 720p. When a resolution pack is enabled for the loaded game (Graphic Packs), the pack sets the resolution and this option is hidden.",
+		"A generic fallback for games without a resolution graphic pack: resizes every screen-shaped render target, which some games use for things that break when resized. A multiple of the game's own resolution: for a 720p game 0.5x is 640x360, a quarter of the pixels, and 2x is 2560x1440; for a 1080p game 0.5x is 960x540. When a resolution pack is enabled for the loaded game (Graphic Packs), the pack sets the resolution and this option is hidden.",
 		NULL,
 		"video",
 		{
-			{ "640x360", NULL },
-			{ "960x540", NULL },
-			{ "1280x720", NULL },
-			{ "1920x1080", NULL },
-			{ "2560x1440", NULL },
-			{ "3840x2160", NULL },
+			{ "0.25x", "0.25x (320x180 at 720p)" },
+			{ "0.5x", "0.5x (640x360 at 720p)" },
+			{ "0.75x", "0.75x (960x540 at 720p)" },
+			{ "native", "Native" },
+			{ "1.5x", "1.5x (1920x1080 at 720p)" },
+			{ "2x", "2x (2560x1440 at 720p)" },
+			{ "3x", "3x (3840x2160 at 720p)" },
 			{ NULL, NULL },
 		},
-		"1280x720"
+		"native"
 	},
 	{
 		"cemu_fullscreen_scaling",
@@ -568,9 +569,9 @@ struct retro_core_option_v2_definition option_defs_us[] = {
 	},
 	{
 		"cemu_log_audio",
-		"Log Audio Pacing (debugging)",
+		"Log Audio and Frame Pacing (debugging)",
 		NULL,
-		"Once a second, how many samples AX produced, how many the ring had to drop, and how many the frontend took. For working out which end of that chain audio is going missing at.",
+		"Once a second, how many samples AX produced, how many the ring had to drop, and how many the frontend took; and how many times the frontend ran the core, how many frames the title finished, and where the time went (waiting for the GPU thread, presenting, audio). For working out whether a slow game is held up by the emulated CPU, the GPU or the frontend.",
 		NULL,
 		"logging",
 		{

@@ -2166,9 +2166,19 @@ static std::optional<CafeConsoleLanguage> libretro_parse_console_language(const 
 static bool libretro_parse_internal_resolution(const char* v, unsigned& outWidth, unsigned& outHeight)
 {
 	if (!v) return false;
-	// Below the Wii U's own 720p, for hardware that cannot keep up with it.
-	// The presentation image stays 1280x720, so these render fewer pixels and
-	// are scaled up to it - a quarter of the fill rate at half resolution.
+	// Multiples of the game's own resolution, so a value means the same in
+	// every game and its .opt (sco): returned as the size they are for a 720p
+	// game, which is what the scale and the output size are worked out from.
+	// Below native is for hardware that cannot keep up; the presentation image
+	// stays at the output size, so those render fewer pixels and are scaled up.
+	if (libretro_iequals(v, "native")) { outWidth = 1280; outHeight = 720; return true; }
+	if (libretro_iequals(v, "0.25x")) { outWidth = 320; outHeight = 180; return true; }
+	if (libretro_iequals(v, "0.5x")) { outWidth = 640; outHeight = 360; return true; }
+	if (libretro_iequals(v, "0.75x")) { outWidth = 960; outHeight = 540; return true; }
+	if (libretro_iequals(v, "1.5x")) { outWidth = 1920; outHeight = 1080; return true; }
+	if (libretro_iequals(v, "2x")) { outWidth = 2560; outHeight = 1440; return true; }
+	if (libretro_iequals(v, "3x")) { outWidth = 3840; outHeight = 2160; return true; }
+	// The sizes the option used to have, from .opt files written then
 	if (libretro_iequals(v, "640x360")) { outWidth = 640; outHeight = 360; return true; }
 	if (libretro_iequals(v, "960x540")) { outWidth = 960; outHeight = 540; return true; }
 	if (libretro_iequals(v, "1280x720")) { outWidth = 1280; outHeight = 720; return true; }
@@ -2970,7 +2980,10 @@ static void libretro_apply_core_options()
 		if (libretro_parse_internal_resolution(v, newWidth, newHeight))
 		{
 			extern float g_libretroRenderScale;
-			g_libretroRenderScale = (float)newHeight / 720.0f;
+			extern uint32 g_libretroWantedHeight;
+			extern void libretro_update_render_scale();
+			g_libretroWantedHeight = newHeight;
+			libretro_update_render_scale();
 			s_wanted_out_width = newWidth;
 			s_wanted_out_height = newHeight;
 			if (log_cb && g_libretroRenderScale != 1.0f)
