@@ -3586,20 +3586,28 @@ static void libretro_publish_core_options(retro_environment_t cb, bool withRepla
 		break;
 	}
 
-	// The fixed options, then the loaded title's graphic packs
+	// The fixed options, then the loaded title's graphic packs, then Logging.
+	// RetroArch lists the categories in the order their first option comes
+	// in, not in the order of the category table, so Logging goes last by
+	// coming last here - after the packs, which are only known at run time.
 	static std::vector<struct retro_core_option_v2_definition> all;
 	all.clear();
+	std::vector<struct retro_core_option_v2_definition> logging;
 	for (const struct retro_core_option_v2_definition& def : option_defs_us)
 	{
 		if (!def.key)
 			break;
 		if (!accountsKnown && (!strcmp(def.key, "cemu_account") || !strcmp(def.key, "cemu_create_account") || !strcmp(def.key, "cemu_remove_account")))
 			continue;
-		all.push_back(def);
+		if (def.category_key && !strcmp(def.category_key, "logging"))
+			logging.push_back(def);
+		else
+			all.push_back(def);
 	}
 	for (size_t i = 0; i < s_pack_option_defs.size(); i++)
 		if (withReplacements || s_pack_options[i].originalKey.empty())
 			all.push_back(s_pack_option_defs[i]);
+	all.insert(all.end(), logging.begin(), logging.end());
 	all.push_back({});
 	options_us.definitions = all.data();
 
