@@ -1231,6 +1231,15 @@ bool LatteTexture_GX2FormatHasStencil(bool isDepth, Latte::E_GX2SURFFMT format)
 // 1.0 leaves every texture at the size the game asked for, which is what the
 // core does unless the internal resolution option says otherwise.
 float g_libretroRenderScale = 1.0f;
+// Internal Resolution as a multiple of the game's own resolution (Native,
+// 0.5x, 2x, ...), held as the 720p height it corresponds to
+uint32 g_libretroWantedHeight = 720;
+
+void libretro_update_render_scale()
+{
+	const float scale = (float)g_libretroWantedHeight / 720.0f;
+	g_libretroRenderScale = std::fabs(scale - 1.0f) < 0.001f ? 1.0f : scale;
+}
 
 // Whether an active graphic pack resizes textures, i.e. a resolution pack.
 bool LatteTexture_graphicPackSetsResolution()
@@ -1287,7 +1296,20 @@ LatteTexture::LatteTexture(Latte::E_DIM dim, MPTR physAddress, MPTR physMipAddre
 	// does not. Scaling alongside one used to resize the 16:9 targets the pack
 	// leaves alone too, which is where Fast Racing Neo's menu lost its car
 	// pictures at anything but 720p (NNshi).
-	if (g_libretroRenderScale != 1.0f && width >= 256 && height >= 256 && width * 9 == height * 16 &&
+	//
+	// A height may be padded up to a multiple of 16 rows, as the GPU's tiling
+	// wants: Deus Ex renders its depth of field into 640x368, then copies it
+	// to the 640x360 it scales. Left out, the 640x368 one stayed unscaled and
+	// Cemu refused every copy between the two ("mismatching scale ratio"),
+	// the black backdrop again (sco's log).
+	const auto heightFits = [](uint32 h, uint32 exact) {
+		return h >= exact && h <= ((exact + 15) & ~15u);
+	};
+	const auto isScreenShaped = [&](uint32 w, uint32 h) {
+		return w * 9 % 16 == 0 && heightFits(h, w * 9 / 16);
+	};
+	if (g_libretroRenderScale != 1.0f &&
+		width >= 256 && height >= 256 && isScreenShaped(width, height) &&
 		tileMode >= Latte::E_HWTILEMODE::TM_2D_TILED_THIN1 && !LatteTexture_graphicPackSetsResolution())
 	{
 		const uint32 scaledWidth = std::max<uint32>(4, ((uint32)(width * g_libretroRenderScale) + 3) & ~3u);
