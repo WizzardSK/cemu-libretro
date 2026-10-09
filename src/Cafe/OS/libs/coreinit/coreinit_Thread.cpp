@@ -54,6 +54,9 @@ sint32 activeThreadCount = 0;
 
 void nnNfp_update();
 
+// CemuLibretro.cpp: pins the calling thread to the CPU's fast cores
+void LibretroPinToFastCores(const char* who);
+
 namespace coreinit
 {
 #ifdef __arm64__
@@ -1522,8 +1525,7 @@ namespace coreinit
 	void OSSchedulerCoreEmulationThread(void* _assignedCoreIndex)
 	{
 		SetThreadName(fmt::format("OSSched[core={}]", (uintptr_t)_assignedCoreIndex).c_str());
-		extern void LibretroPinToFastCores(const char* who);
-		LibretroPinToFastCores(fmt::format("PPC core {}", (uintptr_t)_assignedCoreIndex).c_str());
+		::LibretroPinToFastCores(fmt::format("PPC core {}", (uintptr_t)_assignedCoreIndex).c_str());
 		t_assignedCoreIndex = (sint32)(uintptr_t)_assignedCoreIndex;
 		if (t_assignedCoreIndex >= 0 && t_assignedCoreIndex < 3)
 		{
