@@ -2676,7 +2676,9 @@ static void libretro_apply_core_options()
 	// on here rather than remembered: the conversion starts in this same process
 	// and the switch goes straight back off, so nothing about it is ever written
 	// to the .opt file - there is no next run for it to survive into.
-	if (!s_convert_mode.load())
+	// Without a destination the option is not declared (publish), and asking
+	// RetroArch for it only puts "Invalid value" in its log (sco8487)
+	if (!s_convert_mode.load() && !s_wua_destinations.empty())
 	{
 		if (const char* v = libretro_get_option_value("cemu_convert_to_wua"))
 		{
