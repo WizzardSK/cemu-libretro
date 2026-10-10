@@ -571,7 +571,7 @@ struct retro_core_option_v2_definition option_defs_us[] = {
 		"cemu_profiler",
 		"Sampling Profiler (debugging)",
 		NULL,
-		"Samples the busiest threads 250 times a second and writes where they spend their time to system/Cemu/profile.folded every 10 s and when the game is closed, for a flamegraph. Costs a few percent of speed while on.",
+		"Samples the busiest threads every 4 ms of CPU time they use and writes where that time goes to system/Cemu/profile.folded every 10 s and when the game is closed, for a flamegraph. Costs a few percent of speed while on.",
 		NULL,
 		"logging",
 		{

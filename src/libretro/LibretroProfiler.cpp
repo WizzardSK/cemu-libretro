@@ -2,9 +2,13 @@
 // the code the busiest threads spend their time in, for a flamegraph.
 //
 // RetroArch from the Play Store cannot be profiled from outside (simpleperf
-// needs a profileable or rooted app), so the core samples itself: a thread
-// signals the busiest threads of the process 250 times a second, each one
-// records its program counter and walks its frame-pointer chain (read with
+// needs a profileable or rooted app), so the core samples itself: the busiest
+// threads of the process each get a timer on their own CPU time, which
+// signals the thread every 4 ms it spends running - time it waits or sleeps
+// counts for nothing, so the samples are where the CPU time goes (signalling
+// every thread on the wall clock made a waiting thread's futex most of the
+// profile). The signalled thread records its program counter and walks its
+// frame-pointer chain (read with
 // process_vm_readv, so a broken chain or a JIT frame without one cannot fault),
 // and the samples are folded into "thread;outermost;...;innermost count" lines
 // with each frame as library+offset, in system/Cemu/profile.folded. The core's
@@ -29,6 +33,7 @@
 #include <sys/syscall.h>
 #include <sys/uio.h>
 #include <thread>
+#include <time.h>
 #include <ucontext.h>
 #include <unistd.h>
 #include <unordered_map>
@@ -40,6 +45,37 @@ namespace
 	constexpr size_t kRingSize = 1 << 14;
 	constexpr int kThreadsSampled = 10;
 	constexpr int kSignal = SIGPROF;
+	// CPU time between samples of a thread
+	constexpr long kIntervalNs = 4'000'000;
+#ifndef sigev_notify_thread_id
+#define sigev_notify_thread_id _sigev_un._tid
+#endif
+#ifndef SIGEV_THREAD_ID
+#define SIGEV_THREAD_ID 4
+#endif
+
+	// A timer on a thread's CPU time (the kernel's per-thread CPU clock) that
+	// signals that thread; -1 when the kernel refused.
+	int arm_thread_timer(pid_t tid)
+	{
+		const clockid_t clock = static_cast<clockid_t>((~static_cast<unsigned>(tid)) << 3) | 6;
+		struct sigevent event{};
+		event.sigev_notify = SIGEV_THREAD_ID;
+		event.sigev_signo = kSignal;
+		event.sigev_notify_thread_id = tid;
+		int id = -1;
+		if (syscall(SYS_timer_create, clock, &event, &id) != 0)
+			return -1;
+		struct itimerspec spec{};
+		spec.it_interval.tv_nsec = kIntervalNs;
+		spec.it_value.tv_nsec = kIntervalNs;
+		if (syscall(SYS_timer_settime, id, 0, &spec, nullptr) != 0)
+		{
+			syscall(SYS_timer_delete, id);
+			return -1;
+		}
+		return id;
+	}
 
 	struct Sample
 	{
@@ -191,7 +227,7 @@ namespace
 		uint64_t read = 0, total = 0;
 		auto last_threads = std::chrono::steady_clock::now() - std::chrono::seconds(2);
 		auto last_write = std::chrono::steady_clock::now();
-		std::vector<pid_t> targets;
+		std::map<pid_t, int> timers;
 		const pid_t self = static_cast<pid_t>(syscall(SYS_gettid));
 		auto write_out = [&]() {
 			std::ofstream out(g_out_path, std::ios::trunc);
@@ -210,13 +246,25 @@ namespace
 					if (tid != self)
 						busy.emplace_back(info.busy, tid);
 				std::sort(busy.rbegin(), busy.rend());
-				targets.clear();
-				for (size_t i = 0; i < busy.size() && i < kThreadsSampled; ++i)
-					targets.push_back(busy[i].second);
+				std::map<pid_t, int> keep;
+				for (size_t i = 0; i < busy.size() && i < kThreadsSampled && busy[i].first; ++i)
+				{
+					const pid_t tid = busy[i].second;
+					auto it = timers.find(tid);
+					if (it != timers.end())
+					{
+						keep.emplace(tid, it->second);
+						timers.erase(it);
+					}
+					else if (const int id = arm_thread_timer(tid); id >= 0)
+						keep.emplace(tid, id);
+				}
+				// No longer among the busiest, or gone
+				for (const auto& [tid, id] : timers)
+					syscall(SYS_timer_delete, id);
+				timers.swap(keep);
 				last_threads = now;
 			}
-			for (pid_t tid : targets)
-				syscall(SYS_tgkill, g_pid, tid, kSignal);
 			std::this_thread::sleep_for(std::chrono::milliseconds(4));
 			// Fold what came in
 			const uint64_t written = g_write.load(std::memory_order_relaxed);
@@ -239,6 +287,10 @@ namespace
 				last_write = now;
 			}
 		}
+		for (const auto& [tid, id] : timers)
+			syscall(SYS_timer_delete, id);
+		// A signal already on its way lands in the handler, restored only
+		// after this thread is joined
 		write_out();
 	}
 }
