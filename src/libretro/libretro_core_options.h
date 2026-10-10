@@ -87,6 +87,21 @@ struct retro_core_option_v2_definition option_defs_us[] = {
 		"auto"
 	},
 	{
+		"cemu_audio_channels",
+		"Audio Channels (Restart)",
+		NULL,
+		"The TV the console reports to games, as standalone's TV channels setting: games that support it mix for that many speakers. Surround 5.1 goes to RetroArch as six channels when it has multi-channel audio output, else mixed down to stereo.",
+		NULL,
+		"system",
+		{
+			{ "mono", "Mono" },
+			{ "stereo", "Stereo" },
+			{ "surround", "Surround 5.1" },
+			{ NULL, NULL },
+		},
+		"stereo"
+	},
+	{
 		"cemu_console_language",
 		"Console Language",
 		NULL,

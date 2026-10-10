@@ -12,14 +12,16 @@
 class LibretroAudioRingBuffer
 {
 public:
-	// ~341 ms at 48 kHz stereo. It has to hold everything AX may make between
+	// ~341 ms at 48 kHz 5.1 (a second in stereo). It has to hold everything AX may make between
 	// two retro_runs, and a retro_run grants up to 250 ms (see
 	// AXOut_LibretroGrantSamples). At 128 ms a slow device's frames - 8 or 9
 	// a second in sco8487's heavier Deus Ex scenes - got grants the ring could
 	// not take, and the rest was dropped. Drained every retro_run, so the
 	// size adds no latency.
 	static constexpr size_t kBufferFrames = 16384;
-	static constexpr size_t kChannels = 2;
+	// Up to 5.1; the ring holds whole frames of the output's channels, 2 or
+	// 6, both of which divide its size
+	static constexpr size_t kChannels = 6;
 	static constexpr size_t kBufferSamples = kBufferFrames * kChannels;
 
 	LibretroAudioRingBuffer() = default;
@@ -89,6 +91,10 @@ class LibretroAudioAPI : public IAudioAPI
 public:
 	// Callback type matches retro_audio_sample_batch_t: returns frames actually accepted.
 	using AudioCallback = size_t(*)(const int16_t* data, size_t frames);
+	// RetroArch's multi-channel batch: frames of `channels` samples, the
+	// speakers in `layout` (RETRO_AUDIO_SPEAKER_*)
+	using MultiAudioCallback = size_t(*)(const int16_t* data, size_t frames,
+		unsigned channels, unsigned layout);
 
 	LibretroAudioAPI(uint32 samplerate, uint32 channels, uint32 samples_per_block, uint32 bits_per_sample);
 	// The ring and the flush buffer are statics that outlive any one instance,
@@ -109,6 +115,9 @@ public:
 
 	// Register the frontend's audio_batch_cb (called from retro_init).
 	static void SetAudioCallback(AudioCallback cb);
+	// What the frontend is given: 2 (stereo through the batch callback) or 6
+	// (5.1 through the multi-channel one). Set at load, before AX starts.
+	static void SetOutput(unsigned channels, MultiAudioCallback multi);
 
 	// Drain whatever was produced since the last call, push to the frontend.
 	// Call once per retro_run.
@@ -130,6 +139,10 @@ private:
 	static void ReportStats();
 
 	static AudioCallback s_audio_callback;
+	static MultiAudioCallback s_multi_callback;
+	static unsigned s_out_channels;
+	// One block converted to the output's channels
+	std::vector<int16_t> m_convert;
 	static LibretroAudioRingBuffer s_ring_buffer;
 	static std::vector<int16_t> s_flush_buffer;
 

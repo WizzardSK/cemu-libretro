@@ -260,6 +260,19 @@ static LibretroSystemImplementation s_systemImpl;
 // Globals
 // ============================================================================
 
+#ifndef RETRO_ENVIRONMENT_GET_AUDIO_SAMPLE_BATCH_MULTI
+// RetroArch's multi-channel audio (master since 10.9.2026)
+#define RETRO_ENVIRONMENT_GET_AUDIO_SAMPLE_BATCH_MULTI (94 | RETRO_ENVIRONMENT_EXPERIMENTAL)
+typedef size_t (RETRO_CALLCONV *retro_audio_sample_batch_multi_int16_t)(
+	const int16_t* data, size_t frames, unsigned channels, unsigned layout);
+typedef size_t (RETRO_CALLCONV *retro_audio_sample_batch_multi_float_t)(
+	const float* data, size_t frames, unsigned channels, unsigned layout);
+struct retro_audio_sample_multi_callback
+{
+	retro_audio_sample_batch_multi_int16_t batch_int16;
+	retro_audio_sample_batch_multi_float_t batch_float;
+};
+#endif
 static retro_environment_t environ_cb = nullptr;
 
 // Defined further down, beside the cheat entry points they exist for.
@@ -2876,6 +2889,14 @@ static void libretro_apply_core_options()
 		bool b;
 		if (libretro_parse_enabled_disabled(v, b))
 			cfg.gx2drawdone_sync = b;
+	}
+
+	// Audio Channels: what AVM reports for the TV, and so what AX mixes for
+	if (const char* v = libretro_get_option_value("cemu_audio_channels"))
+	{
+		if (libretro_iequals(v, "mono")) cfg.tv_channels = kMono;
+		else if (libretro_iequals(v, "surround")) cfg.tv_channels = kSurround;
+		else cfg.tv_channels = kStereo;
 	}
 
 	// Console language
@@ -5616,6 +5637,27 @@ RETRO_API bool retro_load_game(const struct retro_game_info* game)
 	// Re-decided below for this load; a stale value from a previous one would
 	// hide a frontend that cannot give this core a context the second time.
 	s_use_hw_render = false;
+
+	// 5.1 when asked for and RetroArch has multi-channel output (asked once,
+	// at load); otherwise the audio goes out as stereo
+	{
+		static retro_audio_sample_multi_callback s_multi{};
+		s_multi = {};
+		const char* channels = libretro_get_option_value("cemu_audio_channels");
+		const bool surround = channels && libretro_iequals(channels, "surround");
+		if (surround &&
+			!(environ_cb(RETRO_ENVIRONMENT_GET_AUDIO_SAMPLE_BATCH_MULTI, &s_multi) && s_multi.batch_int16))
+		{
+			libretro_log(RETRO_LOG_WARN, "audio: the frontend has no multi-channel output, 5.1 is mixed down to stereo\n");
+			s_multi = {};
+		}
+		LibretroAudioAPI::SetOutput(s_multi.batch_int16 ? 6 : 2, s_multi.batch_int16
+			? [](const int16_t* data, size_t frames, unsigned ch, unsigned layout) -> size_t {
+				return s_audio_submission_allowed && data && frames > 0 ? s_multi.batch_int16(data, frames, ch, layout) : 0;
+			}
+			: nullptr);
+		libretro_log(RETRO_LOG_INFO, "audio: %u channels to the frontend\n", s_multi.batch_int16 ? 6u : 2u);
+	}
 
 	// Set up pixel format
 	enum retro_pixel_format fmt = RETRO_PIXEL_FORMAT_XRGB8888;

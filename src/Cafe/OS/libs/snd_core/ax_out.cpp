@@ -193,14 +193,28 @@ namespace snd_core
 			{
 				if (s_drcMixBlockReady)
 				{
-					constexpr size_t kChannels = 2;
-					const size_t samplesToMix = (size_t)AX_SAMPLES_PER_3MS_48KHZ * (size_t)AX_FRAMES_PER_GROUP * kChannels;
-					for (size_t i = 0; i < samplesToMix; ++i)
-					{
-						int v = (int)tempTVChannelData[i] + (int)s_drcMixBlock[i];
+					// The GamePad's stereo onto the TV's front pair (both on
+					// a mono TV), whatever the TV's channel count
+					const size_t frames = (size_t)AX_SAMPLES_PER_3MS_48KHZ * (size_t)AX_FRAMES_PER_GROUP;
+					auto mix = [](sint16& out, int add) {
+						int v = (int)out + add;
 						if (v > 32767) v = 32767;
 						else if (v < -32768) v = -32768;
-						tempTVChannelData[i] = (sint16)v;
+						out = (sint16)v;
+					};
+					for (size_t f = 0; f < frames; ++f)
+					{
+						sint16* tv = tempTVChannelData + f * channels;
+						const int l = s_drcMixBlock[f * 2], r = s_drcMixBlock[f * 2 + 1];
+						if (channels == 1)
+						{
+							mix(tv[0], (l + r) / 2);
+						}
+						else
+						{
+							mix(tv[0], l);
+							mix(tv[1], r);
+						}
 					}
 					s_drcMixBlockReady = false;
 				}
@@ -437,7 +451,9 @@ namespace snd_core
 			try
 			{
 				// For libretro, use LibretroAudioAPI which routes audio to RetroArch
-				g_tvAudio = std::make_unique<LibretroAudioAPI>(48000, 2, snd_core::AX_SAMPLES_PER_3MS_48KHZ * AX_FRAMES_PER_GROUP, 16);
+				// As many channels as the TV the console reports (Audio
+				// Channels option); the audio API makes the frontend's of them
+				g_tvAudio = std::make_unique<LibretroAudioAPI>(48000, CemuConfig::AudioChannelsToNChannels(GetConfig().tv_channels), snd_core::AX_SAMPLES_PER_3MS_48KHZ * AX_FRAMES_PER_GROUP, 16);
 				cemuLog_log(LogType::Force, "Initialized LibretroAudioAPI for TV audio");
 			}
 			catch (std::runtime_error& ex)

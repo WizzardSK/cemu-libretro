@@ -1,5 +1,6 @@
 #include "LibretroAudioAPI.h"
 
+#include <algorithm>
 #include <atomic>
 #include <chrono>
 
@@ -24,6 +25,8 @@ uint64_t LibretroAudioAPI::s_stat_sent = 0;
 uint64_t LibretroAudioAPI::s_stat_flushes = 0;
 uint64_t LibretroAudioAPI::s_stat_empty_flushes = 0;
 LibretroAudioRingBuffer LibretroAudioAPI::s_ring_buffer;
+LibretroAudioAPI::MultiAudioCallback LibretroAudioAPI::s_multi_callback = nullptr;
+unsigned LibretroAudioAPI::s_out_channels = 2;
 std::vector<int16_t> LibretroAudioAPI::s_flush_buffer;
 
 LibretroAudioAPI::LibretroAudioAPI(uint32 samplerate, uint32 channels, uint32 samples_per_block, uint32 bits_per_sample)
@@ -45,8 +48,9 @@ bool LibretroAudioAPI::NeedAdditionalBlocks() const
 {
 	// Match upstream behavior: ask for more blocks while the ring has less
 	// than (audio_delay * samples_per_block) buffered.
+	// In the ring's samples, which are the output's channels
 	const size_t bufferedSamples = s_ring_buffer.GetReadAvailableSamples();
-	const size_t targetBufferSamples = GetAudioDelay() * (m_bytesPerBlock / sizeof(int16_t));
+	const size_t targetBufferSamples = GetAudioDelay() * m_samplesPerBlock * s_out_channels;
 	return bufferedSamples < targetBufferSamples;
 }
 
@@ -55,8 +59,42 @@ bool LibretroAudioAPI::FeedBlock(sint16* data)
 	if (!data || !m_playing)
 		return false;
 
-	const size_t sampleCount = m_bytesPerBlock / sizeof(int16_t);
-	const size_t written = s_ring_buffer.Write(data, sampleCount);
+	// AX's channels (the TV mode: 1, 2 or 6) to the output's (2 or 6). 5.1
+	// is FL FR C LFE SL SR, as standalone hands it to cubeb.
+	const size_t frames = m_samplesPerBlock;
+	const unsigned in = m_channels, out = s_out_channels;
+	const int16_t* block = data;
+	if (in != out)
+	{
+		m_convert.resize(frames * out);
+		for (size_t f = 0; f < frames; f++)
+		{
+			const int16_t* s = data + f * in;
+			int16_t* d = m_convert.data() + f * out;
+			if (in == 1)
+			{
+				for (unsigned c = 0; c < out; c++)
+					d[c] = c < 2 ? s[0] : 0;
+			}
+			else if (in == 6 && out == 2)
+			{
+				// Centre and surrounds at -3 dB, LFE left out
+				const float c = s[2] * 0.7071f;
+				const float l = s[0] + c + s[4] * 0.7071f;
+				const float r = s[1] + c + s[5] * 0.7071f;
+				d[0] = (int16_t)std::clamp(l, -32768.0f, 32767.0f);
+				d[1] = (int16_t)std::clamp(r, -32768.0f, 32767.0f);
+			}
+			else
+			{
+				for (unsigned ch = 0; ch < out; ch++)
+					d[ch] = ch < in ? s[ch] : 0;
+			}
+		}
+		block = m_convert.data();
+	}
+	const size_t sampleCount = frames * out;
+	const size_t written = s_ring_buffer.Write(block, sampleCount);
 	AccountWrite(sampleCount, written);
 	return written > 0;
 }
@@ -76,6 +114,13 @@ bool LibretroAudioAPI::Stop()
 void LibretroAudioAPI::SetAudioCallback(AudioCallback cb)
 {
 	s_audio_callback = cb;
+}
+
+void LibretroAudioAPI::SetOutput(unsigned channels, MultiAudioCallback multi)
+{
+	s_out_channels = channels == 6 && multi ? 6 : 2;
+	s_multi_callback = s_out_channels == 6 ? multi : nullptr;
+	s_ring_buffer.Reset();
 }
 
 void LibretroAudioAPI::FlushAudio()
@@ -108,7 +153,8 @@ void LibretroAudioAPI::FlushAudio()
 	if (samplesRead == 0)
 		return;
 
-	const size_t framesRead = samplesRead / LibretroAudioRingBuffer::kChannels;
+	const size_t channels = s_out_channels;
+	const size_t framesRead = samplesRead / channels;
 
 	// retro_audio_sample_batch_t may consume fewer frames than offered; loop so
 	// a partial accept doesn't lose audio.
@@ -116,14 +162,18 @@ void LibretroAudioAPI::FlushAudio()
 	const int16_t* cursor = s_flush_buffer.data();
 	while (framesSent < framesRead)
 	{
-		const size_t accepted = s_audio_callback(cursor, framesRead - framesSent);
+		// 5.1: FL FR C LFE SL SR, as RetroArch's speaker bits run
+		constexpr unsigned k51 = 0x001 | 0x002 | 0x004 | 0x008 | 0x200 | 0x400;
+		const size_t accepted = channels == 6
+			? s_multi_callback(cursor, framesRead - framesSent, 6, k51)
+			: s_audio_callback(cursor, framesRead - framesSent);
 		if (accepted == 0)
 			break;
 		framesSent += accepted;
-		cursor += accepted * LibretroAudioRingBuffer::kChannels;
+		cursor += accepted * channels;
 	}
 
-	AccountFlush(samplesRead, framesSent * LibretroAudioRingBuffer::kChannels);
+	AccountFlush(samplesRead, framesSent * channels);
 }
 
 void LibretroAudioAPI::SetStatsLogging(bool enabled)
