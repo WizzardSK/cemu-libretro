@@ -165,6 +165,9 @@ struct AArch64GenContext_t : CodeGenerator
 			nop();
 	}
 
+	// cold code emitted after the main code
+	std::vector<std::function<void()>> m_coldCode;
+
 	std::map<IMLSegment*, size_t> segmentStarts;
 	void storeSegmentStart(IMLSegment* imlSegment)
 	{
@@ -749,7 +752,26 @@ bool AArch64GenContext_t::r_r_r(IMLInstruction* imlInstruction)
 	}
 	else if (imlInstruction->operation == PPCREC_IML_OP_DIVIDE_SIGNED)
 	{
+		// sdiv returns 0 for a zero divisor and 0x80000000 on overflow, divw gives the dividend sign and -1
+		Label divisorZero;
+		Label overflow;
+		Label divide;
+		Label done;
+		cbz(regOperand2, divisorZero);
+		cmn(regOperand2, 1);
+		bne(divide);
+		mov(TEMP_GPR1.WReg, 0x80000000);
+		cmp(regOperand1, TEMP_GPR1.WReg);
+		beq(overflow);
+		L(divide);
 		sdiv(regResult, regOperand1, regOperand2);
+		b(done);
+		L(divisorZero);
+		asr(regResult, regOperand1, 31);
+		b(done);
+		L(overflow);
+		mov(regResult, 0xFFFFFFFF);
+		L(done);
 	}
 	else if (imlInstruction->operation == PPCREC_IML_OP_DIVIDE_UNSIGNED)
 	{
@@ -1199,22 +1221,49 @@ bool AArch64GenContext_t::fpr_store(IMLInstruction* imlInstruction, bool indexed
 	sint32 memOffset = imlInstruction->op_storeLoad.immS32;
 	uint8 mode = imlInstruction->op_storeLoad.mode;
 
-	if (mode == PPCREC_FPR_ST_MODE_SINGLE)
+	if (mode == PPCREC_FPR_ST_MODE_SINGLE || mode == PPCREC_FPR_ST_MODE_SINGLE_FTZ)
 	{
-		add_imm(TEMP_GPR1.WReg, memReg, memOffset, TEMP_GPR1.WReg);
-		if (indexed)
-			add(TEMP_GPR1.WReg, TEMP_GPR1.WReg, indexReg);
-
 		if (imlInstruction->op_storeLoad.flags2.notExpanded)
 		{
 			// value is already in single format
 			fmov(TEMP_GPR2.WReg, dataSReg);
 		}
-		else
+		else if (mode == PPCREC_FPR_ST_MODE_SINGLE_FTZ)
 		{
 			fcvt(TEMP_FPR.SReg, dataDReg);
 			fmov(TEMP_GPR2.WReg, TEMP_FPR.SReg);
 		}
+		else
+		{
+			// stfs truncates instead of rounding, so build the result directly
+			Label denormal;
+			Label done;
+			fmov(TEMP_GPR2.XReg, dataDReg);
+			ubfx(TEMP_GPR1.XReg, TEMP_GPR2.XReg, 52, 11);
+			sub(TEMP_GPR1.WReg, TEMP_GPR1.WReg, 874);
+			cmp(TEMP_GPR1.WReg, 23);
+			blo(denormal);
+			lsr(TEMP_GPR1.XReg, TEMP_GPR2.XReg, 62);
+			ubfx(TEMP_GPR2.XReg, TEMP_GPR2.XReg, 29, 30);
+			orr(TEMP_GPR2.WReg, TEMP_GPR2.WReg, TEMP_GPR1.WReg, ShMod::LSL, 30);
+			L(done);
+			m_coldCode.emplace_back([this, denormal, done, dataDReg]() mutable
+			{
+				// scale denormals before extracting the mantissa
+				L(denormal);
+				mov(TEMP_GPR1.XReg, 0x4940000000000000ull); // 2^149
+				fmov(TEMP_FPR.DReg, TEMP_GPR1.XReg);
+				fmul(TEMP_FPR.DReg, TEMP_FPR.DReg, dataDReg);
+				fabs(TEMP_FPR.DReg, TEMP_FPR.DReg);
+				fcvtzs(TEMP_GPR1.WReg, TEMP_FPR.DReg);
+				lsr(TEMP_GPR2.XReg, TEMP_GPR2.XReg, 63);
+				orr(TEMP_GPR2.WReg, TEMP_GPR1.WReg, TEMP_GPR2.WReg, ShMod::LSL, 31);
+				b(done);
+			});
+		}
+		add_imm(TEMP_GPR1.WReg, memReg, memOffset, TEMP_GPR1.WReg);
+		if (indexed)
+			add(TEMP_GPR1.WReg, TEMP_GPR1.WReg, indexReg);
 		rev(TEMP_GPR2.WReg, TEMP_GPR2.WReg);
 		str(TEMP_GPR2.WReg, AdrExt(MEM_BASE_REG, TEMP_GPR1.WReg, ExtMod::UXTW));
 	}
@@ -1607,6 +1656,9 @@ bool PPCRecompiler_generateAArch64Code(struct PPCRecFunction_t* PPCRecFunction, 
 	{
 		return false;
 	}
+
+	for (size_t i = 0; i < aarch64GenContext.m_coldCode.size(); i++)
+		aarch64GenContext.m_coldCode[i]();
 
 	const size_t codeSize = aarch64GenContext.getSize();
 	if (!aarch64GenContext.processAllJumps())
