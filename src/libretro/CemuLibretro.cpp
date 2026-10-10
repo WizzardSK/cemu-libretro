@@ -3881,7 +3881,7 @@ RETRO_API unsigned retro_api_version()
 RETRO_API void retro_get_system_info(struct retro_system_info* info)
 {
 	info->library_name = "Cemu";
-	info->library_version = "2.6-341-g32e6628a";
+	info->library_version = "2.6-356-gaa20e2f8";
 	info->need_fullpath = true;
 	// tmd: NUS/WUP dumps are a directory of .app files next to a title.tmd,
 	// and pointing the core at that title.tmd loads the title.
@@ -5751,7 +5751,7 @@ RETRO_API bool retro_load_game(const struct retro_game_info* game)
 			s_multi = {};
 		}
 		LibretroAudioAPI::SetOutput(s_multi.batch_int16 ? 6 : 2, s_multi.batch_int16
-			? [](const int16_t* data, size_t frames, unsigned ch, unsigned layout) -> size_t {
+			? +[](const int16_t* data, size_t frames, unsigned ch, unsigned layout) -> size_t {
 				return s_audio_submission_allowed && data && frames > 0 ? s_multi.batch_int16(data, frames, ch, layout) : 0;
 			}
 			: nullptr);
