@@ -26,7 +26,10 @@
 #include "Cafe/OS/common/OSCommon.h"
 #include "Cafe/OS/RPL/rpl_structs.h"
 #include <fstream>
-#if BOOST_OS_MACOS
+#if defined(__MINGW32__)
+#include <pthread.h>
+#endif
+#if BOOST_OS_MACOS || BOOST_OS_IOS
 #include <mach/mach.h>
 #include <pthread.h>
 #endif
@@ -6504,12 +6507,20 @@ static std::string libretro_cpu_clocks()
 static int64_t libretro_thread_cpu_us(std::thread::native_handle_type h)
 {
 #if BOOST_OS_WINDOWS
+	// MSVC's std::thread handle is the thread's HANDLE; MinGW's (winpthreads)
+	// is a pthread_t, whose HANDLE winpthreads gives
+#if defined(__MINGW32__)
+	const HANDLE thread = pthread_gethandle(h);
+#else
+	const HANDLE thread = (HANDLE)h;
+#endif
 	FILETIME created, exited, kernel, user;
-	if (!GetThreadTimes((HANDLE)h, &created, &exited, &kernel, &user))
+	if (!GetThreadTimes(thread, &created, &exited, &kernel, &user))
 		return -1;
 	auto ticks = [](const FILETIME& f) { return ((int64_t)f.dwHighDateTime << 32) | f.dwLowDateTime; };
 	return (ticks(kernel) + ticks(user)) / 10;
-#elif BOOST_OS_MACOS
+#elif BOOST_OS_MACOS || BOOST_OS_IOS
+	// Apple has no pthread_getcpuclockid
 	thread_basic_info_data_t info;
 	mach_msg_type_number_t count = THREAD_BASIC_INFO_COUNT;
 	if (thread_info(pthread_mach_thread_np(h), THREAD_BASIC_INFO, (thread_info_t)&info, &count) != KERN_SUCCESS)
@@ -6538,7 +6549,7 @@ static void libretro_log_thread_time(std::chrono::steady_clock::time_point now)
 	std::vector<std::thread::native_handle_type> threads = coreinit::OSGetSchedulerThreads();
 	const size_t cores = threads.size();
 	threads.push_back(sLatteThread.native_handle());
-#if BOOST_OS_WINDOWS
+#if BOOST_OS_WINDOWS && !defined(__MINGW32__)
 	threads.push_back(GetCurrentThread());
 #else
 	threads.push_back(pthread_self());
