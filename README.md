@@ -47,7 +47,7 @@ cp cemu_libretro.info ~/.config/retroarch/info/
 
 Everything the core reads lives under `Cemu/` in RetroArch's system directory (`<system>`), except the emulated NAND, which is in the save directory.
 
-- **Keys:** `keys.txt` in `<system>/Cemu/`. Encrypted `.wud`/`.wux` images and NUS titles need it.
+- **Keys:** `keys.txt` in `<system>/Cemu/`. Encrypted `.wud`/`.wux` images and NUS titles need it; a disc image's key can also be kept beside it, with the same name and the extension `.key` (`game.wux`, `game.key`), 16 bytes or 32 hex digits.
 - **Games:** `.wua`, `.wud`, `.wux`, `.iso`, `.rpx`, `.elf`, or `title.tmd` of an unpacked NUS title.
 - **Updates and DLC:** put them in `<system>/Cemu/titles/`, one folder per update or DLC, either as downloaded (`.app`/`.h3` next to `title.tmd` and `title.tik`) or unpacked (`code`/`content`/`meta`). They are found by title id and used without being copied.
 - **Graphic packs:** the community packs are built into the core and unpacked to `<system>/Cemu/graphicPacks/` when content loads. They are refreshed whenever the core is a newer build. Your own packs can go next to them. Each pack the loaded game has shows up under **Graphic Packs** in the core options, with an Enabled switch and its presets. Changes take effect the next time the game is loaded.

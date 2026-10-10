@@ -1,4 +1,5 @@
 #include <mutex>
+#include <fstream>
 
 #include "Cemu/Logging/CemuLogging.h"
 #include "WindowSystem.h"
@@ -139,4 +140,35 @@ void KeyCache_Prepare()
 	delete fs_keys;
 	cemuLog_log(LogType::Force, "[KeyCache] KeyCache_Prepare done (lines_read={}, total_keys_loaded={})", lineNumber, (sint32)g_keyCache.size());
 	mtxKeyCache.unlock();
+}
+
+void KeyCache_AddKeyFile(const fs::path& keyPath)
+{
+	std::error_code ec;
+	if (!fs::is_regular_file(keyPath, ec))
+		return;
+	std::ifstream file(keyPath, std::ios::binary);
+	std::string data((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+	uint8 key[16];
+	if (data.size() == 16)
+		memcpy(key, data.data(), 16);
+	else
+	{
+		std::string hex;
+		for (char c : data)
+			if (!isspace((unsigned char)c))
+				hex += c;
+		if (hex.size() != 32 || !strishex(hex))
+		{
+			cemuLog_log(LogType::Force, "[KeyCache] {} is not a disc key (16 bytes, or 32 hex digits)", _pathToUtf8(keyPath));
+			return;
+		}
+		StringHelpers::ParseHexString(hex, key, 16);
+	}
+	std::lock_guard lock(mtxKeyCache);
+	for (const auto& entry : g_keyCache)
+		if (memcmp(entry.aes128key, key, 16) == 0)
+			return;
+	KeyCache_AddKey128(key);
+	cemuLog_log(LogType::Force, "[KeyCache] disc key added from {}", _pathToUtf8(keyPath));
 }

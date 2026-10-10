@@ -213,6 +213,8 @@ bool FSTVolume::FindDiscKey(const fs::path& path, NCrypto::AesKey& discTitleKey,
 	if (imageOpened)
 		*imageOpened = true;
 
+	// a key beside the image (<image name>.key) joins the key cache first
+	KeyCache_AddKeyFile(fs::path(path).replace_extension(".key"));
 	// try all the keys in the key cache
 	uint8 headerDecrypted[sizeof(header)-16];
 	sint32 triedKeys = 0;

@@ -4802,6 +4802,14 @@ static void libretro_install_titles(std::vector<TitleInfo> found, bool removeSou
 	// A disc image or .wua goes only when every title it holds is installed:
 	// Install Content takes the update and DLC out of a .wua that holds the
 	// game as well, and that one stays
+	// A disc image's key file beside it (<image>.key) is part of it: it goes
+	// with the image, and only then (Shoegzer, #30)
+	auto keyBeside = [](const fs::path& image) {
+		fs::path key = image;
+		key.replace_extension(".key");
+		std::error_code ec;
+		return key != image && fs::is_regular_file(key, ec) ? key : fs::path();
+	};
 	for (const auto& [archive, doneIds] : archives)
 	{
 		bool all = true;
@@ -4815,12 +4823,20 @@ static void libretro_install_titles(std::vector<TitleInfo> found, bool removeSou
 		if (haveRunning && _utf8ToPath(s_game_path).lexically_normal() == archive.lexically_normal())
 		{
 			libretro_remove_on_unload(archive);
+			if (const fs::path key = keyBeside(archive); !key.empty())
+				libretro_remove_on_unload(key);
 			deferred++;
 			continue;
 		}
+		const fs::path key = keyBeside(archive);
 		std::error_code ec;
 		fs::remove(archive, ec);
 		cemuLog_log(LogType::Force, "install: removed {}{}", _pathToUtf8(archive), ec ? " (" + ec.message() + ")" : "");
+		if (!key.empty() && !ec)
+		{
+			fs::remove(key, ec);
+			cemuLog_log(LogType::Force, "install: removed {}{}", _pathToUtf8(key), ec ? " (" + ec.message() + ")" : "");
+		}
 	}
 
 	// So the title list knows the installed copies, without waiting for
@@ -5616,8 +5632,8 @@ static bool libretro_disc_key_available(const fs::path& gamePath)
 
 	const fs::path keysPath = ActiveSettings::GetUserDataPath("keys.txt");
 	libretro_show_message(RETRO_LOG_ERROR, 8000,
-		fmt::format("No disc key for {}. Add its key to {}",
-			_pathToUtf8(gamePath.filename()), _pathToUtf8(keysPath)));
+		fmt::format("No disc key for {}. Put it beside the image as {}, or add it to {}",
+			_pathToUtf8(gamePath.filename()), _pathToUtf8(fs::path(gamePath.filename()).replace_extension(".key")), _pathToUtf8(keysPath)));
 	return false;
 }
 
