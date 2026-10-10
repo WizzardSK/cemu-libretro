@@ -97,6 +97,10 @@ extern void glReadPixels(int x, int y, int width, int height, unsigned int forma
 #endif
 
 #include <mutex>
+#if defined(__linux__)
+#include <sched.h>
+#include <unistd.h>
+#endif
 #include <condition_variable>
 #include <atomic>
 
@@ -2468,6 +2472,11 @@ static void libretro_apply_profile_options()
 	// Set through the variable rather than the profile: gameProfile_load is what
 	// copies the profile's quantum into it, and that has already happened by the
 	// time this runs.
+	if (const char* v = libretro_get_option_value("cemu_fast_cores"))
+	{
+		extern bool g_libretroFastCores;
+		g_libretroFastCores = !libretro_iequals(v, "disabled");
+	}
 	if (const char* v = libretro_get_option_value("cemu_thread_quantum"))
 	{
 		const int quantum = atoi(v);
@@ -2578,6 +2587,86 @@ static std::string libretro_account_label(const Account& account)
 static bool libretro_account_removable(uint32 persistentId)
 {
 	return persistentId != s_pending_account && persistentId != GetConfig().account.m_persistent_id;
+}
+
+// cemu_fast_cores: the emulated CPU cores and the GPU thread on the CPU's fast
+// cores. A phone mixes slow (efficiency) and fast cores, and the system is free
+// to run any thread on a slow one; the threads that hold a frame up are pinned
+// to the cores whose maximum frequency is above the slowest cluster's. Each
+// thread pins itself when it starts (OSSchedulerCoreEmulationThread,
+// Latte_ThreadEntry). A CPU whose cores are all alike is left alone.
+// Only as many threads as there are fast cores are pinned, in order of rank
+// (0 the GPU thread, 1 PPC core 1 - the game's main thread, 2 PPC core 0,
+// 3 PPC core 2); the others stay free to run anywhere. Four busy threads held
+// to a phone's two fast cores ran slower than with no pinning at all
+// (sco8487's Deus Ex on cores 6 and 7, 9 fps where it had been smoother).
+bool g_libretroFastCores = true;
+
+void LibretroPinToFastCores(const char* who, int rank)
+{
+#if defined(__linux__)
+	if (!g_libretroFastCores)
+		return;
+	static std::once_flag s_once;
+	static cpu_set_t s_fast;
+	static bool s_heterogeneous = false;
+	static int s_fastCount = 0;
+	std::call_once(s_once, []() {
+		CPU_ZERO(&s_fast);
+		const long count = sysconf(_SC_NPROCESSORS_CONF);
+		std::vector<long> freq;
+		for (long i = 0; i < count && i < CPU_SETSIZE; i++)
+		{
+			long f = 0;
+			if (FILE* file = fopen(fmt::format("/sys/devices/system/cpu/cpu{}/cpufreq/cpuinfo_max_freq", i).c_str(), "r"))
+			{
+				if (fscanf(file, "%ld", &f) != 1)
+					f = 0;
+				fclose(file);
+			}
+			freq.push_back(f);
+		}
+		long lo = 0, hi = 0;
+		for (long f : freq)
+		{
+			if (f <= 0)
+				continue;
+			lo = lo ? std::min(lo, f) : f;
+			hi = std::max(hi, f);
+		}
+		if (lo == 0 || lo == hi)
+		{
+			cemuLog_log(LogType::Force, "[libretro] performance cores: all cores alike, threads left to the system");
+			return;
+		}
+		std::string list;
+		for (size_t i = 0; i < freq.size(); i++)
+		{
+			if (freq[i] > lo)
+			{
+				CPU_SET(i, &s_fast);
+				s_fastCount++;
+				list += fmt::format("{}{} ({} MHz)", list.empty() ? "" : ", ", i, freq[i] / 1000);
+			}
+		}
+		s_heterogeneous = true;
+		cemuLog_log(LogType::Force, "[libretro] performance cores: {}; the slowest cores run at {} MHz", list, lo / 1000);
+	});
+	if (!s_heterogeneous)
+		return;
+	if (rank >= s_fastCount)
+	{
+		cemuLog_log(LogType::Force, "[libretro] {} left to the system: {} fast cores, taken by the threads before it", who, s_fastCount);
+		return;
+	}
+	if (sched_setaffinity(0, sizeof(s_fast), &s_fast) == 0)
+		cemuLog_log(LogType::Force, "[libretro] {} pinned to the performance cores", who);
+	else
+		cemuLog_log(LogType::Force, "[libretro] {} could not be pinned to the performance cores (errno {})", who, errno);
+#else
+	(void)who;
+	(void)rank;
+#endif
 }
 
 // cemu_log_thread_time; the logging itself is further down, next to retro_run.

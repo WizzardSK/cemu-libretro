@@ -250,6 +250,20 @@ struct retro_core_option_v2_definition option_defs_us[] = {
 		"45000"
 	},
 	{
+		"cemu_fast_cores",
+		"Use Performance Cores",
+		NULL,
+		"On a CPU with slow and fast cores (most phones), keeps the emulated Wii U CPU cores and the GPU thread on the fast ones, so the system cannot move them to an efficiency core. Auto does it only on such a CPU; Linux and Android only.",
+		NULL,
+		"system",
+		{
+			{ "auto", "Auto" },
+			{ "disabled", NULL },
+			{ NULL, NULL },
+		},
+		"auto"
+	},
+	{
 		"cemu_rumble_strength",
 		"Rumble Strength",
 		NULL,
