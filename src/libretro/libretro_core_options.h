@@ -87,6 +87,20 @@ struct retro_core_option_v2_definition option_defs_us[] = {
 		"auto"
 	},
 	{
+		"cemu_gamepad_motion",
+		"GamePad Motion",
+		NULL,
+		"The GamePad's gyroscope and accelerometer from the sensors RetroArch reads on port 1: a phone's or tablet's own, or a controller's where RetroArch's input driver gives them (DualShock 4, DualSense and others through SDL). Games aiming or steering by tilting the GamePad need it. Off: the GamePad lies still, as with standalone's motion turned off.",
+		NULL,
+		"system",
+		{
+			{ "disabled", "Disabled" },
+			{ "enabled", "Enabled" },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
 		"cemu_audio_channels",
 		"Audio Channels (Restart)",
 		NULL,

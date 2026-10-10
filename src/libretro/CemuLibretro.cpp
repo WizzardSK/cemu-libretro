@@ -99,6 +99,7 @@ extern void glReadPixels(int x, int y, int width, int height, unsigned int forma
 #endif
 
 #include <mutex>
+#include "input/motion/MotionHandler.h"
 #include <condition_variable>
 #include <atomic>
 
@@ -1541,6 +1542,84 @@ struct LibretroPortState
 
 static LibretroPortState s_port_state[kLibretroMaxPorts];
 
+// GamePad Motion: RetroArch's sensors on port 1 (a phone's own, or a
+// controller's through the input driver), turned into the GamePad's motion
+// as upstream turns SDL's controller sensors into it. Sampled in retro_run;
+// the guest reads the latest sample.
+static retro_sensor_interface s_sensor_interface{};
+static bool s_motion_active = false;
+static WiiUMotionHandler s_motion_handler;
+static MotionSample s_motion_sample;
+static std::mutex s_motion_mutex;
+static std::chrono::steady_clock::time_point s_motion_last{};
+
+static void libretro_set_motion(bool want)
+{
+	if (s_motion_active && !want && s_sensor_interface.set_sensor_state)
+	{
+		s_sensor_interface.set_sensor_state(0, RETRO_SENSOR_ACCELEROMETER_DISABLE, 0);
+		s_sensor_interface.set_sensor_state(0, RETRO_SENSOR_GYROSCOPE_DISABLE, 0);
+	}
+	if (want && !s_motion_active)
+	{
+		s_sensor_interface = {};
+		const bool got = environ_cb(RETRO_ENVIRONMENT_GET_SENSOR_INTERFACE, &s_sensor_interface) &&
+			s_sensor_interface.set_sensor_state && s_sensor_interface.get_sensor_input;
+		const bool acc = got && s_sensor_interface.set_sensor_state(0, RETRO_SENSOR_ACCELEROMETER_ENABLE, 200);
+		const bool gyro = got && s_sensor_interface.set_sensor_state(0, RETRO_SENSOR_GYROSCOPE_ENABLE, 200);
+		s_motion_active = acc && gyro;
+		libretro_log(s_motion_active ? RETRO_LOG_INFO : RETRO_LOG_WARN,
+			"GamePad Motion: %s (sensor interface %s, accelerometer %s, gyroscope %s)\n",
+			s_motion_active ? "on" : "unavailable", got ? "yes" : "no", acc ? "yes" : "no", gyro ? "yes" : "no");
+		if (!s_motion_active && got)
+		{
+			s_sensor_interface.set_sensor_state(0, RETRO_SENSOR_ACCELEROMETER_DISABLE, 0);
+			s_sensor_interface.set_sensor_state(0, RETRO_SENSOR_GYROSCOPE_DISABLE, 0);
+		}
+		std::lock_guard<std::mutex> lock(s_motion_mutex);
+		s_motion_handler = {};
+		s_motion_sample = {};
+		s_motion_last = {};
+		return;
+	}
+	if (!want)
+		s_motion_active = false;
+}
+
+static void libretro_poll_motion()
+{
+	if (!s_motion_active)
+		return;
+	// libretro's axes are Android's - x right, y up, z towards the user, the
+	// accelerometer in g, the gyroscope in rad/s counter-clockwise - which are
+	// SDL's for a controller too, so the conversion is upstream's for SDL
+	auto get = [](unsigned id) { return s_sensor_interface.get_sensor_input(0, id); };
+	const float ax = get(RETRO_SENSOR_ACCELEROMETER_X), ay = get(RETRO_SENSOR_ACCELEROMETER_Y),
+		az = get(RETRO_SENSOR_ACCELEROMETER_Z);
+	const float gx = get(RETRO_SENSOR_GYROSCOPE_X), gy = get(RETRO_SENSOR_GYROSCOPE_Y),
+		gz = get(RETRO_SENSOR_GYROSCOPE_Z);
+	const auto now = std::chrono::steady_clock::now();
+	std::lock_guard<std::mutex> lock(s_motion_mutex);
+	const float dt = s_motion_last == std::chrono::steady_clock::time_point{}
+		? 1.0f / 60.0f
+		: std::chrono::duration<float>(now - s_motion_last).count();
+	s_motion_last = now;
+	s_motion_handler.processMotionSample(std::clamp(dt, 0.0001f, 0.25f),
+		gx, -gy, -gz, -ax, ay, az);
+	s_motion_sample = s_motion_handler.getMotionSample();
+}
+
+// For vpad.cpp: the GamePad's motion, false when GamePad Motion is off or
+// the frontend has no sensors
+bool libretro_get_gamepad_motion(MotionSample& out)
+{
+	if (!s_motion_active)
+		return false;
+	std::lock_guard<std::mutex> lock(s_motion_mutex);
+	out = s_motion_sample;
+	return true;
+}
+
 // ---- Rumble ----------------------------------------------------------------
 //
 // Through the frontend's rumble interface, from retro_run, only when a port's
@@ -2898,6 +2977,10 @@ static void libretro_apply_core_options()
 		else if (libretro_iequals(v, "surround")) cfg.tv_channels = kSurround;
 		else cfg.tv_channels = kStereo;
 	}
+
+	// GamePad Motion, on or off as the option changes
+	if (const char* v = libretro_get_option_value("cemu_gamepad_motion"))
+		libretro_set_motion(libretro_iequals(v, "enabled"));
 
 	// Console language
 	if (const char* v = libretro_get_option_value("cemu_console_language"))
@@ -5940,6 +6023,7 @@ static void libretro_stop_system_services()
 
 RETRO_API void retro_unload_game()
 {
+	libretro_set_motion(false);
 	// The next content takes the output size afresh from the option.
 	s_out_size_taken = false;
 	libretro_reset_install_switches();
@@ -6193,6 +6277,8 @@ static void libretro_poll_input()
 	input_poll_cb();
 
 	s_layout_combo_held_this_frame = false;
+
+	libretro_poll_motion();
 
 	// Raw pad state for the ports that drive something, for the Wii Remotes
 	// behind InputManager - and for the GamePad below, which is built from

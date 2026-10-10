@@ -1,3 +1,4 @@
+#include "input/motion/MotionSample.h"
 #include "Cafe/OS/common/OSCommon.h"
 #include "Cafe/HW/Espresso/PPCCallback.h"
 #include "Cafe/OS/libs/vpad/vpad.h"
@@ -127,6 +128,7 @@ extern bool libretro_get_touch_state(uint16_t* x, uint16_t* y);
 extern bool libretro_vpad_rumble_push(const uint8* pattern, uint8 length);
 extern void libretro_vpad_rumble_clear();
 extern bool libretro_gamepad_on_port1();
+extern bool libretro_get_gamepad_motion(MotionSample& out);
 
 namespace vpad
 {
@@ -303,6 +305,40 @@ namespace vpad
 			status->leftStick.y = ly;
 			status->rightStick.x = rx;
 			status->rightStick.y = ry;
+
+			// GamePad Motion, filled as VPADController::update_motion does
+			MotionSample motion;
+			if (libretro_get_gamepad_motion(motion))
+			{
+				glm::vec3 acc;
+				motion.getVPADAccelerometer(&acc[0]);
+				status->acc.x = acc.x;
+				status->acc.y = acc.y;
+				status->acc.z = acc.z;
+				status->accMagnitude = motion.getVPADAccMagnitude();
+				status->accAcceleration = motion.getVPADAccAcceleration();
+				glm::vec3 gyroChange;
+				motion.getVPADGyroChange(&gyroChange[0]);
+				status->gyroChange.x = gyroChange.x;
+				status->gyroChange.y = gyroChange.y;
+				status->gyroChange.z = gyroChange.z;
+				glm::vec3 gyroOrientation;
+				motion.getVPADOrientation(&gyroOrientation[0]);
+				status->gyroOrientation.x = gyroOrientation.x;
+				status->gyroOrientation.y = gyroOrientation.y;
+				status->gyroOrientation.z = gyroOrientation.z;
+				float attitude[9];
+				motion.getVPADAttitudeMatrix(attitude);
+				status->dir.x.x = attitude[0];
+				status->dir.x.y = attitude[1];
+				status->dir.x.z = attitude[2];
+				status->dir.y.x = attitude[3];
+				status->dir.y.y = attitude[4];
+				status->dir.y.z = attitude[5];
+				status->dir.z.x = attitude[6];
+				status->dir.z.y = attitude[7];
+				status->dir.z.z = attitude[8];
+			}
 
 			if (error)
 				*error = VPAD_READ_ERR_NONE;
