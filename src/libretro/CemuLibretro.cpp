@@ -5668,7 +5668,7 @@ RETRO_API bool retro_load_game(const struct retro_game_info* game)
 			s_multi = {};
 		}
 		LibretroAudioAPI::SetOutput(s_multi.batch_int16 ? 6 : 2, s_multi.batch_int16
-			? [](const int16_t* data, size_t frames, unsigned ch, unsigned layout) -> size_t {
+			? +[](const int16_t* data, size_t frames, unsigned ch, unsigned layout) -> size_t {
 				return s_audio_submission_allowed && data && frames > 0 ? s_multi.batch_int16(data, frames, ch, layout) : 0;
 			}
 			: nullptr);
