@@ -53,6 +53,7 @@ Everything the core reads lives under `Cemu/` in RetroArch's system directory (`
 - **Graphic packs:** the community packs are built into the core and unpacked to `<system>/Cemu/graphicPacks/` when content loads. They are refreshed whenever the core is a newer build. Your own packs can go next to them. Each pack the loaded game has shows up under **Graphic Packs** in the core options, with an Enabled switch and its presets. Changes take effect the next time the game is loaded.
 - **Shared fonts:** `CafeStd.ttf`, `CafeCn.ttf`, `CafeKr.ttf` and `CafeTw.ttf` in `<system>/Cemu/resources/sharedFonts/`. Games need them for Japanese and other CJK text.
 - **NAND (mlc01):** `<save>/Cemu/mlc01/`, created with the default folders on first start, as standalone Cemu does.
+- **Account name:** a core option cannot hold free text, so the active account (**Accounts → Active Account**) takes its name from the first line of `<system>/Cemu/account_name.txt`, up to the console's ten characters, each time a title starts. Without the file the name is left as it is.
 - **Logs:** `<system>/Cemu/log.txt`. Its first lines name the build it came from, so please attach it, with the RetroArch log, to bug reports.
 
 ## Controls
