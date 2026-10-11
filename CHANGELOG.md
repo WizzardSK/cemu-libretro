@@ -10,6 +10,7 @@ What changed in the libretro core of this fork, newest first. Changes that come 
 
 ### Sound and pads
 
+- GamePad Motion option (System, off by default as in standalone): the GamePad's gyroscope and accelerometer come from the sensors RetroArch reads on port 1, for games that aim or steer by tilting the GamePad. On Linux with the udev controller driver, a DualSense or DualShock 4 needs its motion sensors device made readable; the README has the rule (tested by Shoegzer, Splatoon with a DualSense).
 - Audio Channels (System): Mono, Stereo or Surround 5.1 - what the console reports for the TV and AX mixes for. 5.1 goes to RetroArch's multi-channel output.
 - Rumble through RetroArch's rumble interface, and a Pro Controller on port 1.
 
