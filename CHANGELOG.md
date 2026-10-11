@@ -23,7 +23,7 @@ What changed in the libretro core of this fork, newest first. Changes that come 
 
 ### Games and content
 
-- The active account can be named: the first line of `system/Cemu/account_name.txt`, up to ten characters, is given to the account a title starts with (Shoegzer #28, NNshi).
+- The active account can be named: the first line of `system/Cemu/account_name.txt`, up to ten characters, is given to the account a title starts with, and the account lists in the options show it (Shoegzer #28, NNshi).
 - Manage Content: Install Game and Uninstall Game, for the running game, into mlc01. Updates and DLC are installed from `system/Cemu/titles`, and installed content can be removed.
 - Disc images have their keys beside them (`<image>.key`).
 - Graphic packs: an Enabled switch per pack, with preset groups shown as standalone does.

@@ -4615,6 +4615,9 @@ static void libretro_apply_account_name_file()
 	else
 	{
 		Account::RefreshAccounts();
+		// the account lists of the options show names: declared again, or
+		// they kept the old one until the core was next loaded (Shoegzer)
+		libretro_publish_core_options(environ_cb);
 		libretro_log(RETRO_LOG_INFO, "account %08x named from account_name.txt\n", persistentId);
 	}
 }
