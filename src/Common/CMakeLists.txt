@@ -74,7 +74,9 @@ target_link_libraries(CemuCommon PRIVATE
 # Android and webOS are UNIX to CMake but have no X11 - see the find_package()
 # guard in the top-level CMakeLists, which already skips both.
 if (UNIX AND NOT APPLE AND NOT ANDROID AND NOT WEBOS)
-	target_link_libraries(CemuCommon PRIVATE X11::X11 X11::Xrender X11::Xutil)
+	# Xlib's headers only (platform.h includes them): the core calls nothing
+	# of libX11's and does not link it
+	target_include_directories(CemuCommon PRIVATE ${X11_INCLUDE_DIR})
 endif()
 
 # PUBLIC because:

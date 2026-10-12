@@ -85,10 +85,15 @@
 #include "LibretroVkQueue.h"
 #include "libretro_core_options.h"
 
-// GL function needed for framebuffer readback (glBindFramebuffer is in Cemu's glext.h)
+// GL function needed for framebuffer readback (glBindFramebuffer is in Cemu's glext.h).
+// Through the frontend's GL like the rest, not by name: the core links no libGL.
 #ifdef ENABLE_OPENGL
-extern "C" {
-extern void glReadPixels(int x, int y, int width, int height, unsigned int format, unsigned int type, void* pixels);
+static void* cemu_gl_get_proc(const char* name);
+static void lr_glReadPixels(int x, int y, int width, int height, unsigned int format, unsigned int type, void* pixels)
+{
+	static const auto f = (void (*)(int, int, int, int, unsigned int, unsigned int, void*))cemu_gl_get_proc("glReadPixels");
+	if (f)
+		f(x, y, width, height, format, type, pixels);
 }
 #endif
 #ifndef GL_BGRA
@@ -137,7 +142,67 @@ static HGLRC s_wgl_shared_context = nullptr;
 #endif // __ANDROID__
 #include <dlfcn.h>
 
-// EGL fallback for Wayland sessions: RetroArch uses EGL there, so glXGetCurrentContext()
+#ifndef __ANDROID__
+// GLX and Xlib are not linked into the core: with libGL and libX11 among its
+// libraries it would not load on a system without X11, and the frontend owns
+// the window anyway. When the frontend's context is a GLX one, its libGL and
+// libX11 are in the process, and their functions are found at run time; when
+// they are not found there is no GLX context to share, which is what these
+// answer.
+template<typename F>
+static F lr_x11_symbol(const char* name)
+{
+	return (F)dlsym(RTLD_DEFAULT, name);
+}
+static __GLXextFuncPtr lr_glXGetProcAddress(const GLubyte* name)
+{
+	static auto f = lr_x11_symbol<__GLXextFuncPtr (*)(const GLubyte*)>("glXGetProcAddress");
+	return f ? f(name) : nullptr;
+}
+static int lr_glXMakeCurrent(Display* display, GLXDrawable drawable, GLXContext context)
+{
+	static auto f = lr_x11_symbol<int (*)(Display*, GLXDrawable, GLXContext)>("glXMakeCurrent");
+	return f ? f(display, drawable, context) : 0;
+}
+static GLXContext lr_glXGetCurrentContext()
+{
+	static auto f = lr_x11_symbol<GLXContext (*)()>("glXGetCurrentContext");
+	return f ? f() : nullptr;
+}
+static Display* lr_glXGetCurrentDisplay()
+{
+	static auto f = lr_x11_symbol<Display* (*)()>("glXGetCurrentDisplay");
+	return f ? f() : nullptr;
+}
+static GLXDrawable lr_glXGetCurrentDrawable()
+{
+	static auto f = lr_x11_symbol<GLXDrawable (*)()>("glXGetCurrentDrawable");
+	return f ? f() : 0;
+}
+static int lr_glXQueryContext(Display* display, GLXContext context, int attribute, int* value)
+{
+	static auto f = lr_x11_symbol<int (*)(Display*, GLXContext, int, int*)>("glXQueryContext");
+	return f ? f(display, context, attribute, value) : 1 /* GLX_BAD_SCREEN: not Success */;
+}
+static GLXFBConfig* lr_glXGetFBConfigs(Display* display, int screen, int* count)
+{
+	static auto f = lr_x11_symbol<GLXFBConfig* (*)(Display*, int, int*)>("glXGetFBConfigs");
+	return f ? f(display, screen, count) : nullptr;
+}
+static int lr_glXGetFBConfigAttrib(Display* display, GLXFBConfig config, int attribute, int* value)
+{
+	static auto f = lr_x11_symbol<int (*)(Display*, GLXFBConfig, int, int*)>("glXGetFBConfigAttrib");
+	return f ? f(display, config, attribute, value) : 1;
+}
+static void lr_XFree(void* data)
+{
+	static auto f = lr_x11_symbol<int (*)(void*)>("XFree");
+	if (f)
+		f(data);
+}
+#endif // __ANDROID__
+
+// EGL fallback for Wayland sessions: RetroArch uses EGL there, so lr_glXGetCurrentContext()
 // returns NULL and the GLX path can't grab the frontend context.
 #include <EGL/egl.h>
 #ifndef EGL_CONTEXT_MAJOR_VERSION
@@ -227,7 +292,7 @@ static void* cemu_gl_get_proc(const char* name)
 	// No GLX; eglGetProcAddress covers both core and extension entry points here.
 	return (void*)eglGetProcAddress(name);
 #else
-	return (void*)glXGetProcAddress((const GLubyte*)name);
+	return (void*)lr_glXGetProcAddress((const GLubyte*)name);
 #endif
 }
 #endif // ENABLE_OPENGL
@@ -1452,7 +1517,7 @@ public:
 #ifndef __ANDROID__
 		else if (s_glx_shared_context && s_glx_display && s_glx_drawable && !s_gpu_context_made_current)
 		{
-			int result = glXMakeCurrent(s_glx_display, s_glx_drawable, s_glx_shared_context);
+			int result = lr_glXMakeCurrent(s_glx_display, s_glx_drawable, s_glx_shared_context);
 			if (result)
 			{
 				s_gpu_context_made_current = true;
@@ -1491,7 +1556,7 @@ public:
 				if (s_framebuffer.size() != (size_t)width * height)
 					s_framebuffer.resize((size_t)width * height);
 				glBindFramebuffer(GL_READ_FRAMEBUFFER_EXT, fbo);
-				glReadPixels(0, 0, width, height, GL_BGRA, GL_UNSIGNED_BYTE, s_framebuffer.data());
+				lr_glReadPixels(0, 0, width, height, GL_BGRA, GL_UNSIGNED_BYTE, s_framebuffer.data());
 				s_gl_frame_width = width;
 				s_gl_frame_height = height;
 			}
@@ -5283,15 +5348,15 @@ static void libretro_create_shared_gl_context()
 	return;
 #else
 	// Capture the frontend's GL context. Prefer GLX (X11); on Wayland the frontend
-	// runs on EGL and glXGetCurrentContext() returns NULL, so fall back to EGL.
-	s_glx_frontend_context = glXGetCurrentContext();
+	// runs on EGL and lr_glXGetCurrentContext() returns NULL, so fall back to EGL.
+	s_glx_frontend_context = lr_glXGetCurrentContext();
 	if (!s_glx_frontend_context)
 	{
 		libretro_create_shared_egl_context();
 		return;
 	}
-	s_glx_display = glXGetCurrentDisplay();
-	s_glx_drawable = glXGetCurrentDrawable();
+	s_glx_display = lr_glXGetCurrentDisplay();
+	s_glx_drawable = lr_glXGetCurrentDrawable();
 
 	if (!s_glx_display)
 	{
@@ -5320,11 +5385,11 @@ static void libretro_create_shared_gl_context()
 
 	// Get the FBConfig ID from the frontend's current context
 	int fbconfig_id = 0;
-	glXQueryContext(s_glx_display, s_glx_frontend_context, GLX_FBCONFIG_ID, &fbconfig_id);
+	lr_glXQueryContext(s_glx_display, s_glx_frontend_context, GLX_FBCONFIG_ID, &fbconfig_id);
 
 	// Find matching FBConfig
 	int nelements = 0;
-	GLXFBConfig* configs = glXGetFBConfigs(s_glx_display, screenNum, &nelements);
+	GLXFBConfig* configs = lr_glXGetFBConfigs(s_glx_display, screenNum, &nelements);
 	if (!configs || nelements == 0)
 	{
 		libretro_log(RETRO_LOG_ERROR, "No GLX FBConfigs available\n");
@@ -5335,7 +5400,7 @@ static void libretro_create_shared_gl_context()
 	for (int i = 0; i < nelements; i++)
 	{
 		int id = 0;
-		glXGetFBConfigAttrib(s_glx_display, configs[i], GLX_FBCONFIG_ID, &id);
+		lr_glXGetFBConfigAttrib(s_glx_display, configs[i], GLX_FBCONFIG_ID, &id);
 		if (id == fbconfig_id)
 		{
 			chosen_config = configs[i];
@@ -5354,7 +5419,7 @@ static void libretro_create_shared_gl_context()
 	s_glx_shared_context = _glXCreateContextAttribsARB(
 		s_glx_display, chosen_config, s_glx_frontend_context, 1 /*direct*/, context_attribs);
 
-	XFree(configs);
+	lr_XFree(configs);
 
 	if (s_glx_shared_context)
 	{
@@ -5512,8 +5577,8 @@ static void libretro_context_reset()
 		{
 			// A context after a context - see the WGL branch above. Update the
 			// drawable for MakeCurrent.
-			s_glx_display = glXGetCurrentDisplay();
-			s_glx_drawable = glXGetCurrentDrawable();
+			s_glx_display = lr_glXGetCurrentDisplay();
+			s_glx_drawable = lr_glXGetCurrentDrawable();
 			s_gpu_context_made_current = false;
 			cemuLog_log(LogType::Force, "[libretro] a context came back with a shared GLX context still here - the rebuild path");
 			libretro_log(RETRO_LOG_INFO, "Context restored, updating drawable=0x%lx\n",

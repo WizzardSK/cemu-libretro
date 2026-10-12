@@ -168,7 +168,10 @@ if(ENABLE_LIBRETRO)
 			# either - ENABLE_OPENGL is off here, and the EGL/GLX code in
 			# CemuLibretro.cpp is all behind it. Vulkan is loaded at run time.
 		else()
-			target_link_libraries(cemu_libretro PRIVATE GL EGL X11)
+			# EGL alone. No libGL and no libX11: GL's functions are loaded
+			# by the renderer, GLX's and Xlib's are found at run time
+			# (CemuLibretro.cpp), so the core loads without X11.
+			target_link_libraries(cemu_libretro PRIVATE EGL)
 		endif()
 		# Force all CemuResource symbols (imgui needs fontawesome from resource archive)
 		target_link_options(cemu_libretro PRIVATE "LINKER:--whole-archive" $<TARGET_FILE:CemuResource> "LINKER:--no-whole-archive")

@@ -30,6 +30,7 @@ What changed in the libretro core of this fork, newest first. Changes that come 
 
 ### Stability
 
+- Linux: the core no longer links libGL and libX11, so it loads on a system without X11. The GLX functions it shares RetroArch's OpenGL context with on an X11 session are found at run time, in RetroArch's own libraries.
 - RetroArch can unload the core: the audio API and the graphic pack loading run on joined threads, the GPU thread ends properly on Windows, and unloaded modules are forgotten by the graphic packs, padscore and the DLC list.
 
 ### Options and logging
