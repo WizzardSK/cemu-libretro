@@ -2742,6 +2742,8 @@ static bool libretro_account_removable(uint32 persistentId)
 // cemu_log_thread_time; the logging itself is further down, next to retro_run.
 static bool s_log_thread_time = false;
 
+static void libretro_apply_account_name_file();
+
 static void libretro_apply_core_options()
 {
 	libretro_handle_install_requests();
@@ -2766,6 +2768,7 @@ static void libretro_apply_core_options()
 			}
 		}
 		Account::RefreshAccounts();
+		libretro_apply_account_name_file();
 		libretro_publish_core_options(environ_cb);
 		libretro_set_option_value("cemu_account", fmt::format("{:08x}", persistentId).c_str());
 		libretro_set_option_value("cemu_create_account", "disabled");
@@ -2821,6 +2824,9 @@ static void libretro_apply_core_options()
 			}
 			libretro_log(RETRO_LOG_INFO, "removed the save data of account %08x in %d titles\n", persistentId, removedSaves);
 			Account::RefreshAccounts();
+			// its line leaves account_name.txt now, not at the next title
+			// start (Shoegzer: removed an account, closed, the line was there)
+			libretro_apply_account_name_file();
 		}
 		libretro_publish_core_options(environ_cb);
 		libretro_set_option_value("cemu_remove_account", "disabled");
@@ -4653,8 +4659,9 @@ static void libretro_rescan_titles()
 
 // Account names from a text file, as a core option cannot hold free text
 // (NNshi): system/Cemu/account_name.txt has a line per account,
-// "<persistent id> = <name>", and each time a title starts the accounts take
-// their names from it, up to the console's ten characters. The core writes
+// "<persistent id> = <name>", and each time a title starts, or an account is
+// made or removed, the accounts take their names from it, up to the console's
+// ten characters. The core writes
 // the file itself, with every account there is, so the ids need not be looked
 // up (Shoegzer). A line that is a name alone, the file's earlier form, names
 // the account the title starts with.
@@ -4719,7 +4726,7 @@ static void libretro_apply_account_name_file()
 	std::string listing =
 		"# Account names. One line per account: <id> = <name>, the name up to ten characters.\n"
 		"# Change a name here and the account has it the next time a game starts.\n"
-		"# This file is written again at each start with the accounts there are.\n";
+		"# This file is written again at each start, and when an account is made or removed.\n";
 	for (const Account& account : Account::RefreshAccounts())
 		listing += fmt::format("{:08x} = {}\n", account.GetPersistentId(), boost::nowide::narrow(std::wstring(account.GetMiiName())));
 	if (listing != original)
