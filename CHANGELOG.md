@@ -23,6 +23,7 @@ What changed in the libretro core of this fork, newest first. Changes that come 
 
 ### Games and content
 
+- New option Accounts > Rename Active Account: the account's name is entered inside the core, with a pad (Up and Down change the last character, Right adds one, Left removes one, Start accepts, Select cancels) or a keyboard, and shown as the frontend's status message while it is typed. `account_name.txt` is written with the new name. It needs the frontend's on-screen notifications on (Shoegzer, #28).
 - Accounts can be named: `system/Cemu/account_name.txt` has a line per account, `<id> = <name>`, up to ten characters; the core writes the file with the accounts there are (at each title start and when an account is made or removed), each takes its name from it when a title starts, and the account lists in the options show it (Shoegzer #28, NNshi).
 - Manage Content: Install Game and Uninstall Game, for the running game, into mlc01. Updates and DLC are installed from `system/Cemu/titles`, and installed content can be removed.
 - Disc images have their keys beside them (`<image>.key`).

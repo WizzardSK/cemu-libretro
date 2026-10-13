@@ -643,7 +643,21 @@ struct retro_core_option_v2_definition option_defs_us[] = {
 		"cemu_create_account",
 		"Create Account",
 		NULL,
-		"Creates a new account, named Player 2, Player 3 and so on, and makes it the Active Account. Then this goes back to OFF. The console holds up to 12 accounts.",
+		"Creates a new account, named Player 2, Player 3 and so on, and makes it the active account. Then this returns to OFF. The new account appears in the list of accounts once this menu has been exited and opened again. The console holds up to 12 accounts.",
+		NULL,
+		"accounts",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_rename_account",
+		"Rename Active Account",
+		NULL,
+		"Opens the name entry for the active account when this menu is exited, and returns to OFF. The name so far is shown as a notification over the game, so the frontend's on-screen notifications have to be on.\n\nWith a pad: Up and Down change the last character, Right adds one, Left removes one, Start accepts, Select cancels.\n\nWith a keyboard: type, Backspace removes, Enter accepts, Escape cancels (the frontend may need Game Focus on to pass keys to the core).\n\nA name has up to 10 characters. The game gets no input until the entry is closed, and a running game shows the new name once it is started again.",
 		NULL,
 		"accounts",
 		{

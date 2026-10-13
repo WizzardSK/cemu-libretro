@@ -2721,6 +2721,7 @@ static void libretro_publish_core_options(retro_environment_t cb, bool withRepla
 
 // The account picked in the options, for the next title start; 0 for none.
 static uint32 s_pending_account = 0;
+static std::atomic_bool s_name_entry_requested{false};
 
 // An account as the lists show it: its name and persistent id. The first
 // account Cemu creates is named "default"; it is shown as Default.
@@ -2742,7 +2743,7 @@ static bool libretro_account_removable(uint32 persistentId)
 // cemu_log_thread_time; the logging itself is further down, next to retro_run.
 static bool s_log_thread_time = false;
 
-static void libretro_apply_account_name_file();
+static void libretro_apply_account_name_file(bool readNames);
 
 static void libretro_apply_core_options()
 {
@@ -2768,7 +2769,7 @@ static void libretro_apply_core_options()
 			}
 		}
 		Account::RefreshAccounts();
-		libretro_apply_account_name_file();
+		libretro_apply_account_name_file(true);
 		libretro_publish_core_options(environ_cb);
 		libretro_set_option_value("cemu_account", fmt::format("{:08x}", persistentId).c_str());
 		libretro_set_option_value("cemu_create_account", "disabled");
@@ -2788,6 +2789,14 @@ static void libretro_apply_core_options()
 			// the one picked before was still missing from it).
 			libretro_publish_core_options(environ_cb);
 		}
+	}
+
+	// Rename Active Account is a request as well: the entry opens with the next
+	// frame (libretro_update_name_entry) and the option goes back off.
+	if (const char* v = libretro_get_option_value("cemu_rename_account"); v && s_initialized && !strcmp(v, "enabled"))
+	{
+		libretro_set_option_value("cemu_rename_account", "disabled");
+		s_name_entry_requested = true;
 	}
 
 	// Remove an Account is a request too: the account's folder goes, the list
@@ -2826,7 +2835,7 @@ static void libretro_apply_core_options()
 			Account::RefreshAccounts();
 			// its line leaves account_name.txt now, not at the next title
 			// start (Shoegzer: removed an account, closed, the line was there)
-			libretro_apply_account_name_file();
+			libretro_apply_account_name_file(true);
 		}
 		libretro_publish_core_options(environ_cb);
 		libretro_set_option_value("cemu_remove_account", "disabled");
@@ -3817,7 +3826,7 @@ static void libretro_publish_core_options(retro_environment_t cb, bool withRepla
 	{
 		if (!def.key)
 			break;
-		if (!accountsKnown && (!strcmp(def.key, "cemu_account") || !strcmp(def.key, "cemu_create_account") || !strcmp(def.key, "cemu_remove_account")))
+		if (!accountsKnown && (!strcmp(def.key, "cemu_account") || !strcmp(def.key, "cemu_create_account") || !strcmp(def.key, "cemu_rename_account") || !strcmp(def.key, "cemu_remove_account")))
 			continue;
 		if (def.category_key && !strcmp(def.category_key, "logging"))
 			logging.push_back(def);
@@ -4665,7 +4674,9 @@ static void libretro_rescan_titles()
 // the file itself, with every account there is, so the ids need not be looked
 // up (Shoegzer). A line that is a name alone, the file's earlier form, names
 // the account the title starts with.
-static void libretro_apply_account_name_file()
+// With readNames off the file is only written from the accounts as they are:
+// after a rename made in the core, its lines are the old names.
+static void libretro_apply_account_name_file(bool readNames)
 {
 	const fs::path path = ActiveSettings::GetUserDataPath("account_name.txt");
 	const auto trim = [](std::string text) {
@@ -4687,7 +4698,7 @@ static void libretro_apply_account_name_file()
 			original += line;
 			original += '\n';
 			line = trim(line);
-			if (line.empty() || line[0] == '#')
+			if (!readNames || line.empty() || line[0] == '#')
 				continue;
 			const size_t equals = line.find('=');
 			const std::string id = equals == std::string::npos ? std::string() : trim(line.substr(0, equals));
@@ -5157,7 +5168,7 @@ static void libretro_prepare_and_launch_title()
 	// start too - kept the account the first title ran as.
 	if (s_pending_account)
 		GetConfig().account.m_persistent_id = s_pending_account;
-	libretro_apply_account_name_file();
+	libretro_apply_account_name_file(true);
 	iosuAct_forgetAccounts();
 	fs::path gamePath = _utf8ToPath(s_game_path);
 	CafeSystem::PREPARE_STATUS_CODE status;
@@ -5877,6 +5888,8 @@ static bool libretro_disc_key_available(const fs::path& gamePath)
 	return false;
 }
 
+static void RETRO_CALLCONV libretro_keyboard_event(bool down, unsigned keycode, uint32_t character, uint16_t modifiers);
+
 RETRO_API bool retro_load_game(const struct retro_game_info* game)
 {
 	if (!game || !game->path)
@@ -5889,6 +5902,12 @@ RETRO_API bool retro_load_game(const struct retro_game_info* game)
 		return false;
 
 	libretro_reset_install_switches();
+
+	// Keys for the name entry of Rename Active Account
+	{
+		struct retro_keyboard_callback keyboard{libretro_keyboard_event};
+		environ_cb(RETRO_ENVIRONMENT_SET_KEYBOARD_CALLBACK, &keyboard);
+	}
 
 	// Re-decided below for this load; a stale value from a previous one would
 	// hide a frontend that cannot give this core a context the second time.
@@ -6425,6 +6444,192 @@ RETRO_API void retro_deinit()
 // ============================================================================
 // Input mapping
 // ============================================================================
+
+// Rename Active Account: a name typed inside the core, since a core option
+// cannot hold free text and a frontend's own keyboard is not offered to cores
+// (Shoegzer, #28). Nothing of the core's is drawn over the picture (imgui
+// never reaches the screen here), so the name so far is shown as the
+// frontend's notification. A pad picks it a character at a time, the way an
+// arcade's initials are entered; a keyboard types it, through the frontend's
+// keyboard callback. The game gets no input while the entry is open.
+static struct
+{
+	bool active = false;
+	uint32 persistentId = 0;
+	std::wstring text;
+	std::recursive_mutex mutex; // the keyboard callback may come from another thread
+	bool accept = false, cancel = false, changed = false;
+	bool held[16]{};
+	int repeat = 0, shown = 0;
+} s_name_entry;
+
+// A line that replaces the one before it: the frontend's status message,
+// which has one place on screen, where notifications would pile up.
+static void libretro_show_status(unsigned durationMs, const std::string& text)
+{
+	unsigned version = 0;
+	if (!environ_cb || !environ_cb(RETRO_ENVIRONMENT_GET_MESSAGE_INTERFACE_VERSION, &version) || version < 1)
+	{
+		libretro_show_message(RETRO_LOG_INFO, durationMs, text);
+		return;
+	}
+	struct retro_message_ext msg = {};
+	msg.msg = text.c_str();
+	msg.duration = durationMs;
+	msg.priority = 3;
+	msg.level = RETRO_LOG_INFO;
+	msg.target = RETRO_MESSAGE_TARGET_OSD;
+	msg.type = RETRO_MESSAGE_TYPE_STATUS;
+	msg.progress = -1;
+	environ_cb(RETRO_ENVIRONMENT_SET_MESSAGE_EXT, &msg);
+}
+
+static const std::wstring kNameEntryCharacters =
+	L"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 -_.!?&+";
+
+static void RETRO_CALLCONV libretro_keyboard_event(bool down, unsigned keycode, uint32_t character, uint16_t /*modifiers*/)
+{
+	if (!down)
+		return;
+	std::lock_guard lock(s_name_entry.mutex);
+	if (!s_name_entry.active)
+		return;
+	if (keycode == RETROK_BACKSPACE)
+	{
+		if (!s_name_entry.text.empty())
+			s_name_entry.text.pop_back();
+	}
+	else if (keycode == RETROK_RETURN || keycode == RETROK_KP_ENTER)
+		s_name_entry.accept = true;
+	else if (keycode == RETROK_ESCAPE)
+		s_name_entry.cancel = true;
+	else if (character >= 32 && character != 127 && character < 0xFFFF && s_name_entry.text.size() < 10)
+		s_name_entry.text.push_back((wchar_t)character);
+	else
+		return;
+	s_name_entry.changed = true;
+}
+
+static void libretro_update_name_entry()
+{
+	std::lock_guard lock(s_name_entry.mutex);
+	if (s_name_entry_requested.exchange(false) && !s_name_entry.active)
+	{
+		const uint32 persistentId = s_pending_account ? s_pending_account : GetConfig().account.m_persistent_id;
+		Account account = Account::GetAccount(persistentId);
+		if (account.GetPersistentId() != persistentId)
+		{
+			libretro_show_message(RETRO_LOG_WARN, 4000, "Cannot rename: the active account was not found");
+			return;
+		}
+		s_name_entry.active = true;
+		s_name_entry.persistentId = persistentId;
+		s_name_entry.text = std::wstring(account.GetMiiName());
+		s_name_entry.accept = s_name_entry.cancel = false;
+		s_name_entry.changed = true;
+		s_name_entry.repeat = 0;
+		// what is held as the menu closes is not a press
+		for (int i = 0; i < 16; i++)
+			s_name_entry.held[i] = s_port_state[0].buttons[i] != 0;
+	}
+	if (!s_name_entry.active)
+		return;
+
+	bool pressed[16];
+	for (int i = 0; i < 16; i++)
+	{
+		const bool down = s_port_state[0].buttons[i] != 0;
+		pressed[i] = down && !s_name_entry.held[i];
+		s_name_entry.held[i] = down;
+	}
+	// Up and Down repeat while held, after a third of a second
+	const bool up = s_name_entry.held[RETRO_DEVICE_ID_JOYPAD_UP];
+	const bool down = s_name_entry.held[RETRO_DEVICE_ID_JOYPAD_DOWN];
+	bool step = pressed[RETRO_DEVICE_ID_JOYPAD_UP] || pressed[RETRO_DEVICE_ID_JOYPAD_DOWN];
+	if (up != down)
+	{
+		if (++s_name_entry.repeat > 20 && s_name_entry.repeat % 4 == 0)
+			step = true;
+	}
+	else
+		s_name_entry.repeat = 0;
+	if (step && up != down)
+	{
+		if (s_name_entry.text.empty())
+			s_name_entry.text.push_back(kNameEntryCharacters[0]);
+		else
+		{
+			const size_t count = kNameEntryCharacters.size();
+			size_t at = kNameEntryCharacters.find(s_name_entry.text.back());
+			if (at == std::wstring::npos)
+				at = 0;
+			else
+				at = (at + (down ? 1 : count - 1)) % count;
+			s_name_entry.text.back() = kNameEntryCharacters[at];
+		}
+		s_name_entry.changed = true;
+	}
+	if (pressed[RETRO_DEVICE_ID_JOYPAD_RIGHT] && s_name_entry.text.size() < 10)
+	{
+		s_name_entry.text.push_back(s_name_entry.text.empty() ? kNameEntryCharacters[0] : s_name_entry.text.back());
+		s_name_entry.changed = true;
+	}
+	if (pressed[RETRO_DEVICE_ID_JOYPAD_LEFT] && !s_name_entry.text.empty())
+	{
+		s_name_entry.text.pop_back();
+		s_name_entry.changed = true;
+	}
+	if (pressed[RETRO_DEVICE_ID_JOYPAD_START])
+		s_name_entry.accept = true;
+	if (pressed[RETRO_DEVICE_ID_JOYPAD_SELECT])
+		s_name_entry.cancel = true;
+
+	// Nothing of this reaches the game
+	s_input_state = {};
+	for (auto& port : s_port_state)
+		port = {};
+
+	if (s_name_entry.cancel)
+	{
+		s_name_entry.active = false;
+		libretro_show_message(RETRO_LOG_INFO, 3000, "Account not renamed");
+		return;
+	}
+	if (s_name_entry.accept)
+	{
+		s_name_entry.accept = false;
+		std::wstring name = s_name_entry.text;
+		while (!name.empty() && name.back() == L' ')
+			name.pop_back();
+		if (name.empty())
+		{
+			libretro_show_message(RETRO_LOG_WARN, 3000, "A name needs at least one character");
+			return;
+		}
+		s_name_entry.active = false;
+		Account account = Account::GetAccount(s_name_entry.persistentId);
+		account.SetMiiName(name);
+		if (const std::error_code ec = account.Save())
+		{
+			libretro_show_message(RETRO_LOG_ERROR, 6000, "Could not save the account's name: " + ec.message());
+			return;
+		}
+		Account::RefreshAccounts();
+		libretro_apply_account_name_file(false);
+		libretro_publish_core_options(environ_cb);
+		libretro_show_message(RETRO_LOG_INFO, 5000, fmt::format("Account {:08x} is now named {}",
+			s_name_entry.persistentId, boost::nowide::narrow(name)));
+		return;
+	}
+	// Shown again before it runs out, so it stays up while the entry is open
+	if (s_name_entry.changed || ++s_name_entry.shown >= 120)
+	{
+		s_name_entry.changed = false;
+		s_name_entry.shown = 0;
+		libretro_show_status(3000, fmt::format("Name: {}_   (Up/Down: character, Right: add, Left: remove, Start: accept, Select: cancel)",
+			boost::nowide::narrow(s_name_entry.text)));
+	}
+}
 
 static void libretro_poll_input()
 {
@@ -7130,6 +7335,7 @@ RETRO_API void retro_run()
 
 	// Poll input
 	libretro_poll_input();
+	libretro_update_name_entry();
 	libretro_update_rumble();
 
 	using prof_clock = std::chrono::steady_clock;
