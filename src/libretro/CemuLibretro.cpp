@@ -4651,40 +4651,88 @@ static void libretro_rescan_titles()
 		std::this_thread::sleep_for(std::chrono::milliseconds(100));
 }
 
-// The active account's name from a text file, as a core option cannot hold
-// free text (NNshi): system/Cemu/account_name.txt, its first line, up to the
-// console's ten characters, given to the account a title starts with.
+// Account names from a text file, as a core option cannot hold free text
+// (NNshi): system/Cemu/account_name.txt has a line per account,
+// "<persistent id> = <name>", and each time a title starts the accounts take
+// their names from it, up to the console's ten characters. The core writes
+// the file itself, with every account there is, so the ids need not be looked
+// up (Shoegzer). A line that is a name alone, the file's earlier form, names
+// the account the title starts with.
 static void libretro_apply_account_name_file()
 {
-	std::ifstream in(ActiveSettings::GetUserDataPath("account_name.txt"));
-	std::string line;
-	if (!in || !std::getline(in, line))
-		return;
-	while (!line.empty() && std::isspace((unsigned char)line.back()))
-		line.pop_back();
-	size_t start = 0;
-	while (start < line.size() && std::isspace((unsigned char)line[start]))
-		start++;
-	std::wstring name = boost::nowide::widen(line.substr(start));
-	if (name.empty())
-		return;
-	if (name.size() > 10)
-		name.resize(10);
-	const uint32 persistentId = GetConfig().account.m_persistent_id;
-	Account account = Account::GetAccount(persistentId);
-	if (account.GetPersistentId() != persistentId || account.GetMiiName() == name)
-		return;
-	account.SetMiiName(name);
-	if (const std::error_code ec = account.Save())
-		libretro_log(RETRO_LOG_WARN, "could not save the account name from account_name.txt: %s\n", ec.message().c_str());
-	else
+	const fs::path path = ActiveSettings::GetUserDataPath("account_name.txt");
+	const auto trim = [](std::string text) {
+		while (!text.empty() && std::isspace((unsigned char)text.back()))
+			text.pop_back();
+		size_t start = 0;
+		while (start < text.size() && std::isspace((unsigned char)text[start]))
+			start++;
+		return text.substr(start);
+	};
+	std::string original;
+	std::vector<std::pair<uint32, std::string>> wanted;
+	std::string nameAlone;
 	{
-		Account::RefreshAccounts();
-		// the account lists of the options show names: declared again, or
-		// they kept the old one until the core was next loaded (Shoegzer)
-		libretro_publish_core_options(environ_cb);
-		libretro_log(RETRO_LOG_INFO, "account %08x named from account_name.txt\n", persistentId);
+		std::ifstream in(path, std::ios::binary);
+		std::string line;
+		while (in && std::getline(in, line))
+		{
+			original += line;
+			original += '\n';
+			line = trim(line);
+			if (line.empty() || line[0] == '#')
+				continue;
+			const size_t equals = line.find('=');
+			const std::string id = equals == std::string::npos ? std::string() : trim(line.substr(0, equals));
+			char* end = nullptr;
+			const uint32 persistentId = id.empty() || id.size() > 8 ? 0 : (uint32)std::strtoul(id.c_str(), &end, 16);
+			if (persistentId != 0 && end && *end == '\0')
+				wanted.emplace_back(persistentId, trim(line.substr(equals + 1)));
+			else if (nameAlone.empty())
+				nameAlone = line;
+		}
 	}
+	if (!nameAlone.empty())
+		wanted.emplace_back(GetConfig().account.m_persistent_id, nameAlone);
+
+	bool renamed = false;
+	for (const auto& [persistentId, text] : wanted)
+	{
+		std::wstring name = boost::nowide::widen(text);
+		if (name.empty())
+			continue;
+		if (name.size() > 10)
+			name.resize(10);
+		Account account = Account::GetAccount(persistentId);
+		if (account.GetPersistentId() != persistentId || account.GetMiiName() == name)
+			continue;
+		account.SetMiiName(name);
+		if (const std::error_code ec = account.Save())
+			libretro_log(RETRO_LOG_WARN, "could not save the name of account %08x from account_name.txt: %s\n", persistentId, ec.message().c_str());
+		else
+		{
+			renamed = true;
+			libretro_log(RETRO_LOG_INFO, "account %08x named from account_name.txt\n", persistentId);
+		}
+	}
+
+	std::string listing =
+		"# Account names. One line per account: <id> = <name>, the name up to ten characters.\n"
+		"# Change a name here and the account has it the next time a game starts.\n"
+		"# This file is written again at each start with the accounts there are.\n";
+	for (const Account& account : Account::RefreshAccounts())
+		listing += fmt::format("{:08x} = {}\n", account.GetPersistentId(), boost::nowide::narrow(std::wstring(account.GetMiiName())));
+	if (listing != original)
+	{
+		std::ofstream out(path, std::ios::binary | std::ios::trunc);
+		out << listing;
+		if (!out)
+			libretro_log(RETRO_LOG_WARN, "could not write account_name.txt\n");
+	}
+	// the account lists of the options show names: declared again, or they
+	// kept the old one until the core was next loaded (Shoegzer)
+	if (renamed)
+		libretro_publish_core_options(environ_cb);
 }
 
 static void libretro_request_install()
