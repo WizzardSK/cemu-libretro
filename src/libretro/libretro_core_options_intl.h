@@ -68,6 +68,13 @@ extern "C" {
 #define OPTION_VAL_SINGLECORE_RECOMPILER_AR NULL
 #define OPTION_VAL_MULTICORE_RECOMPILER_AR NULL
 #define OPTION_VAL_MULTICORE_INTERPRETER_AR NULL
+#define CEMU_GAMEPAD_MOTION_LABEL_AR NULL
+#define CEMU_GAMEPAD_MOTION_INFO_0_AR NULL
+#define CEMU_AUDIO_CHANNELS_LABEL_AR NULL
+#define CEMU_AUDIO_CHANNELS_INFO_0_AR NULL
+#define OPTION_VAL_MONO_AR NULL
+#define OPTION_VAL_STEREO_AR NULL
+#define OPTION_VAL_SURROUND_AR NULL
 #define CEMU_CONSOLE_LANGUAGE_LABEL_AR NULL
 #define OPTION_VAL_ENGLISH_AR NULL
 #define OPTION_VAL_JAPANESE_AR "Japanese - 日本語"
@@ -155,6 +162,8 @@ extern "C" {
 #define CEMU_ACCOUNT_INFO_0_AR NULL
 #define CEMU_CREATE_ACCOUNT_LABEL_AR NULL
 #define CEMU_CREATE_ACCOUNT_INFO_0_AR NULL
+#define CEMU_RENAME_ACCOUNT_LABEL_AR NULL
+#define CEMU_RENAME_ACCOUNT_INFO_0_AR NULL
 #define CEMU_REMOVE_ACCOUNT_LABEL_AR NULL
 #define CEMU_REMOVE_ACCOUNT_INFO_0_AR NULL
 #define CEMU_INSTALL_GAME_LABEL_AR NULL
@@ -205,6 +214,35 @@ struct retro_core_option_v2_definition option_defs_ar[] = {
 			{ NULL, NULL },
 		},
 		"auto"
+	},
+	{
+		"cemu_gamepad_motion",
+		CEMU_GAMEPAD_MOTION_LABEL_AR,
+		NULL,
+		CEMU_GAMEPAD_MOTION_INFO_0_AR,
+		NULL,
+		"system",
+		{
+			{ "disabled", "Disabled" },
+			{ "enabled", "Enabled" },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_audio_channels",
+		CEMU_AUDIO_CHANNELS_LABEL_AR,
+		NULL,
+		CEMU_AUDIO_CHANNELS_INFO_0_AR,
+		NULL,
+		"system",
+		{
+			{ "mono", OPTION_VAL_MONO_AR },
+			{ "stereo", OPTION_VAL_STEREO_AR },
+			{ "surround", OPTION_VAL_SURROUND_AR },
+			{ NULL, NULL },
+		},
+		"stereo"
 	},
 	{
 		"cemu_console_language",
@@ -745,6 +783,20 @@ struct retro_core_option_v2_definition option_defs_ar[] = {
 		"disabled"
 	},
 	{
+		"cemu_rename_account",
+		CEMU_RENAME_ACCOUNT_LABEL_AR,
+		NULL,
+		CEMU_RENAME_ACCOUNT_INFO_0_AR,
+		NULL,
+		"accounts",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
 		"cemu_remove_account",
 		CEMU_REMOVE_ACCOUNT_LABEL_AR,
 		NULL,
@@ -892,6 +944,13 @@ struct retro_core_options_v2 options_ar = {
 #define OPTION_VAL_SINGLECORE_RECOMPILER_AST NULL
 #define OPTION_VAL_MULTICORE_RECOMPILER_AST NULL
 #define OPTION_VAL_MULTICORE_INTERPRETER_AST NULL
+#define CEMU_GAMEPAD_MOTION_LABEL_AST NULL
+#define CEMU_GAMEPAD_MOTION_INFO_0_AST NULL
+#define CEMU_AUDIO_CHANNELS_LABEL_AST NULL
+#define CEMU_AUDIO_CHANNELS_INFO_0_AST NULL
+#define OPTION_VAL_MONO_AST "Monu"
+#define OPTION_VAL_STEREO_AST "Estéreu"
+#define OPTION_VAL_SURROUND_AST NULL
 #define CEMU_CONSOLE_LANGUAGE_LABEL_AST NULL
 #define OPTION_VAL_ENGLISH_AST "Inglés"
 #define OPTION_VAL_JAPANESE_AST "Xaponés"
@@ -979,6 +1038,8 @@ struct retro_core_options_v2 options_ar = {
 #define CEMU_ACCOUNT_INFO_0_AST NULL
 #define CEMU_CREATE_ACCOUNT_LABEL_AST NULL
 #define CEMU_CREATE_ACCOUNT_INFO_0_AST NULL
+#define CEMU_RENAME_ACCOUNT_LABEL_AST NULL
+#define CEMU_RENAME_ACCOUNT_INFO_0_AST NULL
 #define CEMU_REMOVE_ACCOUNT_LABEL_AST NULL
 #define CEMU_REMOVE_ACCOUNT_INFO_0_AST NULL
 #define CEMU_INSTALL_GAME_LABEL_AST NULL
@@ -1029,6 +1090,35 @@ struct retro_core_option_v2_definition option_defs_ast[] = {
 			{ NULL, NULL },
 		},
 		"auto"
+	},
+	{
+		"cemu_gamepad_motion",
+		CEMU_GAMEPAD_MOTION_LABEL_AST,
+		NULL,
+		CEMU_GAMEPAD_MOTION_INFO_0_AST,
+		NULL,
+		"system",
+		{
+			{ "disabled", "Disabled" },
+			{ "enabled", "Enabled" },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_audio_channels",
+		CEMU_AUDIO_CHANNELS_LABEL_AST,
+		NULL,
+		CEMU_AUDIO_CHANNELS_INFO_0_AST,
+		NULL,
+		"system",
+		{
+			{ "mono", OPTION_VAL_MONO_AST },
+			{ "stereo", OPTION_VAL_STEREO_AST },
+			{ "surround", OPTION_VAL_SURROUND_AST },
+			{ NULL, NULL },
+		},
+		"stereo"
 	},
 	{
 		"cemu_console_language",
@@ -1569,6 +1659,20 @@ struct retro_core_option_v2_definition option_defs_ast[] = {
 		"disabled"
 	},
 	{
+		"cemu_rename_account",
+		CEMU_RENAME_ACCOUNT_LABEL_AST,
+		NULL,
+		CEMU_RENAME_ACCOUNT_INFO_0_AST,
+		NULL,
+		"accounts",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
 		"cemu_remove_account",
 		CEMU_REMOVE_ACCOUNT_LABEL_AST,
 		NULL,
@@ -1716,6 +1820,13 @@ struct retro_core_options_v2 options_ast = {
 #define OPTION_VAL_SINGLECORE_RECOMPILER_BE NULL
 #define OPTION_VAL_MULTICORE_RECOMPILER_BE NULL
 #define OPTION_VAL_MULTICORE_INTERPRETER_BE NULL
+#define CEMU_GAMEPAD_MOTION_LABEL_BE NULL
+#define CEMU_GAMEPAD_MOTION_INFO_0_BE NULL
+#define CEMU_AUDIO_CHANNELS_LABEL_BE NULL
+#define CEMU_AUDIO_CHANNELS_INFO_0_BE NULL
+#define OPTION_VAL_MONO_BE "Мона"
+#define OPTION_VAL_STEREO_BE "Стэрэа"
+#define OPTION_VAL_SURROUND_BE NULL
 #define CEMU_CONSOLE_LANGUAGE_LABEL_BE NULL
 #define OPTION_VAL_ENGLISH_BE "Англійская"
 #define OPTION_VAL_JAPANESE_BE "Японскі"
@@ -1803,6 +1914,8 @@ struct retro_core_options_v2 options_ast = {
 #define CEMU_ACCOUNT_INFO_0_BE NULL
 #define CEMU_CREATE_ACCOUNT_LABEL_BE NULL
 #define CEMU_CREATE_ACCOUNT_INFO_0_BE NULL
+#define CEMU_RENAME_ACCOUNT_LABEL_BE NULL
+#define CEMU_RENAME_ACCOUNT_INFO_0_BE NULL
 #define CEMU_REMOVE_ACCOUNT_LABEL_BE NULL
 #define CEMU_REMOVE_ACCOUNT_INFO_0_BE NULL
 #define CEMU_INSTALL_GAME_LABEL_BE NULL
@@ -1853,6 +1966,35 @@ struct retro_core_option_v2_definition option_defs_be[] = {
 			{ NULL, NULL },
 		},
 		"auto"
+	},
+	{
+		"cemu_gamepad_motion",
+		CEMU_GAMEPAD_MOTION_LABEL_BE,
+		NULL,
+		CEMU_GAMEPAD_MOTION_INFO_0_BE,
+		NULL,
+		"system",
+		{
+			{ "disabled", "Disabled" },
+			{ "enabled", "Enabled" },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_audio_channels",
+		CEMU_AUDIO_CHANNELS_LABEL_BE,
+		NULL,
+		CEMU_AUDIO_CHANNELS_INFO_0_BE,
+		NULL,
+		"system",
+		{
+			{ "mono", OPTION_VAL_MONO_BE },
+			{ "stereo", OPTION_VAL_STEREO_BE },
+			{ "surround", OPTION_VAL_SURROUND_BE },
+			{ NULL, NULL },
+		},
+		"stereo"
 	},
 	{
 		"cemu_console_language",
@@ -2393,6 +2535,20 @@ struct retro_core_option_v2_definition option_defs_be[] = {
 		"disabled"
 	},
 	{
+		"cemu_rename_account",
+		CEMU_RENAME_ACCOUNT_LABEL_BE,
+		NULL,
+		CEMU_RENAME_ACCOUNT_INFO_0_BE,
+		NULL,
+		"accounts",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
 		"cemu_remove_account",
 		CEMU_REMOVE_ACCOUNT_LABEL_BE,
 		NULL,
@@ -2540,6 +2696,13 @@ struct retro_core_options_v2 options_be = {
 #define OPTION_VAL_SINGLECORE_RECOMPILER_BG NULL
 #define OPTION_VAL_MULTICORE_RECOMPILER_BG NULL
 #define OPTION_VAL_MULTICORE_INTERPRETER_BG NULL
+#define CEMU_GAMEPAD_MOTION_LABEL_BG NULL
+#define CEMU_GAMEPAD_MOTION_INFO_0_BG NULL
+#define CEMU_AUDIO_CHANNELS_LABEL_BG NULL
+#define CEMU_AUDIO_CHANNELS_INFO_0_BG NULL
+#define OPTION_VAL_MONO_BG NULL
+#define OPTION_VAL_STEREO_BG NULL
+#define OPTION_VAL_SURROUND_BG NULL
 #define CEMU_CONSOLE_LANGUAGE_LABEL_BG NULL
 #define OPTION_VAL_ENGLISH_BG NULL
 #define OPTION_VAL_JAPANESE_BG NULL
@@ -2627,6 +2790,8 @@ struct retro_core_options_v2 options_be = {
 #define CEMU_ACCOUNT_INFO_0_BG NULL
 #define CEMU_CREATE_ACCOUNT_LABEL_BG NULL
 #define CEMU_CREATE_ACCOUNT_INFO_0_BG NULL
+#define CEMU_RENAME_ACCOUNT_LABEL_BG NULL
+#define CEMU_RENAME_ACCOUNT_INFO_0_BG NULL
 #define CEMU_REMOVE_ACCOUNT_LABEL_BG NULL
 #define CEMU_REMOVE_ACCOUNT_INFO_0_BG NULL
 #define CEMU_INSTALL_GAME_LABEL_BG NULL
@@ -2677,6 +2842,35 @@ struct retro_core_option_v2_definition option_defs_bg[] = {
 			{ NULL, NULL },
 		},
 		"auto"
+	},
+	{
+		"cemu_gamepad_motion",
+		CEMU_GAMEPAD_MOTION_LABEL_BG,
+		NULL,
+		CEMU_GAMEPAD_MOTION_INFO_0_BG,
+		NULL,
+		"system",
+		{
+			{ "disabled", "Disabled" },
+			{ "enabled", "Enabled" },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_audio_channels",
+		CEMU_AUDIO_CHANNELS_LABEL_BG,
+		NULL,
+		CEMU_AUDIO_CHANNELS_INFO_0_BG,
+		NULL,
+		"system",
+		{
+			{ "mono", OPTION_VAL_MONO_BG },
+			{ "stereo", OPTION_VAL_STEREO_BG },
+			{ "surround", OPTION_VAL_SURROUND_BG },
+			{ NULL, NULL },
+		},
+		"stereo"
 	},
 	{
 		"cemu_console_language",
@@ -3217,6 +3411,20 @@ struct retro_core_option_v2_definition option_defs_bg[] = {
 		"disabled"
 	},
 	{
+		"cemu_rename_account",
+		CEMU_RENAME_ACCOUNT_LABEL_BG,
+		NULL,
+		CEMU_RENAME_ACCOUNT_INFO_0_BG,
+		NULL,
+		"accounts",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
 		"cemu_remove_account",
 		CEMU_REMOVE_ACCOUNT_LABEL_BG,
 		NULL,
@@ -3364,6 +3572,13 @@ struct retro_core_options_v2 options_bg = {
 #define OPTION_VAL_SINGLECORE_RECOMPILER_CA "Recompilador mononucli"
 #define OPTION_VAL_MULTICORE_RECOMPILER_CA "Recompilador multinucli"
 #define OPTION_VAL_MULTICORE_INTERPRETER_CA "Intèrpret multinucli"
+#define CEMU_GAMEPAD_MOTION_LABEL_CA "Moviment del GamePad"
+#define CEMU_GAMEPAD_MOTION_INFO_0_CA "Es tracta del giroscopi i l'acceleròmetre del comandament que RetroArch llegeix al port 1: ja siguin els del propi telèfon o tauleta, o els d'un comandament que els proporcioni a través del controlador d'entrada de RetroArch (com ara el DualShock 4, el DualSense i d'altres). Aquesta funció és necessària per als jocs que permeten apuntar o dirigir el moviment inclinant el comandament. Desactivat: el comandament roman immòbil, tal com passa quan es desactiva el control per moviment a l'aplicació autònoma."
+#define CEMU_AUDIO_CHANNELS_LABEL_CA "Canals d'àudio (Reiniciar)"
+#define CEMU_AUDIO_CHANNELS_INFO_0_CA "La consola comunica al joc les característiques del televisor (tal com estigui configurat aquest): els jocs compatibles fan la mescla per al nombre d'altaveus corresponent. El so envoltant 5.1 arriba a RetroArch com a sis canals quan la sortida d'àudio és multicanal; en cas contrari, es mescla en estèreo."
+#define OPTION_VAL_MONO_CA NULL
+#define OPTION_VAL_STEREO_CA "Estèreo"
+#define OPTION_VAL_SURROUND_CA NULL
 #define CEMU_CONSOLE_LANGUAGE_LABEL_CA "Idioma de la consola"
 #define OPTION_VAL_ENGLISH_CA "Anglès"
 #define OPTION_VAL_JAPANESE_CA "Japonès"
@@ -3450,19 +3665,21 @@ struct retro_core_options_v2 options_bg = {
 #define CEMU_ACCOUNT_LABEL_CA "Activa el compte"
 #define CEMU_ACCOUNT_INFO_0_CA "El compte de Wii U amb què s'executa el joc, cadascun amb les seves pròpies dades de partida i el seu Mii. La llista mostra els comptes que figuren al directori de comptes.\n\nEls canvis s'apliquen quan es tanca el títol i es torna a iniciar, o bé quan es reinicia. Fins aleshores, el títol en execució continua desant les dades al compte amb què es va iniciar."
 #define CEMU_CREATE_ACCOUNT_LABEL_CA "Crea un compte"
-#define CEMU_CREATE_ACCOUNT_INFO_0_CA "Crea un compte nou, anomenat Jugador 2, Jugador 3 i successivament, i activa cada compte. Després torna a la posició d'apagada. La consola admet fins a 12 comptes."
+#define CEMU_CREATE_ACCOUNT_INFO_0_CA "Crea un nou compte, anomenat Jugador 2, Jugador 3 i així successivament, i activa els comptes. Llavors això torna a desactivat. El nou compte apareix a la llista de comptes si surts del menú i tornes a entrar una altra vegada. La consola pot suportar fins a 12 comptes."
+#define CEMU_RENAME_ACCOUNT_LABEL_CA "Canvia el nom del compte actiu"
+#define CEMU_RENAME_ACCOUNT_INFO_0_CA "Obre l'opció d'introduir el nom del compte actiu en sortir d'aquest menú i torna a l'estat \"OFF\". El nom que s'està escrivint es mostra com una notificació sobre el joc; per tant, cal que les notificacions en pantalla de la interfície estiguin activades.\n\nAmb un comandament: amunt i avall canvien l'últim caràcter, dreta n'afegeix un, esquerra n'elimina un, Start accepta i Select cancel·la.\n\nAmb un teclat: escriu; la tecla de retrocés (Backspace) elimina caràcters, Enter accepta i Escape cancel·la (és possible que calgui activar el \"Game Focus\" a la interfície perquè les tecles arribin al nucli).\n\nEl nom pot tenir fins a 10 caràcters. El joc no rep cap entrada fins que es tanca l'opció d'introducció del nom, i, si el joc està en marxa, mostrarà el nou nom un cop es reiniciï."
 #define CEMU_REMOVE_ACCOUNT_LABEL_CA "Elimina el compte"
-#define CEMU_REMOVE_ACCOUNT_INFO_0_CA "AVÍS: eliminar un compte també en suprimeix les dades de partida de tots els jocs, i aquesta acció és irreversible.\n\nElimina el compte seleccionat, tal com ho fa l'opció d'esborrar un usuari de la consola: el compte desapareix del registre de comptes i les seves dades de partida s'eliminen de la carpeta corresponent de cada títol. El compte s'elimina en sortir del menú, moment en què l'opció torna a l'estat «Desactivat».\n\nNo es pot eliminar el compte actiu ni tampoc el compte amb què s'ha iniciat el joc en curs fins que aquest no es tanqui. Per tant, no és possible eliminar l'últim compte."
+#define CEMU_REMOVE_ACCOUNT_INFO_0_CA "Elimina el compte seleccionat del directori de comptes (saves/Cemu/mlc01/usr/save/system/act) —tal com ho faria l'eliminació d'un usuari a la consola— en sortir d'aquest menú. En tornar al menú, l'opció torna a indicar «OFF».\n\nNo es pot eliminar el compte actiu ni tampoc el compte amb què s'ha iniciat el joc que s'està executant actualment, fins que no es tanqui aquest joc.\n\nAVÍS: eliminar un compte també suprimeix de manera permanent les partides desades associades a aquest compte en tots els jocs. Feu una còpia de seguretat de les partides que vulgueu conservar abans d'eliminar-lo."
 #define CEMU_INSTALL_GAME_LABEL_CA "Instal·la els jocs"
-#define CEMU_INSTALL_GAME_INFO_0_CA "Instal·la tots els jocs situats a `system/Cemu/titles` (incloses les subcarpetes) al directori de jocs instal·lats de la Wii U emulada (`saves/Cemu/mlc01/usr/title/00050000`), tal com ho faria la consola en instal·lar un joc des del disc. Un joc pot ser una imatge de disc (`.wud`, `.wux`, `.iso`) o un fitxer `.wua`; les actualitzacions del títol i els continguts addicionals (DLC) que contingui el fitxer `.wua` s'instal·len conjuntament amb el joc. Si un joc ja està instal·lat en la mateixa versió o en una de més recent, no es modifica.\n\nQuan aquesta opció està activada, la instal·lació comença immediatament i el progrés es mostra mitjançant una notificació; l'opció es desactiva automàticament un cop s'han instal·lat tots els jocs. Per iniciar un joc instal·lat, cal carregar el fitxer `.rpx` que es troba a la seva carpeta de codi dins del directori de jocs instal·lats; ja no cal utilitzar la imatge de disc original."
+#define CEMU_INSTALL_GAME_INFO_0_CA "Instal·la tots els jocs des del directori d'origen (system/Cemu/titles), incloent-hi les subcarpetes, al directori de jocs instal·lats de la Wii U emulada (saves/Cemu/mlc01/usr/title/00050000), tal com ho faria la consola en instal·lar un joc des del disc. Un joc pot ser una imatge de disc (.wud, .wux, .iso) o un fitxer .wua; les actualitzacions del títol i els continguts descarregables (DLC) que contingui el fitxer .wua s'instal·len conjuntament amb el joc. Les imatges de disc xifrades (.wud, .wux) requereixen la seva clau de disc: bé en un fitxer adjacent amb el mateix nom i l'extensió .key (p. ex., game.wux i game.key), o bé a system/Cemu/keys.txt. Si un joc ja està instal·lat amb la mateixa versió o una de més recent, no es modifica.\n\nQuan aquesta opció està activada, la instal·lació comença immediatament i el progrés es mostra mitjançant una notificació; l'opció es desactiva automàticament un cop instal·lats tots els jocs i en sortir del menú o canviar d'opció. Per iniciar un joc instal·lat, cal carregar el fitxer .rpx situat a la carpeta de codi dins del directori de jocs instal·lats; la imatge de disc original ja no és necessària."
 #define CEMU_UNINSTALL_GAME_LABEL_CA "Desinstal·la el joc"
-#define CEMU_UNINSTALL_GAME_INFO_0_CA "Desinstal·la el joc en execució del directori d'instal·lació (saves/Cemu/mlc01/usr/title/00050000) un cop es tanca o es reinicia el joc, incloent-hi l'actualització del títol i el DLC instal·lats; l'opció roman activada fins aleshores. Les partides desades es mantenen intactes, així com la imatge de disc o el fitxer .wua a partir del qual es va instal·lar."
+#define CEMU_UNINSTALL_GAME_INFO_0_CA "Desinstal·la el joc en execució i totes les actualitzacions de títol i contingut descarregable (DLC) associats del directori d'instal·lació (saves/Cemu/mlc01/usr/title) un cop es tanca o es reinicia el joc; l'opció roman activada fins aleshores. Les partides desades corresponents a l'ID del títol (saves/Cemu/mlc01/usr/save/<title id>) no s'eliminen."
 #define CEMU_INSTALL_TITLES_LABEL_CA "Instal·la el contingut"
-#define CEMU_INSTALL_TITLES_INFO_0_CA "Instal·la totes les actualitzacions de títol i els DLC situats a `system/Cemu/titles` (incloses les subcarpetes) a l'emmagatzematge de la Wii U emulada (`saves/Cemu/mlc01/usr/title`). Cada element es desa en la seva pròpia carpeta dins de `system/Cemu/titles`; una descàrrega NUS (fitxers `.app`) requereix que els fitxers `title.tmd` i `title.tik` (la clau de desxifratge) estiguin situats al costat. Si ja hi ha instal·lada una versió igual o més recent, no es modifica.\n\nQuan aquesta opció està activada, la instal·lació comença immediatament i el progrés es mostra mitjançant una notificació; l'opció es desactiva automàticament un cop s'ha instal·lat tot el contingut i se surt del menú o es canvia una altra opció. El joc utilitza el contingut instal·lat un cop es reinicia.\n\nEs pot instal·lar contingut des d'altres ubicacions mitjançant el menú principal de RetroArch (*Main Menu* > *Load Content*), seleccionant el fitxer `title.tmd` corresponent i assegurant-se que el fitxer `title.tik` es trobi al costat."
+#define CEMU_INSTALL_TITLES_INFO_0_CA "Instal·la totes les actualitzacions de títol i els DLC des del directori d'origen (system/Cemu/titles) —incloses les subcarpetes— al directori d'instal·lació (saves/Cemu/mlc01/usr/title). Cada element es troba en la seva pròpia carpeta dins del directori d'origen; una descàrrega NUS (fitxers .app) requereix que els fitxers title.tmd i title.tik —així com la clau de desxifratge— estiguin situats al costat. Si ja hi ha una versió instal·lada igual o més recent, no es modifica.\n\nQuan aquesta opció està activada, la instal·lació comença immediatament i el progrés es mostra mitjançant una notificació; l'opció es desactiva automàticament un cop s'ha instal·lat tot el contingut i se surt del menú o es canvia d'opció. El joc utilitza el contingut instal·lat un cop es reinicia.\n\nEs pot instal·lar contingut des d'altres ubicacions mitjançant el menú principal de RetroArch (Main Menu > Load Content), seleccionant el fitxer title.tmd corresponent i assegurant-se que el fitxer title.tik es trobi al costat."
 #define CEMU_UNINSTALL_TITLES_LABEL_CA "Desinstal·la el contingut"
-#define CEMU_UNINSTALL_TITLES_INFO_0_CA "Desinstal·la l'actualització del títol i el contingut descarregable (DLC) del joc en execució de l'emmagatzematge de la Wii U emulada (saves/Cemu/mlc01/usr/title) un cop es tanca o es reinicia el joc; l'opció roman activada fins aleshores. Les còpies situades a system/Cemu/titles no es modifiquen."
+#define CEMU_UNINSTALL_TITLES_INFO_0_CA "Desinstal·la l'actualització del títol i el contingut descarregable (DLC) del joc en execució des del directori d'instal·lació (saves/Cemu/mlc01/usr/title) un cop es tanca o es reinicia el joc; l'opció roman activada fins aleshores. Les còpies del directori d'origen (system/Cemu/titles) no es modifiquen."
 #define CEMU_INSTALL_REMOVE_SOURCE_LABEL_CA "Elimina els fitxers després de la instal·lació"
-#define CEMU_INSTALL_REMOVE_SOURCE_INFO_0_CA "AVÍS: això esborra fitxers de system/Cemu/titles i l'acció és irreversible. La carpeta system/Cemu/titles és per a la gestió del nucli; guarda la còpia única d'un bolcat en un altre lloc.\n\nEsborra de system/Cemu/titles allò que s'hagi instal·lat mitjançant «Install Games» i «Install Content»: la carpeta d'una actualització de títol o d'un DLC un cop instal·lats, i una imatge de disc o un fitxer .wua un cop s'hagi instal·lat tot el contingut que contenen (l'opció «Install Content» per si sola deixa un fitxer .wua que també conté el joc). Els fitxers que utilitza el joc en execució s'eliminen quan aquest es tanca o es reinicia. El contingut carregat mitjançant «Load Content» es manté on és."
+#define CEMU_INSTALL_REMOVE_SOURCE_INFO_0_CA "Elimina el que Install Games i Install Content han instal·lat del directori d'origen (system/Cemu/titles): una carpeta d'actualització de títol o DLC un cop instal·lat, i una imatge de disc (amb el seu fitxer .key) o .wua un cop instal·lat tot el que conté. Els fitxers que utilitza el joc en execució s'eliminen quan es tanca o es reinicia.\n\nAVÍS: això elimina permanentment els fitxers del directori d'origen. Aquest directori és perquè el nucli el gestioni; guarda les dades del joc que vols arxivar en un altre lloc."
 #define CEMU_WUA_OUTPUT_DIR_LABEL_CA "Carpeta de sortida"
 #define CEMU_WUA_OUTPUT_DIR_INFO_0_CA "Indica on es desa el fitxer .wua. Cal que hi hagi espai suficient."
 #define CEMU_CONVERT_TO_WUA_LABEL_CA "Inicia la conversió a WUA"
@@ -3501,6 +3718,35 @@ struct retro_core_option_v2_definition option_defs_ca[] = {
 			{ NULL, NULL },
 		},
 		"auto"
+	},
+	{
+		"cemu_gamepad_motion",
+		CEMU_GAMEPAD_MOTION_LABEL_CA,
+		NULL,
+		CEMU_GAMEPAD_MOTION_INFO_0_CA,
+		NULL,
+		"system",
+		{
+			{ "disabled", "Disabled" },
+			{ "enabled", "Enabled" },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_audio_channels",
+		CEMU_AUDIO_CHANNELS_LABEL_CA,
+		NULL,
+		CEMU_AUDIO_CHANNELS_INFO_0_CA,
+		NULL,
+		"system",
+		{
+			{ "mono", OPTION_VAL_MONO_CA },
+			{ "stereo", OPTION_VAL_STEREO_CA },
+			{ "surround", OPTION_VAL_SURROUND_CA },
+			{ NULL, NULL },
+		},
+		"stereo"
 	},
 	{
 		"cemu_console_language",
@@ -4041,6 +4287,20 @@ struct retro_core_option_v2_definition option_defs_ca[] = {
 		"disabled"
 	},
 	{
+		"cemu_rename_account",
+		CEMU_RENAME_ACCOUNT_LABEL_CA,
+		NULL,
+		CEMU_RENAME_ACCOUNT_INFO_0_CA,
+		NULL,
+		"accounts",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
 		"cemu_remove_account",
 		CEMU_REMOVE_ACCOUNT_LABEL_CA,
 		NULL,
@@ -4188,6 +4448,13 @@ struct retro_core_options_v2 options_ca = {
 #define OPTION_VAL_SINGLECORE_RECOMPILER_CHS "单核重编译器"
 #define OPTION_VAL_MULTICORE_RECOMPILER_CHS "多核重编译器"
 #define OPTION_VAL_MULTICORE_INTERPRETER_CHS "多核解释器"
+#define CEMU_GAMEPAD_MOTION_LABEL_CHS NULL
+#define CEMU_GAMEPAD_MOTION_INFO_0_CHS NULL
+#define CEMU_AUDIO_CHANNELS_LABEL_CHS NULL
+#define CEMU_AUDIO_CHANNELS_INFO_0_CHS NULL
+#define OPTION_VAL_MONO_CHS "单声道"
+#define OPTION_VAL_STEREO_CHS "立体声"
+#define OPTION_VAL_SURROUND_CHS NULL
 #define CEMU_CONSOLE_LANGUAGE_LABEL_CHS "主机系统语言"
 #define OPTION_VAL_ENGLISH_CHS "英语"
 #define OPTION_VAL_JAPANESE_CHS "日语"
@@ -4274,19 +4541,21 @@ struct retro_core_options_v2 options_ca = {
 #define CEMU_ACCOUNT_LABEL_CHS "当前激活账户"
 #define CEMU_ACCOUNT_INFO_0_CHS "运行游戏所使用的 Wii U 账户，每个账户拥有独立的存档和 Mii 形象。列表显示的是账户目录中的所有账户。\n\n更改将在游戏关闭并重新启动或重置时生效。在此之前，运行中的游戏将继续保存到启动时使用的账户中。"
 #define CEMU_CREATE_ACCOUNT_LABEL_CHS "创建账户"
-#define CEMU_CREATE_ACCOUNT_INFO_0_CHS "创建一个名为 Player 2、Player 3 等的新账户，并将其设为当前激活账户。随后此选项会自动切回“关闭”状态。主机最多可容纳 12 个账户。"
+#define CEMU_CREATE_ACCOUNT_INFO_0_CHS NULL
+#define CEMU_RENAME_ACCOUNT_LABEL_CHS NULL
+#define CEMU_RENAME_ACCOUNT_INFO_0_CHS NULL
 #define CEMU_REMOVE_ACCOUNT_LABEL_CHS "删除账户"
-#define CEMU_REMOVE_ACCOUNT_INFO_0_CHS "警告：删除账户会同时删除该账户在所有游戏中的存档数据，且此操作不可逆。\n\n删除选定的账户（效果等同于在主机上删除用户）：该账户将从账户目录中移除，其在每个游戏中的存档文件夹也将被删除。离开菜单时将执行删除操作，随后此选项切回“关闭”状态。\n\n当前激活的账户无法被删除，运行中游戏所使用的账户在游戏关闭前也无法被删除。因此，主机上的最后一个账户无法被删除。"
+#define CEMU_REMOVE_ACCOUNT_INFO_0_CHS NULL
 #define CEMU_INSTALL_GAME_LABEL_CHS "安装游戏"
-#define CEMU_INSTALL_GAME_INFO_0_CHS "将 system/Cemu/titles（包含子文件夹）中的所有游戏安装至模拟 Wii U 的已安装游戏目录（saves/Cemu/mlc01/usr/title/00050000），如同实体主机从光盘安装游戏一般。游戏支持光盘镜像（.wud、.wux、.iso）或 .wua 格式；.wua 所包含的更新补丁与 DLC 会一并安装。已安装相同或更新版本的游戏将被忽略。\n\n开启此选项后将立即开始安装，进度以通知形式显示，当所有游戏安装完毕后该选项会自动关闭。安装后的游戏可通过加载已安装游戏目录中代码文件夹内的 .rpx 文件启动，不再需要原光盘镜像。"
+#define CEMU_INSTALL_GAME_INFO_0_CHS NULL
 #define CEMU_UNINSTALL_GAME_LABEL_CHS "卸载游戏"
-#define CEMU_UNINSTALL_GAME_INFO_0_CHS "在游戏关闭或重置时，从已安装游戏目录（saves/Cemu/mlc01/usr/title/00050000）中卸载当前运行的游戏及其已安装的更新补丁和 DLC；在此之前该选项保持开启。其存档数据以及用于安装的原光盘镜像或 .wua 文件均会被保留。"
+#define CEMU_UNINSTALL_GAME_INFO_0_CHS NULL
 #define CEMU_INSTALL_TITLES_LABEL_CHS "安装内容"
-#define CEMU_INSTALL_TITLES_INFO_0_CHS "将 system/Cemu/titles（包含子文件夹）中的所有更新补丁与 DLC 安装至模拟 Wii U 的存储目录（saves/Cemu/mlc01/usr/title）中。每个内容在 system/Cemu/titles 中应存放在各自的文件夹内；NUS 下载内容（.app 文件）需要在同级目录下包含对应的 title.tmd 与解密密钥文件 title.tik。已安装相同或更新版本的内容将被忽略。\n\n开启此选项后将立即开始安装，进度以通知形式显示，当所有内容安装完毕且退出此菜单或更改其他选项时，该选项会自动关闭。重启后游戏将使用已安装的内容。\n\n其他路径的内容可通过 RetroArch 的“主菜单 > 加载内容”来安装：选中对应的 title.tmd 文件（需保证同级目录下存在 title.tik）即可。"
+#define CEMU_INSTALL_TITLES_INFO_0_CHS NULL
 #define CEMU_UNINSTALL_TITLES_LABEL_CHS "卸载内容"
-#define CEMU_UNINSTALL_TITLES_INFO_0_CHS "在游戏关闭或重置时，从模拟 Wii U 存储目录（saves/Cemu/mlc01/usr/title）中卸载当前运行游戏的更新补丁与 DLC；在此之前该选项保持开启。system/Cemu/titles 中的副本不会受影响。"
+#define CEMU_UNINSTALL_TITLES_INFO_0_CHS NULL
 #define CEMU_INSTALL_REMOVE_SOURCE_LABEL_CHS "安装后删除源文件"
-#define CEMU_INSTALL_REMOVE_SOURCE_INFO_0_CHS "警告：此选项会删除 system/Cemu/titles 中的文件，且操作不可逆。system/Cemu/titles 为核心管理的文件夹，请将转储文件的唯一副本备份在别处。\n\n通过“安装游戏”和“安装内容”成功安装后，自动删除 system/Cemu/titles 中的对应文件：已安装的更新补丁或 DLC 文件夹；以及当内部所有内容安装完毕后的光盘镜像或 .wua 文件（若仅使用“安装内容”，包含游戏本体的 .wua 文件将被保留）。正在运行的游戏所占用的文件将在游戏关闭或重置时被删除。通过“加载内容”方式加载的内容则保留在原路径。"
+#define CEMU_INSTALL_REMOVE_SOURCE_INFO_0_CHS NULL
 #define CEMU_WUA_OUTPUT_DIR_LABEL_CHS "导出输出目录"
 #define CEMU_WUA_OUTPUT_DIR_INFO_0_CHS "导出生成的 .wua 文件的保存位置。需要保证有足够的存储空间。"
 #define CEMU_CONVERT_TO_WUA_LABEL_CHS "开始转换为 WUA 格式"
@@ -4325,6 +4594,35 @@ struct retro_core_option_v2_definition option_defs_chs[] = {
 			{ NULL, NULL },
 		},
 		"auto"
+	},
+	{
+		"cemu_gamepad_motion",
+		CEMU_GAMEPAD_MOTION_LABEL_CHS,
+		NULL,
+		CEMU_GAMEPAD_MOTION_INFO_0_CHS,
+		NULL,
+		"system",
+		{
+			{ "disabled", "Disabled" },
+			{ "enabled", "Enabled" },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_audio_channels",
+		CEMU_AUDIO_CHANNELS_LABEL_CHS,
+		NULL,
+		CEMU_AUDIO_CHANNELS_INFO_0_CHS,
+		NULL,
+		"system",
+		{
+			{ "mono", OPTION_VAL_MONO_CHS },
+			{ "stereo", OPTION_VAL_STEREO_CHS },
+			{ "surround", OPTION_VAL_SURROUND_CHS },
+			{ NULL, NULL },
+		},
+		"stereo"
 	},
 	{
 		"cemu_console_language",
@@ -4865,6 +5163,20 @@ struct retro_core_option_v2_definition option_defs_chs[] = {
 		"disabled"
 	},
 	{
+		"cemu_rename_account",
+		CEMU_RENAME_ACCOUNT_LABEL_CHS,
+		NULL,
+		CEMU_RENAME_ACCOUNT_INFO_0_CHS,
+		NULL,
+		"accounts",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
 		"cemu_remove_account",
 		CEMU_REMOVE_ACCOUNT_LABEL_CHS,
 		NULL,
@@ -5012,6 +5324,13 @@ struct retro_core_options_v2 options_chs = {
 #define OPTION_VAL_SINGLECORE_RECOMPILER_CHT NULL
 #define OPTION_VAL_MULTICORE_RECOMPILER_CHT NULL
 #define OPTION_VAL_MULTICORE_INTERPRETER_CHT NULL
+#define CEMU_GAMEPAD_MOTION_LABEL_CHT NULL
+#define CEMU_GAMEPAD_MOTION_INFO_0_CHT NULL
+#define CEMU_AUDIO_CHANNELS_LABEL_CHT NULL
+#define CEMU_AUDIO_CHANNELS_INFO_0_CHT NULL
+#define OPTION_VAL_MONO_CHT "單聲道"
+#define OPTION_VAL_STEREO_CHT "立體聲"
+#define OPTION_VAL_SURROUND_CHT NULL
 #define CEMU_CONSOLE_LANGUAGE_LABEL_CHT NULL
 #define OPTION_VAL_ENGLISH_CHT "英語"
 #define OPTION_VAL_JAPANESE_CHT "日語"
@@ -5099,6 +5418,8 @@ struct retro_core_options_v2 options_chs = {
 #define CEMU_ACCOUNT_INFO_0_CHT NULL
 #define CEMU_CREATE_ACCOUNT_LABEL_CHT NULL
 #define CEMU_CREATE_ACCOUNT_INFO_0_CHT NULL
+#define CEMU_RENAME_ACCOUNT_LABEL_CHT NULL
+#define CEMU_RENAME_ACCOUNT_INFO_0_CHT NULL
 #define CEMU_REMOVE_ACCOUNT_LABEL_CHT NULL
 #define CEMU_REMOVE_ACCOUNT_INFO_0_CHT NULL
 #define CEMU_INSTALL_GAME_LABEL_CHT NULL
@@ -5149,6 +5470,35 @@ struct retro_core_option_v2_definition option_defs_cht[] = {
 			{ NULL, NULL },
 		},
 		"auto"
+	},
+	{
+		"cemu_gamepad_motion",
+		CEMU_GAMEPAD_MOTION_LABEL_CHT,
+		NULL,
+		CEMU_GAMEPAD_MOTION_INFO_0_CHT,
+		NULL,
+		"system",
+		{
+			{ "disabled", "Disabled" },
+			{ "enabled", "Enabled" },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_audio_channels",
+		CEMU_AUDIO_CHANNELS_LABEL_CHT,
+		NULL,
+		CEMU_AUDIO_CHANNELS_INFO_0_CHT,
+		NULL,
+		"system",
+		{
+			{ "mono", OPTION_VAL_MONO_CHT },
+			{ "stereo", OPTION_VAL_STEREO_CHT },
+			{ "surround", OPTION_VAL_SURROUND_CHT },
+			{ NULL, NULL },
+		},
+		"stereo"
 	},
 	{
 		"cemu_console_language",
@@ -5689,6 +6039,20 @@ struct retro_core_option_v2_definition option_defs_cht[] = {
 		"disabled"
 	},
 	{
+		"cemu_rename_account",
+		CEMU_RENAME_ACCOUNT_LABEL_CHT,
+		NULL,
+		CEMU_RENAME_ACCOUNT_INFO_0_CHT,
+		NULL,
+		"accounts",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
 		"cemu_remove_account",
 		CEMU_REMOVE_ACCOUNT_LABEL_CHT,
 		NULL,
@@ -5836,6 +6200,13 @@ struct retro_core_options_v2 options_cht = {
 #define OPTION_VAL_SINGLECORE_RECOMPILER_CS NULL
 #define OPTION_VAL_MULTICORE_RECOMPILER_CS NULL
 #define OPTION_VAL_MULTICORE_INTERPRETER_CS NULL
+#define CEMU_GAMEPAD_MOTION_LABEL_CS NULL
+#define CEMU_GAMEPAD_MOTION_INFO_0_CS NULL
+#define CEMU_AUDIO_CHANNELS_LABEL_CS NULL
+#define CEMU_AUDIO_CHANNELS_INFO_0_CS NULL
+#define OPTION_VAL_MONO_CS NULL
+#define OPTION_VAL_STEREO_CS NULL
+#define OPTION_VAL_SURROUND_CS NULL
 #define CEMU_CONSOLE_LANGUAGE_LABEL_CS NULL
 #define OPTION_VAL_ENGLISH_CS "Angličtina"
 #define OPTION_VAL_JAPANESE_CS "Japonština"
@@ -5923,6 +6294,8 @@ struct retro_core_options_v2 options_cht = {
 #define CEMU_ACCOUNT_INFO_0_CS NULL
 #define CEMU_CREATE_ACCOUNT_LABEL_CS NULL
 #define CEMU_CREATE_ACCOUNT_INFO_0_CS NULL
+#define CEMU_RENAME_ACCOUNT_LABEL_CS NULL
+#define CEMU_RENAME_ACCOUNT_INFO_0_CS NULL
 #define CEMU_REMOVE_ACCOUNT_LABEL_CS NULL
 #define CEMU_REMOVE_ACCOUNT_INFO_0_CS NULL
 #define CEMU_INSTALL_GAME_LABEL_CS NULL
@@ -5973,6 +6346,35 @@ struct retro_core_option_v2_definition option_defs_cs[] = {
 			{ NULL, NULL },
 		},
 		"auto"
+	},
+	{
+		"cemu_gamepad_motion",
+		CEMU_GAMEPAD_MOTION_LABEL_CS,
+		NULL,
+		CEMU_GAMEPAD_MOTION_INFO_0_CS,
+		NULL,
+		"system",
+		{
+			{ "disabled", "Disabled" },
+			{ "enabled", "Enabled" },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_audio_channels",
+		CEMU_AUDIO_CHANNELS_LABEL_CS,
+		NULL,
+		CEMU_AUDIO_CHANNELS_INFO_0_CS,
+		NULL,
+		"system",
+		{
+			{ "mono", OPTION_VAL_MONO_CS },
+			{ "stereo", OPTION_VAL_STEREO_CS },
+			{ "surround", OPTION_VAL_SURROUND_CS },
+			{ NULL, NULL },
+		},
+		"stereo"
 	},
 	{
 		"cemu_console_language",
@@ -6513,6 +6915,20 @@ struct retro_core_option_v2_definition option_defs_cs[] = {
 		"disabled"
 	},
 	{
+		"cemu_rename_account",
+		CEMU_RENAME_ACCOUNT_LABEL_CS,
+		NULL,
+		CEMU_RENAME_ACCOUNT_INFO_0_CS,
+		NULL,
+		"accounts",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
 		"cemu_remove_account",
 		CEMU_REMOVE_ACCOUNT_LABEL_CS,
 		NULL,
@@ -6660,6 +7076,13 @@ struct retro_core_options_v2 options_cs = {
 #define OPTION_VAL_SINGLECORE_RECOMPILER_CY NULL
 #define OPTION_VAL_MULTICORE_RECOMPILER_CY NULL
 #define OPTION_VAL_MULTICORE_INTERPRETER_CY NULL
+#define CEMU_GAMEPAD_MOTION_LABEL_CY NULL
+#define CEMU_GAMEPAD_MOTION_INFO_0_CY NULL
+#define CEMU_AUDIO_CHANNELS_LABEL_CY NULL
+#define CEMU_AUDIO_CHANNELS_INFO_0_CY NULL
+#define OPTION_VAL_MONO_CY NULL
+#define OPTION_VAL_STEREO_CY NULL
+#define OPTION_VAL_SURROUND_CY NULL
 #define CEMU_CONSOLE_LANGUAGE_LABEL_CY NULL
 #define OPTION_VAL_ENGLISH_CY NULL
 #define OPTION_VAL_JAPANESE_CY NULL
@@ -6747,6 +7170,8 @@ struct retro_core_options_v2 options_cs = {
 #define CEMU_ACCOUNT_INFO_0_CY NULL
 #define CEMU_CREATE_ACCOUNT_LABEL_CY NULL
 #define CEMU_CREATE_ACCOUNT_INFO_0_CY NULL
+#define CEMU_RENAME_ACCOUNT_LABEL_CY NULL
+#define CEMU_RENAME_ACCOUNT_INFO_0_CY NULL
 #define CEMU_REMOVE_ACCOUNT_LABEL_CY NULL
 #define CEMU_REMOVE_ACCOUNT_INFO_0_CY NULL
 #define CEMU_INSTALL_GAME_LABEL_CY NULL
@@ -6797,6 +7222,35 @@ struct retro_core_option_v2_definition option_defs_cy[] = {
 			{ NULL, NULL },
 		},
 		"auto"
+	},
+	{
+		"cemu_gamepad_motion",
+		CEMU_GAMEPAD_MOTION_LABEL_CY,
+		NULL,
+		CEMU_GAMEPAD_MOTION_INFO_0_CY,
+		NULL,
+		"system",
+		{
+			{ "disabled", "Disabled" },
+			{ "enabled", "Enabled" },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_audio_channels",
+		CEMU_AUDIO_CHANNELS_LABEL_CY,
+		NULL,
+		CEMU_AUDIO_CHANNELS_INFO_0_CY,
+		NULL,
+		"system",
+		{
+			{ "mono", OPTION_VAL_MONO_CY },
+			{ "stereo", OPTION_VAL_STEREO_CY },
+			{ "surround", OPTION_VAL_SURROUND_CY },
+			{ NULL, NULL },
+		},
+		"stereo"
 	},
 	{
 		"cemu_console_language",
@@ -7337,6 +7791,20 @@ struct retro_core_option_v2_definition option_defs_cy[] = {
 		"disabled"
 	},
 	{
+		"cemu_rename_account",
+		CEMU_RENAME_ACCOUNT_LABEL_CY,
+		NULL,
+		CEMU_RENAME_ACCOUNT_INFO_0_CY,
+		NULL,
+		"accounts",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
 		"cemu_remove_account",
 		CEMU_REMOVE_ACCOUNT_LABEL_CY,
 		NULL,
@@ -7484,6 +7952,13 @@ struct retro_core_options_v2 options_cy = {
 #define OPTION_VAL_SINGLECORE_RECOMPILER_DA NULL
 #define OPTION_VAL_MULTICORE_RECOMPILER_DA NULL
 #define OPTION_VAL_MULTICORE_INTERPRETER_DA NULL
+#define CEMU_GAMEPAD_MOTION_LABEL_DA NULL
+#define CEMU_GAMEPAD_MOTION_INFO_0_DA NULL
+#define CEMU_AUDIO_CHANNELS_LABEL_DA NULL
+#define CEMU_AUDIO_CHANNELS_INFO_0_DA NULL
+#define OPTION_VAL_MONO_DA NULL
+#define OPTION_VAL_STEREO_DA NULL
+#define OPTION_VAL_SURROUND_DA NULL
 #define CEMU_CONSOLE_LANGUAGE_LABEL_DA NULL
 #define OPTION_VAL_ENGLISH_DA NULL
 #define OPTION_VAL_JAPANESE_DA NULL
@@ -7571,6 +8046,8 @@ struct retro_core_options_v2 options_cy = {
 #define CEMU_ACCOUNT_INFO_0_DA NULL
 #define CEMU_CREATE_ACCOUNT_LABEL_DA NULL
 #define CEMU_CREATE_ACCOUNT_INFO_0_DA NULL
+#define CEMU_RENAME_ACCOUNT_LABEL_DA NULL
+#define CEMU_RENAME_ACCOUNT_INFO_0_DA NULL
 #define CEMU_REMOVE_ACCOUNT_LABEL_DA NULL
 #define CEMU_REMOVE_ACCOUNT_INFO_0_DA NULL
 #define CEMU_INSTALL_GAME_LABEL_DA NULL
@@ -7621,6 +8098,35 @@ struct retro_core_option_v2_definition option_defs_da[] = {
 			{ NULL, NULL },
 		},
 		"auto"
+	},
+	{
+		"cemu_gamepad_motion",
+		CEMU_GAMEPAD_MOTION_LABEL_DA,
+		NULL,
+		CEMU_GAMEPAD_MOTION_INFO_0_DA,
+		NULL,
+		"system",
+		{
+			{ "disabled", "Disabled" },
+			{ "enabled", "Enabled" },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_audio_channels",
+		CEMU_AUDIO_CHANNELS_LABEL_DA,
+		NULL,
+		CEMU_AUDIO_CHANNELS_INFO_0_DA,
+		NULL,
+		"system",
+		{
+			{ "mono", OPTION_VAL_MONO_DA },
+			{ "stereo", OPTION_VAL_STEREO_DA },
+			{ "surround", OPTION_VAL_SURROUND_DA },
+			{ NULL, NULL },
+		},
+		"stereo"
 	},
 	{
 		"cemu_console_language",
@@ -8161,6 +8667,20 @@ struct retro_core_option_v2_definition option_defs_da[] = {
 		"disabled"
 	},
 	{
+		"cemu_rename_account",
+		CEMU_RENAME_ACCOUNT_LABEL_DA,
+		NULL,
+		CEMU_RENAME_ACCOUNT_INFO_0_DA,
+		NULL,
+		"accounts",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
 		"cemu_remove_account",
 		CEMU_REMOVE_ACCOUNT_LABEL_DA,
 		NULL,
@@ -8282,7 +8802,7 @@ struct retro_core_options_v2 options_da = {
 #define CATEGORY_VIDEO_LABEL_DE NULL
 #define CATEGORY_VIDEO_INFO_0_DE "Auflösung, Skalierung und Frame Pacing."
 #define CATEGORY_SHADERS_LABEL_DE "Shader"
-#define CATEGORY_SHADERS_INFO_0_DE "Shader-Übersetzung, -Caching und -Kompilierung."
+#define CATEGORY_SHADERS_INFO_0_DE "Shaderübersetzung, -caching und -kompilierung."
 #define CATEGORY_SCREEN_LABEL_DE "Bildschirm"
 #define CATEGORY_SCREEN_INFO_0_DE "Welcher Wii-U-Bildschirm angezeigt wird und wie."
 #define CATEGORY_SYSTEM_LABEL_DE NULL
@@ -8308,6 +8828,13 @@ struct retro_core_options_v2 options_da = {
 #define OPTION_VAL_SINGLECORE_RECOMPILER_DE "Einzelkern-Recompiler"
 #define OPTION_VAL_MULTICORE_RECOMPILER_DE "Mehrkern-Recompiler"
 #define OPTION_VAL_MULTICORE_INTERPRETER_DE "Mehrkern-Interpreter"
+#define CEMU_GAMEPAD_MOTION_LABEL_DE "Bewegungssteuerung des GamePads"
+#define CEMU_GAMEPAD_MOTION_INFO_0_DE "Kreisel- und Beschleunigungssensor des GamePads, ausgelesen von RetroArch an Port 1: die Sensoren eines Smartphones oder Tablets oder die eines Controllers, sofern der Eingabetreiber von RetroArch sie unterstützt (DualShock 4, DualSense und andere). Spiele, bei denen durch Neigen des GamePads gezielt oder gelenkt wird, benötigen diese Funktion. Aus: Das GamePad bleibt unbewegt, wie bei deaktivierter Bewegungssteuerung im Standalone-Modus."
+#define CEMU_AUDIO_CHANNELS_LABEL_DE "Audiokanäle (Neustart)"
+#define CEMU_AUDIO_CHANNELS_INFO_0_DE "Der Fernseher, den die Konsole den Spielen meldet, entsprechend der Einstellung „TV-Kanäle“ in der Standalone-Version: Spiele, die diese Einstellung unterstützen, mischen den Ton für die angegebene Anzahl an Lautsprechern ab. Surround-Sound in 5.1 wird an RetroArch als 6-Kanal-Audio ausgegeben, sofern Mehrkanal-Audioausgabe verfügbar ist; andernfalls wird er auf Stereo heruntergemischt."
+#define OPTION_VAL_MONO_DE NULL
+#define OPTION_VAL_STEREO_DE NULL
+#define OPTION_VAL_SURROUND_DE NULL
 #define CEMU_CONSOLE_LANGUAGE_LABEL_DE "Konsolensprache"
 #define OPTION_VAL_ENGLISH_DE "Englisch"
 #define OPTION_VAL_JAPANESE_DE "Japanisch"
@@ -8321,10 +8848,10 @@ struct retro_core_options_v2 options_da = {
 #define OPTION_VAL_PORTUGUESE_DE "Portugiesisch"
 #define OPTION_VAL_RUSSIAN_DE "Russisch"
 #define OPTION_VAL_TAIWANESE_DE "Taiwanesisch"
-#define CEMU_ASYNC_SHADER_COMPILE_LABEL_DE "Asynchrone Shader-Kompilierung"
+#define CEMU_ASYNC_SHADER_COMPILE_LABEL_DE "Asynchrone Shaderkompilierung"
 #define CEMU_GX2DRAWDONE_SYNC_LABEL_DE "GX2DrawDone-Synchronisierung"
 #define CEMU_PRECOMPILED_SHADERS_LABEL_DE "Vorkompilierte Shader"
-#define CEMU_ACCURATE_SHADER_MUL_LABEL_DE "Präzise Shader-Multiplikation"
+#define CEMU_ACCURATE_SHADER_MUL_LABEL_DE "Präzise Shadermultiplikation"
 #define CEMU_SHOW_GAME_FPS_LABEL_DE "Spiel-FPS anzeigen"
 #define CEMU_SHOW_GAME_FPS_INFO_0_DE "Zeigt die Bildrate an, mit der das Spiel rendert. Der eigene FPS-Zähler von RetroArch zählt, wie oft der Core ausgeführt wird, und bleibt bei 60, wenn das Spiel Frames auslässt, da jeder Durchlauf die Audiomenge eines Frames enthält."
 #define CEMU_UPSCALE_FILTER_LABEL_DE "Hochskalierungsfilter"
@@ -8384,7 +8911,7 @@ struct retro_core_options_v2 options_da = {
 #define CEMU_LOG_THREAD_TIME_LABEL_DE "Thread-CPU-Zeit protokollieren (Debuggen)"
 #define CEMU_LOG_THREAD_TIME_INFO_0_DE "Einmal pro Sekunde wird erfasst, wie stark die Threads der emulierten PowerPC-Kerne, der GPU-Thread und der Frontend-Thread ausgelastet waren – jeweils als Anteil der Auslastung eines Host-Kerns. Ein Thread mit nahezu 100 % Auslastung ist derjenige, auf den ein langsames Spiel wartet."
 #define CEMU_DUMP_SHADERS_LABEL_DE "Shader dumpen (Debuggen)"
-#define CEMU_DUMP_SHADERS_INFO_0_DE "Schreibt den Quelltext jedes vom Spiel verwendeten Shaders nach system/Cemu/dump/shaders. Die Dateien werden nach ihren Hashes benannt, wie sie in log.txt erscheinen. Zum Melden von Shadern, die auf einer bestimmten GPU fehlschlagen oder fehlerhaft dargestellt werden. Verlangsamt die Shader-Kompilierung und füllt den Ordner schnell, daher anschließend wieder deaktivieren."
+#define CEMU_DUMP_SHADERS_INFO_0_DE "Schreibt den Quelltext jedes vom Spiel verwendeten Shaders nach system/Cemu/dump/shaders. Die Dateien werden nach ihren Hashes benannt, wie sie in log.txt erscheinen. Zum Melden von Shadern, die auf einer bestimmten GPU fehlschlagen oder fehlerhaft dargestellt werden. Verlangsamt die Shaderkompilierung und füllt den Ordner schnell, daher anschließend wieder deaktivieren."
 #define CEMU_BC1_16BIT_LABEL_DE "BC1-Texturspeicher reduzieren"
 #define CEMU_BC1_16BIT_INFO_0_DE "Halbiert den Speicherbedarf von BC1-Texturen auf GPUs, die BC nicht abtasten können, auf Kosten eines Bits im Grünkanal. Hat keine Auswirkungen, wenn BC unterstützt wird."
 #define CEMU_GPU_API_LABEL_DE "Grafik-API"
@@ -8394,19 +8921,21 @@ struct retro_core_options_v2 options_da = {
 #define CEMU_ACCOUNT_LABEL_DE "Aktives Konto"
 #define CEMU_ACCOUNT_INFO_0_DE "Das Wii-U-Konto, unter dem das Spiel ausgeführt wird, jeweils mit eigenen Spielständen und eigenem Mii. Die Liste enthält die Konten im Kontenverzeichnis.\n\nEine Änderung wird wirksam, wenn der Titel beendet und neu gestartet oder zurückgesetzt wird. Bis dahin speichert der laufende Titel weiterhin in dem Konto, mit dem er gestartet wurde."
 #define CEMU_CREATE_ACCOUNT_LABEL_DE "Konto erstellen"
-#define CEMU_CREATE_ACCOUNT_INFO_0_DE "Erstellt ein neues Konto mit der Bezeichnung „Player 2“, „Player 3“ usw. und macht es zum aktiven Konto. Anschließend wird diese Option wieder auf „Aus“ gesetzt. Die Konsole kann bis zu 12 Konten verwalten."
+#define CEMU_CREATE_ACCOUNT_INFO_0_DE "Erstellt ein neues Konto mit dem Namen „Spieler 2“, „Spieler 3“ usw. und legt es als aktives Konto fest. Anschließend springt diese Option auf „AUS“ zurück. Das neue Konto erscheint in der Kontenliste, nachdem dieses Menü geschlossen und erneut geöffnet wurde. Auf der Konsole können bis zu 12 Konten gespeichert werden."
+#define CEMU_RENAME_ACCOUNT_LABEL_DE "Aktives Konto umbenennen"
+#define CEMU_RENAME_ACCOUNT_INFO_0_DE "Öffnet nach dem Schließen dieses Menüs die Namenseingabe für das aktive Konto und springt anschließend auf „AUS“ zurück. Der bisher eingegebene Name wird als Benachrichtigung über dem Spiel angezeigt. Daher müssen die Bildschirmanzeigen des Frontends aktiviert sein.\n\nMit einem Controller: Mit Oben und Unten das letzte Zeichen ändern, mit Rechts ein Zeichen hinzufügen, mit Links ein Zeichen entfernen, mit Start bestätigen und mit Select abbrechen.\n\nMit einer Tastatur: Text eingeben, mit der Rücktaste ein Zeichen entfernen, mit Eingabe bestätigen und mit Esc abbrechen (möglicherweise muss im Frontend der Spielfokus aktiviert sein, damit Tasten an den Core weitergegeben werden).\n\nEin Name darf bis zu 10 Zeichen lang sein. Bis zum Schließen der Eingabe werden keine Eingaben an das Spiel weitergegeben. Bei einem laufenden Spiel wird der neue Name erst nach einem erneuten Start angezeigt."
 #define CEMU_REMOVE_ACCOUNT_LABEL_DE "Konto entfernen"
-#define CEMU_REMOVE_ACCOUNT_INFO_0_DE "WARNUNG: Durch das Entfernen eines Kontos werden auch dessen Speicherdaten in allen Spielen gelöscht. Dieser Vorgang kann nicht rückgängig gemacht werden.\n\nEntfernt das ausgewählte Konto wie beim Löschen eines Benutzers auf der Konsole: Das Konto wird aus dem Kontoverzeichnis und seine Spielstände werden aus den Speicherordnern aller Titel entfernt. Das Konto wird beim Verlassen des Menüs entfernt; anschließend wird diese Option wieder auf AUS gesetzt.\n\nDas aktive Konto kann nicht entfernt werden. Ebenso wenig kann das Konto entfernt werden, mit dem das laufende Spiel gestartet wurde, solange das Spiel nicht geschlossen ist. Daher kann das letzte Konto nicht entfernt werden."
+#define CEMU_REMOVE_ACCOUNT_INFO_0_DE "Entfernt das ausgewählte Konto beim Verlassen dieses Menüs aus dem Kontoverzeichnis (saves/Cemu/mlc01/usr/save/system/act), wie beim Löschen eines Benutzers auf der Konsole. Beim erneuten Öffnen des Menüs wird die Option wieder als AUS angezeigt.\n\nDas aktive Konto kann nicht entfernt werden. Ebenso wenig kann das Konto entfernt werden, mit dem das laufende Spiel gestartet wurde, solange das Spiel nicht geschlossen ist.\n\nWARNUNG: Beim Entfernen eines Kontos werden auch alle damit erstellten Spielstände in sämtlichen Spielen dauerhaft gelöscht. Spielstände, die erhalten bleiben sollen, vor dem Entfernen sichern."
 #define CEMU_INSTALL_GAME_LABEL_DE "Spiele installieren"
-#define CEMU_INSTALL_GAME_INFO_0_DE "Installiert alle Spiele aus system/Cemu/titles einschließlich aller Unterordner in das Verzeichnis für installierte Spiele der emulierten Wii U (saves/Cemu/mlc01/usr/title/00050000), so wie die Konsole ein Spiel von einer Disc installiert. Ein Spiel ist ein Disc-Image (.wud, .wux, .iso) oder eine .wua-Datei. Darin enthaltene Titelupdates und DLC werden ebenfalls installiert. Ein Spiel, das bereits in derselben oder einer neueren Version installiert ist, bleibt unverändert.\n\nWenn diese Option auf EIN steht, beginnt die Installation sofort. Der Fortschritt wird als Benachrichtigung angezeigt. Die Option wird wieder auf AUS gesetzt, sobald alle Spiele installiert sind. Ein installiertes Spiel wird gestartet, indem die .rpx-Datei im code-Ordner des Spiels im Verzeichnis für installierte Spiele geladen wird. Das Disc-Image wird dafür nicht mehr benötigt."
+#define CEMU_INSTALL_GAME_INFO_0_DE "Installiert alle Spiele aus dem Quellverzeichnis (system/Cemu/titles) einschließlich aller Unterordner in das Verzeichnis für installierte Spiele der emulierten Wii U (saves/Cemu/mlc01/usr/title/00050000), so wie die Konsole ein Spiel von einer Disc installiert. Ein Spiel ist ein Disc-Image (.wud, .wux, .iso) oder eine .wua-Datei. Darin enthaltene Titelupdates und DLC werden ebenfalls installiert. Für ein verschlüsseltes Disc-Image (.wud, .wux) wird der Disc-Schlüssel benötigt: entweder in einer Datei mit demselben Namen und der Endung .key daneben (game.wux, game.key) oder in system/Cemu/keys.txt. Ein Spiel, das bereits in derselben oder einer neueren Version installiert ist, bleibt unverändert.\n\nWenn diese Option auf EIN steht, beginnt die Installation sofort. Der Fortschritt wird als Benachrichtigung angezeigt. Die Option wird wieder auf AUS gesetzt, sobald alle Spiele installiert sind und dieses Menü verlassen oder eine andere Option geändert wird. Ein installiertes Spiel wird gestartet, indem die .rpx-Datei im code-Ordner des Spiels im Verzeichnis für installierte Spiele geladen wird. Das Disc-Image wird dafür nicht mehr benötigt."
 #define CEMU_UNINSTALL_GAME_LABEL_DE "Spiel deinstallieren"
-#define CEMU_UNINSTALL_GAME_INFO_0_DE "Deinstalliert das laufende Spiel aus dem Verzeichnis für installierte Spiele (saves/Cemu/mlc01/usr/title/00050000), sobald das Spiel beendet oder zurückgesetzt wurde, einschließlich des installierten Updates und DLCs; bis dahin bleibt die Option auf EIN. Die Spielstände sowie das Disk-Image oder die .wua-Datei, aus dem beziehungsweise der das Spiel installiert wurde, bleiben erhalten."
+#define CEMU_UNINSTALL_GAME_INFO_0_DE "Deinstalliert das laufende Spiel sowie alle zugehörigen Titelupdates und DLC aus dem Installationsverzeichnis (saves/Cemu/mlc01/usr/title), sobald das Spiel geschlossen oder zurückgesetzt wird. Die Option bleibt bis dahin auf EIN. Spielstände für die Titel-ID des Spiels (saves/Cemu/mlc01/usr/save/) werden nicht entfernt."
 #define CEMU_INSTALL_TITLES_LABEL_DE "Inhalt installieren"
-#define CEMU_INSTALL_TITLES_INFO_0_DE "Installiert alle Titelupdates und DLC aus system/Cemu/titles einschließlich aller Unterordner in den Speicher der emulierten Wii U (saves/Cemu/mlc01/usr/title). Jedes Update und jedes DLC muss sich in einem eigenen Ordner in system/Cemu/titles befinden. Für einen NUS-Download (.app-Dateien) müssen die zugehörigen title.tmd und title.tik sowie der Entschlüsselungsschlüssel danebenliegen. Eine bereits installierte Version, die gleich oder neuer ist, bleibt unverändert.\n\nWenn diese Option auf EIN steht, beginnt die Installation sofort. Der Fortschritt wird als Benachrichtigung angezeigt. Die Option wird wieder auf AUS gesetzt, sobald alle Inhalte installiert sind und dieses Menü verlassen oder eine andere Option geändert wird. Nach einem Neustart verwendet das Spiel die installierten Inhalte.\n\nInhalte von anderen Speicherorten lassen sich über RetroArchs „Hauptmenü“ > „Inhalte laden“ installieren. Dazu die zugehörige title.tmd auswählen; die title.tik muss danebenliegen."
+#define CEMU_INSTALL_TITLES_INFO_0_DE "Installiert alle Titelupdates und DLC aus dem Quellverzeichnis (system/Cemu/titles) einschließlich aller Unterordner in das Installationsverzeichnis (saves/Cemu/mlc01/usr/title). Jedes Update und jedes DLC muss sich in einem eigenen Ordner im Quellverzeichnis befinden. Bei einem NUS-Download (.app-Dateien) müssen die zugehörigen title.tmd- und title.tik-Dateien sowie der Entschlüsselungsschlüssel danebenliegen. Eine bereits installierte Version, die gleich oder neuer ist, bleibt unverändert.\n\nWenn diese Option auf EIN steht, beginnt die Installation sofort. Der Fortschritt wird als Benachrichtigung angezeigt. Die Option wird wieder auf AUS gesetzt, sobald alle Inhalte installiert sind und dieses Menü verlassen oder eine andere Option geändert wird. Nach einem Neustart verwendet das Spiel die installierten Inhalte.\n\nInhalte von anderen Speicherorten lassen sich über RetroArchs „Hauptmenü“ > „Inhalte laden“ installieren. Dazu die zugehörige title.tmd auswählen; die title.tik muss danebenliegen."
 #define CEMU_UNINSTALL_TITLES_LABEL_DE "Inhalt deinstallieren"
-#define CEMU_UNINSTALL_TITLES_INFO_0_DE "Deinstalliert das Titelupdate und die DLC des laufenden Spiels aus dem Speicher der emulierten Wii U (saves/Cemu/mlc01/usr/title), sobald das Spiel geschlossen oder zurückgesetzt wird. Die Option bleibt bis dahin auf EIN. Kopien in system/Cemu/titles bleiben unberührt."
+#define CEMU_UNINSTALL_TITLES_INFO_0_DE "Deinstalliert das Titelupdate und die DLC des laufenden Spiels aus dem Installationsverzeichnis (saves/Cemu/mlc01/usr/title), sobald das Spiel geschlossen oder zurückgesetzt wird. Die Option bleibt bis dahin auf EIN. Kopien im Quellverzeichnis (system/Cemu/titles) bleiben unberührt."
 #define CEMU_INSTALL_REMOVE_SOURCE_LABEL_DE "Dateien nach der Installation entfernen"
-#define CEMU_INSTALL_REMOVE_SOURCE_INFO_0_DE "WARNUNG: Dadurch werden Dateien aus system/Cemu/titles gelöscht. Dieser Vorgang kann nicht rückgängig gemacht werden. system/Cemu/titles ist ein Ordner, der vom Core verwaltet wird. Die einzige Kopie eines Dumps sollte an anderer Stelle aufbewahrt werden.\n\nLöscht aus system/Cemu/titles alle Dateien, die über „Spiele installieren“ und „Inhalte installieren“ dort installiert wurden: einen Ordner mit einem Titel-Update oder DLC nach dessen Installation sowie ein Disc-Image oder eine .wua-Datei, sobald alle darin enthaltenen Inhalte installiert sind („Inhalte installieren“ allein lässt eine .wua-Datei zurück, die auch das Spiel enthält). Vom laufenden Spiel verwendete Dateien werden gelöscht, sobald es geschlossen oder zurückgesetzt wird. Über „Inhalte laden“ geladene Inhalte bleiben an ihrem Speicherort."
+#define CEMU_INSTALL_REMOVE_SOURCE_INFO_0_DE "Entfernt aus dem Quellverzeichnis (system/Cemu/titles), was über „Spiele installieren“ und „Inhalte installieren“ installiert wurde: den Ordner eines Titelupdates oder DLCs nach dessen Installation sowie ein Disc-Image (einschließlich der zugehörigen .key-Datei) oder eine .wua-Datei, sobald alle darin enthaltenen Inhalte installiert sind. Vom laufenden Spiel verwendete Dateien werden beim Schließen oder Zurücksetzen des Spiels entfernt.\n\nWARNUNG: Dadurch werden Dateien dauerhaft aus dem Quellverzeichnis entfernt. Dieses Verzeichnis ist für die Verwaltung durch den Core vorgesehen. Spielinhalte, die archiviert werden sollen, an anderer Stelle aufbewahren."
 #define CEMU_WUA_OUTPUT_DIR_LABEL_DE "Ausgabeverzeichnis"
 #define CEMU_WUA_OUTPUT_DIR_INFO_0_DE "Wohin die .wua-Datei gespeichert wird. Dafür muss Speicherplatz vorhanden sein."
 #define CEMU_CONVERT_TO_WUA_LABEL_DE "Konvertierung in WUA starten"
@@ -8445,6 +8974,35 @@ struct retro_core_option_v2_definition option_defs_de[] = {
 			{ NULL, NULL },
 		},
 		"auto"
+	},
+	{
+		"cemu_gamepad_motion",
+		CEMU_GAMEPAD_MOTION_LABEL_DE,
+		NULL,
+		CEMU_GAMEPAD_MOTION_INFO_0_DE,
+		NULL,
+		"system",
+		{
+			{ "disabled", "Disabled" },
+			{ "enabled", "Enabled" },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_audio_channels",
+		CEMU_AUDIO_CHANNELS_LABEL_DE,
+		NULL,
+		CEMU_AUDIO_CHANNELS_INFO_0_DE,
+		NULL,
+		"system",
+		{
+			{ "mono", OPTION_VAL_MONO_DE },
+			{ "stereo", OPTION_VAL_STEREO_DE },
+			{ "surround", OPTION_VAL_SURROUND_DE },
+			{ NULL, NULL },
+		},
+		"stereo"
 	},
 	{
 		"cemu_console_language",
@@ -8985,6 +9543,20 @@ struct retro_core_option_v2_definition option_defs_de[] = {
 		"disabled"
 	},
 	{
+		"cemu_rename_account",
+		CEMU_RENAME_ACCOUNT_LABEL_DE,
+		NULL,
+		CEMU_RENAME_ACCOUNT_INFO_0_DE,
+		NULL,
+		"accounts",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
 		"cemu_remove_account",
 		CEMU_REMOVE_ACCOUNT_LABEL_DE,
 		NULL,
@@ -9132,6 +9704,13 @@ struct retro_core_options_v2 options_de = {
 #define OPTION_VAL_SINGLECORE_RECOMPILER_EL NULL
 #define OPTION_VAL_MULTICORE_RECOMPILER_EL NULL
 #define OPTION_VAL_MULTICORE_INTERPRETER_EL NULL
+#define CEMU_GAMEPAD_MOTION_LABEL_EL NULL
+#define CEMU_GAMEPAD_MOTION_INFO_0_EL NULL
+#define CEMU_AUDIO_CHANNELS_LABEL_EL NULL
+#define CEMU_AUDIO_CHANNELS_INFO_0_EL NULL
+#define OPTION_VAL_MONO_EL NULL
+#define OPTION_VAL_STEREO_EL NULL
+#define OPTION_VAL_SURROUND_EL NULL
 #define CEMU_CONSOLE_LANGUAGE_LABEL_EL NULL
 #define OPTION_VAL_ENGLISH_EL "Αγγλικά"
 #define OPTION_VAL_JAPANESE_EL "Ιαπωνικά"
@@ -9219,6 +9798,8 @@ struct retro_core_options_v2 options_de = {
 #define CEMU_ACCOUNT_INFO_0_EL NULL
 #define CEMU_CREATE_ACCOUNT_LABEL_EL NULL
 #define CEMU_CREATE_ACCOUNT_INFO_0_EL NULL
+#define CEMU_RENAME_ACCOUNT_LABEL_EL NULL
+#define CEMU_RENAME_ACCOUNT_INFO_0_EL NULL
 #define CEMU_REMOVE_ACCOUNT_LABEL_EL NULL
 #define CEMU_REMOVE_ACCOUNT_INFO_0_EL NULL
 #define CEMU_INSTALL_GAME_LABEL_EL NULL
@@ -9269,6 +9850,35 @@ struct retro_core_option_v2_definition option_defs_el[] = {
 			{ NULL, NULL },
 		},
 		"auto"
+	},
+	{
+		"cemu_gamepad_motion",
+		CEMU_GAMEPAD_MOTION_LABEL_EL,
+		NULL,
+		CEMU_GAMEPAD_MOTION_INFO_0_EL,
+		NULL,
+		"system",
+		{
+			{ "disabled", "Disabled" },
+			{ "enabled", "Enabled" },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_audio_channels",
+		CEMU_AUDIO_CHANNELS_LABEL_EL,
+		NULL,
+		CEMU_AUDIO_CHANNELS_INFO_0_EL,
+		NULL,
+		"system",
+		{
+			{ "mono", OPTION_VAL_MONO_EL },
+			{ "stereo", OPTION_VAL_STEREO_EL },
+			{ "surround", OPTION_VAL_SURROUND_EL },
+			{ NULL, NULL },
+		},
+		"stereo"
 	},
 	{
 		"cemu_console_language",
@@ -9809,6 +10419,20 @@ struct retro_core_option_v2_definition option_defs_el[] = {
 		"disabled"
 	},
 	{
+		"cemu_rename_account",
+		CEMU_RENAME_ACCOUNT_LABEL_EL,
+		NULL,
+		CEMU_RENAME_ACCOUNT_INFO_0_EL,
+		NULL,
+		"accounts",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
 		"cemu_remove_account",
 		CEMU_REMOVE_ACCOUNT_LABEL_EL,
 		NULL,
@@ -9956,6 +10580,13 @@ struct retro_core_options_v2 options_el = {
 #define OPTION_VAL_SINGLECORE_RECOMPILER_EN NULL
 #define OPTION_VAL_MULTICORE_RECOMPILER_EN NULL
 #define OPTION_VAL_MULTICORE_INTERPRETER_EN NULL
+#define CEMU_GAMEPAD_MOTION_LABEL_EN NULL
+#define CEMU_GAMEPAD_MOTION_INFO_0_EN NULL
+#define CEMU_AUDIO_CHANNELS_LABEL_EN NULL
+#define CEMU_AUDIO_CHANNELS_INFO_0_EN NULL
+#define OPTION_VAL_MONO_EN NULL
+#define OPTION_VAL_STEREO_EN NULL
+#define OPTION_VAL_SURROUND_EN NULL
 #define CEMU_CONSOLE_LANGUAGE_LABEL_EN NULL
 #define OPTION_VAL_ENGLISH_EN NULL
 #define OPTION_VAL_JAPANESE_EN NULL
@@ -10043,6 +10674,8 @@ struct retro_core_options_v2 options_el = {
 #define CEMU_ACCOUNT_INFO_0_EN NULL
 #define CEMU_CREATE_ACCOUNT_LABEL_EN NULL
 #define CEMU_CREATE_ACCOUNT_INFO_0_EN NULL
+#define CEMU_RENAME_ACCOUNT_LABEL_EN NULL
+#define CEMU_RENAME_ACCOUNT_INFO_0_EN NULL
 #define CEMU_REMOVE_ACCOUNT_LABEL_EN NULL
 #define CEMU_REMOVE_ACCOUNT_INFO_0_EN NULL
 #define CEMU_INSTALL_GAME_LABEL_EN NULL
@@ -10093,6 +10726,35 @@ struct retro_core_option_v2_definition option_defs_en[] = {
 			{ NULL, NULL },
 		},
 		"auto"
+	},
+	{
+		"cemu_gamepad_motion",
+		CEMU_GAMEPAD_MOTION_LABEL_EN,
+		NULL,
+		CEMU_GAMEPAD_MOTION_INFO_0_EN,
+		NULL,
+		"system",
+		{
+			{ "disabled", "Disabled" },
+			{ "enabled", "Enabled" },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_audio_channels",
+		CEMU_AUDIO_CHANNELS_LABEL_EN,
+		NULL,
+		CEMU_AUDIO_CHANNELS_INFO_0_EN,
+		NULL,
+		"system",
+		{
+			{ "mono", OPTION_VAL_MONO_EN },
+			{ "stereo", OPTION_VAL_STEREO_EN },
+			{ "surround", OPTION_VAL_SURROUND_EN },
+			{ NULL, NULL },
+		},
+		"stereo"
 	},
 	{
 		"cemu_console_language",
@@ -10633,6 +11295,20 @@ struct retro_core_option_v2_definition option_defs_en[] = {
 		"disabled"
 	},
 	{
+		"cemu_rename_account",
+		CEMU_RENAME_ACCOUNT_LABEL_EN,
+		NULL,
+		CEMU_RENAME_ACCOUNT_INFO_0_EN,
+		NULL,
+		"accounts",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
 		"cemu_remove_account",
 		CEMU_REMOVE_ACCOUNT_LABEL_EN,
 		NULL,
@@ -10780,6 +11456,13 @@ struct retro_core_options_v2 options_en = {
 #define OPTION_VAL_SINGLECORE_RECOMPILER_EO NULL
 #define OPTION_VAL_MULTICORE_RECOMPILER_EO NULL
 #define OPTION_VAL_MULTICORE_INTERPRETER_EO NULL
+#define CEMU_GAMEPAD_MOTION_LABEL_EO NULL
+#define CEMU_GAMEPAD_MOTION_INFO_0_EO NULL
+#define CEMU_AUDIO_CHANNELS_LABEL_EO NULL
+#define CEMU_AUDIO_CHANNELS_INFO_0_EO NULL
+#define OPTION_VAL_MONO_EO "Unukanala"
+#define OPTION_VAL_STEREO_EO "Dukanala"
+#define OPTION_VAL_SURROUND_EO NULL
 #define CEMU_CONSOLE_LANGUAGE_LABEL_EO NULL
 #define OPTION_VAL_ENGLISH_EO "Angla"
 #define OPTION_VAL_JAPANESE_EO "Japana"
@@ -10867,6 +11550,8 @@ struct retro_core_options_v2 options_en = {
 #define CEMU_ACCOUNT_INFO_0_EO NULL
 #define CEMU_CREATE_ACCOUNT_LABEL_EO NULL
 #define CEMU_CREATE_ACCOUNT_INFO_0_EO NULL
+#define CEMU_RENAME_ACCOUNT_LABEL_EO NULL
+#define CEMU_RENAME_ACCOUNT_INFO_0_EO NULL
 #define CEMU_REMOVE_ACCOUNT_LABEL_EO NULL
 #define CEMU_REMOVE_ACCOUNT_INFO_0_EO NULL
 #define CEMU_INSTALL_GAME_LABEL_EO NULL
@@ -10917,6 +11602,35 @@ struct retro_core_option_v2_definition option_defs_eo[] = {
 			{ NULL, NULL },
 		},
 		"auto"
+	},
+	{
+		"cemu_gamepad_motion",
+		CEMU_GAMEPAD_MOTION_LABEL_EO,
+		NULL,
+		CEMU_GAMEPAD_MOTION_INFO_0_EO,
+		NULL,
+		"system",
+		{
+			{ "disabled", "Disabled" },
+			{ "enabled", "Enabled" },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_audio_channels",
+		CEMU_AUDIO_CHANNELS_LABEL_EO,
+		NULL,
+		CEMU_AUDIO_CHANNELS_INFO_0_EO,
+		NULL,
+		"system",
+		{
+			{ "mono", OPTION_VAL_MONO_EO },
+			{ "stereo", OPTION_VAL_STEREO_EO },
+			{ "surround", OPTION_VAL_SURROUND_EO },
+			{ NULL, NULL },
+		},
+		"stereo"
 	},
 	{
 		"cemu_console_language",
@@ -11457,6 +12171,20 @@ struct retro_core_option_v2_definition option_defs_eo[] = {
 		"disabled"
 	},
 	{
+		"cemu_rename_account",
+		CEMU_RENAME_ACCOUNT_LABEL_EO,
+		NULL,
+		CEMU_RENAME_ACCOUNT_INFO_0_EO,
+		NULL,
+		"accounts",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
 		"cemu_remove_account",
 		CEMU_REMOVE_ACCOUNT_LABEL_EO,
 		NULL,
@@ -11604,6 +12332,13 @@ struct retro_core_options_v2 options_eo = {
 #define OPTION_VAL_SINGLECORE_RECOMPILER_ES "Recompilador mononúcleo"
 #define OPTION_VAL_MULTICORE_RECOMPILER_ES "Recompilador multinúcleo"
 #define OPTION_VAL_MULTICORE_INTERPRETER_ES "Intérprete multinúcleo"
+#define CEMU_GAMEPAD_MOTION_LABEL_ES "Movimientos del GamePad"
+#define CEMU_GAMEPAD_MOTION_INFO_0_ES "Asigna el giroscopio y acelerómetro del GamePad a los sensores que leerá el RetroPad del puerto 1: los de un smartphone o tablet por un lado, o los de un mando que pueda reconocer el controlador de entrada de RetroArch por el otro (DualShock 4, DualSense, entre otros). Necesario para juegos en los que se apunte o conduzca con el GamePad. Desactiva esta opción para que el GamePad se quede quieto, desactivando sus movimientos."
+#define CEMU_AUDIO_CHANNELS_LABEL_ES "Canales de audio (es necesario reiniciar)"
+#define CEMU_AUDIO_CHANNELS_INFO_0_ES "Establece el tipo de televisor que indica la consola a los juegos (tal y como estaría configurado dicho televisor): los juegos que sean compatibles producirán una mezcla de audio para el número de altavoces indicado. 5.1 Surround se mostrará en RetroArch como seis canales si tiene activada la salida de audio multicanal, en caso contrario, se convertirá a estéreo."
+#define OPTION_VAL_MONO_ES "Monoaural"
+#define OPTION_VAL_STEREO_ES "Estéreo"
+#define OPTION_VAL_SURROUND_ES "5.1 Surround"
 #define CEMU_CONSOLE_LANGUAGE_LABEL_ES "Idioma de la consola"
 #define OPTION_VAL_ENGLISH_ES "Inglés"
 #define OPTION_VAL_JAPANESE_ES "Japonés"
@@ -11630,14 +12365,14 @@ struct retro_core_options_v2 options_eo = {
 #define OPTION_VAL_NEAREST_ES "Más cercano"
 #define CEMU_DOWNSCALE_FILTER_LABEL_ES "Filtro de reducción de escala"
 #define CEMU_INTERNAL_RESOLUTION_LABEL_ES "Resolución interna"
-#define CEMU_INTERNAL_RESOLUTION_INFO_0_ES NULL
-#define OPTION_VAL_0_25X_ES NULL
-#define OPTION_VAL_0_5X_ES NULL
-#define OPTION_VAL_0_75X_ES NULL
+#define CEMU_INTERNAL_RESOLUTION_INFO_0_ES "Una alternativa genérica para aquellos juegos que no tengan paquetes de gráficos para resoluciones: reescala todos los objetivos de renderizado con forma de pantalla, usados por algunos juegos en cosas que fallan al ser reescaladas. El valor es un múltiplo de la resolución interna del juego: si el juego se muestra a 720p, × 0,5 la reducirá a 640 × 360, una cuarta parte de los píxeles, y un valor de × 2 la duplicaría a 2560 × 1440; en el caso de un juego mostrado a 1080p, x 160 reducirá su resolución a 960 × 540. Cuando se active un paquete de resolución para el juego cargado (un paquete de gráficos), el paquete establecerá una resolución concreta y esta opción quedará oculta."
+#define OPTION_VAL_0_25X_ES "× 0,25 (320 × 180 a 720p)"
+#define OPTION_VAL_0_5X_ES "× 0,5 (640 × 360 a 720p)"
+#define OPTION_VAL_0_75X_ES "× 0,75 (960 × 540 a 720p)"
 #define OPTION_VAL_NATIVE_ES "Nativa"
-#define OPTION_VAL_1_5X_ES NULL
-#define OPTION_VAL_2X_ES NULL
-#define OPTION_VAL_3X_ES NULL
+#define OPTION_VAL_1_5X_ES "× 1,5 (1920 × 1080 a 720p)"
+#define OPTION_VAL_2X_ES "× 2 (2560 × 1440 a 720p)"
+#define OPTION_VAL_3X_ES "× 3 (3840 × 2160 a 720p)"
 #define CEMU_THREAD_QUANTUM_LABEL_ES "Cuantía de hilos"
 #define CEMU_RUMBLE_STRENGTH_LABEL_ES "Intensidad de vibración"
 #define CEMU_RUMBLE_STRENGTH_INFO_0_ES "Establece la fuerza con la que vibrará el mando cuando lo ordene el juego: la del motor del GamePad y la del mando de Wii o el mando Pro. Si desactivas esta opción, el front-end no transmitirá ninguna señal de vibración."
@@ -11675,10 +12410,10 @@ struct retro_core_options_v2 options_eo = {
 #define CEMU_LOG_TEXTURE_MEMORY_INFO_0_ES "Informa de la cantidad de memoria de texturas en formato BC que ha tenido que ser descomprimida porque la GPU no puede leer sus muestras."
 #define CEMU_LOG_INPUT_API_LABEL_ES "Registrar llamadas a API de mando (depuración)"
 #define CEMU_LOG_INPUT_API_INFO_0_ES "Registra todas las llamadas que hace un título a los mandos: qué mandos ha sondeado y qué ha recibido de vuelta. Es muy molesto; se muestra durante varios segundos."
-#define CEMU_LOG_AUDIO_LABEL_ES NULL
-#define CEMU_LOG_AUDIO_INFO_0_ES NULL
-#define CEMU_LOG_THREAD_TIME_LABEL_ES NULL
-#define CEMU_LOG_THREAD_TIME_INFO_0_ES NULL
+#define CEMU_LOG_AUDIO_LABEL_ES "Registrar ritmo de audio y de fotogramas (depuración)"
+#define CEMU_LOG_AUDIO_INFO_0_ES "Registra una vez por segundo cuántas muestras ha producido el AX, cuantas pérdidas ha sufrido el anillo y cuántas ha sufrido el front-end, así como cuántas veces ha ejecutado el front-end al núcleo, cuántos fotogramas ha acabado el título y dónde se ha dedicado el tiempo (a esperar al hilo de la CPU, a presentar, al audio). Sirve para identificar si un juego está ralentizándose debido a la CPU emulada, la GPU o el front-end."
+#define CEMU_LOG_THREAD_TIME_LABEL_ES "Registrar duración de hilos de CPU (depuración)"
+#define CEMU_LOG_THREAD_TIME_INFO_0_ES "Registra una vez por segundo la ocupación de cada hilo emulado del PowerPC, de la GPU y del front-end en porcentajes por cada núcleo del equipo. Un hilo cuyo porcentaje esté muy cerca del 100 % será el hilo al que esté esperando un juego ralentizado."
 #define CEMU_DUMP_SHADERS_LABEL_ES "Volcar shaders (depuración)"
 #define CEMU_DUMP_SHADERS_INFO_0_ES "Escribe el origen de todos los shaders usados por un juego en system/Cemu/dump/shaders, nombrándolos con sus hashes tal y como aparezcan en el archivo log.txt. Utiliza esta opción cuando quieras informar de un shader que falle o que se muestre erróneamente en una GPU concreta. Ralentizará la compilación de shaders y llenará rápidamente la carpeta, así que desactiva esta opción en cuanto hayas acabado."
 #define CEMU_BC1_16BIT_LABEL_ES "Reducir memoria de texturas BC1"
@@ -11690,19 +12425,21 @@ struct retro_core_options_v2 options_eo = {
 #define CEMU_ACCOUNT_LABEL_ES "Cuenta activa"
 #define CEMU_ACCOUNT_INFO_0_ES "Indica la cuenta de Wii U con la que se ejecutará el juego, con sus datos guardados y Mii correspondientes. Esta lista mostrará todas las cuentas del directorio de cuentas.\n\nLos cambios se aplicarán al cerrar y volver a abrir o al reiniciar un contenido. Hasta entonces, el título que se esté ejecutando seguirá guardando información en la cuenta con la que se haya ejecutado."
 #define CEMU_CREATE_ACCOUNT_LABEL_ES "Crear cuenta"
-#define CEMU_CREATE_ACCOUNT_INFO_0_ES "Crea una cuenta nueva llamada Jugador 2, Jugador 3, etcétera; y la asigna como cuenta activa. Tras crear dicha cuenta, esta opción volverá a desactivarse. Una consola puede tener hasta 12 cuentas."
+#define CEMU_CREATE_ACCOUNT_INFO_0_ES "Crea una cuenta nueva llamada Jugador 2, Jugador 3, etcétera; y la asigna como cuenta activa. Tras crear dicha cuenta, esta opción volverá a desactivarse. La cuenta nueva aparecerá en la lista de cuentas una vez hayas salido y vuelto a entrar a este menú. Una consola puede tener hasta 12 cuentas."
+#define CEMU_RENAME_ACCOUNT_LABEL_ES "Cambiar nombre de cuenta activa"
+#define CEMU_RENAME_ACCOUNT_INFO_0_ES "Abre la pantalla de introducción de nombre de la cuenta activa una vez hayas salido de este menú y luego desactiva esta opción. El nombre se mostrará como una notificación superpuesta al juego, así que es necesario tener activadas las notificaciones en pantalla del front-end.\n\nCon mando: Arriba/Abajo cambian el último carácter, Derecha añade uno, Izquierda quita uno, START acepta y SELECT cancela.\n\nCon teclado: escribe con las teclas, Retroceso quita el último carácter, Intro acepta, Esc cancela (es posible que el front-end necesite que la prioridad al juego esté activada para transmitir las pulsaciones al núcleo).\n\nUn nombre puede tener hasta 10 caracteres. El juego no recibirá pulsaciones hasta que se termine de introducir un nombre, un juego que se esté ejecutando mostrará el nombre nuevo cuando se haya reiniciado."
 #define CEMU_REMOVE_ACCOUNT_LABEL_ES "Eliminar cuenta"
-#define CEMU_REMOVE_ACCOUNT_INFO_0_ES "ADVERTENCIA: si eliminas una cuenta, también borrarás sus datos guardados de todos los juegos, y esta acción no se podrá deshacer.\n\nElimina la cuenta seleccionada tal y como se eliminaría a un usuario de la consola: borrando la cuenta del directorio de cuentas y sus datos guardados de todas las carpetas de guardado de todos los títulos. La cuenta se eliminará al salir del menú y la opción volverá a desactivarse.\n\nNo se podrán eliminar ni la cuenta activa ni la cuenta con la que se haya ejecutado un juego hasta cerrar el juego para evitar eliminar la última cuenta de todas."
+#define CEMU_REMOVE_ACCOUNT_INFO_0_ES "Elimina la cuenta seleccionada del directorio de cuentas (saves/Cemu/mlc01/usr/save/system/act) tal y como eliminaría un usuario la consola en cuanto salgas de este menú. La opción se volverá a mostrar como desactivada cuando vuelvas a este menú.\n\nNo se pueden eliminar ni la cuenta activa ni la cuenta con la que se ha iniciado el juego que esté ejecutándose hasta que se haya cerrado el mismo.\n\nADVERTENCIA: si eliminas una cuenta, perderás también las partidas que hayas guardado en todos los juegos con dicha cuenta. Haz copias de seguridad de todas las partidas que quieras conservar antes de eliminar su cuenta."
 #define CEMU_INSTALL_GAME_LABEL_ES "Instalar juegos"
-#define CEMU_INSTALL_GAME_INFO_0_ES "Instala todos los juegos de system/Cemu/titles en saves/Cemu/mlc01 (subcarpetas incluidas) en el almacenamiento emulado de Wii U (saves/Cemu/mlc01/usr/title/00050000), como haría la consola al instalar un juego desde su disco. Un juego es una imagen de disco (en formato .wud, .wux o .iso) o un archivo .wua, también se instalarán las actualizaciones y contenidos descargables que incluyan los archivos .wua. Si ya existe una versión idéntica o superior, no se hará ningún cambio.\n\nAl activar esta opción la instalación comenzará inmediatamente, su progreso se mostrará en una notificación y la opción se volverá a desactivar en cuanto se hayan instalado todos los juegos. El juego instalado se podrá ejecutar cargando el archivo .rpx de su carpeta code y la imagen de disco ya no será necesaria."
+#define CEMU_INSTALL_GAME_INFO_0_ES "Instala todos los juegos del directorio de origen (system/Cemu/titles), subcarpetas incluidas, en el almacenamiento emulado de Wii U (saves/Cemu/mlc01/usr/title/00050000), como haría la consola al instalar un juego desde su disco. Un juego es una imagen de disco (en formato .wud, .wux o .iso) o un archivo .wua, también se instalarán las actualizaciones y contenidos descargables que incluyan los archivos .wua. Una imagen de disco encriptada (.wud, .wux) necesitará su clave de disco: debe ser un archivo con su mismo nombre pero con la extensión .key (juego.wux, juego.key) y situarse en la misma carpeta de la imagen o en system/Cemu/keys.txt. o Si ya existe una versión idéntica o superior, no se hará ningún cambio.\n\nAl activar esta opción la instalación comenzará inmediatamente, su progreso se mostrará en una notificación y la opción se volverá a desactivar en cuanto se hayan instalado todos los juegos, hayas salido de este menú o hayas cambiado otra opción. El juego instalado se podrá ejecutar cargando el archivo .rpx de su carpeta code y la imagen de disco ya no será necesaria."
 #define CEMU_UNINSTALL_GAME_LABEL_ES "Desinstalar juegos"
-#define CEMU_UNINSTALL_GAME_INFO_0_ES "Desinstala el juego que se esté ejecutando del directorio de instalación del juego (saves/Cemu/mlc01/usr/title/00050000) cuando se cierre o reinicie el juego, borrando también sus actualizaciones y contenidos descargables, hasta entonces se mantendrán los datos. No se tocarán sus datos guardados ni la imagen de disco o el archivo .wua que se usaron en su instalación."
+#define CEMU_UNINSTALL_GAME_INFO_0_ES "Desinstala el juego que se esté ejecutando, así como todas sus actualizaciones y contenidos descargables, del directorio de instalación (saves/Cemu/mlc01/usr/title) cuando se cierre o reinicie el juego; esta opción se mantendrá activada hasta entonces. No se tocarán los datos guardados para el ID de título del juego (saves/Cemu/mlc01/usr/save/<id de título>)."
 #define CEMU_INSTALL_TITLES_LABEL_ES "Instalar contenidos"
-#define CEMU_INSTALL_TITLES_INFO_0_ES "Instala todas las actualizaciones y contenidos descargables (DLC) de system/Cemu/titles (subcarpetas incluidas) en el almacenamiento emulado de Wii U (saves/Cemu/mlc01/usr/title). Cada elemento tendrá una carpeta propia en system/Cemu/titles; una descarga en formato NUS (archivos .app) necesitará sus archivos title.tmd, title.tlk y la clave de desencriptado en la misma carpeta. Si ya existe una versión idéntica o superior, no se hará ningún cambio.\n\nAl activar esta opción la instalación comenzará inmediatamente, su progreso se mostrará en una notificación y la opción se volverá a desactivar en cuanto se hayan instalado todos los contenidos, abandones este menú o cambies otra opción. El juego utilizará los contenidos instalados una vez se reinicie.\n\nLos contenidos ubicados en otros sitios pueden instalarse dentro del menú principal de RetroArch > Cargar contenido y luego seleccionando el archivo title.tmd (acompañado de su title.tik)."
+#define CEMU_INSTALL_TITLES_INFO_0_ES "Instala todas las actualizaciones y contenidos descargables (DLC) del directorio de origen (system/Cemu/titles), subcarpetas incluidas, en el directorio de instalación (saves/Cemu/mlc01/usr/title). Cada elemento tendrá una carpeta propia en el directorio de origen, una descarga en formato NUS (archivos .app) necesitará sus archivos title.tmd, title.tlk y la clave de desencriptado en la misma carpeta. Si ya existe una versión idéntica o superior, no se hará ningún cambio.\n\nAl activar esta opción la instalación comenzará inmediatamente, su progreso se mostrará en una notificación y la opción se volverá a desactivar en cuanto se hayan instalado todos los contenidos, abandones este menú o cambies otra opción. El juego utilizará los contenidos instalados una vez se reinicie.\n\nLos contenidos ubicados en otros sitios pueden instalarse dentro del menú principal de RetroArch > Cargar contenido y luego seleccionando el archivo title.tmd (acompañado de su title.tik)."
 #define CEMU_UNINSTALL_TITLES_LABEL_ES "Desinstalar contenidos"
-#define CEMU_UNINSTALL_TITLES_INFO_0_ES "Desinstala las actualizaciones y contenidos descargables del juego que se encuentren en el almacenamiento emulado de Wii U (saves/Cemu/mlc01/usr/title) cuando se cierre o reinicie el juego; esta opción se mantendrá activada hasta terminar el proceso. No se tocarán las copias guardadas en system/Cemu/titles."
+#define CEMU_UNINSTALL_TITLES_INFO_0_ES "Desinstala las actualizaciones y contenidos descargables del juego que se esté ejecutando ubicadas en el directorio de instalación (saves/Cemu/mlc01/usr/title) cuando se cierre o reinicie el juego; esta opción se mantendrá activada hasta terminar el proceso. No se tocarán las copias guardadas en el directorio de origen (system/Cemu/titles)."
 #define CEMU_INSTALL_REMOVE_SOURCE_LABEL_ES "Eliminar archivos tras su instalación"
-#define CEMU_INSTALL_REMOVE_SOURCE_INFO_0_ES "ADVERTENCIA: esta opción eliminará los archivos de system/Cemu/titles y no se puede deshacer. system/Cemu/titles es una carpeta administrada por el núcleo, si tienes una sola copia de un volcado, guárdala en más sitios.\n\nElimina los datos instalados mediante las opciones Instalar juegos e Instalar contenidos en system/Cemu/titles: una actualización o una carpeta de contenidos descargables cuando se hayan terminado de instalar por un lado, una imagen de disco o un archivo .wua cuando se hayan instalado todos sus contenidos por otro (Instalar contenidos mantendrá un archivo .wua que contiene el juego base). Se eliminarán los archivos que esté utilizando el juego que se esté ejecutando una vez lo cierres o reinicies. Aquellos contenidos cargados con la opción Cargar contenido se dejarán intactos."
+#define CEMU_INSTALL_REMOVE_SOURCE_INFO_0_ES "Elimina los datos instalados con las opciones Instalar juegos e Instalar contenido del directorio de origen (system/Cemu/titles): la carpeta con una actualización o con contenidos descargables una vez se hayan instalado y una imagen de disco (con su archivo .key) o un archivo .wua cuando se hayan instalado todos sus contenidos. Los archivos que esté usando el juego en ejecución se eliminarán cuando se cierre o reinicie el juego.\n\nADVERTENCIA: se eliminarán de forma permanente los archivos que se encuentren en el directorio de origen. Este directorio es administrado por el núcleo, guarda los archivos que quieras conservar en otra parte."
 #define CEMU_WUA_OUTPUT_DIR_LABEL_ES "Directorio de salida"
 #define CEMU_WUA_OUTPUT_DIR_INFO_0_ES "Indica dónde se escribirá el archivo .wua. Es necesario que haya espacio suficiente en memoria."
 #define CEMU_CONVERT_TO_WUA_LABEL_ES "Iniciar conversión a WUA"
@@ -11741,6 +12478,35 @@ struct retro_core_option_v2_definition option_defs_es[] = {
 			{ NULL, NULL },
 		},
 		"auto"
+	},
+	{
+		"cemu_gamepad_motion",
+		CEMU_GAMEPAD_MOTION_LABEL_ES,
+		NULL,
+		CEMU_GAMEPAD_MOTION_INFO_0_ES,
+		NULL,
+		"system",
+		{
+			{ "disabled", "Disabled" },
+			{ "enabled", "Enabled" },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_audio_channels",
+		CEMU_AUDIO_CHANNELS_LABEL_ES,
+		NULL,
+		CEMU_AUDIO_CHANNELS_INFO_0_ES,
+		NULL,
+		"system",
+		{
+			{ "mono", OPTION_VAL_MONO_ES },
+			{ "stereo", OPTION_VAL_STEREO_ES },
+			{ "surround", OPTION_VAL_SURROUND_ES },
+			{ NULL, NULL },
+		},
+		"stereo"
 	},
 	{
 		"cemu_console_language",
@@ -12281,6 +13047,20 @@ struct retro_core_option_v2_definition option_defs_es[] = {
 		"disabled"
 	},
 	{
+		"cemu_rename_account",
+		CEMU_RENAME_ACCOUNT_LABEL_ES,
+		NULL,
+		CEMU_RENAME_ACCOUNT_INFO_0_ES,
+		NULL,
+		"accounts",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
 		"cemu_remove_account",
 		CEMU_REMOVE_ACCOUNT_LABEL_ES,
 		NULL,
@@ -12428,6 +13208,13 @@ struct retro_core_options_v2 options_es = {
 #define OPTION_VAL_SINGLECORE_RECOMPILER_FA NULL
 #define OPTION_VAL_MULTICORE_RECOMPILER_FA NULL
 #define OPTION_VAL_MULTICORE_INTERPRETER_FA NULL
+#define CEMU_GAMEPAD_MOTION_LABEL_FA NULL
+#define CEMU_GAMEPAD_MOTION_INFO_0_FA NULL
+#define CEMU_AUDIO_CHANNELS_LABEL_FA NULL
+#define CEMU_AUDIO_CHANNELS_INFO_0_FA NULL
+#define OPTION_VAL_MONO_FA NULL
+#define OPTION_VAL_STEREO_FA NULL
+#define OPTION_VAL_SURROUND_FA NULL
 #define CEMU_CONSOLE_LANGUAGE_LABEL_FA NULL
 #define OPTION_VAL_ENGLISH_FA NULL
 #define OPTION_VAL_JAPANESE_FA NULL
@@ -12515,6 +13302,8 @@ struct retro_core_options_v2 options_es = {
 #define CEMU_ACCOUNT_INFO_0_FA NULL
 #define CEMU_CREATE_ACCOUNT_LABEL_FA NULL
 #define CEMU_CREATE_ACCOUNT_INFO_0_FA NULL
+#define CEMU_RENAME_ACCOUNT_LABEL_FA NULL
+#define CEMU_RENAME_ACCOUNT_INFO_0_FA NULL
 #define CEMU_REMOVE_ACCOUNT_LABEL_FA NULL
 #define CEMU_REMOVE_ACCOUNT_INFO_0_FA NULL
 #define CEMU_INSTALL_GAME_LABEL_FA NULL
@@ -12565,6 +13354,35 @@ struct retro_core_option_v2_definition option_defs_fa[] = {
 			{ NULL, NULL },
 		},
 		"auto"
+	},
+	{
+		"cemu_gamepad_motion",
+		CEMU_GAMEPAD_MOTION_LABEL_FA,
+		NULL,
+		CEMU_GAMEPAD_MOTION_INFO_0_FA,
+		NULL,
+		"system",
+		{
+			{ "disabled", "Disabled" },
+			{ "enabled", "Enabled" },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_audio_channels",
+		CEMU_AUDIO_CHANNELS_LABEL_FA,
+		NULL,
+		CEMU_AUDIO_CHANNELS_INFO_0_FA,
+		NULL,
+		"system",
+		{
+			{ "mono", OPTION_VAL_MONO_FA },
+			{ "stereo", OPTION_VAL_STEREO_FA },
+			{ "surround", OPTION_VAL_SURROUND_FA },
+			{ NULL, NULL },
+		},
+		"stereo"
 	},
 	{
 		"cemu_console_language",
@@ -13105,6 +13923,20 @@ struct retro_core_option_v2_definition option_defs_fa[] = {
 		"disabled"
 	},
 	{
+		"cemu_rename_account",
+		CEMU_RENAME_ACCOUNT_LABEL_FA,
+		NULL,
+		CEMU_RENAME_ACCOUNT_INFO_0_FA,
+		NULL,
+		"accounts",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
 		"cemu_remove_account",
 		CEMU_REMOVE_ACCOUNT_LABEL_FA,
 		NULL,
@@ -13252,6 +14084,13 @@ struct retro_core_options_v2 options_fa = {
 #define OPTION_VAL_SINGLECORE_RECOMPILER_FI NULL
 #define OPTION_VAL_MULTICORE_RECOMPILER_FI NULL
 #define OPTION_VAL_MULTICORE_INTERPRETER_FI NULL
+#define CEMU_GAMEPAD_MOTION_LABEL_FI NULL
+#define CEMU_GAMEPAD_MOTION_INFO_0_FI NULL
+#define CEMU_AUDIO_CHANNELS_LABEL_FI NULL
+#define CEMU_AUDIO_CHANNELS_INFO_0_FI NULL
+#define OPTION_VAL_MONO_FI NULL
+#define OPTION_VAL_STEREO_FI NULL
+#define OPTION_VAL_SURROUND_FI NULL
 #define CEMU_CONSOLE_LANGUAGE_LABEL_FI NULL
 #define OPTION_VAL_ENGLISH_FI NULL
 #define OPTION_VAL_JAPANESE_FI NULL
@@ -13339,6 +14178,8 @@ struct retro_core_options_v2 options_fa = {
 #define CEMU_ACCOUNT_INFO_0_FI NULL
 #define CEMU_CREATE_ACCOUNT_LABEL_FI NULL
 #define CEMU_CREATE_ACCOUNT_INFO_0_FI NULL
+#define CEMU_RENAME_ACCOUNT_LABEL_FI NULL
+#define CEMU_RENAME_ACCOUNT_INFO_0_FI NULL
 #define CEMU_REMOVE_ACCOUNT_LABEL_FI NULL
 #define CEMU_REMOVE_ACCOUNT_INFO_0_FI NULL
 #define CEMU_INSTALL_GAME_LABEL_FI NULL
@@ -13389,6 +14230,35 @@ struct retro_core_option_v2_definition option_defs_fi[] = {
 			{ NULL, NULL },
 		},
 		"auto"
+	},
+	{
+		"cemu_gamepad_motion",
+		CEMU_GAMEPAD_MOTION_LABEL_FI,
+		NULL,
+		CEMU_GAMEPAD_MOTION_INFO_0_FI,
+		NULL,
+		"system",
+		{
+			{ "disabled", "Disabled" },
+			{ "enabled", "Enabled" },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_audio_channels",
+		CEMU_AUDIO_CHANNELS_LABEL_FI,
+		NULL,
+		CEMU_AUDIO_CHANNELS_INFO_0_FI,
+		NULL,
+		"system",
+		{
+			{ "mono", OPTION_VAL_MONO_FI },
+			{ "stereo", OPTION_VAL_STEREO_FI },
+			{ "surround", OPTION_VAL_SURROUND_FI },
+			{ NULL, NULL },
+		},
+		"stereo"
 	},
 	{
 		"cemu_console_language",
@@ -13929,6 +14799,20 @@ struct retro_core_option_v2_definition option_defs_fi[] = {
 		"disabled"
 	},
 	{
+		"cemu_rename_account",
+		CEMU_RENAME_ACCOUNT_LABEL_FI,
+		NULL,
+		CEMU_RENAME_ACCOUNT_INFO_0_FI,
+		NULL,
+		"accounts",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
 		"cemu_remove_account",
 		CEMU_REMOVE_ACCOUNT_LABEL_FI,
 		NULL,
@@ -14076,6 +14960,13 @@ struct retro_core_options_v2 options_fi = {
 #define OPTION_VAL_SINGLECORE_RECOMPILER_FR "Recompilateur monocœur"
 #define OPTION_VAL_MULTICORE_RECOMPILER_FR "Recompilateur multicœur"
 #define OPTION_VAL_MULTICORE_INTERPRETER_FR "Interpréteur multicœur"
+#define CEMU_GAMEPAD_MOTION_LABEL_FR "Mouvement du GamePad"
+#define CEMU_GAMEPAD_MOTION_INFO_0_FR "Le gyroscope et l'accéléromètre du GamePad depuis les capteurs de RetroArch se lisent sur le port 1 : ceux d'un téléphone ou d'une tablette, ou d'une manette où le pilote d'entrée de RetroArch les donne (DualShock 4, DualSense et autres). Les jeux visant ou dirigeant en inclinant le GamePad en ont besoin. Désactivé : le GemePad reste immobile, comme avec le mouvement désactivé dans la version autonome."
+#define CEMU_AUDIO_CHANNELS_LABEL_FR "Canaux audio (redémarrer)"
+#define CEMU_AUDIO_CHANNELS_INFO_0_FR "La console signale au jeu les caractéristiques du téléviseur, selon le paramètre de sortie audio de la console elle-même ; les jeux compatibles effectuent alors le mixage pour le nombre d'enceintes correspondant. Le son surround 5.1 est transmis à RetroArch sous forme de six canaux lorsque la sortie audio multicanal est active, dans le cas contraire, il est mixé en stéréo."
+#define OPTION_VAL_MONO_FR NULL
+#define OPTION_VAL_STEREO_FR "Stéréo"
+#define OPTION_VAL_SURROUND_FR NULL
 #define CEMU_CONSOLE_LANGUAGE_LABEL_FR "Langue de la console"
 #define OPTION_VAL_ENGLISH_FR "Anglais"
 #define OPTION_VAL_JAPANESE_FR "Japonais"
@@ -14162,19 +15053,21 @@ struct retro_core_options_v2 options_fi = {
 #define CEMU_ACCOUNT_LABEL_FR "Compte actif"
 #define CEMU_ACCOUNT_INFO_0_FR "Il s'agit du compte Wii U sous lequel le jeu s'exécute, chacun disposant de ses propres données de sauvegarde et de son propre Mii. La liste correspond aux comptes présents dans le dossier des comptes.\n\nLes modifications ne prennent effet qu'une fois le jeu fermé puis relancé, ou réinitialisé. Jusque-là, le jeu en cours d'exécution continue d'enregistrer les données sur le compte utilisé lors de son lancement."
 #define CEMU_CREATE_ACCOUNT_LABEL_FR "Créer un compte"
-#define CEMU_CREATE_ACCOUNT_INFO_0_FR "Crée un nouveau compte, nommé Player 2, Player 3 , etc., et le définit comme compte actif. L'option repasse ensuite sur Désactivé. La console peut contenir jusqu'à 12 comptes."
+#define CEMU_CREATE_ACCOUNT_INFO_0_FR NULL
+#define CEMU_RENAME_ACCOUNT_LABEL_FR NULL
+#define CEMU_RENAME_ACCOUNT_INFO_0_FR NULL
 #define CEMU_REMOVE_ACCOUNT_LABEL_FR "Supprimer le compte"
-#define CEMU_REMOVE_ACCOUNT_INFO_0_FR "ATTENTION : la suppression d'un compte entraîne également la suppression de ses données de sauvegarde pour tous les jeux, cette opération est irréversible.\n\nCette action supprime le compte sélectionné, tout comme le ferait la suppression d'un utilisateur sur la console : le compte est retiré de la liste des comptes et ses données de sauvegarde sont effacées des dossiers de sauvegarde de chaque titre. Le compte est supprimé lorsque vous quittez le menu, et cette option repasse alors sur Désactivé.\n\nIl est impossible de supprimer le compte actif, ni celui ayant servi à lancer le jeu en cours d'exécution tant que ce dernier n'a pas été fermé. Par conséquent, le dernier compte restant ne peut pas être supprimé."
+#define CEMU_REMOVE_ACCOUNT_INFO_0_FR "Supprime le compte sélectionné du dossier des comptes (saves/Cemu/mlc01/usr/save/system/act), tout comme le ferait la suppression d'un utilisateur sur la console, une fois ce menu quitté. L'option affiche à nouveau Désactivé au retour dans le menu.\n\nLe compte actif ne peut pas être supprimé, pas plus que le compte ayant servi à lancer le jeu en cours d'exécution, tant qu'il n'est pas fermé.\n\nATTENTION : la suppression d'un compte entraîne également la suppression définitive des sauvegardes associées à ce compte dans tous les jeux. Veuillez sauvegarder les données que vous souhaitez conserver avant de procéder à la suppression."
 #define CEMU_INSTALL_GAME_LABEL_FR "Installer les jeux"
-#define CEMU_INSTALL_GAME_INFO_0_FR "Installe tous les jeux présents dans system/Cemu/titles, sous-dossiers inclus, vers le répertoire des jeux installés de la Wii U émulée (saves/Cemu/mlc01/usr/title/00050000), simulant ainsi l'installation d'un jeu depuis un disque sur la console. Un jeu peut se présenter sous la forme d'une image disque (.wud, .wux, .iso) ou d'un fichier .wua ; les mises à jour et les DLC contenus dans un fichier .wua sont installés en même temps que le jeu. Si un jeu est déjà installé dans une version identique ou plus récente, il n'est pas modifié.\n\nLorsque cette option est activée, l'installation démarre immédiatement et sa progression s'affiche sous forme de notification, l'option se désactive automatiquement une fois tous les jeux installés. Pour lancer un jeu installé, il faut charger le fichier .rpx situé dans le dossier code du dossier des jeux installés ; l'image disque d'origine n'est alors plus nécessaire."
+#define CEMU_INSTALL_GAME_INFO_0_FR "Installe tous les jeux présents dans le dossier source (system/Cemu/titles), sous-dossiers inclus, vers le dossoer des jeux installés de la Wii U émulée (saves/Cemu/mlc01/usr/title/00050000), reproduisant ainsi le processus d'installation d'un jeu depuis un disque sur la console. Un jeu peut se présenter sous la forme d'une image disque (.wud, .wux, .iso) ou d'un fichier .wua ; les mises à jour et les DLC contenus dans un fichier .wua sont installés en même temps que le jeu. Une image disque chiffrée (.wud, .wux) nécessite sa clé de disque, laquelle doit figurer soit dans un fichier adjacent portant le même nom et l'extension .key (ex. : game.wux et game.key), soit dans le fichier system/Cemu/keys.txt. Si un jeu est déjà installé dans une version identique ou plus récente, il n'est pas réinstallé.\n\nLorsque cette option est activée, l'installation démarre immédiatement et sa progression s'affiche sous forme de notification ; l'option se désactive automatiquement une fois tous les jeux installés, dès que l'on quitte ce menu ou que l'on modifie une autre option. Pour lancer un jeu installé, il faut charger le fichier .rpx situé dans le dossier code du répertoire des jeux installés ; l'image disque d'origine n'est alors plus nécessaire."
 #define CEMU_UNINSTALL_GAME_LABEL_FR "Désinstaller le jeu"
-#define CEMU_UNINSTALL_GAME_INFO_0_FR "Désinstalle le jeu en cours d'exécution du répertoire d'installation (saves/Cemu/mlc01/usr/title/00050000) une fois celui-ci fermé ou réinitialisé, ainsi que sa mise à jour et ses DLC installés ; le processus reste actif jusqu'à ce moment-là. Les sauvegardes sont conservées, tout comme l'image disque ou le fichier .wua ayant servi à l'installation."
+#define CEMU_UNINSTALL_GAME_INFO_0_FR "Désinstalle le jeu en cours d'exécution ainsi que toutes les mises à jour de titre et tous les DLC associés depuis le répertoire d'installation (saves/Cemu/mlc01/usr/title) une fois le jeu fermé ou réinitialisé ; l'option reste activée jusqu'à ce moment-là. Les sauvegardes correspondant à l'ID du titre (saves/Cemu/mlc01/usr/save/<id titre>) ne sont pas supprimées."
 #define CEMU_INSTALL_TITLES_LABEL_FR "Installer le contenu"
-#define CEMU_INSTALL_TITLES_INFO_0_FR "Installe toutes les mises à jour de titre et tous les DLC présents dans system/Cemu/titles, sous-dossiers inclus, vers le stockage de la Wii U émulée (saves/Cemu/mlc01/usr/title). Chaque élément doit se trouver dans son propre dossier au sein de system/Cemu/titles ; un téléchargement NUS (fichiers .app) nécessite la présence des fichiers title.tmd et title.tik, contenant la clé de déchiffrement, à ses côtés. Si une version identique ou plus récente est déjà installée, l'élément est ignoré.\n\nLorsque cette option est activée, l'installation démarre immédiatement et la progression s'affiche sous forme de notification ; l'option se désactive une fois tout le contenu installé, dès que l'on quitte ce menu ou que l'on modifie un autre paramètre. Le jeu utilise le contenu installé une fois redémarré.\n\nIl est possible d'installer du contenu provenant d'autres emplacements via le menu principal de RetroArch > Charger du contenu, en sélectionnant le fichier title.tmd correspondant, à condition que le fichier title.tik soit présent à côté."
+#define CEMU_INSTALL_TITLES_INFO_0_FR "Installe toutes les mises à jour de titre et tous les DLC depuis le dossier source (system/Cemu/titles), sous-dossiers inclus, vers le dossier d'installation (saves/Cemu/mlc01/usr/title). Chaque élément doit se trouver dans son propre dossier au sein du répertoire source ; un téléchargement NUS (fichiers .app) nécessite la présence des fichiers title.tmd et title.tik, contenant la clé de déchiffrement, à ses côtés. Si une version identique ou plus récente est déjà installée, elle n'est pas modifiée.\n\nLorsque cette option est activée, l'installation démarre immédiatement et sa progression s'affiche sous forme de notification ; l'option se désactive automatiquement une fois tout le contenu installé, dès que l'on quitte ce menu ou que l'on modifie un autre paramètre. Le jeu utilise le contenu installé une fois redémarré.\n\nIl est possible d'installer du contenu provenant d'autres emplacements via le menu principal de RetroArch > Charger du contenu, en sélectionnant le fichier title.tmd correspondant, à condition que le fichier title.tik soit présent à côté."
 #define CEMU_UNINSTALL_TITLES_LABEL_FR "Désinstaller le contenu"
-#define CEMU_UNINSTALL_TITLES_INFO_0_FR "Désinstalle la mise à jour et les DLC du jeu en cours d'exécution depuis le stockage de la Wii U émulée (saves/Cemu/mlc01/usr/title) une fois le jeu fermé ou réinitialisé ; l'option reste activée jusqu'à ce moment-là. Les fichiers présents dans system/Cemu/titles ne sont pas modifiés."
+#define CEMU_UNINSTALL_TITLES_INFO_0_FR "Désinstalle la mise à jour du titre et les DLC du jeu en cours d'exécution depuis le dossier d'installation (saves/Cemu/mlc01/usr/title) une fois le jeu fermé ou réinitialisé ; l'option reste activée jusqu'à ce moment-là. Les copies présentes dans le dossier source (system/Cemu/titles) ne sont pas modifiées."
 #define CEMU_INSTALL_REMOVE_SOURCE_LABEL_FR "Supprimer les fichiers après l'installation"
-#define CEMU_INSTALL_REMOVE_SOURCE_INFO_0_FR "ATTENTION : cette opération supprime des fichiers du dossier system/Cemu/titles et est irréversible. Le dossier system/Cemu/titles est géré par le cœur ; conservez toute copie unique d'un dump ailleurs.\n\nSupprime les éléments installés via Installer les jeux et Installer le contenu dans system/Cemu/titles : le dossier d'une mise à jour de titre ou d'un DLC une fois installé, ainsi qu'une image disque ou un fichier .wua une fois que tout son contenu a été installé (la fonction Installer le contenu seule laisse un fichier .wua qui contient également le jeu). Les fichiers utilisés par le jeu en cours d'exécution sont supprimés lorsque celui-ci est fermé ou réinitialisé. Le contenu chargé via Charger du contenu reste à son emplacement d'origine."
+#define CEMU_INSTALL_REMOVE_SOURCE_INFO_0_FR "Supprime du dossier source (system/Cemu/titles) les éléments installés via les fonctions Installer les jeux et Installer le contenu : le dossier d'une mise à jour de titre ou d'un DLC une fois installé, ainsi qu'une image disque (avec son fichier .key) ou un fichier .wua une fois tout son contenu installé. Les fichiers utilisés par le jeu en cours d'exécution sont supprimés lorsque celui-ci est fermé ou réinitialisé.\n\nATTENTION : cette opération supprime définitivement les fichiers du dossier source. Ce dossier est destiné à la gestion par le cœur ; conservez ailleurs les données de jeu que vous souhaitez archiver."
 #define CEMU_WUA_OUTPUT_DIR_LABEL_FR "Dossier de sortie"
 #define CEMU_WUA_OUTPUT_DIR_INFO_0_FR "L'emplacement où le fichier .wua est écrit. Il faut prévoir de l'espace pour celui-ci."
 #define CEMU_CONVERT_TO_WUA_LABEL_FR "Lancer la conversion vers WUA"
@@ -14213,6 +15106,35 @@ struct retro_core_option_v2_definition option_defs_fr[] = {
 			{ NULL, NULL },
 		},
 		"auto"
+	},
+	{
+		"cemu_gamepad_motion",
+		CEMU_GAMEPAD_MOTION_LABEL_FR,
+		NULL,
+		CEMU_GAMEPAD_MOTION_INFO_0_FR,
+		NULL,
+		"system",
+		{
+			{ "disabled", "Disabled" },
+			{ "enabled", "Enabled" },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_audio_channels",
+		CEMU_AUDIO_CHANNELS_LABEL_FR,
+		NULL,
+		CEMU_AUDIO_CHANNELS_INFO_0_FR,
+		NULL,
+		"system",
+		{
+			{ "mono", OPTION_VAL_MONO_FR },
+			{ "stereo", OPTION_VAL_STEREO_FR },
+			{ "surround", OPTION_VAL_SURROUND_FR },
+			{ NULL, NULL },
+		},
+		"stereo"
 	},
 	{
 		"cemu_console_language",
@@ -14753,6 +15675,20 @@ struct retro_core_option_v2_definition option_defs_fr[] = {
 		"disabled"
 	},
 	{
+		"cemu_rename_account",
+		CEMU_RENAME_ACCOUNT_LABEL_FR,
+		NULL,
+		CEMU_RENAME_ACCOUNT_INFO_0_FR,
+		NULL,
+		"accounts",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
 		"cemu_remove_account",
 		CEMU_REMOVE_ACCOUNT_LABEL_FR,
 		NULL,
@@ -14884,7 +15820,7 @@ struct retro_core_options_v2 options_fr = {
 #define CATEGORY_ACCOUNTS_LABEL_GA "Cuntais"
 #define CATEGORY_ACCOUNTS_INFO_0_GA "Bainistigh cuntais i bhfillteán na gcuntas ar an Wii U (saves/Cemu/mlc01/usr/save/system/act)."
 #define CATEGORY_INSTALL_LABEL_GA "Ábhar"
-#define CATEGORY_INSTALL_INFO_0_GA NULL
+#define CATEGORY_INSTALL_INFO_0_GA "Bainistigh cluichí, nuashonruithe teidil agus DLC in saves/Cemu/mlc01, .i. stóras an chonsóil insamhlaithe."
 #define CATEGORY_CONVERT_LABEL_GA "Tiontaigh go WUA"
 #define CATEGORY_CONVERT_INFO_0_GA "Scríobh an teideal luchtaithe amach mar chartlann .wua."
 #define CATEGORY_GRAPHIC_PACKS_LABEL_GA "Pacáistí Grafaicí"
@@ -14900,6 +15836,13 @@ struct retro_core_options_v2 options_fr = {
 #define OPTION_VAL_SINGLECORE_RECOMPILER_GA "Aththiomsaitheoir Aonchroí"
 #define OPTION_VAL_MULTICORE_RECOMPILER_GA "Athiompailteoir Ilchroí"
 #define OPTION_VAL_MULTICORE_INTERPRETER_GA "Léirmhínitheoir Ilchroí"
+#define CEMU_GAMEPAD_MOTION_LABEL_GA "Gluaiseacht an GamePad"
+#define CEMU_GAMEPAD_MOTION_INFO_0_GA "Baineann sé seo le gíreascóp agus luasghéaraitheoir an GamePad — na braiteoirí a léann RetroArch ar phort 1: cibé acu braiteoirí an fhóin nó an táibléid féin iad, nó braiteoirí rialaitheora a sholáthraíonn tiománaí ionchuir RetroArch (amhail DualShock 4, DualSense, agus eile). Bíonn gá leis seo i gcás cluichí ina ndéantar díriú nó stiúradh trí chlaonadh a dhéanamh ar an GamePad. As: fanann an GamePad ina stad, díreach mar a bhíonn nuair a bhíonn gné na gluaiseachta múchta i bhfeidhmchlár neamhspleách."
+#define CEMU_AUDIO_CHANNELS_LABEL_GA "Cainéil Fuaime (Atosaigh)"
+#define CEMU_AUDIO_CHANNELS_INFO_0_GA "Cuireann an consól in iúl do na cluichí cén cineál teilifíse atá i gceist (amhail is gur teilifís neamhspleách í): déanann na cluichí a thacaíonn leis sin an fhuaim a chumasc don líon sin cainteoirí. Seoltar fuaim timpeallach 5.1 chuig RetroArch mar shé chainéal nuair a bhíonn aschur fuaime ilchainéil ar fáil; murach sin, déantar í a chumasc síos go steiréó."
+#define OPTION_VAL_MONO_GA NULL
+#define OPTION_VAL_STEREO_GA "Steiréó"
+#define OPTION_VAL_SURROUND_GA "Fuaim thimpeallach 5.1"
 #define CEMU_CONSOLE_LANGUAGE_LABEL_GA "Teanga an Chonsóil"
 #define OPTION_VAL_ENGLISH_GA "Béarla"
 #define OPTION_VAL_JAPANESE_GA "Seapáinis"
@@ -14926,7 +15869,7 @@ struct retro_core_options_v2 options_fr = {
 #define OPTION_VAL_NEAREST_GA "Is cóngaraí"
 #define CEMU_DOWNSCALE_FILTER_LABEL_GA "Scagaire Laghdaithe Scála"
 #define CEMU_INTERNAL_RESOLUTION_LABEL_GA "Rún Inmheánach"
-#define CEMU_INTERNAL_RESOLUTION_INFO_0_GA NULL
+#define CEMU_INTERNAL_RESOLUTION_INFO_0_GA "Rogha chúltaca ghinearálta do chluichí nach bhfuil pacáiste grafaicí réitigh acu: athraíonn sé méid gach sprice rindreála a bhfuil cruth scáileáin uirthi — rud a úsáideann roinnt cluichí le haghaidh gnéithe a théann ó mhaith nuair a athraítear an méid. Iolra de réiteach bunaidh an chluiche: i gcás cluiche 720p, is ionann 0.5x agus 640x360 (ceathrú cuid de na picteilíní) agus is ionann 2x agus 2560x1440; i gcás cluiche 1080p, is ionann 0.5x agus 960x540. Nuair a bhíonn pacáiste réitigh cumasaithe don chluiche atá á rith (Pacáistí Grafaicí), socraíonn an pacáiste an réiteach agus cuirtear an rogha seo i bhfolach."
 #define OPTION_VAL_0_25X_GA "0.25x (320x180 ag 720p)"
 #define OPTION_VAL_0_5X_GA "0.5x (640x360 ag 720p)"
 #define OPTION_VAL_0_75X_GA "0.75x (960x540 ag 720p)"
@@ -14935,8 +15878,8 @@ struct retro_core_options_v2 options_fr = {
 #define OPTION_VAL_2X_GA "2x (2560x1440 ag 720p)"
 #define OPTION_VAL_3X_GA "3x (3840x2160 ag 720p)"
 #define CEMU_THREAD_QUANTUM_LABEL_GA "Snáithe Candamach"
-#define CEMU_RUMBLE_STRENGTH_LABEL_GA NULL
-#define CEMU_RUMBLE_STRENGTH_INFO_0_GA NULL
+#define CEMU_RUMBLE_STRENGTH_LABEL_GA "Neart Rumble"
+#define CEMU_RUMBLE_STRENGTH_INFO_0_GA "An déine a bhíonn ag baint le creathadh an rialaitheora nuair a iarrann an cluiche é: mótar an GamePad, agus mótar an Wii Remote nó an Pro Controller. Má roghnaítear 'As' (Off), ní sheoltar aon chreathadh chuig an gcomhéadan."
 #define OPTION_VAL_25_GA NULL
 #define OPTION_VAL_50_GA NULL
 #define OPTION_VAL_75_GA NULL
@@ -14974,7 +15917,7 @@ struct retro_core_options_v2 options_fr = {
 #define CEMU_LOG_AUDIO_LABEL_GA "Logáil Fuaime agus Luasluail Frámaí (dífhabhtú)"
 #define CEMU_LOG_AUDIO_INFO_0_GA "Gach soicind: cé mhéad sampla a tháirg AX, cé mhéad a bhí ar an bhfáinne a chaitheamh i leataobh, agus cé mhéad a ghlac an comhéadan tosaigh; chomh maith le cé mhéad uair a rith an comhéadan tosaigh an croí, cé mhéad fráma a chríochnaigh an teideal, agus cá háit ar caitheadh ​​an t-am (ag fanacht le snáithe an GPU, ag cur an íomhá ar taispeáint, agus an fhuaim). Úsáidtear é seo chun a fháil amach cé acu an LAP insamhlaithe, an GPU nó an comhéadan tosaigh atá ag cur moille ar chluiche atá ag rith go mall."
 #define CEMU_LOG_THREAD_TIME_LABEL_GA "Logáil Am LAP an tSnáithe (dífhabhtú)"
-#define CEMU_LOG_THREAD_TIME_INFO_0_GA NULL
+#define CEMU_LOG_THREAD_TIME_INFO_0_GA "Déantar tomhas gach soicind ar an méid oibre a bhí á dhéanamh ag snáithe gach croíleacáin PowerPC insamhlaithe, ag snáithe an GPU agus ag snáithe an chórais tosaigh (frontend), mar chuid de chroíleacán amháin den óstach. Is é an snáithe atá ag feidhmiú ag leibhéal gar do 100% ná an ceann a bhfuil cluiche mall ag fanacht leis."
 #define CEMU_DUMP_SHADERS_LABEL_GA "Dumpáil Scáthóirí (dífhabhtú)"
 #define CEMU_DUMP_SHADERS_INFO_0_GA "Scríobhann sé foinse gach *shader* a úsáideann an cluiche chuig `system/Cemu/dump/shaders`, agus ainmnítear iad de réir a gcuid *hash* mar a fheictear iad i `log.txt`. Úsáidtear é seo chun tuairisc a thabhairt ar *shader* a theipeann nó a tharraingítear go mícheart ar GPU áirithe. Moillíonn sé tiomsú na *shader* agus líonann sé an fillteán go tapa, mar sin déan é a mhúchadh arís ina dhiaidh sin."
 #define CEMU_BC1_16BIT_LABEL_GA "Laghdaigh Cuimhne Uigeachta BC1"
@@ -14986,19 +15929,21 @@ struct retro_core_options_v2 options_fr = {
 #define CEMU_ACCOUNT_LABEL_GA "Cuntas Gníomhach"
 #define CEMU_ACCOUNT_INFO_0_GA "Is é an cuntas Wii U a úsáidtear chun an cluiche a reáchtáil — agus a bhfuil a shonraí sábhála agus a Mii féin ag gach ceann acu — atá i gceist anseo; liosta de na cuntais atá i bhfillteán na gcuntas atá sa liosta seo.\n\nCuirtear athrú i bhfeidhm nuair a dhúntar an cluiche agus nuair a thosaítear arís é, nó nuair a athshocraítear é. Go dtí sin, leanann an cluiche atá ar siúl de bheith ag sábháil sonraí chuig an gcuntas ar cuireadh tús leis ar dtús."
 #define CEMU_CREATE_ACCOUNT_LABEL_GA "Cruthaigh Cuntas"
-#define CEMU_CREATE_ACCOUNT_INFO_0_GA "Cruthaítear cuntas nua — darb ainm dó Player 2, Player 3, agus mar sin de — agus socraítear é mar an gCuntas Gníomhach. Ina dhiaidh sin, filleann an socrú ar OFF. Is féidir leis an gconsól suas le 12 chuntas a choinneáil."
+#define CEMU_CREATE_ACCOUNT_INFO_0_GA "Cruthaítear cuntas nua - darb ainm Player 2, Player 3, agus mar sin de - agus socraítear é mar an gcuntas gníomhach. Ina dhiaidh sin, filleann an socrú ar OFF. Beidh an cuntas nua le feiceáil sa liosta cuntas nuair a bheidh an roghchlár dúnta agus oscailte arís. Is féidir leis an gconsól suas le 12 chuntas a choinneáil."
+#define CEMU_RENAME_ACCOUNT_LABEL_GA "Athainmnigh an Cuntas Gníomhach"
+#define CEMU_RENAME_ACCOUNT_INFO_0_GA "Osclaíonn sé seo an iontráil ainm don chuntas gníomhach nuair a fhágtar an roghchlár seo, agus filleann sé ar AS. Taispeántar an t-ainm go dtí seo mar fhógra os cionn an chluiche, mar sin caithfidh fógraí ar an scáileán an tosaigh a bheith ar siúl.\n\nLe ceap: Suas agus Síos athraíonn an carachtar deireanach, cuireann Deas ceann leis, baintear Clé ceann, glacann Tosaigh, cealaíonn Roghnaigh.\n\nLe méarchlár: clóscríobh, baintear Cúlspás, glacann Iontráil, cealaíonn Éalú (b’fhéidir go mbeidh Fócas Cluiche ag teastáil ón tosaigh chun eochracha a thabhairt don chroílár).\n\nTá suas le 10 gcarachtar in ainm. Ní fhaigheann an cluiche aon ionchur go dtí go ndúnfar an iontráil, agus taispeánann cluiche atá ag rith an t-ainm nua a luaithe a thosaítear arís é."
 #define CEMU_REMOVE_ACCOUNT_LABEL_GA "Bain an Cuntas"
-#define CEMU_REMOVE_ACCOUNT_INFO_0_GA "RABHADH: Má bhaintear cuntas, scriostar freisin na sonraí sábhála a bhaineann leis i ngach cluiche, agus ní féidir an gníomh seo a chur ar ceal.\n\nBaintear an cuntas roghnaithe, díreach mar a tharlaíonn nuair a scriostar úsáideoir ar an gconsól: baintear an cuntas den liosta cuntas agus baintear na sonraí sábhála a bhaineann leis ó fhillteán sábhála gach cluiche. Baintear an cuntas nuair a fhágann tú an roghchlár, agus filleann an socrú ar 'AS' ina dhiaidh sin.\n\nNí féidir an cuntas gníomhach a bhaint, ná an cuntas a úsáideadh chun an cluiche atá ar siúl a thosú, go dtí go ndúntar an cluiche sin. Dá bhrí sin, ní féidir an cuntas deireanach a bhaint."
+#define CEMU_REMOVE_ACCOUNT_INFO_0_GA "Baintear an cuntas roghnaithe as eolaire na gcuntas (saves/Cemu/mlc01/usr/save/system/act) — díreach mar a tharlaíonn nuair a scriostar úsáideoir ar an gconsól — nuair a fhágtar an roghchlár seo. Taispeántar ‘OFF’ arís sa roghchlár nuair a fhilltear air.\n\nNí féidir an cuntas gníomhach a bhaint, ná an cuntas a úsáideadh chun an cluiche atá ar siúl faoi láthair a thosú, go dtí go ndúntar an cluiche sin.\n\nRABHADH: Má bhaintear cuntas, scriostar go buan freisin na comhaid sábhála a cruthaíodh faoin gcuntas sin i ngach cluiche. Déan cóip chúltaca d’aon chomhaid sábhála ar mhaith leat iad a choinneáil sula mbainfidh tú an cuntas."
 #define CEMU_INSTALL_GAME_LABEL_GA "Suiteáil Cluichí"
-#define CEMU_INSTALL_GAME_INFO_0_GA NULL
+#define CEMU_INSTALL_GAME_INFO_0_GA "Déantar gach cluiche ón eolaire foinse (system/Cemu/titles) — lena n-áirítear fo-fhillteáin — a shuiteáil in eolaire na gcluichí suiteáilte den Wii U insamhlaithe (saves/Cemu/mlc01/usr/title/00050000), ar an gcaoi chéanna a shuiteálann an consól cluiche ó dhiosca. Is íomhá diosca (.wud, .wux, .iso) nó comhad .wua é an cluiche; déantar an nuashonrú teidil agus an DLC atá sa chomhad .wua a shuiteáil leis freisin. Teastaíonn eochair an diosca le haghaidh íomhá diosca criptithe (.wud, .wux): bíodh sí i gcomhad in aice leis an íomhá a bhfuil an t-ainm céanna air agus an síneadh .key aige (m.sh. game.wux, game.key), nó sa chomhad system/Cemu/keys.txt. Má tá an cluiche suiteáilte cheana féin (sa leagan céanna nó i leagan níos nuaí), ní dhéantar aon athrú air.\n\nNuair a bhíonn an ghné seo AR siúl, tosaíonn an tsuiteáil láithreach agus taispeántar an dul chun cinn mar fhógra; múchtar an ghné arís nuair a bhíonn gach cluiche suiteáilte agus nuair a fhágtar an roghchlár seo nó nuair a athraítear rogha eile. Cuirtear tús le cluiche suiteáilte tríd an gcomhad .rpx ina fhillteán cóid (san eolaire cluichí suiteáilte) a luchtú; ní bhíonn gá leis an íomhá diosca a thuilleadh."
 #define CEMU_UNINSTALL_GAME_LABEL_GA "Díshuiteáil an Cluiche"
-#define CEMU_UNINSTALL_GAME_INFO_0_GA "Baineann sé an cluiche atá á rith den eolaire ina bhfuil sé suiteáilte (saves/Cemu/mlc01/usr/title/00050000) nuair a dhéantar an cluiche a dhúnadh nó a athshocrú, chomh maith leis an nuashonrú teidil agus an DLC a bhí suiteáilte leis; fanann sé gníomhach go dtí sin. Fágtar na comhaid sábhála slán, chomh maith leis an íomhá diosca nó an comhad .wua ónar suiteáladh é."
+#define CEMU_UNINSTALL_GAME_INFO_0_GA "Baintear an cluiche atá á rith, chomh maith le gach nuashonrú teidil agus ábhar in-íoslódáilte (DLC) gaolmhar, ón eolaire suiteála (saves/Cemu/mlc01/usr/title) nuair a dhúntar nó nuair a athshocraítear an cluiche; fanann an rogha seo gníomhach go dtí sin. Ní bhaintear na comhaid sábhála a bhaineann le haitheantas teidil an chluiche (saves/Cemu/mlc01/usr/save/<title id>)."
 #define CEMU_INSTALL_TITLES_LABEL_GA "Suiteáil Ábhar"
-#define CEMU_INSTALL_TITLES_INFO_0_GA NULL
+#define CEMU_INSTALL_TITLES_INFO_0_GA "Déantar gach nuashonrú teidil agus ábhar in-íoslódáilte (DLC) a shuiteáil ón eolaire foinse (system/Cemu/titles) — lena n-áirítear fo-fhillteáin — isteach san eolaire suiteála (saves/Cemu/mlc01/usr/title). Cuirtear gach ceann acu ina fhillteán féin san eolaire foinse; i gcás íoslódáil NUS (comhaid .app), ní mór an comhad title.tmd agus an comhad title.tik (an eochair dhíchriptithe) a bheith i láthair in aice leo. Má tá leagan den chlár suiteáilte cheana féin atá comhionann leis an leagan nua nó níos nuaí ná é, ní dhéantar aon athrú air.\n\nNuair a bhíonn an ghné seo gníomhach (ON), tosaíonn an tsuiteáil láithreach agus taispeántar an dul chun cinn mar fhógra; múchtar an ghné (OFF) nuair a bhíonn an t-ábhar ar fad suiteáilte agus nuair a fhágtar an roghchlár seo nó nuair a athraítear rogha eile. Úsáideann an cluiche an t-ábhar suiteáilte nuair a atosaítear é.\n\nIs féidir ábhar ó shuíomhanna eile a shuiteáil trí úsáid a bhaint as Príomh-Roghchlár RetroArch > Load Content, agus an comhad title.tmd cuí a roghnú agus an comhad title.tik ina aice."
 #define CEMU_UNINSTALL_TITLES_LABEL_GA "Díshuiteáil Ábhar"
-#define CEMU_UNINSTALL_TITLES_INFO_0_GA "Baintear nuashonrú teidil agus DLC an chluiche atá á rith ó stóras an Wii U insamhlaithe (saves/Cemu/mlc01/usr/title) nuair a dhúntar an cluiche nó nuair a athshocraítear é; fanann an ghné seo gníomhach go dtí sin. Ní dhéantar teagmháil leis na cóipeanna atá i system/Cemu/titles."
+#define CEMU_UNINSTALL_TITLES_INFO_0_GA "Baintear nuashonrú teidil agus DLC an chluiche atá á imirt ón eolaire suiteála (saves/Cemu/mlc01/usr/title) nuair a dhéantar an cluiche a dhúnadh nó a athshocrú; fanann an rogha gníomhach go dtí sin. Ní dhéantar aon athrú ar na cóipeanna san eolaire foinse (system/Cemu/titles)."
 #define CEMU_INSTALL_REMOVE_SOURCE_LABEL_GA "Bain comhaid tar éis iad a shuiteáil"
-#define CEMU_INSTALL_REMOVE_SOURCE_INFO_0_GA "RABHADH: Scriosann sé seo comhaid ó system/Cemu/titles, agus ní féidir an gníomh sin a chur ar ceal. Is fillteán é system/Cemu/titles atá le bainistiú ag an gcroí-chóras; coinnigh an t-aon chóip amháin de dhumpáil in áit eile.\n\nScriosann sé seo nithe a shuiteáil *Install Games* agus *Install Content* ó system/Cemu/titles: fillteán nuashonraithe teidil nó DLC nuair a bhíonn sé suiteáilte, agus íomhá diosca nó comhad .wua nuair a bhíonn gach rud atá iontu suiteáilte (fágann *Install Content* ina aonar comhad .wua ina bhfuil an cluiche féin chomh maith). Scriostar comhaid atá in úsáid ag an gcluiche atá ar siúl nuair a dhúntar nó nuair a athshocraítear é. Fágtar an t-ábhar a luchtú trí *Load Content* san áit ina bhfuil sé."
+#define CEMU_INSTALL_REMOVE_SOURCE_INFO_0_GA "Baintear den eolaire foinse (system/Cemu/titles) na nithe a shuiteáil 'Install Games' agus 'Install Content': fillteán nuashonrúcháin teidil nó DLC nuair a bhíonn sé suiteáilte, agus íomhá diosca (mar aon leis an gcomhad .wua nó .key a bhaineann léi) nuair a bhíonn gach rud atá inti suiteáilte. Baintear comhaid a bhíonn in úsáid ag an gcluiche atá ar siúl nuair a dhúntar nó nuair a athshocraítear é.\n\nRABHADH: baintear comhaid go buan den eolaire foinse leis seo. Is ag an gcroí-chóras atá sé an t-eolaire sin a bhainistiú; coinnigh sonraí cluiche ar mhaith leat iad a chartlannú in áit eile."
 #define CEMU_WUA_OUTPUT_DIR_LABEL_GA "Eolaire Aschuir"
 #define CEMU_WUA_OUTPUT_DIR_INFO_0_GA "Áit a bhfuil an .wua scríofa. Teastaíonn spás dó."
 #define CEMU_CONVERT_TO_WUA_LABEL_GA "Tosaigh an t-aistriú go WUA"
@@ -15037,6 +15982,35 @@ struct retro_core_option_v2_definition option_defs_ga[] = {
 			{ NULL, NULL },
 		},
 		"auto"
+	},
+	{
+		"cemu_gamepad_motion",
+		CEMU_GAMEPAD_MOTION_LABEL_GA,
+		NULL,
+		CEMU_GAMEPAD_MOTION_INFO_0_GA,
+		NULL,
+		"system",
+		{
+			{ "disabled", "Disabled" },
+			{ "enabled", "Enabled" },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_audio_channels",
+		CEMU_AUDIO_CHANNELS_LABEL_GA,
+		NULL,
+		CEMU_AUDIO_CHANNELS_INFO_0_GA,
+		NULL,
+		"system",
+		{
+			{ "mono", OPTION_VAL_MONO_GA },
+			{ "stereo", OPTION_VAL_STEREO_GA },
+			{ "surround", OPTION_VAL_SURROUND_GA },
+			{ NULL, NULL },
+		},
+		"stereo"
 	},
 	{
 		"cemu_console_language",
@@ -15577,6 +16551,20 @@ struct retro_core_option_v2_definition option_defs_ga[] = {
 		"disabled"
 	},
 	{
+		"cemu_rename_account",
+		CEMU_RENAME_ACCOUNT_LABEL_GA,
+		NULL,
+		CEMU_RENAME_ACCOUNT_INFO_0_GA,
+		NULL,
+		"accounts",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
 		"cemu_remove_account",
 		CEMU_REMOVE_ACCOUNT_LABEL_GA,
 		NULL,
@@ -15724,6 +16712,13 @@ struct retro_core_options_v2 options_ga = {
 #define OPTION_VAL_SINGLECORE_RECOMPILER_GL NULL
 #define OPTION_VAL_MULTICORE_RECOMPILER_GL NULL
 #define OPTION_VAL_MULTICORE_INTERPRETER_GL NULL
+#define CEMU_GAMEPAD_MOTION_LABEL_GL NULL
+#define CEMU_GAMEPAD_MOTION_INFO_0_GL NULL
+#define CEMU_AUDIO_CHANNELS_LABEL_GL NULL
+#define CEMU_AUDIO_CHANNELS_INFO_0_GL NULL
+#define OPTION_VAL_MONO_GL NULL
+#define OPTION_VAL_STEREO_GL "Estéreo"
+#define OPTION_VAL_SURROUND_GL NULL
 #define CEMU_CONSOLE_LANGUAGE_LABEL_GL NULL
 #define OPTION_VAL_ENGLISH_GL "Inglés"
 #define OPTION_VAL_JAPANESE_GL "Xaponés"
@@ -15811,6 +16806,8 @@ struct retro_core_options_v2 options_ga = {
 #define CEMU_ACCOUNT_INFO_0_GL NULL
 #define CEMU_CREATE_ACCOUNT_LABEL_GL NULL
 #define CEMU_CREATE_ACCOUNT_INFO_0_GL NULL
+#define CEMU_RENAME_ACCOUNT_LABEL_GL NULL
+#define CEMU_RENAME_ACCOUNT_INFO_0_GL NULL
 #define CEMU_REMOVE_ACCOUNT_LABEL_GL NULL
 #define CEMU_REMOVE_ACCOUNT_INFO_0_GL NULL
 #define CEMU_INSTALL_GAME_LABEL_GL NULL
@@ -15861,6 +16858,35 @@ struct retro_core_option_v2_definition option_defs_gl[] = {
 			{ NULL, NULL },
 		},
 		"auto"
+	},
+	{
+		"cemu_gamepad_motion",
+		CEMU_GAMEPAD_MOTION_LABEL_GL,
+		NULL,
+		CEMU_GAMEPAD_MOTION_INFO_0_GL,
+		NULL,
+		"system",
+		{
+			{ "disabled", "Disabled" },
+			{ "enabled", "Enabled" },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_audio_channels",
+		CEMU_AUDIO_CHANNELS_LABEL_GL,
+		NULL,
+		CEMU_AUDIO_CHANNELS_INFO_0_GL,
+		NULL,
+		"system",
+		{
+			{ "mono", OPTION_VAL_MONO_GL },
+			{ "stereo", OPTION_VAL_STEREO_GL },
+			{ "surround", OPTION_VAL_SURROUND_GL },
+			{ NULL, NULL },
+		},
+		"stereo"
 	},
 	{
 		"cemu_console_language",
@@ -16401,6 +17427,20 @@ struct retro_core_option_v2_definition option_defs_gl[] = {
 		"disabled"
 	},
 	{
+		"cemu_rename_account",
+		CEMU_RENAME_ACCOUNT_LABEL_GL,
+		NULL,
+		CEMU_RENAME_ACCOUNT_INFO_0_GL,
+		NULL,
+		"accounts",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
 		"cemu_remove_account",
 		CEMU_REMOVE_ACCOUNT_LABEL_GL,
 		NULL,
@@ -16548,6 +17588,13 @@ struct retro_core_options_v2 options_gl = {
 #define OPTION_VAL_SINGLECORE_RECOMPILER_HE NULL
 #define OPTION_VAL_MULTICORE_RECOMPILER_HE NULL
 #define OPTION_VAL_MULTICORE_INTERPRETER_HE NULL
+#define CEMU_GAMEPAD_MOTION_LABEL_HE NULL
+#define CEMU_GAMEPAD_MOTION_INFO_0_HE NULL
+#define CEMU_AUDIO_CHANNELS_LABEL_HE NULL
+#define CEMU_AUDIO_CHANNELS_INFO_0_HE NULL
+#define OPTION_VAL_MONO_HE NULL
+#define OPTION_VAL_STEREO_HE NULL
+#define OPTION_VAL_SURROUND_HE NULL
 #define CEMU_CONSOLE_LANGUAGE_LABEL_HE NULL
 #define OPTION_VAL_ENGLISH_HE NULL
 #define OPTION_VAL_JAPANESE_HE NULL
@@ -16635,6 +17682,8 @@ struct retro_core_options_v2 options_gl = {
 #define CEMU_ACCOUNT_INFO_0_HE NULL
 #define CEMU_CREATE_ACCOUNT_LABEL_HE NULL
 #define CEMU_CREATE_ACCOUNT_INFO_0_HE NULL
+#define CEMU_RENAME_ACCOUNT_LABEL_HE NULL
+#define CEMU_RENAME_ACCOUNT_INFO_0_HE NULL
 #define CEMU_REMOVE_ACCOUNT_LABEL_HE NULL
 #define CEMU_REMOVE_ACCOUNT_INFO_0_HE NULL
 #define CEMU_INSTALL_GAME_LABEL_HE NULL
@@ -16685,6 +17734,35 @@ struct retro_core_option_v2_definition option_defs_he[] = {
 			{ NULL, NULL },
 		},
 		"auto"
+	},
+	{
+		"cemu_gamepad_motion",
+		CEMU_GAMEPAD_MOTION_LABEL_HE,
+		NULL,
+		CEMU_GAMEPAD_MOTION_INFO_0_HE,
+		NULL,
+		"system",
+		{
+			{ "disabled", "Disabled" },
+			{ "enabled", "Enabled" },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_audio_channels",
+		CEMU_AUDIO_CHANNELS_LABEL_HE,
+		NULL,
+		CEMU_AUDIO_CHANNELS_INFO_0_HE,
+		NULL,
+		"system",
+		{
+			{ "mono", OPTION_VAL_MONO_HE },
+			{ "stereo", OPTION_VAL_STEREO_HE },
+			{ "surround", OPTION_VAL_SURROUND_HE },
+			{ NULL, NULL },
+		},
+		"stereo"
 	},
 	{
 		"cemu_console_language",
@@ -17225,6 +18303,20 @@ struct retro_core_option_v2_definition option_defs_he[] = {
 		"disabled"
 	},
 	{
+		"cemu_rename_account",
+		CEMU_RENAME_ACCOUNT_LABEL_HE,
+		NULL,
+		CEMU_RENAME_ACCOUNT_INFO_0_HE,
+		NULL,
+		"accounts",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
 		"cemu_remove_account",
 		CEMU_REMOVE_ACCOUNT_LABEL_HE,
 		NULL,
@@ -17372,6 +18464,13 @@ struct retro_core_options_v2 options_he = {
 #define OPTION_VAL_SINGLECORE_RECOMPILER_HR NULL
 #define OPTION_VAL_MULTICORE_RECOMPILER_HR NULL
 #define OPTION_VAL_MULTICORE_INTERPRETER_HR NULL
+#define CEMU_GAMEPAD_MOTION_LABEL_HR NULL
+#define CEMU_GAMEPAD_MOTION_INFO_0_HR NULL
+#define CEMU_AUDIO_CHANNELS_LABEL_HR NULL
+#define CEMU_AUDIO_CHANNELS_INFO_0_HR NULL
+#define OPTION_VAL_MONO_HR NULL
+#define OPTION_VAL_STEREO_HR NULL
+#define OPTION_VAL_SURROUND_HR NULL
 #define CEMU_CONSOLE_LANGUAGE_LABEL_HR NULL
 #define OPTION_VAL_ENGLISH_HR "Engleski"
 #define OPTION_VAL_JAPANESE_HR "Japanski"
@@ -17459,6 +18558,8 @@ struct retro_core_options_v2 options_he = {
 #define CEMU_ACCOUNT_INFO_0_HR NULL
 #define CEMU_CREATE_ACCOUNT_LABEL_HR NULL
 #define CEMU_CREATE_ACCOUNT_INFO_0_HR NULL
+#define CEMU_RENAME_ACCOUNT_LABEL_HR NULL
+#define CEMU_RENAME_ACCOUNT_INFO_0_HR NULL
 #define CEMU_REMOVE_ACCOUNT_LABEL_HR NULL
 #define CEMU_REMOVE_ACCOUNT_INFO_0_HR NULL
 #define CEMU_INSTALL_GAME_LABEL_HR NULL
@@ -17509,6 +18610,35 @@ struct retro_core_option_v2_definition option_defs_hr[] = {
 			{ NULL, NULL },
 		},
 		"auto"
+	},
+	{
+		"cemu_gamepad_motion",
+		CEMU_GAMEPAD_MOTION_LABEL_HR,
+		NULL,
+		CEMU_GAMEPAD_MOTION_INFO_0_HR,
+		NULL,
+		"system",
+		{
+			{ "disabled", "Disabled" },
+			{ "enabled", "Enabled" },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_audio_channels",
+		CEMU_AUDIO_CHANNELS_LABEL_HR,
+		NULL,
+		CEMU_AUDIO_CHANNELS_INFO_0_HR,
+		NULL,
+		"system",
+		{
+			{ "mono", OPTION_VAL_MONO_HR },
+			{ "stereo", OPTION_VAL_STEREO_HR },
+			{ "surround", OPTION_VAL_SURROUND_HR },
+			{ NULL, NULL },
+		},
+		"stereo"
 	},
 	{
 		"cemu_console_language",
@@ -18049,6 +19179,20 @@ struct retro_core_option_v2_definition option_defs_hr[] = {
 		"disabled"
 	},
 	{
+		"cemu_rename_account",
+		CEMU_RENAME_ACCOUNT_LABEL_HR,
+		NULL,
+		CEMU_RENAME_ACCOUNT_INFO_0_HR,
+		NULL,
+		"accounts",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
 		"cemu_remove_account",
 		CEMU_REMOVE_ACCOUNT_LABEL_HR,
 		NULL,
@@ -18196,6 +19340,13 @@ struct retro_core_options_v2 options_hr = {
 #define OPTION_VAL_SINGLECORE_RECOMPILER_HU NULL
 #define OPTION_VAL_MULTICORE_RECOMPILER_HU NULL
 #define OPTION_VAL_MULTICORE_INTERPRETER_HU NULL
+#define CEMU_GAMEPAD_MOTION_LABEL_HU NULL
+#define CEMU_GAMEPAD_MOTION_INFO_0_HU NULL
+#define CEMU_AUDIO_CHANNELS_LABEL_HU NULL
+#define CEMU_AUDIO_CHANNELS_INFO_0_HU NULL
+#define OPTION_VAL_MONO_HU "Monó"
+#define OPTION_VAL_STEREO_HU "Sztereó"
+#define OPTION_VAL_SURROUND_HU NULL
 #define CEMU_CONSOLE_LANGUAGE_LABEL_HU NULL
 #define OPTION_VAL_ENGLISH_HU "angol"
 #define OPTION_VAL_JAPANESE_HU "japán"
@@ -18283,6 +19434,8 @@ struct retro_core_options_v2 options_hr = {
 #define CEMU_ACCOUNT_INFO_0_HU NULL
 #define CEMU_CREATE_ACCOUNT_LABEL_HU NULL
 #define CEMU_CREATE_ACCOUNT_INFO_0_HU NULL
+#define CEMU_RENAME_ACCOUNT_LABEL_HU NULL
+#define CEMU_RENAME_ACCOUNT_INFO_0_HU NULL
 #define CEMU_REMOVE_ACCOUNT_LABEL_HU NULL
 #define CEMU_REMOVE_ACCOUNT_INFO_0_HU NULL
 #define CEMU_INSTALL_GAME_LABEL_HU NULL
@@ -18333,6 +19486,35 @@ struct retro_core_option_v2_definition option_defs_hu[] = {
 			{ NULL, NULL },
 		},
 		"auto"
+	},
+	{
+		"cemu_gamepad_motion",
+		CEMU_GAMEPAD_MOTION_LABEL_HU,
+		NULL,
+		CEMU_GAMEPAD_MOTION_INFO_0_HU,
+		NULL,
+		"system",
+		{
+			{ "disabled", "Disabled" },
+			{ "enabled", "Enabled" },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_audio_channels",
+		CEMU_AUDIO_CHANNELS_LABEL_HU,
+		NULL,
+		CEMU_AUDIO_CHANNELS_INFO_0_HU,
+		NULL,
+		"system",
+		{
+			{ "mono", OPTION_VAL_MONO_HU },
+			{ "stereo", OPTION_VAL_STEREO_HU },
+			{ "surround", OPTION_VAL_SURROUND_HU },
+			{ NULL, NULL },
+		},
+		"stereo"
 	},
 	{
 		"cemu_console_language",
@@ -18873,6 +20055,20 @@ struct retro_core_option_v2_definition option_defs_hu[] = {
 		"disabled"
 	},
 	{
+		"cemu_rename_account",
+		CEMU_RENAME_ACCOUNT_LABEL_HU,
+		NULL,
+		CEMU_RENAME_ACCOUNT_INFO_0_HU,
+		NULL,
+		"accounts",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
 		"cemu_remove_account",
 		CEMU_REMOVE_ACCOUNT_LABEL_HU,
 		NULL,
@@ -19020,6 +20216,13 @@ struct retro_core_options_v2 options_hu = {
 #define OPTION_VAL_SINGLECORE_RECOMPILER_ID NULL
 #define OPTION_VAL_MULTICORE_RECOMPILER_ID NULL
 #define OPTION_VAL_MULTICORE_INTERPRETER_ID NULL
+#define CEMU_GAMEPAD_MOTION_LABEL_ID NULL
+#define CEMU_GAMEPAD_MOTION_INFO_0_ID NULL
+#define CEMU_AUDIO_CHANNELS_LABEL_ID NULL
+#define CEMU_AUDIO_CHANNELS_INFO_0_ID NULL
+#define OPTION_VAL_MONO_ID NULL
+#define OPTION_VAL_STEREO_ID NULL
+#define OPTION_VAL_SURROUND_ID NULL
 #define CEMU_CONSOLE_LANGUAGE_LABEL_ID NULL
 #define OPTION_VAL_ENGLISH_ID "Bahasa Inggris"
 #define OPTION_VAL_JAPANESE_ID "Bahasa Jepang"
@@ -19107,6 +20310,8 @@ struct retro_core_options_v2 options_hu = {
 #define CEMU_ACCOUNT_INFO_0_ID NULL
 #define CEMU_CREATE_ACCOUNT_LABEL_ID NULL
 #define CEMU_CREATE_ACCOUNT_INFO_0_ID NULL
+#define CEMU_RENAME_ACCOUNT_LABEL_ID NULL
+#define CEMU_RENAME_ACCOUNT_INFO_0_ID NULL
 #define CEMU_REMOVE_ACCOUNT_LABEL_ID NULL
 #define CEMU_REMOVE_ACCOUNT_INFO_0_ID NULL
 #define CEMU_INSTALL_GAME_LABEL_ID NULL
@@ -19157,6 +20362,35 @@ struct retro_core_option_v2_definition option_defs_id[] = {
 			{ NULL, NULL },
 		},
 		"auto"
+	},
+	{
+		"cemu_gamepad_motion",
+		CEMU_GAMEPAD_MOTION_LABEL_ID,
+		NULL,
+		CEMU_GAMEPAD_MOTION_INFO_0_ID,
+		NULL,
+		"system",
+		{
+			{ "disabled", "Disabled" },
+			{ "enabled", "Enabled" },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_audio_channels",
+		CEMU_AUDIO_CHANNELS_LABEL_ID,
+		NULL,
+		CEMU_AUDIO_CHANNELS_INFO_0_ID,
+		NULL,
+		"system",
+		{
+			{ "mono", OPTION_VAL_MONO_ID },
+			{ "stereo", OPTION_VAL_STEREO_ID },
+			{ "surround", OPTION_VAL_SURROUND_ID },
+			{ NULL, NULL },
+		},
+		"stereo"
 	},
 	{
 		"cemu_console_language",
@@ -19697,6 +20931,20 @@ struct retro_core_option_v2_definition option_defs_id[] = {
 		"disabled"
 	},
 	{
+		"cemu_rename_account",
+		CEMU_RENAME_ACCOUNT_LABEL_ID,
+		NULL,
+		CEMU_RENAME_ACCOUNT_INFO_0_ID,
+		NULL,
+		"accounts",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
 		"cemu_remove_account",
 		CEMU_REMOVE_ACCOUNT_LABEL_ID,
 		NULL,
@@ -19844,6 +21092,13 @@ struct retro_core_options_v2 options_id = {
 #define OPTION_VAL_SINGLECORE_RECOMPILER_IT NULL
 #define OPTION_VAL_MULTICORE_RECOMPILER_IT NULL
 #define OPTION_VAL_MULTICORE_INTERPRETER_IT NULL
+#define CEMU_GAMEPAD_MOTION_LABEL_IT NULL
+#define CEMU_GAMEPAD_MOTION_INFO_0_IT NULL
+#define CEMU_AUDIO_CHANNELS_LABEL_IT NULL
+#define CEMU_AUDIO_CHANNELS_INFO_0_IT NULL
+#define OPTION_VAL_MONO_IT NULL
+#define OPTION_VAL_STEREO_IT NULL
+#define OPTION_VAL_SURROUND_IT NULL
 #define CEMU_CONSOLE_LANGUAGE_LABEL_IT NULL
 #define OPTION_VAL_ENGLISH_IT "Inglese"
 #define OPTION_VAL_JAPANESE_IT "Giapponese"
@@ -19931,6 +21186,8 @@ struct retro_core_options_v2 options_id = {
 #define CEMU_ACCOUNT_INFO_0_IT NULL
 #define CEMU_CREATE_ACCOUNT_LABEL_IT NULL
 #define CEMU_CREATE_ACCOUNT_INFO_0_IT NULL
+#define CEMU_RENAME_ACCOUNT_LABEL_IT NULL
+#define CEMU_RENAME_ACCOUNT_INFO_0_IT NULL
 #define CEMU_REMOVE_ACCOUNT_LABEL_IT NULL
 #define CEMU_REMOVE_ACCOUNT_INFO_0_IT NULL
 #define CEMU_INSTALL_GAME_LABEL_IT NULL
@@ -19981,6 +21238,35 @@ struct retro_core_option_v2_definition option_defs_it[] = {
 			{ NULL, NULL },
 		},
 		"auto"
+	},
+	{
+		"cemu_gamepad_motion",
+		CEMU_GAMEPAD_MOTION_LABEL_IT,
+		NULL,
+		CEMU_GAMEPAD_MOTION_INFO_0_IT,
+		NULL,
+		"system",
+		{
+			{ "disabled", "Disabled" },
+			{ "enabled", "Enabled" },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_audio_channels",
+		CEMU_AUDIO_CHANNELS_LABEL_IT,
+		NULL,
+		CEMU_AUDIO_CHANNELS_INFO_0_IT,
+		NULL,
+		"system",
+		{
+			{ "mono", OPTION_VAL_MONO_IT },
+			{ "stereo", OPTION_VAL_STEREO_IT },
+			{ "surround", OPTION_VAL_SURROUND_IT },
+			{ NULL, NULL },
+		},
+		"stereo"
 	},
 	{
 		"cemu_console_language",
@@ -20521,6 +21807,20 @@ struct retro_core_option_v2_definition option_defs_it[] = {
 		"disabled"
 	},
 	{
+		"cemu_rename_account",
+		CEMU_RENAME_ACCOUNT_LABEL_IT,
+		NULL,
+		CEMU_RENAME_ACCOUNT_INFO_0_IT,
+		NULL,
+		"accounts",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
 		"cemu_remove_account",
 		CEMU_REMOVE_ACCOUNT_LABEL_IT,
 		NULL,
@@ -20668,6 +21968,13 @@ struct retro_core_options_v2 options_it = {
 #define OPTION_VAL_SINGLECORE_RECOMPILER_JA NULL
 #define OPTION_VAL_MULTICORE_RECOMPILER_JA NULL
 #define OPTION_VAL_MULTICORE_INTERPRETER_JA NULL
+#define CEMU_GAMEPAD_MOTION_LABEL_JA NULL
+#define CEMU_GAMEPAD_MOTION_INFO_0_JA NULL
+#define CEMU_AUDIO_CHANNELS_LABEL_JA NULL
+#define CEMU_AUDIO_CHANNELS_INFO_0_JA NULL
+#define OPTION_VAL_MONO_JA "モノラル"
+#define OPTION_VAL_STEREO_JA "ステレオ"
+#define OPTION_VAL_SURROUND_JA NULL
 #define CEMU_CONSOLE_LANGUAGE_LABEL_JA NULL
 #define OPTION_VAL_ENGLISH_JA "英語"
 #define OPTION_VAL_JAPANESE_JA "日本語"
@@ -20755,6 +22062,8 @@ struct retro_core_options_v2 options_it = {
 #define CEMU_ACCOUNT_INFO_0_JA NULL
 #define CEMU_CREATE_ACCOUNT_LABEL_JA NULL
 #define CEMU_CREATE_ACCOUNT_INFO_0_JA NULL
+#define CEMU_RENAME_ACCOUNT_LABEL_JA NULL
+#define CEMU_RENAME_ACCOUNT_INFO_0_JA NULL
 #define CEMU_REMOVE_ACCOUNT_LABEL_JA NULL
 #define CEMU_REMOVE_ACCOUNT_INFO_0_JA NULL
 #define CEMU_INSTALL_GAME_LABEL_JA NULL
@@ -20805,6 +22114,35 @@ struct retro_core_option_v2_definition option_defs_ja[] = {
 			{ NULL, NULL },
 		},
 		"auto"
+	},
+	{
+		"cemu_gamepad_motion",
+		CEMU_GAMEPAD_MOTION_LABEL_JA,
+		NULL,
+		CEMU_GAMEPAD_MOTION_INFO_0_JA,
+		NULL,
+		"system",
+		{
+			{ "disabled", "Disabled" },
+			{ "enabled", "Enabled" },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_audio_channels",
+		CEMU_AUDIO_CHANNELS_LABEL_JA,
+		NULL,
+		CEMU_AUDIO_CHANNELS_INFO_0_JA,
+		NULL,
+		"system",
+		{
+			{ "mono", OPTION_VAL_MONO_JA },
+			{ "stereo", OPTION_VAL_STEREO_JA },
+			{ "surround", OPTION_VAL_SURROUND_JA },
+			{ NULL, NULL },
+		},
+		"stereo"
 	},
 	{
 		"cemu_console_language",
@@ -21345,6 +22683,20 @@ struct retro_core_option_v2_definition option_defs_ja[] = {
 		"disabled"
 	},
 	{
+		"cemu_rename_account",
+		CEMU_RENAME_ACCOUNT_LABEL_JA,
+		NULL,
+		CEMU_RENAME_ACCOUNT_INFO_0_JA,
+		NULL,
+		"accounts",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
 		"cemu_remove_account",
 		CEMU_REMOVE_ACCOUNT_LABEL_JA,
 		NULL,
@@ -21492,6 +22844,13 @@ struct retro_core_options_v2 options_ja = {
 #define OPTION_VAL_SINGLECORE_RECOMPILER_KO "싱글코어 리컴파일러"
 #define OPTION_VAL_MULTICORE_RECOMPILER_KO "멀티코어 리컴파일러"
 #define OPTION_VAL_MULTICORE_INTERPRETER_KO "멀티코어 인터프리터"
+#define CEMU_GAMEPAD_MOTION_LABEL_KO NULL
+#define CEMU_GAMEPAD_MOTION_INFO_0_KO NULL
+#define CEMU_AUDIO_CHANNELS_LABEL_KO NULL
+#define CEMU_AUDIO_CHANNELS_INFO_0_KO NULL
+#define OPTION_VAL_MONO_KO "모노"
+#define OPTION_VAL_STEREO_KO "스테레오"
+#define OPTION_VAL_SURROUND_KO NULL
 #define CEMU_CONSOLE_LANGUAGE_LABEL_KO "콘솔 언어"
 #define OPTION_VAL_ENGLISH_KO "영어"
 #define OPTION_VAL_JAPANESE_KO "일본어"
@@ -21579,6 +22938,8 @@ struct retro_core_options_v2 options_ja = {
 #define CEMU_ACCOUNT_INFO_0_KO NULL
 #define CEMU_CREATE_ACCOUNT_LABEL_KO NULL
 #define CEMU_CREATE_ACCOUNT_INFO_0_KO NULL
+#define CEMU_RENAME_ACCOUNT_LABEL_KO NULL
+#define CEMU_RENAME_ACCOUNT_INFO_0_KO NULL
 #define CEMU_REMOVE_ACCOUNT_LABEL_KO NULL
 #define CEMU_REMOVE_ACCOUNT_INFO_0_KO NULL
 #define CEMU_INSTALL_GAME_LABEL_KO NULL
@@ -21629,6 +22990,35 @@ struct retro_core_option_v2_definition option_defs_ko[] = {
 			{ NULL, NULL },
 		},
 		"auto"
+	},
+	{
+		"cemu_gamepad_motion",
+		CEMU_GAMEPAD_MOTION_LABEL_KO,
+		NULL,
+		CEMU_GAMEPAD_MOTION_INFO_0_KO,
+		NULL,
+		"system",
+		{
+			{ "disabled", "Disabled" },
+			{ "enabled", "Enabled" },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_audio_channels",
+		CEMU_AUDIO_CHANNELS_LABEL_KO,
+		NULL,
+		CEMU_AUDIO_CHANNELS_INFO_0_KO,
+		NULL,
+		"system",
+		{
+			{ "mono", OPTION_VAL_MONO_KO },
+			{ "stereo", OPTION_VAL_STEREO_KO },
+			{ "surround", OPTION_VAL_SURROUND_KO },
+			{ NULL, NULL },
+		},
+		"stereo"
 	},
 	{
 		"cemu_console_language",
@@ -22169,6 +23559,20 @@ struct retro_core_option_v2_definition option_defs_ko[] = {
 		"disabled"
 	},
 	{
+		"cemu_rename_account",
+		CEMU_RENAME_ACCOUNT_LABEL_KO,
+		NULL,
+		CEMU_RENAME_ACCOUNT_INFO_0_KO,
+		NULL,
+		"accounts",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
 		"cemu_remove_account",
 		CEMU_REMOVE_ACCOUNT_LABEL_KO,
 		NULL,
@@ -22316,6 +23720,13 @@ struct retro_core_options_v2 options_ko = {
 #define OPTION_VAL_SINGLECORE_RECOMPILER_NL NULL
 #define OPTION_VAL_MULTICORE_RECOMPILER_NL NULL
 #define OPTION_VAL_MULTICORE_INTERPRETER_NL NULL
+#define CEMU_GAMEPAD_MOTION_LABEL_NL NULL
+#define CEMU_GAMEPAD_MOTION_INFO_0_NL NULL
+#define CEMU_AUDIO_CHANNELS_LABEL_NL NULL
+#define CEMU_AUDIO_CHANNELS_INFO_0_NL NULL
+#define OPTION_VAL_MONO_NL NULL
+#define OPTION_VAL_STEREO_NL NULL
+#define OPTION_VAL_SURROUND_NL NULL
 #define CEMU_CONSOLE_LANGUAGE_LABEL_NL NULL
 #define OPTION_VAL_ENGLISH_NL "Engels"
 #define OPTION_VAL_JAPANESE_NL "Japans"
@@ -22403,6 +23814,8 @@ struct retro_core_options_v2 options_ko = {
 #define CEMU_ACCOUNT_INFO_0_NL NULL
 #define CEMU_CREATE_ACCOUNT_LABEL_NL NULL
 #define CEMU_CREATE_ACCOUNT_INFO_0_NL NULL
+#define CEMU_RENAME_ACCOUNT_LABEL_NL NULL
+#define CEMU_RENAME_ACCOUNT_INFO_0_NL NULL
 #define CEMU_REMOVE_ACCOUNT_LABEL_NL NULL
 #define CEMU_REMOVE_ACCOUNT_INFO_0_NL NULL
 #define CEMU_INSTALL_GAME_LABEL_NL NULL
@@ -22453,6 +23866,35 @@ struct retro_core_option_v2_definition option_defs_nl[] = {
 			{ NULL, NULL },
 		},
 		"auto"
+	},
+	{
+		"cemu_gamepad_motion",
+		CEMU_GAMEPAD_MOTION_LABEL_NL,
+		NULL,
+		CEMU_GAMEPAD_MOTION_INFO_0_NL,
+		NULL,
+		"system",
+		{
+			{ "disabled", "Disabled" },
+			{ "enabled", "Enabled" },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_audio_channels",
+		CEMU_AUDIO_CHANNELS_LABEL_NL,
+		NULL,
+		CEMU_AUDIO_CHANNELS_INFO_0_NL,
+		NULL,
+		"system",
+		{
+			{ "mono", OPTION_VAL_MONO_NL },
+			{ "stereo", OPTION_VAL_STEREO_NL },
+			{ "surround", OPTION_VAL_SURROUND_NL },
+			{ NULL, NULL },
+		},
+		"stereo"
 	},
 	{
 		"cemu_console_language",
@@ -22993,6 +24435,20 @@ struct retro_core_option_v2_definition option_defs_nl[] = {
 		"disabled"
 	},
 	{
+		"cemu_rename_account",
+		CEMU_RENAME_ACCOUNT_LABEL_NL,
+		NULL,
+		CEMU_RENAME_ACCOUNT_INFO_0_NL,
+		NULL,
+		"accounts",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
 		"cemu_remove_account",
 		CEMU_REMOVE_ACCOUNT_LABEL_NL,
 		NULL,
@@ -23140,6 +24596,13 @@ struct retro_core_options_v2 options_nl = {
 #define OPTION_VAL_SINGLECORE_RECOMPILER_NO NULL
 #define OPTION_VAL_MULTICORE_RECOMPILER_NO NULL
 #define OPTION_VAL_MULTICORE_INTERPRETER_NO NULL
+#define CEMU_GAMEPAD_MOTION_LABEL_NO NULL
+#define CEMU_GAMEPAD_MOTION_INFO_0_NO NULL
+#define CEMU_AUDIO_CHANNELS_LABEL_NO NULL
+#define CEMU_AUDIO_CHANNELS_INFO_0_NO NULL
+#define OPTION_VAL_MONO_NO NULL
+#define OPTION_VAL_STEREO_NO NULL
+#define OPTION_VAL_SURROUND_NO NULL
 #define CEMU_CONSOLE_LANGUAGE_LABEL_NO NULL
 #define OPTION_VAL_ENGLISH_NO NULL
 #define OPTION_VAL_JAPANESE_NO NULL
@@ -23227,6 +24690,8 @@ struct retro_core_options_v2 options_nl = {
 #define CEMU_ACCOUNT_INFO_0_NO NULL
 #define CEMU_CREATE_ACCOUNT_LABEL_NO NULL
 #define CEMU_CREATE_ACCOUNT_INFO_0_NO NULL
+#define CEMU_RENAME_ACCOUNT_LABEL_NO NULL
+#define CEMU_RENAME_ACCOUNT_INFO_0_NO NULL
 #define CEMU_REMOVE_ACCOUNT_LABEL_NO NULL
 #define CEMU_REMOVE_ACCOUNT_INFO_0_NO NULL
 #define CEMU_INSTALL_GAME_LABEL_NO NULL
@@ -23277,6 +24742,35 @@ struct retro_core_option_v2_definition option_defs_no[] = {
 			{ NULL, NULL },
 		},
 		"auto"
+	},
+	{
+		"cemu_gamepad_motion",
+		CEMU_GAMEPAD_MOTION_LABEL_NO,
+		NULL,
+		CEMU_GAMEPAD_MOTION_INFO_0_NO,
+		NULL,
+		"system",
+		{
+			{ "disabled", "Disabled" },
+			{ "enabled", "Enabled" },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_audio_channels",
+		CEMU_AUDIO_CHANNELS_LABEL_NO,
+		NULL,
+		CEMU_AUDIO_CHANNELS_INFO_0_NO,
+		NULL,
+		"system",
+		{
+			{ "mono", OPTION_VAL_MONO_NO },
+			{ "stereo", OPTION_VAL_STEREO_NO },
+			{ "surround", OPTION_VAL_SURROUND_NO },
+			{ NULL, NULL },
+		},
+		"stereo"
 	},
 	{
 		"cemu_console_language",
@@ -23817,6 +25311,20 @@ struct retro_core_option_v2_definition option_defs_no[] = {
 		"disabled"
 	},
 	{
+		"cemu_rename_account",
+		CEMU_RENAME_ACCOUNT_LABEL_NO,
+		NULL,
+		CEMU_RENAME_ACCOUNT_INFO_0_NO,
+		NULL,
+		"accounts",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
 		"cemu_remove_account",
 		CEMU_REMOVE_ACCOUNT_LABEL_NO,
 		NULL,
@@ -23964,6 +25472,13 @@ struct retro_core_options_v2 options_no = {
 #define OPTION_VAL_SINGLECORE_RECOMPILER_OR NULL
 #define OPTION_VAL_MULTICORE_RECOMPILER_OR NULL
 #define OPTION_VAL_MULTICORE_INTERPRETER_OR NULL
+#define CEMU_GAMEPAD_MOTION_LABEL_OR NULL
+#define CEMU_GAMEPAD_MOTION_INFO_0_OR NULL
+#define CEMU_AUDIO_CHANNELS_LABEL_OR NULL
+#define CEMU_AUDIO_CHANNELS_INFO_0_OR NULL
+#define OPTION_VAL_MONO_OR NULL
+#define OPTION_VAL_STEREO_OR NULL
+#define OPTION_VAL_SURROUND_OR NULL
 #define CEMU_CONSOLE_LANGUAGE_LABEL_OR NULL
 #define OPTION_VAL_ENGLISH_OR NULL
 #define OPTION_VAL_JAPANESE_OR NULL
@@ -24051,6 +25566,8 @@ struct retro_core_options_v2 options_no = {
 #define CEMU_ACCOUNT_INFO_0_OR NULL
 #define CEMU_CREATE_ACCOUNT_LABEL_OR NULL
 #define CEMU_CREATE_ACCOUNT_INFO_0_OR NULL
+#define CEMU_RENAME_ACCOUNT_LABEL_OR NULL
+#define CEMU_RENAME_ACCOUNT_INFO_0_OR NULL
 #define CEMU_REMOVE_ACCOUNT_LABEL_OR NULL
 #define CEMU_REMOVE_ACCOUNT_INFO_0_OR NULL
 #define CEMU_INSTALL_GAME_LABEL_OR NULL
@@ -24101,6 +25618,35 @@ struct retro_core_option_v2_definition option_defs_or[] = {
 			{ NULL, NULL },
 		},
 		"auto"
+	},
+	{
+		"cemu_gamepad_motion",
+		CEMU_GAMEPAD_MOTION_LABEL_OR,
+		NULL,
+		CEMU_GAMEPAD_MOTION_INFO_0_OR,
+		NULL,
+		"system",
+		{
+			{ "disabled", "Disabled" },
+			{ "enabled", "Enabled" },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_audio_channels",
+		CEMU_AUDIO_CHANNELS_LABEL_OR,
+		NULL,
+		CEMU_AUDIO_CHANNELS_INFO_0_OR,
+		NULL,
+		"system",
+		{
+			{ "mono", OPTION_VAL_MONO_OR },
+			{ "stereo", OPTION_VAL_STEREO_OR },
+			{ "surround", OPTION_VAL_SURROUND_OR },
+			{ NULL, NULL },
+		},
+		"stereo"
 	},
 	{
 		"cemu_console_language",
@@ -24641,6 +26187,20 @@ struct retro_core_option_v2_definition option_defs_or[] = {
 		"disabled"
 	},
 	{
+		"cemu_rename_account",
+		CEMU_RENAME_ACCOUNT_LABEL_OR,
+		NULL,
+		CEMU_RENAME_ACCOUNT_INFO_0_OR,
+		NULL,
+		"accounts",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
 		"cemu_remove_account",
 		CEMU_REMOVE_ACCOUNT_LABEL_OR,
 		NULL,
@@ -24788,6 +26348,13 @@ struct retro_core_options_v2 options_or = {
 #define OPTION_VAL_SINGLECORE_RECOMPILER_PL NULL
 #define OPTION_VAL_MULTICORE_RECOMPILER_PL NULL
 #define OPTION_VAL_MULTICORE_INTERPRETER_PL NULL
+#define CEMU_GAMEPAD_MOTION_LABEL_PL NULL
+#define CEMU_GAMEPAD_MOTION_INFO_0_PL NULL
+#define CEMU_AUDIO_CHANNELS_LABEL_PL NULL
+#define CEMU_AUDIO_CHANNELS_INFO_0_PL NULL
+#define OPTION_VAL_MONO_PL NULL
+#define OPTION_VAL_STEREO_PL NULL
+#define OPTION_VAL_SURROUND_PL NULL
 #define CEMU_CONSOLE_LANGUAGE_LABEL_PL NULL
 #define OPTION_VAL_ENGLISH_PL "angielski"
 #define OPTION_VAL_JAPANESE_PL "japoński"
@@ -24875,6 +26442,8 @@ struct retro_core_options_v2 options_or = {
 #define CEMU_ACCOUNT_INFO_0_PL NULL
 #define CEMU_CREATE_ACCOUNT_LABEL_PL NULL
 #define CEMU_CREATE_ACCOUNT_INFO_0_PL NULL
+#define CEMU_RENAME_ACCOUNT_LABEL_PL NULL
+#define CEMU_RENAME_ACCOUNT_INFO_0_PL NULL
 #define CEMU_REMOVE_ACCOUNT_LABEL_PL NULL
 #define CEMU_REMOVE_ACCOUNT_INFO_0_PL NULL
 #define CEMU_INSTALL_GAME_LABEL_PL NULL
@@ -24925,6 +26494,35 @@ struct retro_core_option_v2_definition option_defs_pl[] = {
 			{ NULL, NULL },
 		},
 		"auto"
+	},
+	{
+		"cemu_gamepad_motion",
+		CEMU_GAMEPAD_MOTION_LABEL_PL,
+		NULL,
+		CEMU_GAMEPAD_MOTION_INFO_0_PL,
+		NULL,
+		"system",
+		{
+			{ "disabled", "Disabled" },
+			{ "enabled", "Enabled" },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_audio_channels",
+		CEMU_AUDIO_CHANNELS_LABEL_PL,
+		NULL,
+		CEMU_AUDIO_CHANNELS_INFO_0_PL,
+		NULL,
+		"system",
+		{
+			{ "mono", OPTION_VAL_MONO_PL },
+			{ "stereo", OPTION_VAL_STEREO_PL },
+			{ "surround", OPTION_VAL_SURROUND_PL },
+			{ NULL, NULL },
+		},
+		"stereo"
 	},
 	{
 		"cemu_console_language",
@@ -25465,6 +27063,20 @@ struct retro_core_option_v2_definition option_defs_pl[] = {
 		"disabled"
 	},
 	{
+		"cemu_rename_account",
+		CEMU_RENAME_ACCOUNT_LABEL_PL,
+		NULL,
+		CEMU_RENAME_ACCOUNT_INFO_0_PL,
+		NULL,
+		"accounts",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
 		"cemu_remove_account",
 		CEMU_REMOVE_ACCOUNT_LABEL_PL,
 		NULL,
@@ -25612,6 +27224,13 @@ struct retro_core_options_v2 options_pl = {
 #define OPTION_VAL_SINGLECORE_RECOMPILER_PT_BR NULL
 #define OPTION_VAL_MULTICORE_RECOMPILER_PT_BR NULL
 #define OPTION_VAL_MULTICORE_INTERPRETER_PT_BR NULL
+#define CEMU_GAMEPAD_MOTION_LABEL_PT_BR NULL
+#define CEMU_GAMEPAD_MOTION_INFO_0_PT_BR NULL
+#define CEMU_AUDIO_CHANNELS_LABEL_PT_BR NULL
+#define CEMU_AUDIO_CHANNELS_INFO_0_PT_BR NULL
+#define OPTION_VAL_MONO_PT_BR NULL
+#define OPTION_VAL_STEREO_PT_BR "Estéreo"
+#define OPTION_VAL_SURROUND_PT_BR NULL
 #define CEMU_CONSOLE_LANGUAGE_LABEL_PT_BR NULL
 #define OPTION_VAL_ENGLISH_PT_BR "Inglês"
 #define OPTION_VAL_JAPANESE_PT_BR "Japonês"
@@ -25699,6 +27318,8 @@ struct retro_core_options_v2 options_pl = {
 #define CEMU_ACCOUNT_INFO_0_PT_BR NULL
 #define CEMU_CREATE_ACCOUNT_LABEL_PT_BR NULL
 #define CEMU_CREATE_ACCOUNT_INFO_0_PT_BR NULL
+#define CEMU_RENAME_ACCOUNT_LABEL_PT_BR NULL
+#define CEMU_RENAME_ACCOUNT_INFO_0_PT_BR NULL
 #define CEMU_REMOVE_ACCOUNT_LABEL_PT_BR NULL
 #define CEMU_REMOVE_ACCOUNT_INFO_0_PT_BR NULL
 #define CEMU_INSTALL_GAME_LABEL_PT_BR NULL
@@ -25749,6 +27370,35 @@ struct retro_core_option_v2_definition option_defs_pt_br[] = {
 			{ NULL, NULL },
 		},
 		"auto"
+	},
+	{
+		"cemu_gamepad_motion",
+		CEMU_GAMEPAD_MOTION_LABEL_PT_BR,
+		NULL,
+		CEMU_GAMEPAD_MOTION_INFO_0_PT_BR,
+		NULL,
+		"system",
+		{
+			{ "disabled", "Disabled" },
+			{ "enabled", "Enabled" },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_audio_channels",
+		CEMU_AUDIO_CHANNELS_LABEL_PT_BR,
+		NULL,
+		CEMU_AUDIO_CHANNELS_INFO_0_PT_BR,
+		NULL,
+		"system",
+		{
+			{ "mono", OPTION_VAL_MONO_PT_BR },
+			{ "stereo", OPTION_VAL_STEREO_PT_BR },
+			{ "surround", OPTION_VAL_SURROUND_PT_BR },
+			{ NULL, NULL },
+		},
+		"stereo"
 	},
 	{
 		"cemu_console_language",
@@ -26289,6 +27939,20 @@ struct retro_core_option_v2_definition option_defs_pt_br[] = {
 		"disabled"
 	},
 	{
+		"cemu_rename_account",
+		CEMU_RENAME_ACCOUNT_LABEL_PT_BR,
+		NULL,
+		CEMU_RENAME_ACCOUNT_INFO_0_PT_BR,
+		NULL,
+		"accounts",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
 		"cemu_remove_account",
 		CEMU_REMOVE_ACCOUNT_LABEL_PT_BR,
 		NULL,
@@ -26436,6 +28100,13 @@ struct retro_core_options_v2 options_pt_br = {
 #define OPTION_VAL_SINGLECORE_RECOMPILER_PT_PT NULL
 #define OPTION_VAL_MULTICORE_RECOMPILER_PT_PT NULL
 #define OPTION_VAL_MULTICORE_INTERPRETER_PT_PT NULL
+#define CEMU_GAMEPAD_MOTION_LABEL_PT_PT NULL
+#define CEMU_GAMEPAD_MOTION_INFO_0_PT_PT NULL
+#define CEMU_AUDIO_CHANNELS_LABEL_PT_PT NULL
+#define CEMU_AUDIO_CHANNELS_INFO_0_PT_PT NULL
+#define OPTION_VAL_MONO_PT_PT NULL
+#define OPTION_VAL_STEREO_PT_PT NULL
+#define OPTION_VAL_SURROUND_PT_PT NULL
 #define CEMU_CONSOLE_LANGUAGE_LABEL_PT_PT NULL
 #define OPTION_VAL_ENGLISH_PT_PT "Inglês"
 #define OPTION_VAL_JAPANESE_PT_PT "Japonês"
@@ -26523,6 +28194,8 @@ struct retro_core_options_v2 options_pt_br = {
 #define CEMU_ACCOUNT_INFO_0_PT_PT NULL
 #define CEMU_CREATE_ACCOUNT_LABEL_PT_PT NULL
 #define CEMU_CREATE_ACCOUNT_INFO_0_PT_PT NULL
+#define CEMU_RENAME_ACCOUNT_LABEL_PT_PT NULL
+#define CEMU_RENAME_ACCOUNT_INFO_0_PT_PT NULL
 #define CEMU_REMOVE_ACCOUNT_LABEL_PT_PT NULL
 #define CEMU_REMOVE_ACCOUNT_INFO_0_PT_PT NULL
 #define CEMU_INSTALL_GAME_LABEL_PT_PT NULL
@@ -26573,6 +28246,35 @@ struct retro_core_option_v2_definition option_defs_pt_pt[] = {
 			{ NULL, NULL },
 		},
 		"auto"
+	},
+	{
+		"cemu_gamepad_motion",
+		CEMU_GAMEPAD_MOTION_LABEL_PT_PT,
+		NULL,
+		CEMU_GAMEPAD_MOTION_INFO_0_PT_PT,
+		NULL,
+		"system",
+		{
+			{ "disabled", "Disabled" },
+			{ "enabled", "Enabled" },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_audio_channels",
+		CEMU_AUDIO_CHANNELS_LABEL_PT_PT,
+		NULL,
+		CEMU_AUDIO_CHANNELS_INFO_0_PT_PT,
+		NULL,
+		"system",
+		{
+			{ "mono", OPTION_VAL_MONO_PT_PT },
+			{ "stereo", OPTION_VAL_STEREO_PT_PT },
+			{ "surround", OPTION_VAL_SURROUND_PT_PT },
+			{ NULL, NULL },
+		},
+		"stereo"
 	},
 	{
 		"cemu_console_language",
@@ -27113,6 +28815,20 @@ struct retro_core_option_v2_definition option_defs_pt_pt[] = {
 		"disabled"
 	},
 	{
+		"cemu_rename_account",
+		CEMU_RENAME_ACCOUNT_LABEL_PT_PT,
+		NULL,
+		CEMU_RENAME_ACCOUNT_INFO_0_PT_PT,
+		NULL,
+		"accounts",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
 		"cemu_remove_account",
 		CEMU_REMOVE_ACCOUNT_LABEL_PT_PT,
 		NULL,
@@ -27260,6 +28976,13 @@ struct retro_core_options_v2 options_pt_pt = {
 #define OPTION_VAL_SINGLECORE_RECOMPILER_RU NULL
 #define OPTION_VAL_MULTICORE_RECOMPILER_RU NULL
 #define OPTION_VAL_MULTICORE_INTERPRETER_RU NULL
+#define CEMU_GAMEPAD_MOTION_LABEL_RU NULL
+#define CEMU_GAMEPAD_MOTION_INFO_0_RU NULL
+#define CEMU_AUDIO_CHANNELS_LABEL_RU NULL
+#define CEMU_AUDIO_CHANNELS_INFO_0_RU NULL
+#define OPTION_VAL_MONO_RU "Моно"
+#define OPTION_VAL_STEREO_RU "Стерео"
+#define OPTION_VAL_SURROUND_RU NULL
 #define CEMU_CONSOLE_LANGUAGE_LABEL_RU NULL
 #define OPTION_VAL_ENGLISH_RU "Английский"
 #define OPTION_VAL_JAPANESE_RU "Японский"
@@ -27347,6 +29070,8 @@ struct retro_core_options_v2 options_pt_pt = {
 #define CEMU_ACCOUNT_INFO_0_RU NULL
 #define CEMU_CREATE_ACCOUNT_LABEL_RU NULL
 #define CEMU_CREATE_ACCOUNT_INFO_0_RU NULL
+#define CEMU_RENAME_ACCOUNT_LABEL_RU NULL
+#define CEMU_RENAME_ACCOUNT_INFO_0_RU NULL
 #define CEMU_REMOVE_ACCOUNT_LABEL_RU NULL
 #define CEMU_REMOVE_ACCOUNT_INFO_0_RU NULL
 #define CEMU_INSTALL_GAME_LABEL_RU NULL
@@ -27397,6 +29122,35 @@ struct retro_core_option_v2_definition option_defs_ru[] = {
 			{ NULL, NULL },
 		},
 		"auto"
+	},
+	{
+		"cemu_gamepad_motion",
+		CEMU_GAMEPAD_MOTION_LABEL_RU,
+		NULL,
+		CEMU_GAMEPAD_MOTION_INFO_0_RU,
+		NULL,
+		"system",
+		{
+			{ "disabled", "Disabled" },
+			{ "enabled", "Enabled" },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_audio_channels",
+		CEMU_AUDIO_CHANNELS_LABEL_RU,
+		NULL,
+		CEMU_AUDIO_CHANNELS_INFO_0_RU,
+		NULL,
+		"system",
+		{
+			{ "mono", OPTION_VAL_MONO_RU },
+			{ "stereo", OPTION_VAL_STEREO_RU },
+			{ "surround", OPTION_VAL_SURROUND_RU },
+			{ NULL, NULL },
+		},
+		"stereo"
 	},
 	{
 		"cemu_console_language",
@@ -27937,6 +29691,20 @@ struct retro_core_option_v2_definition option_defs_ru[] = {
 		"disabled"
 	},
 	{
+		"cemu_rename_account",
+		CEMU_RENAME_ACCOUNT_LABEL_RU,
+		NULL,
+		CEMU_RENAME_ACCOUNT_INFO_0_RU,
+		NULL,
+		"accounts",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
 		"cemu_remove_account",
 		CEMU_REMOVE_ACCOUNT_LABEL_RU,
 		NULL,
@@ -28084,6 +29852,13 @@ struct retro_core_options_v2 options_ru = {
 #define OPTION_VAL_SINGLECORE_RECOMPILER_SK "Jednojadrový rekompilátor"
 #define OPTION_VAL_MULTICORE_RECOMPILER_SK "Viacjadrový rekompilátor"
 #define OPTION_VAL_MULTICORE_INTERPRETER_SK "Viacjadrový interpreter"
+#define CEMU_GAMEPAD_MOTION_LABEL_SK "Pohyb GamePadu"
+#define CEMU_GAMEPAD_MOTION_INFO_0_SK "Gyroskop a akcelerometer GamePadu zo senzorov, ktoré RetroArch číta na porte 1: vlastné senzory telefónu alebo tabletu, alebo ovládača, kde ich poskytuje vstupný ovládač RetroArchu (DualShock 4, DualSense a ďalšie). Potrebujú to hry, v ktorých sa mieri alebo riadi nakláňaním GamePadu. Vypnuté: GamePad leží nehybne, ako pri vypnutom pohybe v samostatnej verzii."
+#define CEMU_AUDIO_CHANNELS_LABEL_SK "Zvukové kanály (reštart)"
+#define CEMU_AUDIO_CHANNELS_INFO_0_SK "Televízor, ktorý konzola hlási hrám, ako nastavenie TV kanálov v samostatnej verzii: hry, ktoré to podporujú, miešajú zvuk pre taký počet reproduktorov. Surround 5.1 ide do RetroArchu ako šesť kanálov, ak má viackanálový zvukový výstup, inak sa zmieša do sterea."
+#define OPTION_VAL_MONO_SK NULL
+#define OPTION_VAL_STEREO_SK NULL
+#define OPTION_VAL_SURROUND_SK NULL
 #define CEMU_CONSOLE_LANGUAGE_LABEL_SK "Jazyk konzoly"
 #define OPTION_VAL_ENGLISH_SK "Angličtina"
 #define OPTION_VAL_JAPANESE_SK "Japončina"
@@ -28110,14 +29885,14 @@ struct retro_core_options_v2 options_ru = {
 #define OPTION_VAL_NEAREST_SK "Najbližšie"
 #define CEMU_DOWNSCALE_FILTER_LABEL_SK "Filter zmenšenia"
 #define CEMU_INTERNAL_RESOLUTION_LABEL_SK "Vnútorné rozlíšenie"
-#define CEMU_INTERNAL_RESOLUTION_INFO_0_SK NULL
-#define OPTION_VAL_0_25X_SK NULL
-#define OPTION_VAL_0_5X_SK NULL
-#define OPTION_VAL_0_75X_SK NULL
+#define CEMU_INTERNAL_RESOLUTION_INFO_0_SK "Všeobecná náhrada pre hry bez grafického balíčka s rozlíšením: mení veľkosť každého vykresľovacieho cieľa v tvare obrazovky, ktoré niektoré hry používajú na veci, čo sa pri zmene veľkosti pokazia. Násobok vlastného rozlíšenia hry: pre 720p hru je 0.5x 640x360, štvrtina pixelov, a 2x je 2560x1440; pre 1080p hru je 0.5x 960x540. Keď je pre načítanú hru zapnutý balíček s rozlíšením (Grafické balíčky), rozlíšenie nastavuje balíček a táto voľba je skrytá."
+#define OPTION_VAL_0_25X_SK "0.25x (320x180 pri 720p)"
+#define OPTION_VAL_0_5X_SK "0.5x (640x360 pri 720p)"
+#define OPTION_VAL_0_75X_SK "0.75x (960x540 pri 720p)"
 #define OPTION_VAL_NATIVE_SK "Natívne"
-#define OPTION_VAL_1_5X_SK NULL
-#define OPTION_VAL_2X_SK NULL
-#define OPTION_VAL_3X_SK NULL
+#define OPTION_VAL_1_5X_SK "1.5x (1920x1080 pri 720p)"
+#define OPTION_VAL_2X_SK "2x (2560x1440 pri 720p)"
+#define OPTION_VAL_3X_SK "3x (3840x2160 pri 720p)"
 #define CEMU_THREAD_QUANTUM_LABEL_SK "Kvantum vlákien"
 #define CEMU_RUMBLE_STRENGTH_LABEL_SK "Sila vibrácií"
 #define CEMU_RUMBLE_STRENGTH_INFO_0_SK "Ako silno ovládač vibruje, keď o to hra požiada: motor GamePadu a Wii Remote alebo Pro Controllera. Pri vypnutí sa frontendu neposielajú žiadne vibrácie."
@@ -28155,10 +29930,10 @@ struct retro_core_options_v2 options_ru = {
 #define CEMU_LOG_TEXTURE_MEMORY_INFO_0_SK "Hlási, koľko pamäte textúr tvoria textúry BC, ktoré bolo treba dekomprimovať, lebo ich táto GPU nevie vzorkovať."
 #define CEMU_LOG_INPUT_API_LABEL_SK "Zaznamenávať volania API ovládačov (ladenie)"
 #define CEMU_LOG_INPUT_API_INFO_0_SK "Zaznamená každé volanie ovládača, ktoré titul urobí – ktoré gamepady hľadal a čo sa dozvedel. Veľa záznamov; zapínajte na pár sekúnd."
-#define CEMU_LOG_AUDIO_LABEL_SK NULL
-#define CEMU_LOG_AUDIO_INFO_0_SK NULL
-#define CEMU_LOG_THREAD_TIME_LABEL_SK NULL
-#define CEMU_LOG_THREAD_TIME_INFO_0_SK NULL
+#define CEMU_LOG_AUDIO_LABEL_SK "Zaznamenávať zvuk a časovanie snímok (ladenie)"
+#define CEMU_LOG_AUDIO_INFO_0_SK "Raz za sekundu: koľko vzoriek vyrobil AX, koľko ich musel kruhový zásobník zahodiť a koľko si vzal frontend; a koľkokrát frontend spustil jadro, koľko snímok titul dokončil a kam šiel čas (čakanie na vlákno GPU, prezentácia, zvuk). Na zistenie, či pomalú hru brzdí emulovaný procesor, GPU alebo frontend."
+#define CEMU_LOG_THREAD_TIME_LABEL_SK "Zaznamenávať procesorový čas vlákien (ladenie)"
+#define CEMU_LOG_THREAD_TIME_INFO_0_SK "Raz za sekundu: ako vyťažené bolo vlákno každého emulovaného jadra PowerPC, vlákno GPU a vlákno frontendu, ako podiel jedného jadra hostiteľa. Vlákno blízko 100 % je to, na ktoré pomalá hra čaká."
 #define CEMU_DUMP_SHADERS_LABEL_SK "Ukladať shadery (ladenie)"
 #define CEMU_DUMP_SHADERS_INFO_0_SK "Zapíše zdrojový kód každého shadera, ktorý hra používa, do system/Cemu/dump/shaders, pomenovaný podľa jeho hashov tak, ako sa objavujú v log.txt. Na nahlásenie shadera, ktorý na konkrétnom GPU zlyhá alebo kreslí nesprávne. Spomaľuje kompiláciu shaderov a priečinok rýchlo zapĺňa, preto ho potom znova vypnite."
 #define CEMU_BC1_16BIT_LABEL_SK "Znížiť pamäť textúr BC1"
@@ -28170,19 +29945,21 @@ struct retro_core_options_v2 options_ru = {
 #define CEMU_ACCOUNT_LABEL_SK "Aktívny účet"
 #define CEMU_ACCOUNT_INFO_0_SK "Účet Wii U, pod ktorým hra beží, každý s vlastnými uloženými pozíciami a Mii. Zoznam obsahuje účty v adresári účtov.Zmena sa prejaví, keď sa titul zavrie a znova spustí alebo resetuje. Dovtedy bežiaci titul ukladá do účtu, s ktorým bol spustený."
 #define CEMU_CREATE_ACCOUNT_LABEL_SK "Vytvoriť účet"
-#define CEMU_CREATE_ACCOUNT_INFO_0_SK "Vytvorí nový účet s menom Player 2, Player 3 atď. a nastaví ho ako Aktívny účet. Potom sa táto voľba vráti na VYP. Konzola pojme najviac 12 účtov."
+#define CEMU_CREATE_ACCOUNT_INFO_0_SK "Vytvorí nový účet s menom Player 2, Player 3 atď. a nastaví ho ako aktívny účet. Potom sa voľba vráti na VYPNUTÉ. Nový účet sa v zozname účtov objaví, keď sa táto ponuka zavrie a znovu otvorí. Konzola pojme najviac 12 účtov."
+#define CEMU_RENAME_ACCOUNT_LABEL_SK "Premenovať aktívny účet"
+#define CEMU_RENAME_ACCOUNT_INFO_0_SK "Po zatvorení tejto ponuky otvorí zadávanie mena aktívneho účtu a vráti sa na VYPNUTÉ. Rozpísané meno sa zobrazuje ako upozornenie nad hrou, preto musia byť zapnuté upozornenia frontendu na obrazovke.\n\nOvládačom: Hore a Dole menia posledný znak, Vpravo pridá znak, Vľavo jeden odstráni, Start potvrdí, Select zruší.\n\nKlávesnicou: píšte, Backspace odstraňuje, Enter potvrdí, Escape zruší (frontend môže potrebovať zapnutý Game Focus, aby jadru odovzdával klávesy).\n\nMeno má najviac 10 znakov. Hra nedostáva žiadny vstup, kým sa zadávanie nezavrie, a bežiaca hra ukáže nové meno až po ďalšom spustení."
 #define CEMU_REMOVE_ACCOUNT_LABEL_SK "Odstrániť účet"
-#define CEMU_REMOVE_ACCOUNT_INFO_0_SK "UPOZORNENIE: odstránením účtu sa zmažú aj jeho uložené pozície vo všetkých hrách a nedá sa to vrátiť späť.Odstráni vybraný účet tak, ako to robí zmazanie používateľa na konzole: účet zmizne z adresára účtov a jeho uložené pozície z priečinka uložených pozícií každého titulu. Účet sa odstráni, keď opustíte menu, a táto voľba sa potom vráti na VYP.Aktívny účet sa nedá odstrániť, a ani účet, s ktorým bola spustená bežiaca hra, kým sa táto hra nezavrie. Posledný účet sa preto odstrániť nedá."
+#define CEMU_REMOVE_ACCOUNT_INFO_0_SK "Odstráni vybraný účet z priečinka účtov (saves/Cemu/mlc01/usr/save/system/act), tak ako zmazanie používateľa na konzole, keď sa táto ponuka zavrie. Po návrate do ponuky voľba znovu ukazuje VYPNUTÉ.Aktívny účet sa odstrániť nedá, ani účet, s ktorým bola spustená bežiaca hra, kým sa tá hra nezavrie.VAROVANIE: odstránenie účtu natrvalo zmaže aj uložené pozície vytvorené pod ním v každej hre. Pred odstránením si zálohujte pozície, ktoré chcete zachovať."
 #define CEMU_INSTALL_GAME_LABEL_SK "Inštalovať hry"
-#define CEMU_INSTALL_GAME_INFO_0_SK "Nainštaluje každú hru v system/Cemu/titles, vrátane podpriečinkov, do adresára nainštalovaných hier emulovaného Wii U (saves/Cemu/mlc01/usr/title/00050000), tak ako konzola inštaluje hru zo svojho disku. Hra je obraz disku (.wud, .wux, .iso) alebo .wua; aktualizácia titulu a DLC, ktoré .wua obsahuje, sa nainštalujú s ňou. Hra už nainštalovaná v rovnakej alebo novšej verzii sa nechá tak.Keď je táto voľba ZAP, inštalácia začne okamžite, jej priebeh sa zobrazuje ako upozornenie, a keď sú všetky hry nainštalované, prepne sa späť na VYP. Nainštalovaná hra sa spúšťa načítaním súboru .rpx v jej priečinku code v adresári nainštalovaných hier; jej obraz disku už nie je potrebný."
+#define CEMU_INSTALL_GAME_INFO_0_SK "Nainštaluje každú hru zo zdrojového priečinka (system/Cemu/titles), vrátane podpriečinkov, do priečinka nainštalovaných hier emulovaného Wii U (saves/Cemu/mlc01/usr/title/00050000), tak ako konzola inštaluje hru z disku. Hra je obraz disku (.wud, .wux, .iso) alebo .wua; aktualizácia titulu a DLC, ktoré .wua obsahuje, sa nainštalujú s ňou. Šifrovaný obraz disku (.wud, .wux) potrebuje svoj kľúč disku: v súbore vedľa neho s rovnakým názvom a príponou .key (game.wux, game.key), alebo v system/Cemu/keys.txt. Hra už nainštalovaná v rovnakej alebo novšej verzii sa nemení.Keď je toto ZAPNUTÉ, inštalácia začne okamžite, jej priebeh sa zobrazuje ako upozornenie, a znovu sa VYPNE, keď sú všetky hry nainštalované a táto ponuka sa zavrie alebo sa zmení iná voľba. Nainštalovaná hra sa spúšťa načítaním súboru .rpx v jej priečinku code v priečinku nainštalovaných hier; jej obraz disku už nie je potrebný."
 #define CEMU_UNINSTALL_GAME_LABEL_SK "Odinštalovať hru"
-#define CEMU_UNINSTALL_GAME_INFO_0_SK "Odinštaluje bežiacu hru z adresára nainštalovaných hier (saves/Cemu/mlc01/usr/title/00050000), keď sa hra zavrie alebo resetuje, spolu s jej nainštalovanou aktualizáciou titulu a DLC; dovtedy ostáva na ZAP. Jej uložené pozície ostanú nedotknuté, rovnako ako obraz disku alebo .wua, z ktorého bola nainštalovaná."
+#define CEMU_UNINSTALL_GAME_INFO_0_SK "Odinštaluje bežiacu hru a všetky súvisiace aktualizácie titulu a DLC z priečinka nainštalovaného obsahu (saves/Cemu/mlc01/usr/title), keď sa hra zavrie alebo resetuje; dovtedy voľba ostáva ZAPNUTÁ. Uložené pozície pre ID titulu hry (saves/Cemu/mlc01/usr/save/<title id>) sa neodstraňujú."
 #define CEMU_INSTALL_TITLES_LABEL_SK "Inštalovať obsah"
-#define CEMU_INSTALL_TITLES_INFO_0_SK "Nainštaluje každú aktualizáciu titulu a DLC v system/Cemu/titles, vrátane podpriečinkov, do úložiska emulovaného Wii U (saves/Cemu/mlc01/usr/title). Každá patrí do vlastného priečinka v system/Cemu/titles; stiahnutie z NUS (súbory .app) potrebuje vedľa seba svoj title.tmd a svoj title.tik, dešifrovací kľúč. Už nainštalovaná rovnaká alebo novšia verzia sa nechá tak.Keď je táto voľba ZAP, inštalácia začne okamžite, jej priebeh sa zobrazuje ako upozornenie, a prepne sa späť na VYP, keď je všetok obsah nainštalovaný a toto menu sa opustí alebo sa zmení iná voľba. Hra použije nainštalovaný obsah po reštarte.Obsah z iných umiestnení sa dá nainštalovať cez Hlavné menu > Načítať obsah v RetroArchu výberom príslušného title.tmd, s jeho title.tik vedľa neho."
+#define CEMU_INSTALL_TITLES_INFO_0_SK "Nainštaluje každú aktualizáciu titulu a DLC zo zdrojového priečinka (system/Cemu/titles), vrátane podpriečinkov, do priečinka nainštalovaného obsahu (saves/Cemu/mlc01/usr/title). Každá ide do vlastného priečinka v zdrojovom priečinku; stiahnutie z NUS (súbory .app) potrebuje vedľa seba svoj title.tmd a title.tik, dešifrovací kľúč. Už nainštalovaná rovnaká alebo novšia verzia sa nemení.Keď je toto ZAPNUTÉ, inštalácia začne okamžite, jej priebeh sa zobrazuje ako upozornenie, a znovu sa VYPNE, keď je všetok obsah nainštalovaný a táto ponuka sa zavrie alebo sa zmení iná voľba. Hra použije nainštalovaný obsah po opätovnom spustení.Obsah z iných umiestnení sa dá nainštalovať cez Hlavná ponuka > Načítať obsah v RetroArchu výberom príslušného title.tmd, s jeho title.tik vedľa neho."
 #define CEMU_UNINSTALL_TITLES_LABEL_SK "Odinštalovať obsah"
-#define CEMU_UNINSTALL_TITLES_INFO_0_SK "Odinštaluje aktualizáciu titulu a DLC bežiacej hry z úložiska emulovaného Wii U (saves/Cemu/mlc01/usr/title), keď sa hra zavrie alebo resetuje; dovtedy ostáva na ZAP. Kópie v system/Cemu/titles ostanú nedotknuté."
+#define CEMU_UNINSTALL_TITLES_INFO_0_SK "Odinštaluje aktualizáciu titulu a DLC bežiacej hry z priečinka nainštalovaného obsahu (saves/Cemu/mlc01/usr/title), keď sa hra zavrie alebo resetuje; dovtedy voľba ostáva ZAPNUTÁ. Kópie v zdrojovom priečinku (system/Cemu/titles) sa nemenia."
 #define CEMU_INSTALL_REMOVE_SOURCE_LABEL_SK "Odstrániť súbory po inštalácii"
-#define CEMU_INSTALL_REMOVE_SOURCE_INFO_0_SK "UPOZORNENIE: zmaže súbory zo system/Cemu/titles a nedá sa to vrátiť späť. system/Cemu/titles je priečinok, ktorý spravuje jadro; jedinú kópiu dumpu majte inde.Zmaže zo system/Cemu/titles to, čo nainštalovali Inštalovať hry a Inštalovať obsah: priečinok aktualizácie titulu alebo DLC po jeho nainštalovaní a obraz disku alebo .wua, keď je nainštalované všetko, čo obsahuje (samotné Inštalovať obsah ponechá .wua, ktoré obsahuje aj hru). Súbory, ktoré používa bežiaca hra, sa zmažú, keď sa zavrie alebo resetuje. Obsah načítaný cez Načítať obsah ostane tam, kde je."
+#define CEMU_INSTALL_REMOVE_SOURCE_INFO_0_SK "Odstráni zo zdrojového priečinka (system/Cemu/titles) to, čo nainštalovali Inštalovať hry a Inštalovať obsah: priečinok aktualizácie titulu alebo DLC po jeho nainštalovaní, a obraz disku (s jeho súborom .key) alebo .wua, keď je nainštalované všetko, čo obsahuje. Súbory, ktoré používa bežiaca hra, sa odstránia, keď sa zavrie alebo resetuje.VAROVANIE: toto natrvalo odstraňuje súbory zo zdrojového priečinka. Ten priečinok spravuje jadro; herné dáta, ktoré chcete archivovať, majte inde."
 #define CEMU_WUA_OUTPUT_DIR_LABEL_SK "Výstupný priečinok"
 #define CEMU_WUA_OUTPUT_DIR_INFO_0_SK "Kam sa zapíše súbor .wua. Musí mať preň dosť miesta."
 #define CEMU_CONVERT_TO_WUA_LABEL_SK "Spustiť konverziu do WUA"
@@ -28221,6 +29998,35 @@ struct retro_core_option_v2_definition option_defs_sk[] = {
 			{ NULL, NULL },
 		},
 		"auto"
+	},
+	{
+		"cemu_gamepad_motion",
+		CEMU_GAMEPAD_MOTION_LABEL_SK,
+		NULL,
+		CEMU_GAMEPAD_MOTION_INFO_0_SK,
+		NULL,
+		"system",
+		{
+			{ "disabled", "Disabled" },
+			{ "enabled", "Enabled" },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_audio_channels",
+		CEMU_AUDIO_CHANNELS_LABEL_SK,
+		NULL,
+		CEMU_AUDIO_CHANNELS_INFO_0_SK,
+		NULL,
+		"system",
+		{
+			{ "mono", OPTION_VAL_MONO_SK },
+			{ "stereo", OPTION_VAL_STEREO_SK },
+			{ "surround", OPTION_VAL_SURROUND_SK },
+			{ NULL, NULL },
+		},
+		"stereo"
 	},
 	{
 		"cemu_console_language",
@@ -28761,6 +30567,20 @@ struct retro_core_option_v2_definition option_defs_sk[] = {
 		"disabled"
 	},
 	{
+		"cemu_rename_account",
+		CEMU_RENAME_ACCOUNT_LABEL_SK,
+		NULL,
+		CEMU_RENAME_ACCOUNT_INFO_0_SK,
+		NULL,
+		"accounts",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
 		"cemu_remove_account",
 		CEMU_REMOVE_ACCOUNT_LABEL_SK,
 		NULL,
@@ -28908,6 +30728,13 @@ struct retro_core_options_v2 options_sk = {
 #define OPTION_VAL_SINGLECORE_RECOMPILER_SR NULL
 #define OPTION_VAL_MULTICORE_RECOMPILER_SR NULL
 #define OPTION_VAL_MULTICORE_INTERPRETER_SR NULL
+#define CEMU_GAMEPAD_MOTION_LABEL_SR NULL
+#define CEMU_GAMEPAD_MOTION_INFO_0_SR NULL
+#define CEMU_AUDIO_CHANNELS_LABEL_SR NULL
+#define CEMU_AUDIO_CHANNELS_INFO_0_SR NULL
+#define OPTION_VAL_MONO_SR NULL
+#define OPTION_VAL_STEREO_SR NULL
+#define OPTION_VAL_SURROUND_SR NULL
 #define CEMU_CONSOLE_LANGUAGE_LABEL_SR NULL
 #define OPTION_VAL_ENGLISH_SR NULL
 #define OPTION_VAL_JAPANESE_SR NULL
@@ -28995,6 +30822,8 @@ struct retro_core_options_v2 options_sk = {
 #define CEMU_ACCOUNT_INFO_0_SR NULL
 #define CEMU_CREATE_ACCOUNT_LABEL_SR NULL
 #define CEMU_CREATE_ACCOUNT_INFO_0_SR NULL
+#define CEMU_RENAME_ACCOUNT_LABEL_SR NULL
+#define CEMU_RENAME_ACCOUNT_INFO_0_SR NULL
 #define CEMU_REMOVE_ACCOUNT_LABEL_SR NULL
 #define CEMU_REMOVE_ACCOUNT_INFO_0_SR NULL
 #define CEMU_INSTALL_GAME_LABEL_SR NULL
@@ -29045,6 +30874,35 @@ struct retro_core_option_v2_definition option_defs_sr[] = {
 			{ NULL, NULL },
 		},
 		"auto"
+	},
+	{
+		"cemu_gamepad_motion",
+		CEMU_GAMEPAD_MOTION_LABEL_SR,
+		NULL,
+		CEMU_GAMEPAD_MOTION_INFO_0_SR,
+		NULL,
+		"system",
+		{
+			{ "disabled", "Disabled" },
+			{ "enabled", "Enabled" },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_audio_channels",
+		CEMU_AUDIO_CHANNELS_LABEL_SR,
+		NULL,
+		CEMU_AUDIO_CHANNELS_INFO_0_SR,
+		NULL,
+		"system",
+		{
+			{ "mono", OPTION_VAL_MONO_SR },
+			{ "stereo", OPTION_VAL_STEREO_SR },
+			{ "surround", OPTION_VAL_SURROUND_SR },
+			{ NULL, NULL },
+		},
+		"stereo"
 	},
 	{
 		"cemu_console_language",
@@ -29585,6 +31443,20 @@ struct retro_core_option_v2_definition option_defs_sr[] = {
 		"disabled"
 	},
 	{
+		"cemu_rename_account",
+		CEMU_RENAME_ACCOUNT_LABEL_SR,
+		NULL,
+		CEMU_RENAME_ACCOUNT_INFO_0_SR,
+		NULL,
+		"accounts",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
 		"cemu_remove_account",
 		CEMU_REMOVE_ACCOUNT_LABEL_SR,
 		NULL,
@@ -29714,7 +31586,7 @@ struct retro_core_options_v2 options_sr = {
 #define CATEGORY_ADDONS_LABEL_SV "Tillägg"
 #define CATEGORY_ADDONS_INFO_0_SV "Portaler för Skylanders, Infinity och Dimensions."
 #define CATEGORY_ACCOUNTS_LABEL_SV "Konton"
-#define CATEGORY_ACCOUNTS_INFO_0_SV NULL
+#define CATEGORY_ACCOUNTS_INFO_0_SV "Hantera konton i Wii U:s kontokatalog (saves/Cemu/mlc01/usr/save/system/act)."
 #define CATEGORY_INSTALL_LABEL_SV "Innehåll"
 #define CATEGORY_INSTALL_INFO_0_SV "Hantera spel, titeluppdateringar och DLC i saves/Cemu/mlc01, den emulerade konsolens lagringsutrymme."
 #define CATEGORY_CONVERT_LABEL_SV "Konvertera till WUA"
@@ -29732,6 +31604,13 @@ struct retro_core_options_v2 options_sr = {
 #define OPTION_VAL_SINGLECORE_RECOMPILER_SV "Enkelkärnig omkompilerare"
 #define OPTION_VAL_MULTICORE_RECOMPILER_SV "Flerkärnig omkompilerare"
 #define OPTION_VAL_MULTICORE_INTERPRETER_SV "Flerkärnig tolk"
+#define CEMU_GAMEPAD_MOTION_LABEL_SV "GamePad-rörelse"
+#define CEMU_GAMEPAD_MOTION_INFO_0_SV "Använder GamePadens gyroskop och accelerometer från de sensorer som RetroArch läser på port 1. Det kan vara telefonens eller surfplattans egna sensorer, eller handkontrollens när RetroArchs inmatningsdrivrutin erbjuder dem, till exempel DualShock 4 och DualSense. Spel där man siktar eller styr genom att luta GamePaden behöver detta. Av: GamePaden ligger stilla, som när rörelsefunktionen är avstängd i det fristående programmet."
+#define CEMU_AUDIO_CHANNELS_LABEL_SV "Ljudkanaler (omstart)"
+#define CEMU_AUDIO_CHANNELS_INFO_0_SV "Konsolen rapporterar till spelen vilken typ av TV/ljudsystem som används baserat på inställningen för TV-ljud; spel som har stöd för detta anpassar ljudmixen efter antalet högtalare. 5.1-surroundljud skickas till RetroArch som sex kanaler när flerkanaligt ljudutmatning används, annars mixas det ner till stereo."
+#define OPTION_VAL_MONO_SV NULL
+#define OPTION_VAL_STEREO_SV NULL
+#define OPTION_VAL_SURROUND_SV NULL
 #define CEMU_CONSOLE_LANGUAGE_LABEL_SV "Konsolspråk"
 #define OPTION_VAL_ENGLISH_SV "Engelska"
 #define OPTION_VAL_JAPANESE_SV "Japanska"
@@ -29758,14 +31637,14 @@ struct retro_core_options_v2 options_sr = {
 #define OPTION_VAL_NEAREST_SV "Närmsta"
 #define CEMU_DOWNSCALE_FILTER_LABEL_SV "Nedskalningsfilter"
 #define CEMU_INTERNAL_RESOLUTION_LABEL_SV "Intern upplösning"
-#define CEMU_INTERNAL_RESOLUTION_INFO_0_SV NULL
-#define OPTION_VAL_0_25X_SV NULL
-#define OPTION_VAL_0_5X_SV NULL
-#define OPTION_VAL_0_75X_SV NULL
+#define CEMU_INTERNAL_RESOLUTION_INFO_0_SV "En allmän reservlösning för spel utan grafiskt paket för upplösning. Ändrar storleken på varje skärmformad renderingsyta, vilket vissa spel använder för saker som inte fungerar när storleken ändras. En multipel av spelets egen upplösning: för ett spel i 720p är 0.5x 640x360, en fjärdedel av pixlarna, och 2x är 2560x1440. För ett spel i 1080p är 0.5x 960x540. När ett upplösningspaket är aktiverat för det inlästa spelet (Graphic Packs), anger paketet upplösningen och detta alternativ döljs."
+#define OPTION_VAL_0_25X_SV "0.25x (320x180 vid 720p)"
+#define OPTION_VAL_0_5X_SV "0.5x (640x360 vid 720p)"
+#define OPTION_VAL_0_75X_SV "0.75x (960x540 vid 720p)"
 #define OPTION_VAL_NATIVE_SV "Inbyggd"
-#define OPTION_VAL_1_5X_SV NULL
-#define OPTION_VAL_2X_SV NULL
-#define OPTION_VAL_3X_SV NULL
+#define OPTION_VAL_1_5X_SV "1.5x (1920x1080 vid 720p)"
+#define OPTION_VAL_2X_SV "2x (2560x1440 vid 720p)"
+#define OPTION_VAL_3X_SV "3x (3840x2160 vid 720p)"
 #define CEMU_THREAD_QUANTUM_LABEL_SV "Trådkvantum"
 #define CEMU_RUMBLE_STRENGTH_LABEL_SV "Vibrationsstyrka"
 #define CEMU_RUMBLE_STRENGTH_INFO_0_SV "Hur kraftigt handkontrollen vibrerar när spelet begär det: GamePadens motor och Wii-fjärrkontrollens eller Pro Controller-handkontrollens motor. Av skickar ingen vibration alls till front-endet."
@@ -29773,9 +31652,9 @@ struct retro_core_options_v2 options_sr = {
 #define OPTION_VAL_50_SV NULL
 #define OPTION_VAL_75_SV NULL
 #define OPTION_VAL_100_SV NULL
-#define CEMU_EMULATE_SKYLANDER_PORTAL_LABEL_SV NULL
+#define CEMU_EMULATE_SKYLANDER_PORTAL_LABEL_SV "Emulera Skylanders Portal of Power"
 #define CEMU_EMULATE_INFINITY_BASE_LABEL_SV "Emulera Infinity-basen"
-#define CEMU_EMULATE_DIMENSIONS_TOYPAD_LABEL_SV NULL
+#define CEMU_EMULATE_DIMENSIONS_TOYPAD_LABEL_SV "Emulera Dimensions Toy Pad"
 #define CEMU_NUMBER_OF_SCREEN_LAYOUTS_LABEL_SV "Antal skärmlayouter"
 #define CEMU_SCREEN_LAYOUT1_LABEL_SV NULL
 #define OPTION_VAL_DEFAULT_SCREEN_SV "Standardskärm"
@@ -29803,34 +31682,36 @@ struct retro_core_options_v2 options_sr = {
 #define CEMU_LOG_TEXTURE_MEMORY_INFO_0_SV "Rapporterar hur mycket av texturminnet som är BC och som måste dekomprimeras eftersom denna GPU inte kan sampla det."
 #define CEMU_LOG_INPUT_API_LABEL_SV "Logga handkontrollens API-anrop (felsökning)"
 #define CEMU_LOG_INPUT_API_INFO_0_SV "Loggar varje handkontrollsanrop som ett spel gör – vilka handkontroller det undersökte och vad det fick veta. Ordrikt; använd i några sekunder åt gången."
-#define CEMU_LOG_AUDIO_LABEL_SV NULL
-#define CEMU_LOG_AUDIO_INFO_0_SV NULL
-#define CEMU_LOG_THREAD_TIME_LABEL_SV NULL
-#define CEMU_LOG_THREAD_TIME_INFO_0_SV NULL
-#define CEMU_DUMP_SHADERS_LABEL_SV NULL
-#define CEMU_DUMP_SHADERS_INFO_0_SV NULL
+#define CEMU_LOG_AUDIO_LABEL_SV "Logga ljud och bildrutekadens (felsökning)"
+#define CEMU_LOG_AUDIO_INFO_0_SV "En gång per sekund: hur många samplingar AX producerade, hur många ringen måste släppa och hur många gränssnittet tog emot; samt hur många gånger gränssnittet körde kärnan, hur många bildrutor titeln avslutade och vart tiden tog vägen (väntan på GPU-tråden, presentation, ljud). Används för att avgöra om ett långsamt spel hålls tillbaka av den emulerade processorn, GPU:n eller gränssnittet."
+#define CEMU_LOG_THREAD_TIME_LABEL_SV "Logga CPU-tid för trådar (felsökning)"
+#define CEMU_LOG_THREAD_TIME_INFO_0_SV "En gång per sekund: hur upptagen varje emulerad PowerPC-kärnas tråd, GPU-tråden och gränssnittets tråd var, som andel av en värdkärna. En tråd nära 100 % är den som ett långsamt spel väntar på."
+#define CEMU_DUMP_SHADERS_LABEL_SV "Dumpa shaderprogram (felsökning)"
+#define CEMU_DUMP_SHADERS_INFO_0_SV "Skriver källkoden för varje shaderprogram som spelet använder till system/Cemu/dump/shaders, namngiven efter dess hashar så som de visas i log.txt. Används för att rapportera ett shaderprogram som misslyckas eller ritas fel på en viss GPU. Det gör shaderkompilering långsammare och fyller katalogen snabbt, så stäng av funktionen igen efteråt."
 #define CEMU_BC1_16BIT_LABEL_SV "Minska BC1-texturminnet"
 #define CEMU_BC1_16BIT_INFO_0_SV "Halverar vad BC1-texturer kostar på en GPU som inte kan sampla BC, på bekostnad av en bit grönt. Ingen effekt där BC stöds."
 #define CEMU_GPU_API_LABEL_SV "Grafik-API"
 #define CEMU_GPU_API_INFO_0_SV "Det grafik-API som Cemu renderar med. (Omstart krävs)"
 #define OPTION_VAL_OPENGL_SV NULL
 #define OPTION_VAL_VULKAN_SV NULL
-#define CEMU_ACCOUNT_LABEL_SV NULL
-#define CEMU_ACCOUNT_INFO_0_SV NULL
-#define CEMU_CREATE_ACCOUNT_LABEL_SV NULL
-#define CEMU_CREATE_ACCOUNT_INFO_0_SV NULL
-#define CEMU_REMOVE_ACCOUNT_LABEL_SV NULL
-#define CEMU_REMOVE_ACCOUNT_INFO_0_SV NULL
-#define CEMU_INSTALL_GAME_LABEL_SV NULL
-#define CEMU_INSTALL_GAME_INFO_0_SV NULL
+#define CEMU_ACCOUNT_LABEL_SV "Aktivt konto"
+#define CEMU_ACCOUNT_INFO_0_SV "Wii U-kontot som spelet körs som, vart och ett med egna sparfiler och Mii. Listan innehåller kontona i kontokatalogen.En ändring tillämpas när titeln stängs och startas igen eller återställs. Fram till dess fortsätter titeln att spara till det konto som den startades med."
+#define CEMU_CREATE_ACCOUNT_LABEL_SV "Skapa konto"
+#define CEMU_CREATE_ACCOUNT_INFO_0_SV "Skapar ett nytt konto med namnet Spelare 2, Spelare 3 och så vidare och gör det till det aktiva kontot. Därefter återgår detta till AV. Det nya kontot visas i kontolistan när den här menyn har stängts och öppnats igen. Konsolen rymmer upp till 12 konton."
+#define CEMU_RENAME_ACCOUNT_LABEL_SV "Byt namn på aktivt konto"
+#define CEMU_RENAME_ACCOUNT_INFO_0_SV "Öppnar namninmatningen för det aktiva kontot när den här menyn stängs och återgår till AV. Namnet hittills visas som en notis över spelet, så gränssnittets skärmnotiser måste vara aktiverade.\n\nMed handkontroll: Upp och Ned ändrar det sista tecknet, Höger lägger till ett, Vänster tar bort ett, Start bekräftar, Select avbryter.\n\nMed tangentbord: skriv, Backsteg tar bort, Retur bekräftar, Escape avbryter (gränssnittet kan behöva ha spelfokus aktiverat för att skicka tangenterna till kärnan).\n\nEtt namn får ha högst 10 tecken. Spelet får ingen inmatning förrän inmatningen stängs och ett aktivt spel visar det nya namnet när det startas igen."
+#define CEMU_REMOVE_ACCOUNT_LABEL_SV "Ta bort konto"
+#define CEMU_REMOVE_ACCOUNT_INFO_0_SV "Tar bort det valda kontot från kontokatalogen (saves/Cemu/mlc01/usr/save/system/act), på samma sätt som när en användare tas bort på konsolen, när den här menyn stängs. Alternativet visar AV igen när du återvänder till menyn.Det aktiva kontot kan inte tas bort. Inte heller kontot som det körande spelet startades med förrän spelet har stängts.VARNING: om du tar bort ett konto raderas även sparfilerna under det permanent i alla spel. Säkerhetskopiera sparfiler som du vill behålla innan du tar bort det."
+#define CEMU_INSTALL_GAME_LABEL_SV "Installera spel"
+#define CEMU_INSTALL_GAME_INFO_0_SV "Installerar varje spel från källkatalogen (system/Cemu/titles), inklusive underkataloger, i den emulerade Wii U-konsolens katalog för installerade spel (saves/Cemu/mlc01/usr/title/00050000), på samma sätt som konsolen installerar ett spel från skivan. Ett spel är en skivavbild (.wud, .wux, .iso) eller en .wua. Titeluppdateringen och DLC:n som en .wua innehåller installeras tillsammans med den. En krypterad skivavbild (.wud, .wux) behöver sin skivnyckel: i en fil bredvid den med samma namn och filändelsen .key (game.wux, game.key), eller i system/Cemu/keys.txt. Ett spel som redan är installerat i samma eller en nyare version lämnas orört.När detta är PÅ startar installationen genast, med framsteg som visas som en avisering. Alternativet återgår till AV när alla spel har installerats och menyn stängs eller ett annat alternativ ändras. Ett installerat spel startas genom att läsa in .rpx-filen i dess kodkatalog i katalogen för installerade spel. Skivavbilden behövs inte längre."
 #define CEMU_UNINSTALL_GAME_LABEL_SV "Avinstallera spel"
-#define CEMU_UNINSTALL_GAME_INFO_0_SV NULL
+#define CEMU_UNINSTALL_GAME_INFO_0_SV "Avinstallerar det körande spelet och alla tillhörande titeluppdateringar och DLC från den installerade katalogen (saves/Cemu/mlc01/usr/title) när spelet stängs eller återställs. Alternativet förblir PÅ tills dess. Sparfiler för spelets titel-id (saves/Cemu/mlc01/usr/save/<title id>) tas inte bort."
 #define CEMU_INSTALL_TITLES_LABEL_SV "Installera innehåll"
-#define CEMU_INSTALL_TITLES_INFO_0_SV NULL
+#define CEMU_INSTALL_TITLES_INFO_0_SV "Installerar varje titeluppdatering och DLC från källkatalogen (system/Cemu/titles), inklusive underkataloger, i den installerade katalogen (saves/Cemu/mlc01/usr/title). Varje objekt ska ligga i en egen katalog i källkatalogen. En NUS-hämtning (.app-filer) behöver title.tmd och title.tik, dekrypteringsnyckeln, bredvid dem. En redan installerad version som är samma eller nyare lämnas orörd.När detta är PÅ startar installationen genast, med framsteg som visas som en avisering. Alternativet återgår till AV när allt innehåll har installerats och menyn stängs eller ett annat alternativ ändras. Spelet använder det installerade innehållet när det startas om.Innehåll från andra platser kan installeras via RetroArchs huvudmeny > Läs in innehåll genom att välja motsvarande title.tmd med title.tik bredvid."
 #define CEMU_UNINSTALL_TITLES_LABEL_SV "Avinstallera innehåll"
-#define CEMU_UNINSTALL_TITLES_INFO_0_SV NULL
-#define CEMU_INSTALL_REMOVE_SOURCE_LABEL_SV NULL
-#define CEMU_INSTALL_REMOVE_SOURCE_INFO_0_SV NULL
+#define CEMU_UNINSTALL_TITLES_INFO_0_SV "Avinstallerar det körande spelets titeluppdatering och DLC från den installerade katalogen (saves/Cemu/mlc01/usr/title) när spelet stängs eller återställs. Alternativet förblir PÅ tills dess. Kopior i källkatalogen (system/Cemu/titles) lämnas orörda."
+#define CEMU_INSTALL_REMOVE_SOURCE_LABEL_SV "Ta bort filer efter installation"
+#define CEMU_INSTALL_REMOVE_SOURCE_INFO_0_SV "Tar bort det som Installera spel och Installera innehåll har installerat från källkatalogen (system/Cemu/titles): katalogen för en titeluppdatering eller DLC när den har installerats och en skivavbild med .key-filen eller en .wua när allt dess innehåll har installerats. Filer som det körande spelet använder tas bort när spelet stängs eller återställs.VARNING: Detta tar permanent bort filer från källkatalogen. Katalogen är avsedd att hanteras av kärnan. Spara speldata som du vill arkivera på en annan plats."
 #define CEMU_WUA_OUTPUT_DIR_LABEL_SV "Utdatakatalog"
 #define CEMU_WUA_OUTPUT_DIR_INFO_0_SV "Där .wua-filen skrivs. Kräver utrymme för den."
 #define CEMU_CONVERT_TO_WUA_LABEL_SV "Starta konvertering till WUA"
@@ -29869,6 +31750,35 @@ struct retro_core_option_v2_definition option_defs_sv[] = {
 			{ NULL, NULL },
 		},
 		"auto"
+	},
+	{
+		"cemu_gamepad_motion",
+		CEMU_GAMEPAD_MOTION_LABEL_SV,
+		NULL,
+		CEMU_GAMEPAD_MOTION_INFO_0_SV,
+		NULL,
+		"system",
+		{
+			{ "disabled", "Disabled" },
+			{ "enabled", "Enabled" },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_audio_channels",
+		CEMU_AUDIO_CHANNELS_LABEL_SV,
+		NULL,
+		CEMU_AUDIO_CHANNELS_INFO_0_SV,
+		NULL,
+		"system",
+		{
+			{ "mono", OPTION_VAL_MONO_SV },
+			{ "stereo", OPTION_VAL_STEREO_SV },
+			{ "surround", OPTION_VAL_SURROUND_SV },
+			{ NULL, NULL },
+		},
+		"stereo"
 	},
 	{
 		"cemu_console_language",
@@ -30409,6 +32319,20 @@ struct retro_core_option_v2_definition option_defs_sv[] = {
 		"disabled"
 	},
 	{
+		"cemu_rename_account",
+		CEMU_RENAME_ACCOUNT_LABEL_SV,
+		NULL,
+		CEMU_RENAME_ACCOUNT_INFO_0_SV,
+		NULL,
+		"accounts",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
 		"cemu_remove_account",
 		CEMU_REMOVE_ACCOUNT_LABEL_SV,
 		NULL,
@@ -30556,6 +32480,13 @@ struct retro_core_options_v2 options_sv = {
 #define OPTION_VAL_SINGLECORE_RECOMPILER_TH NULL
 #define OPTION_VAL_MULTICORE_RECOMPILER_TH NULL
 #define OPTION_VAL_MULTICORE_INTERPRETER_TH NULL
+#define CEMU_GAMEPAD_MOTION_LABEL_TH NULL
+#define CEMU_GAMEPAD_MOTION_INFO_0_TH NULL
+#define CEMU_AUDIO_CHANNELS_LABEL_TH NULL
+#define CEMU_AUDIO_CHANNELS_INFO_0_TH NULL
+#define OPTION_VAL_MONO_TH "โมโน"
+#define OPTION_VAL_STEREO_TH "สเตอริโอ"
+#define OPTION_VAL_SURROUND_TH NULL
 #define CEMU_CONSOLE_LANGUAGE_LABEL_TH NULL
 #define OPTION_VAL_ENGLISH_TH "อังกฤษ"
 #define OPTION_VAL_JAPANESE_TH "ญี่ปุ่น"
@@ -30643,6 +32574,8 @@ struct retro_core_options_v2 options_sv = {
 #define CEMU_ACCOUNT_INFO_0_TH NULL
 #define CEMU_CREATE_ACCOUNT_LABEL_TH NULL
 #define CEMU_CREATE_ACCOUNT_INFO_0_TH NULL
+#define CEMU_RENAME_ACCOUNT_LABEL_TH NULL
+#define CEMU_RENAME_ACCOUNT_INFO_0_TH NULL
 #define CEMU_REMOVE_ACCOUNT_LABEL_TH NULL
 #define CEMU_REMOVE_ACCOUNT_INFO_0_TH NULL
 #define CEMU_INSTALL_GAME_LABEL_TH NULL
@@ -30693,6 +32626,35 @@ struct retro_core_option_v2_definition option_defs_th[] = {
 			{ NULL, NULL },
 		},
 		"auto"
+	},
+	{
+		"cemu_gamepad_motion",
+		CEMU_GAMEPAD_MOTION_LABEL_TH,
+		NULL,
+		CEMU_GAMEPAD_MOTION_INFO_0_TH,
+		NULL,
+		"system",
+		{
+			{ "disabled", "Disabled" },
+			{ "enabled", "Enabled" },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_audio_channels",
+		CEMU_AUDIO_CHANNELS_LABEL_TH,
+		NULL,
+		CEMU_AUDIO_CHANNELS_INFO_0_TH,
+		NULL,
+		"system",
+		{
+			{ "mono", OPTION_VAL_MONO_TH },
+			{ "stereo", OPTION_VAL_STEREO_TH },
+			{ "surround", OPTION_VAL_SURROUND_TH },
+			{ NULL, NULL },
+		},
+		"stereo"
 	},
 	{
 		"cemu_console_language",
@@ -31233,6 +33195,20 @@ struct retro_core_option_v2_definition option_defs_th[] = {
 		"disabled"
 	},
 	{
+		"cemu_rename_account",
+		CEMU_RENAME_ACCOUNT_LABEL_TH,
+		NULL,
+		CEMU_RENAME_ACCOUNT_INFO_0_TH,
+		NULL,
+		"accounts",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
 		"cemu_remove_account",
 		CEMU_REMOVE_ACCOUNT_LABEL_TH,
 		NULL,
@@ -31380,6 +33356,13 @@ struct retro_core_options_v2 options_th = {
 #define OPTION_VAL_SINGLECORE_RECOMPILER_TR NULL
 #define OPTION_VAL_MULTICORE_RECOMPILER_TR NULL
 #define OPTION_VAL_MULTICORE_INTERPRETER_TR NULL
+#define CEMU_GAMEPAD_MOTION_LABEL_TR NULL
+#define CEMU_GAMEPAD_MOTION_INFO_0_TR NULL
+#define CEMU_AUDIO_CHANNELS_LABEL_TR NULL
+#define CEMU_AUDIO_CHANNELS_INFO_0_TR NULL
+#define OPTION_VAL_MONO_TR NULL
+#define OPTION_VAL_STEREO_TR NULL
+#define OPTION_VAL_SURROUND_TR NULL
 #define CEMU_CONSOLE_LANGUAGE_LABEL_TR NULL
 #define OPTION_VAL_ENGLISH_TR "İngilizce"
 #define OPTION_VAL_JAPANESE_TR "Japonca"
@@ -31467,6 +33450,8 @@ struct retro_core_options_v2 options_th = {
 #define CEMU_ACCOUNT_INFO_0_TR NULL
 #define CEMU_CREATE_ACCOUNT_LABEL_TR NULL
 #define CEMU_CREATE_ACCOUNT_INFO_0_TR NULL
+#define CEMU_RENAME_ACCOUNT_LABEL_TR NULL
+#define CEMU_RENAME_ACCOUNT_INFO_0_TR NULL
 #define CEMU_REMOVE_ACCOUNT_LABEL_TR NULL
 #define CEMU_REMOVE_ACCOUNT_INFO_0_TR NULL
 #define CEMU_INSTALL_GAME_LABEL_TR NULL
@@ -31517,6 +33502,35 @@ struct retro_core_option_v2_definition option_defs_tr[] = {
 			{ NULL, NULL },
 		},
 		"auto"
+	},
+	{
+		"cemu_gamepad_motion",
+		CEMU_GAMEPAD_MOTION_LABEL_TR,
+		NULL,
+		CEMU_GAMEPAD_MOTION_INFO_0_TR,
+		NULL,
+		"system",
+		{
+			{ "disabled", "Disabled" },
+			{ "enabled", "Enabled" },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_audio_channels",
+		CEMU_AUDIO_CHANNELS_LABEL_TR,
+		NULL,
+		CEMU_AUDIO_CHANNELS_INFO_0_TR,
+		NULL,
+		"system",
+		{
+			{ "mono", OPTION_VAL_MONO_TR },
+			{ "stereo", OPTION_VAL_STEREO_TR },
+			{ "surround", OPTION_VAL_SURROUND_TR },
+			{ NULL, NULL },
+		},
+		"stereo"
 	},
 	{
 		"cemu_console_language",
@@ -32057,6 +34071,20 @@ struct retro_core_option_v2_definition option_defs_tr[] = {
 		"disabled"
 	},
 	{
+		"cemu_rename_account",
+		CEMU_RENAME_ACCOUNT_LABEL_TR,
+		NULL,
+		CEMU_RENAME_ACCOUNT_INFO_0_TR,
+		NULL,
+		"accounts",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
 		"cemu_remove_account",
 		CEMU_REMOVE_ACCOUNT_LABEL_TR,
 		NULL,
@@ -32204,6 +34232,13 @@ struct retro_core_options_v2 options_tr = {
 #define OPTION_VAL_SINGLECORE_RECOMPILER_TT NULL
 #define OPTION_VAL_MULTICORE_RECOMPILER_TT NULL
 #define OPTION_VAL_MULTICORE_INTERPRETER_TT NULL
+#define CEMU_GAMEPAD_MOTION_LABEL_TT NULL
+#define CEMU_GAMEPAD_MOTION_INFO_0_TT NULL
+#define CEMU_AUDIO_CHANNELS_LABEL_TT NULL
+#define CEMU_AUDIO_CHANNELS_INFO_0_TT NULL
+#define OPTION_VAL_MONO_TT NULL
+#define OPTION_VAL_STEREO_TT "Стерео"
+#define OPTION_VAL_SURROUND_TT NULL
 #define CEMU_CONSOLE_LANGUAGE_LABEL_TT NULL
 #define OPTION_VAL_ENGLISH_TT "Инглизчә"
 #define OPTION_VAL_JAPANESE_TT "Япоча"
@@ -32291,6 +34326,8 @@ struct retro_core_options_v2 options_tr = {
 #define CEMU_ACCOUNT_INFO_0_TT NULL
 #define CEMU_CREATE_ACCOUNT_LABEL_TT NULL
 #define CEMU_CREATE_ACCOUNT_INFO_0_TT NULL
+#define CEMU_RENAME_ACCOUNT_LABEL_TT NULL
+#define CEMU_RENAME_ACCOUNT_INFO_0_TT NULL
 #define CEMU_REMOVE_ACCOUNT_LABEL_TT NULL
 #define CEMU_REMOVE_ACCOUNT_INFO_0_TT NULL
 #define CEMU_INSTALL_GAME_LABEL_TT NULL
@@ -32341,6 +34378,35 @@ struct retro_core_option_v2_definition option_defs_tt[] = {
 			{ NULL, NULL },
 		},
 		"auto"
+	},
+	{
+		"cemu_gamepad_motion",
+		CEMU_GAMEPAD_MOTION_LABEL_TT,
+		NULL,
+		CEMU_GAMEPAD_MOTION_INFO_0_TT,
+		NULL,
+		"system",
+		{
+			{ "disabled", "Disabled" },
+			{ "enabled", "Enabled" },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_audio_channels",
+		CEMU_AUDIO_CHANNELS_LABEL_TT,
+		NULL,
+		CEMU_AUDIO_CHANNELS_INFO_0_TT,
+		NULL,
+		"system",
+		{
+			{ "mono", OPTION_VAL_MONO_TT },
+			{ "stereo", OPTION_VAL_STEREO_TT },
+			{ "surround", OPTION_VAL_SURROUND_TT },
+			{ NULL, NULL },
+		},
+		"stereo"
 	},
 	{
 		"cemu_console_language",
@@ -32881,6 +34947,20 @@ struct retro_core_option_v2_definition option_defs_tt[] = {
 		"disabled"
 	},
 	{
+		"cemu_rename_account",
+		CEMU_RENAME_ACCOUNT_LABEL_TT,
+		NULL,
+		CEMU_RENAME_ACCOUNT_INFO_0_TT,
+		NULL,
+		"accounts",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
 		"cemu_remove_account",
 		CEMU_REMOVE_ACCOUNT_LABEL_TT,
 		NULL,
@@ -33028,6 +35108,13 @@ struct retro_core_options_v2 options_tt = {
 #define OPTION_VAL_SINGLECORE_RECOMPILER_UK NULL
 #define OPTION_VAL_MULTICORE_RECOMPILER_UK NULL
 #define OPTION_VAL_MULTICORE_INTERPRETER_UK NULL
+#define CEMU_GAMEPAD_MOTION_LABEL_UK NULL
+#define CEMU_GAMEPAD_MOTION_INFO_0_UK NULL
+#define CEMU_AUDIO_CHANNELS_LABEL_UK NULL
+#define CEMU_AUDIO_CHANNELS_INFO_0_UK NULL
+#define OPTION_VAL_MONO_UK "Моно"
+#define OPTION_VAL_STEREO_UK "Cтерео"
+#define OPTION_VAL_SURROUND_UK NULL
 #define CEMU_CONSOLE_LANGUAGE_LABEL_UK NULL
 #define OPTION_VAL_ENGLISH_UK "Англійська"
 #define OPTION_VAL_JAPANESE_UK "Японська"
@@ -33115,6 +35202,8 @@ struct retro_core_options_v2 options_tt = {
 #define CEMU_ACCOUNT_INFO_0_UK NULL
 #define CEMU_CREATE_ACCOUNT_LABEL_UK NULL
 #define CEMU_CREATE_ACCOUNT_INFO_0_UK NULL
+#define CEMU_RENAME_ACCOUNT_LABEL_UK NULL
+#define CEMU_RENAME_ACCOUNT_INFO_0_UK NULL
 #define CEMU_REMOVE_ACCOUNT_LABEL_UK NULL
 #define CEMU_REMOVE_ACCOUNT_INFO_0_UK NULL
 #define CEMU_INSTALL_GAME_LABEL_UK NULL
@@ -33165,6 +35254,35 @@ struct retro_core_option_v2_definition option_defs_uk[] = {
 			{ NULL, NULL },
 		},
 		"auto"
+	},
+	{
+		"cemu_gamepad_motion",
+		CEMU_GAMEPAD_MOTION_LABEL_UK,
+		NULL,
+		CEMU_GAMEPAD_MOTION_INFO_0_UK,
+		NULL,
+		"system",
+		{
+			{ "disabled", "Disabled" },
+			{ "enabled", "Enabled" },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_audio_channels",
+		CEMU_AUDIO_CHANNELS_LABEL_UK,
+		NULL,
+		CEMU_AUDIO_CHANNELS_INFO_0_UK,
+		NULL,
+		"system",
+		{
+			{ "mono", OPTION_VAL_MONO_UK },
+			{ "stereo", OPTION_VAL_STEREO_UK },
+			{ "surround", OPTION_VAL_SURROUND_UK },
+			{ NULL, NULL },
+		},
+		"stereo"
 	},
 	{
 		"cemu_console_language",
@@ -33705,6 +35823,20 @@ struct retro_core_option_v2_definition option_defs_uk[] = {
 		"disabled"
 	},
 	{
+		"cemu_rename_account",
+		CEMU_RENAME_ACCOUNT_LABEL_UK,
+		NULL,
+		CEMU_RENAME_ACCOUNT_INFO_0_UK,
+		NULL,
+		"accounts",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
 		"cemu_remove_account",
 		CEMU_REMOVE_ACCOUNT_LABEL_UK,
 		NULL,
@@ -33852,6 +35984,13 @@ struct retro_core_options_v2 options_uk = {
 #define OPTION_VAL_SINGLECORE_RECOMPILER_VAL NULL
 #define OPTION_VAL_MULTICORE_RECOMPILER_VAL NULL
 #define OPTION_VAL_MULTICORE_INTERPRETER_VAL NULL
+#define CEMU_GAMEPAD_MOTION_LABEL_VAL NULL
+#define CEMU_GAMEPAD_MOTION_INFO_0_VAL NULL
+#define CEMU_AUDIO_CHANNELS_LABEL_VAL NULL
+#define CEMU_AUDIO_CHANNELS_INFO_0_VAL NULL
+#define OPTION_VAL_MONO_VAL NULL
+#define OPTION_VAL_STEREO_VAL NULL
+#define OPTION_VAL_SURROUND_VAL NULL
 #define CEMU_CONSOLE_LANGUAGE_LABEL_VAL NULL
 #define OPTION_VAL_ENGLISH_VAL NULL
 #define OPTION_VAL_JAPANESE_VAL NULL
@@ -33939,6 +36078,8 @@ struct retro_core_options_v2 options_uk = {
 #define CEMU_ACCOUNT_INFO_0_VAL NULL
 #define CEMU_CREATE_ACCOUNT_LABEL_VAL NULL
 #define CEMU_CREATE_ACCOUNT_INFO_0_VAL NULL
+#define CEMU_RENAME_ACCOUNT_LABEL_VAL NULL
+#define CEMU_RENAME_ACCOUNT_INFO_0_VAL NULL
 #define CEMU_REMOVE_ACCOUNT_LABEL_VAL NULL
 #define CEMU_REMOVE_ACCOUNT_INFO_0_VAL NULL
 #define CEMU_INSTALL_GAME_LABEL_VAL NULL
@@ -33989,6 +36130,35 @@ struct retro_core_option_v2_definition option_defs_val[] = {
 			{ NULL, NULL },
 		},
 		"auto"
+	},
+	{
+		"cemu_gamepad_motion",
+		CEMU_GAMEPAD_MOTION_LABEL_VAL,
+		NULL,
+		CEMU_GAMEPAD_MOTION_INFO_0_VAL,
+		NULL,
+		"system",
+		{
+			{ "disabled", "Disabled" },
+			{ "enabled", "Enabled" },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_audio_channels",
+		CEMU_AUDIO_CHANNELS_LABEL_VAL,
+		NULL,
+		CEMU_AUDIO_CHANNELS_INFO_0_VAL,
+		NULL,
+		"system",
+		{
+			{ "mono", OPTION_VAL_MONO_VAL },
+			{ "stereo", OPTION_VAL_STEREO_VAL },
+			{ "surround", OPTION_VAL_SURROUND_VAL },
+			{ NULL, NULL },
+		},
+		"stereo"
 	},
 	{
 		"cemu_console_language",
@@ -34529,6 +36699,20 @@ struct retro_core_option_v2_definition option_defs_val[] = {
 		"disabled"
 	},
 	{
+		"cemu_rename_account",
+		CEMU_RENAME_ACCOUNT_LABEL_VAL,
+		NULL,
+		CEMU_RENAME_ACCOUNT_INFO_0_VAL,
+		NULL,
+		"accounts",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
 		"cemu_remove_account",
 		CEMU_REMOVE_ACCOUNT_LABEL_VAL,
 		NULL,
@@ -34676,6 +36860,13 @@ struct retro_core_options_v2 options_val = {
 #define OPTION_VAL_SINGLECORE_RECOMPILER_VN "Trình biên dịch lại đơn luồng"
 #define OPTION_VAL_MULTICORE_RECOMPILER_VN "Trình biên dịch lại đa luồng"
 #define OPTION_VAL_MULTICORE_INTERPRETER_VN "Trình thông dịch đa luồng"
+#define CEMU_GAMEPAD_MOTION_LABEL_VN "Điều khiển chuyển động của tay cầm GamePad"
+#define CEMU_GAMEPAD_MOTION_INFO_0_VN "Con quay hồi chuyển và cảm biến gia tốc của tay cầm GamePad, lấy từ các cảm biến mà RetroArch đọc được trên cổng 1: cảm biến tích hợp của điện thoại hoặc máy tính bảng, hoặc cảm biến của tay cầm nếu trình điều khiển đầu vào của RetroArch hỗ trợ (DualShock 4, DualSense và các loại khác). Cần bật tùy chọn này đối với những trò chơi yêu cầu ngắm bắn hoặc điều khiển hướng di chuyển bằng cách nghiêng tay cầm GamePad. Tắt: tay cầm GamePad giữ nguyên trạng thái đứng yên, giống như khi tắt chức năng chuyển động trong chế độ độc lập."
+#define CEMU_AUDIO_CHANNELS_LABEL_VN "Kênh âm thanh (cần khởi động lại)"
+#define CEMU_AUDIO_CHANNELS_INFO_0_VN "Loại TV mà máy chơi game thông báo với các trò chơi, tương tự thiết lập kênh TV của chế độ chạy độc lập: các trò chơi hỗ trợ thiết lập này sẽ phối âm thanh cho số lượng loa tương ứng. Âm thanh vòm 5.1 được gửi đến RetroArch dưới dạng sáu kênh khi có đầu ra âm thanh đa kênh, nếu không sẽ được trộn xuống âm thanh nổi."
+#define OPTION_VAL_MONO_VN NULL
+#define OPTION_VAL_STEREO_VN NULL
+#define OPTION_VAL_SURROUND_VN "Âm thanh vòm 5.1"
 #define CEMU_CONSOLE_LANGUAGE_LABEL_VN "Ngôn ngữ máy chơi"
 #define OPTION_VAL_ENGLISH_VN "Tiếng Anh"
 #define OPTION_VAL_JAPANESE_VN "Tiếng Nhật"
@@ -34702,14 +36893,14 @@ struct retro_core_options_v2 options_val = {
 #define OPTION_VAL_NEAREST_VN "Gần nhất"
 #define CEMU_DOWNSCALE_FILTER_LABEL_VN "Bộ lọc giảm độ phân giải"
 #define CEMU_INTERNAL_RESOLUTION_LABEL_VN "Độ phân giải nội bộ"
-#define CEMU_INTERNAL_RESOLUTION_INFO_0_VN NULL
-#define OPTION_VAL_0_25X_VN NULL
-#define OPTION_VAL_0_5X_VN NULL
-#define OPTION_VAL_0_75X_VN NULL
+#define CEMU_INTERNAL_RESOLUTION_INFO_0_VN "Phương án dự phòng chung cho các trò chơi không có gói đồ họa điều chỉnh độ phân giải: thay đổi kích thước mọi vùng đích kết xuất có hình dạng màn hình, một số trò chơi sử dụng các vùng này cho những thành phần sẽ bị lỗi khi thay đổi kích thước. Độ phân giải là bội số của độ phân giải gốc của trò chơi: với trò chơi 720p, mức 0.5x là 640x360, bằng một phần tư số điểm ảnh, còn mức 2x là 2560x1440; với trò chơi 1080p, mức 0.5x là 960x540. Khi bật gói độ phân giải cho trò chơi đang tải (Gói đồ họa), gói sẽ thiết lập độ phân giải và tùy chọn này sẽ bị ẩn."
+#define OPTION_VAL_0_25X_VN "0.25x (320x180 ở 720p)"
+#define OPTION_VAL_0_5X_VN "0.5x (640x360 ở 720p)"
+#define OPTION_VAL_0_75X_VN "0.75x (960x540 ở 720p)"
 #define OPTION_VAL_NATIVE_VN "Nguyên bản"
-#define OPTION_VAL_1_5X_VN NULL
-#define OPTION_VAL_2X_VN NULL
-#define OPTION_VAL_3X_VN NULL
+#define OPTION_VAL_1_5X_VN "1.5x (1920x1080 ở 720p)"
+#define OPTION_VAL_2X_VN "2x (2560x1440 ở 720p)"
+#define OPTION_VAL_3X_VN "3x (3840x2160 ở 720p)"
 #define CEMU_THREAD_QUANTUM_LABEL_VN "Lượng xử lý mỗi luồng"
 #define CEMU_RUMBLE_STRENGTH_LABEL_VN "Cường độ rung"
 #define CEMU_RUMBLE_STRENGTH_INFO_0_VN "Mức rung của tay cầm khi trò chơi yêu cầu: động cơ của Tay cầm chơi game và của Điều khiển Wii hoặc Tay cầm Pro. Tắt sẽ không gửi bất kỳ lệnh rung nào đến giao diện chính."
@@ -34747,10 +36938,10 @@ struct retro_core_options_v2 options_val = {
 #define CEMU_LOG_TEXTURE_MEMORY_INFO_0_VN "Báo cáo lượng bộ nhớ kết cấu thuộc loại BC đã phải giải nén vì GPU này không thể lấy mẫu loại dữ liệu đó."
 #define CEMU_LOG_INPUT_API_LABEL_VN "Ghi các lệnh gọi API tay cầm vào tệp nhật ký (gỡ lỗi)"
 #define CEMU_LOG_INPUT_API_INFO_0_VN "Ghi lại mọi lệnh gọi tay cầm mà trò chơi thực hiện - trò chơi kiểm tra những tay cầm nào và hệ thống đã phản hồi như thế nào. Tạo rất nhiều dữ liệu; chỉ nên bật trong vài giây mỗi lần."
-#define CEMU_LOG_AUDIO_LABEL_VN NULL
-#define CEMU_LOG_AUDIO_INFO_0_VN NULL
-#define CEMU_LOG_THREAD_TIME_LABEL_VN NULL
-#define CEMU_LOG_THREAD_TIME_INFO_0_VN NULL
+#define CEMU_LOG_AUDIO_LABEL_VN "Ghi nhật ký âm thanh và nhịp khung hình (gỡ lỗi)"
+#define CEMU_LOG_AUDIO_INFO_0_VN "Mỗi giây, ghi lại số mẫu âm thanh AX đã tạo ra, số mẫu phải loại bỏ khỏi bộ đệm vòng và số mẫu giao diện chính đã lấy; đồng thời ghi lại số lần giao diện chính chạy lõi giả lập, số khung hình trò chơi đã hoàn thành và thời gian được phân bổ cho từng công việc (chờ luồng xử lý đồ họa, xuất khung hình, âm thanh). Dùng để xác định liệu trò chơi chạy chậm bị giới hạn bởi bộ xử lý được mô phỏng, bộ xử lý đồ họa hay giao diện chính."
+#define CEMU_LOG_THREAD_TIME_LABEL_VN "Ghi nhật ký thời gian xử lý của luồng (gỡ lỗi)"
+#define CEMU_LOG_THREAD_TIME_INFO_0_VN "Mỗi giây, ghi lại mức độ bận của luồng trên từng lõi PowerPC được mô phỏng, luồng xử lý đồ họa và luồng của giao diện chính, tính theo tỷ lệ phần trăm công suất của một lõi máy thật. Luồng gần mức 100% chính là luồng mà trò chơi chạy chậm đang phải chờ."
 #define CEMU_DUMP_SHADERS_LABEL_VN "Xuất bộ tạo bóng (gỡ lỗi)"
 #define CEMU_DUMP_SHADERS_INFO_0_VN "Ghi mã nguồn của mọi bộ tạo bóng mà game sử dụng vào system/Cemu/dump/shaders, đặt tên theo mã băm của chúng như được hiển thị trong log.txt. Dùng để báo cáo bộ tạo bóng bị lỗi hoặc hiển thị sai trên một GPU cụ thể. Làm chậm quá trình biên dịch bộ tạo bóng và nhanh chóng làm đầy thư mục, vì vậy hãy tắt lại sau khi sử dụng."
 #define CEMU_BC1_16BIT_LABEL_VN "Giảm bộ nhớ kết cấu BC1"
@@ -34762,19 +36953,21 @@ struct retro_core_options_v2 options_val = {
 #define CEMU_ACCOUNT_LABEL_VN "Tài khoản đang hoạt động"
 #define CEMU_ACCOUNT_INFO_0_VN "Tài khoản Wii U mà game chạy bằng tài khoản đó, mỗi tài khoản có dữ liệu lưu và Mii riêng. Danh sách gồm các tài khoản trong thư mục tài khoản.\n\nThay đổi sẽ có hiệu lực khi game được đóng và khởi động lại, hoặc khởi động lại game. Cho đến lúc đó, game đang chạy vẫn tiếp tục lưu dữ liệu vào tài khoản mà game được khởi chạy bằng tài khoản đó."
 #define CEMU_CREATE_ACCOUNT_LABEL_VN "Tạo tài khoản"
-#define CEMU_CREATE_ACCOUNT_INFO_0_VN "Tạo một tài khoản mới, có tên Người chơi 2, Người chơi 3 và tiếp tục như vậy, đồng thời đặt tài khoản đó làm Tài khoản đang hoạt động. Sau đó tùy chọn này tự chuyển về TẮT. Máy có thể chứa tối đa 12 tài khoản."
+#define CEMU_CREATE_ACCOUNT_INFO_0_VN "Tạo tài khoản mới có tên Người chơi 2, Người chơi 3, v. v. và đặt tài khoản đó làm tài khoản đang hoạt động. Sau đó, thiết lập này tự chuyển về TẮT. Tài khoản mới sẽ xuất hiện trong danh sách tài khoản sau khi thoát khỏi menu này và mở lại. Máy chơi game hỗ trợ tối đa 12 tài khoản."
+#define CEMU_RENAME_ACCOUNT_LABEL_VN "Đổi tên tài khoản đang hoạt động"
+#define CEMU_RENAME_ACCOUNT_INFO_0_VN "Mở giao diện nhập tên cho tài khoản đang hoạt động sau khi thoát khỏi menu này, rồi chuyển về TẮT. Tên đang nhập sẽ được hiển thị dưới dạng thông báo đè lên trò chơi, vì vậy thông báo trên màn hình của giao diện điều khiển phải được bật.\n\nVới tay cầm: Lên và Xuống thay đổi ký tự cuối cùng, Phải thêm một ký tự, Trái xóa một ký tự, Start xác nhận, Select hủy.\n\nVới bàn phím: nhập văn bản, Backspace xóa một ký tự, Enter xác nhận, Escape hủy (có thể cần bật Tập trung vào trò chơi trên giao diện điều khiển để chuyển phím đến lõi).\n\nTên có tối đa 10 ký tự. Trò chơi sẽ không nhận được thao tác điều khiển nào cho đến khi giao diện nhập tên được đóng, và trò chơi đang chạy sẽ hiển thị tên mới khi được khởi chạy lại."
 #define CEMU_REMOVE_ACCOUNT_LABEL_VN "Xóa tài khoản"
-#define CEMU_REMOVE_ACCOUNT_INFO_0_VN "CẢNH BÁO: xóa một tài khoản cũng sẽ xóa dữ liệu lưu của tài khoản đó trong mọi trò chơi và không thể hoàn tác.\n\nXóa tài khoản đã chọn, giống như xóa người dùng trên máy chơi game: tài khoản bị xóa khỏi thư mục tài khoản và dữ liệu lưu của tài khoản bị xóa khỏi thư mục lưu của mọi trò chơi. Tài khoản sẽ được xóa khi bạn rời khỏi trình đơn, sau đó thiết lập này sẽ trở về TẮT.\n\nKhông thể xóa tài khoản đang hoạt động, cũng không thể xóa tài khoản đã dùng để khởi chạy trò chơi đang chạy cho đến khi trò chơi đó được đóng. Vì vậy, không thể xóa tài khoản cuối cùng."
+#define CEMU_REMOVE_ACCOUNT_INFO_0_VN "Xóa tài khoản đã chọn khỏi thư mục tài khoản (saves/Cemu/mlc01/usr/save/system/act), tương tự thao tác xóa người dùng trên máy chơi game, khi thoát khỏi trình đơn này. Tùy chọn sẽ hiển thị lại TẮT khi quay lại trình đơn.\n\nKhông thể xóa tài khoản đang hoạt động, cũng như tài khoản đã dùng để khởi chạy trò chơi đang chạy cho đến khi trò chơi đó được đóng.\n\nCẢNH BÁO: xóa tài khoản cũng sẽ xóa vĩnh viễn dữ liệu lưu của tài khoản đó trong tất cả trò chơi. Hãy sao lưu mọi dữ liệu lưu muốn giữ lại trước khi xóa tài khoản."
 #define CEMU_INSTALL_GAME_LABEL_VN "Cài đặt trò chơi"
-#define CEMU_INSTALL_GAME_INFO_0_VN "Cài đặt mọi trò chơi trong system/Cemu/titles, bao gồm cả các thư mục con, vào thư mục trò chơi đã cài đặt của Wii U được mô phỏng (saves/Cemu/mlc01/usr/title/00050000), giống như máy chơi game cài trò chơi từ đĩa. Một trò chơi là ảnh đĩa (.wud, .wux, .iso) hoặc tệp .wua; bản cập nhật trò chơi và nội dung tải thêm chứa trong tệp .wua sẽ được cài đặt cùng. Trò chơi đã được cài đặt ở cùng phiên bản hoặc phiên bản mới hơn sẽ được giữ nguyên.\n\nKhi BẬT, quá trình cài đặt bắt đầu ngay lập tức, tiến trình được hiển thị dưới dạng thông báo, và thiết lập này sẽ tự TẮT khi tất cả trò chơi đã được cài đặt. Trò chơi đã cài đặt được khởi chạy bằng cách nạp tệp .rpx trong thư mục mã của trò chơi thuộc thư mục trò chơi đã cài đặt; không cần đến ảnh đĩa của trò chơi nữa."
+#define CEMU_INSTALL_GAME_INFO_0_VN "Cài đặt mọi trò chơi từ thư mục nguồn (system/Cemu/titles), bao gồm cả các thư mục con, vào thư mục trò chơi đã cài đặt của máy Wii U được mô phỏng (saves/Cemu/mlc01/usr/title/00050000), tương tự cách máy chơi game cài đặt trò chơi từ đĩa. Một trò chơi là ảnh đĩa (.wud, .wux, .iso) hoặc tệp .wua; bản cập nhật trò chơi và nội dung tải thêm chứa trong tệp .wua cũng được cài đặt cùng. Ảnh đĩa được mã hóa (.wud, .wux) cần có khóa đĩa: đặt trong một tệp cùng tên với ảnh đĩa và có phần mở rộng .key (game.wux, game.key), hoặc trong system/Cemu/keys.txt. Trò chơi đã được cài đặt ở cùng phiên bản hoặc phiên bản mới hơn sẽ được giữ nguyên.\n\nKhi BẬT, quá trình cài đặt bắt đầu ngay lập tức, tiến trình được hiển thị dưới dạng thông báo, và thiết lập này sẽ tự TẮT khi tất cả trò chơi đã được cài đặt và bạn thoát khỏi trình đơn này hoặc thay đổi tùy chọn khác. Trò chơi đã cài đặt được khởi chạy bằng cách nạp tệp .rpx trong thư mục mã của trò chơi ở thư mục trò chơi đã cài đặt; không cần đến ảnh đĩa của trò chơi nữa."
 #define CEMU_UNINSTALL_GAME_LABEL_VN "Gỡ cài đặt trò chơi"
-#define CEMU_UNINSTALL_GAME_INFO_0_VN "Gỡ cài đặt trò chơi đang chạy khỏi thư mục trò chơi đã cài đặt (saves/Cemu/mlc01/usr/title/00050000) sau khi trò chơi được đóng hoặc khởi động lại, đồng thời gỡ bản cập nhật trò chơi và nội dung tải thêm đã cài đặt; thiết lập này vẫn BẬT cho đến lúc đó. Dữ liệu lưu của trò chơi vẫn được giữ nguyên, cũng như ảnh đĩa hoặc tệp .wua mà trò chơi được cài đặt từ đó."
+#define CEMU_UNINSTALL_GAME_INFO_0_VN "Gỡ cài đặt trò chơi đang chạy cùng tất cả bản cập nhật trò chơi và nội dung tải thêm liên quan khỏi thư mục đã cài đặt (saves/Cemu/mlc01/usr/title) sau khi trò chơi được đóng hoặc khởi động lại; tùy chọn vẫn BẬT cho đến lúc đó. Dữ liệu lưu có mã định danh trò chơi (saves/Cemu/mlc01/usr/save/) sẽ không bị xóa."
 #define CEMU_INSTALL_TITLES_LABEL_VN "Cài đặt nội dung"
-#define CEMU_INSTALL_TITLES_INFO_0_VN "Cài đặt mọi bản cập nhật trò chơi và nội dung tải thêm trong system/Cemu/titles, bao gồm cả các thư mục con, vào bộ nhớ lưu trữ của Wii U được mô phỏng (saves/Cemu/mlc01/usr/title)., mỗi nội dung nằm trong một thư mục riêng trong system/Cemu/titles; bản tải xuống NUS (các tệp.app) cần có title.tmd và title.tik, là khóa giải mã, nằm cùng thư mục. Phiên bản đã cài đặt có cùng phiên bản hoặc mới hơn sẽ được giữ nguyên.\n\nKhi BẬT, quá trình cài đặt bắt đầu ngay lập tức, tiến trình được hiển thị dưới dạng thông báo, và thiết lập này sẽ tự TẮT khi tất cả nội dung đã được cài đặt và bạn rời khỏi trình đơn này hoặc thay đổi một tùy chọn khác. Trò chơi sẽ sử dụng nội dung đã cài đặt sau khi được khởi động lại.\n\nCó thể cài đặt nội dung từ các vị trí khác bằng Trình đơn chính > Nạp nội dung của RetroArch, bằng cách chọn tệp title.tmd tương ứng, với tệp title.tik nằm bên cạnh."
+#define CEMU_INSTALL_TITLES_INFO_0_VN "Cài đặt mọi bản cập nhật trò chơi và nội dung tải thêm từ thư mục nguồn (system/Cemu/titles), bao gồm cả các thư mục con, vào thư mục đã cài đặt (saves/Cemu/mlc01/usr/title). Mỗi nội dung phải nằm trong một thư mục riêng trong thư mục nguồn; bản tải xuống từ máy chủ NUS (các tệp .app) cần có tệp title.tmd và title.tik chứa khóa giải mã đặt bên cạnh. Phiên bản đã cài đặt nếu bằng hoặc mới hơn sẽ được giữ nguyên.\n\nKhi BẬT, quá trình cài đặt bắt đầu ngay lập tức, tiến trình được hiển thị dưới dạng thông báo, và thiết lập này sẽ tự TẮT khi tất cả nội dung đã được cài đặt và bạn thoát khỏi trình đơn này hoặc thay đổi tùy chọn khác. Trò chơi sẽ sử dụng nội dung đã cài đặt sau khi được khởi động lại.\n\nCó thể cài đặt nội dung từ các vị trí khác bằng cách vào Trình đơn chính > Nạp nội dung của RetroArch, rồi chọn tệp title.tmd tương ứng, với tệp title.tik đặt bên cạnh."
 #define CEMU_UNINSTALL_TITLES_LABEL_VN "Gỡ cài đặt nội dung"
-#define CEMU_UNINSTALL_TITLES_INFO_0_VN "Gỡ bản cập nhật trò chơi và nội dung tải thêm của trò chơi đang chạy khỏi bộ nhớ lưu trữ của Wii U được mô phỏng (saves/Cemu/mlc01/usr/title) sau khi trò chơi được đóng hoặc khởi động lại; thiết lập này vẫn BẬT cho đến lúc đó. Các bản sao trong system/Cemu/titles vẫn được giữ nguyên."
+#define CEMU_UNINSTALL_TITLES_INFO_0_VN "Gỡ cài đặt bản cập nhật trò chơi và nội dung tải thêm của trò chơi đang chạy khỏi thư mục đã cài đặt (saves/Cemu/mlc01/usr/title) sau khi trò chơi được đóng hoặc khởi động lại; tùy chọn vẫn BẬT cho đến lúc đó. Các bản sao trong thư mục nguồn (system/Cemu/titles) sẽ được giữ nguyên."
 #define CEMU_INSTALL_REMOVE_SOURCE_LABEL_VN "Xóa tệp sau khi cài đặt"
-#define CEMU_INSTALL_REMOVE_SOURCE_INFO_0_VN "CẢNH BÁO: thao tác này sẽ xóa các tệp khỏi system/Cemu/titles và không thể hoàn tác. system/Cemu/titles là thư mục để lõi quản lý; hãy giữ bản sao duy nhất của bản trích xuất ở nơi khác.\n\nXóa những gì Cài đặt trò chơi và Cài đặt nội dung đã cài đặt từ system/Cemu/titles: thư mục bản cập nhật trò chơi hoặc nội dung tải thêm sau khi được cài đặt, và ảnh đĩa hoặc tệp .wua sau khi mọi nội dung chứa trong đó đã được cài đặt (chỉ Cài đặt nội dung sẽ giữ lại tệp .wua nếu tệp đó cũng chứa trò chơi). Các tệp đang được trò chơi đang chạy sử dụng sẽ được xóa khi trò chơi được đóng hoặc khởi động lại. Nội dung được nạp thông qua Nạp nội dung vẫn được giữ nguyên tại vị trí hiện tại."
+#define CEMU_INSTALL_REMOVE_SOURCE_INFO_0_VN "Xóa những nội dung mà các tùy chọn Cài đặt trò chơi và Cài đặt nội dung đã cài đặt khỏi thư mục nguồn (system/Cemu/titles): thư mục của bản cập nhật trò chơi hoặc nội dung tải thêm sau khi được cài đặt, và ảnh đĩa (cùng tệp .key) hoặc tệp .wua sau khi mọi nội dung chứa trong đó đã được cài đặt. Các tệp đang được trò chơi chạy sử dụng sẽ bị xóa khi trò chơi được đóng hoặc khởi động lại.\n\nCẢNH BÁO: thao tác này sẽ xóa vĩnh viễn các tệp khỏi thư mục nguồn. Thư mục đó dành cho lõi tự quản lý; hãy lưu trữ dữ liệu trò chơi muốn giữ lại ở một nơi khác."
 #define CEMU_WUA_OUTPUT_DIR_LABEL_VN "Thư mục đầu ra"
 #define CEMU_WUA_OUTPUT_DIR_INFO_0_VN "Nơi tệp .wua được ghi. Cần đủ dung lượng để chứa tệp này."
 #define CEMU_CONVERT_TO_WUA_LABEL_VN "Bắt đầu chuyển đổi sang WUA"
@@ -34813,6 +37006,35 @@ struct retro_core_option_v2_definition option_defs_vn[] = {
 			{ NULL, NULL },
 		},
 		"auto"
+	},
+	{
+		"cemu_gamepad_motion",
+		CEMU_GAMEPAD_MOTION_LABEL_VN,
+		NULL,
+		CEMU_GAMEPAD_MOTION_INFO_0_VN,
+		NULL,
+		"system",
+		{
+			{ "disabled", "Disabled" },
+			{ "enabled", "Enabled" },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_audio_channels",
+		CEMU_AUDIO_CHANNELS_LABEL_VN,
+		NULL,
+		CEMU_AUDIO_CHANNELS_INFO_0_VN,
+		NULL,
+		"system",
+		{
+			{ "mono", OPTION_VAL_MONO_VN },
+			{ "stereo", OPTION_VAL_STEREO_VN },
+			{ "surround", OPTION_VAL_SURROUND_VN },
+			{ NULL, NULL },
+		},
+		"stereo"
 	},
 	{
 		"cemu_console_language",
@@ -35343,6 +37565,20 @@ struct retro_core_option_v2_definition option_defs_vn[] = {
 		CEMU_CREATE_ACCOUNT_LABEL_VN,
 		NULL,
 		CEMU_CREATE_ACCOUNT_INFO_0_VN,
+		NULL,
+		"accounts",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_rename_account",
+		CEMU_RENAME_ACCOUNT_LABEL_VN,
+		NULL,
+		CEMU_RENAME_ACCOUNT_INFO_0_VN,
 		NULL,
 		"accounts",
 		{
