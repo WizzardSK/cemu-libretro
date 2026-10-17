@@ -558,6 +558,14 @@ void swkbd_render(bool mainWindow)
 	ImGui::PopStyleColor();
 }
 
+// What has been typed so far, for a frontend that cannot draw the keyboard
+std::wstring swkbd_getInputText()
+{
+	if (swkbdInternalState == NULL)
+		return {};
+	return std::wstring(swkbdInternalState->formStringBuffer, swkbdInternalState->formStringLength);
+}
+
 bool swkbd_hasKeyboardInputHook()
 {
 	return swkbdInternalState != NULL && swkbdInternalState->isActive;

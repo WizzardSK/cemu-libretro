@@ -506,6 +506,17 @@ void FileCache::AddFile(const FileName&& name, const uint8* fileData, sint32 fil
 	this->_addFileInternal(name.name1, name.name2, fileData, fileSize, false);
 }
 
+void FileCache::Flush()
+{
+#ifndef _WIN32
+	// Windows' FileStream writes with WriteFile, which buffers nothing in the
+	// process, and has no Flush
+	std::unique_lock lock(this->mutex);
+	if (fileStream)
+		fileStream->Flush();
+#endif
+}
+
 bool FileCache::DeleteFile(const FileName&& name)
 {
 	if( name.name1 == FILECACHE_FILETABLE_NAME1 && name.name2 == FILECACHE_FILETABLE_NAME2 )

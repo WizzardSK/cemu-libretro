@@ -62,7 +62,7 @@ struct retro_core_option_v2_category option_cats_us[] = {
 	{ "accounts", "Accounts", "Manage accounts in the Wii U's account directory (saves/Cemu/mlc01/usr/save/system/act)." },
 	{ "install", "Content", "Manage games, title updates and DLC in saves/Cemu/mlc01, the emulated console's storage." },
 	{ "convert", "Convert to WUA", "Write the loaded title out as a .wua archive." },
-	{ "graphic_packs", "Graphic Packs", "The loaded game's graphic packs and their presets. Changes apply the next time the game is loaded." },
+	{ "graphic_packs", "Graphic Packs", "The loaded game's graphic packs and their presets. Changes apply the next time the game is loaded. Your own packs, or changed copies of the built-in ones, go in system/Cemu/customGraphicPacks." },
 	{ "cheats", "Cheats", "The loaded game's cheat packs, from the graphic packs' Cheats folder. Changes apply the next time the game is loaded." },
 	{ "logging", "Logging", "Extra log output, for diagnosing problems." },
 	{ NULL, NULL, NULL },
@@ -225,6 +225,20 @@ struct retro_core_option_v2_definition option_defs_us[] = {
 			{ NULL, NULL },
 		},
 		"linear"
+	},
+	{
+		"cemu_frame_wait",
+		"Frame Wait",
+		NULL,
+		"How long each run waits for the game's frame before showing the last one again. 'Whole Frame' gives the GPU the whole frame time, as standalone Cemu does; a frame later than that slows the run, and the audio with it. 'Most of a Frame' waits 72 % of it, so a late frame is a repeated frame instead and the audio keeps its pace, at the cost of the last 28 % of the frame time.",
+		NULL,
+		"video",
+		{
+			{ "whole", "Whole Frame" },
+			{ "most", "Most of a Frame" },
+			{ NULL, NULL },
+		},
+		"whole"
 	},
 	{
 		"cemu_downscale_filter",
@@ -589,6 +603,20 @@ struct retro_core_option_v2_definition option_defs_us[] = {
 		"Writes the source of every shader the game uses to system/Cemu/dump/shaders, named by its hashes as they appear in log.txt. For reporting a shader that fails or draws wrongly on a particular GPU. Slows shader compilation down and fills the folder quickly, so turn it off again afterwards.",
 		NULL,
 		"logging",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_render_ahead",
+		"Render Ahead One Frame",
+		NULL,
+		"Lets Cemu start drawing the next frame while RetroArch shows the last one, as standalone Cemu does. Smoother where frames take most of the frame time to draw, with one frame more input latency. Disabled, a frame not drawn within 12 ms is shown as the previous one again.",
+		NULL,
+		"video",
 		{
 			{ "disabled", NULL },
 			{ "enabled", NULL },

@@ -18,6 +18,12 @@ What changed in the libretro core of this fork, newest first. Changes that come 
 
 - Internal Resolution as multiples of the game's own resolution (0.25x to 3x), with 16:9 render targets kept 16:9. The largest picture RetroArch is told to expect grows with it.
 - The frame rate is always the graphic packs'; there is no Frame Rate option.
+- A 30 fps game is reported to RetroArch as 30 fps: the core follows the game's own swap interval (GX2SetSwapInterval) once it has held for a second, where it reported 60 and showed every frame twice, unevenly (NNshi, Wind Waker HD).
+- New option Video > Frame Wait: how long each run waits for the game's frame. Whole Frame, the default, gives the GPU the whole frame time as standalone Cemu does; Most of a Frame waits 72 % of it, as the core did before.
+- New option Video > Render Ahead One Frame (off by default): the GPU draws the next frame while RetroArch presents the last, for one frame more latency, as standalone Cemu's swapchain has.
+- Vulkan: a frame is handed to RetroArch only once its copy has been submitted; before, RetroArch could show the previous frame again (a repeated and a dropped frame, NNshi, Mario Kart 8).
+- The Wii U's software keyboard (Wind Waker HD's name, for one) is typed into with RetroArch's keyboard (Game Focus on), the text shown in RetroArch's notifications; Start on the pad accepts, with the account's name when nothing was typed. Before, the game waited on a keyboard nobody could see.
+- The pipeline cache keeps every pipeline compiled before the game was closed; the last ones were lost and compiled again at every start (NNshi, the same stutters in BotW and Mario Kart 8 each session).
 - OpenGL shows both screens in the composite layouts.
 - Android: Taiko's Don is drawn on Qualcomm's driver.
 

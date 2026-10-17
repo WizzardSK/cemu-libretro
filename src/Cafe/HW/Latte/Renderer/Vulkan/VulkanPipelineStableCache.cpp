@@ -158,6 +158,11 @@ void VulkanPipelineStableCache::Close()
 	// The writer only touches the cache file, but Close is also where a title
 	// hands that file back, so it goes the same way: wake it, let it see the
 	// flag, join it.
+	// There is no deadline on any of this: a pipeline dropped here is compiled
+	// again, with its stutter, at every start, so the close waits for it. How
+	// long that took is logged, for slow devices where it could be noticed.
+	const auto writeStart = std::chrono::steady_clock::now();
+	const size_t queuedAtClose = g_pipelineCachingQueue.size();
 	if (m_pipelineCacheStoreThread)
 	{
 		m_stopCacheStoreThread = true;
@@ -166,6 +171,15 @@ void VulkanPipelineStableCache::Close()
 		delete m_pipelineCacheStoreThread;
 		m_pipelineCacheStoreThread = nullptr;
 	}
+	// What the writer handed to the cache file goes through the async file
+	// writer, and the file itself is kept open past this (see BeginLoading),
+	// so in a core whose library is unloaded after this both have to be
+	// written out now: whatever a stream still buffers is lost with it.
+	FileCache_StopAsyncWriter();
+	if (s_cache)
+		s_cache->Flush();
+	cemuLog_log(LogType::Force, "Pipeline cache: {} pipelines still queued at close, written in {} ms",
+		queuedAtClose, std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - writeStart).count());
 	// Every hash in here names a pipeline built against the device that is
 	// going away. Kept across titles, the next one believes its pipelines are
 	// already accounted for and never writes them again.
@@ -481,11 +495,16 @@ void VulkanPipelineStableCache::WorkerThread()
 		g_pipelineCachingQueue.pop(job);
 		// Upstream's loop has no way out: the thread is detached and the
 		// process ends under it. Close() pushes an empty job with this set, and
-		// this is where the thread leaves so it can be joined.
-		if (m_stopCacheStoreThread)
+		// this is where the thread leaves so it can be joined - at that empty
+		// job, after every pipeline queued before it. Leaving at the first pop
+		// that saw the flag dropped them, and a pipeline compiled shortly
+		// before the game was closed was compiled again on every start
+		// (NNshi: the same stutters in BotW and MK8 each session).
+		if (!job)
 		{
-			delete job;
-			return;
+			if (m_stopCacheStoreThread)
+				return;
+			continue;
 		}
 		if (!s_cache)
 		{

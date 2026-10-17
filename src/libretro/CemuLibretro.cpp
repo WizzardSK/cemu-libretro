@@ -13,6 +13,7 @@
 
 #include "config/CemuConfig.h"
 #include "Cafe/Account/Account.h"
+#include "Cafe/OS/libs/swkbd/swkbd.h"
 #include <openssl/crypto.h>
 #include <boost/nowide/convert.hpp>
 #include "config/ActiveSettings.h"
@@ -563,6 +564,10 @@ static unsigned int s_frontend_read_fbo = 0;
 static unsigned int s_frontend_read_rbo_attached = 0;
 static unsigned int s_frontend_upload_tex = 0;
 
+// Render Ahead (cemu_render_ahead): the GPU thread is let into the next frame
+// at the end of retro_run rather than at its start.
+static bool s_render_ahead = false;
+
 // Frame gate.
 //
 // RetroArch pauses a core by not calling retro_run, but this emulator runs on
@@ -739,6 +744,8 @@ std::atomic_bool s_frame_ready{false};
 // s_prof_frames_ready, which the profiling log resets on its own schedule.
 static std::atomic<uint32_t> s_game_frames{0};
 static bool s_show_game_fps = false;
+// The share of a frame retro_run waits for the game's frame (cemu_frame_wait)
+static double s_frame_wait_share = 1.0;
 
 // The rate retro_run is reported to come at: each retro_run lets the game
 // render one frame and carries one frame's worth of audio.
@@ -746,15 +753,29 @@ static double s_output_fps = 60.0;
 
 static const char* libretro_get_option_value(const char* key);
 
-// 60, as on the Wii U, unless an active graphic pack sets another vsync rate
-// (an FPS++ preset at 120, say), which the game then renders at. This used to
-// be the Frame Rate option's Auto, beside fixed rates that only had to match
-// such a pack by hand; NNshi and sco agreed the pack's rate is the only one
-// that makes sense, so it is the behaviour now and the option is gone.
+// The rate the title presents at: the vsync rate - 60, as on the Wii U,
+// unless an active graphic pack sets another (an FPS++ preset at 120, say) -
+// divided by the swap interval the title asks for with GX2SetSwapInterval, so
+// a 30 fps title (interval 2) is reported as 30. Reported as 60 instead, every
+// other retro_run waited out its 12 ms for a frame that was never coming and
+// showed the last one again, and the frames that did come had 12 ms where the
+// title gives itself 33 (NNshi). This used to be the Frame Rate option's Auto,
+// beside fixed rates that only had to match such a pack by hand; NNshi and sco
+// agreed the title's own rate is the only one that makes sense, so it is the
+// behaviour now and the option is gone.
 static double libretro_wanted_fps()
 {
 	sint32 frequency = 0;
-	return LatteTiming_getCustomVsyncFrequency(frequency) && frequency > 0 ? (double)frequency : 60.0;
+	double fps = LatteTiming_getCustomVsyncFrequency(frequency) && frequency > 0 ? (double)frequency : 60.0;
+	// 0 is vsync off, which Cemu flips on every vsync anyway. The shared area
+	// is the running title's, so only while one runs.
+	if (s_game_loaded && LatteGPUState.sharedArea)
+	{
+		const uint32 interval = std::min<uint32>(uint32(LatteGPUState.sharedArea->swapInterval), 4);
+		if (interval > 1)
+			fps /= interval;
+	}
+	return fps;
 }
 
 void libretro_signal_frame_ready()
@@ -2952,6 +2973,12 @@ static void libretro_apply_core_options()
 				g_libretroNarrowBC1 = b;
 		}
 #endif
+		if (const char* v = libretro_get_option_value("cemu_render_ahead"))
+		{
+			bool b;
+			if (libretro_parse_enabled_disabled(v, b))
+				s_render_ahead = b;
+		}
 		if (const char* v = libretro_get_option_value("cemu_log_audio"))
 		{
 			bool b;
@@ -3026,6 +3053,9 @@ static void libretro_apply_core_options()
 	// OSD, which is a different piece of work: forward
 	// LatteOverlay_pushNotification to SET_MESSAGE_EXT.
 	cfg.notification.position = ScreenPosition::kDisabled;
+
+	if (const char* v = libretro_get_option_value("cemu_frame_wait"))
+		s_frame_wait_share = strcmp(v, "most") == 0 ? 0.72 : 1.0;
 
 	if (const char* v = libretro_get_option_value("cemu_show_game_fps"))
 	{
@@ -3998,11 +4028,34 @@ RETRO_API void retro_get_system_av_info(struct retro_system_av_info* info)
 // A graphic pack with a frame rate of its own turned out to be active once the
 // title started (packs are activated then), or stopped being: tell the
 // frontend.
-static void libretro_update_output_fps()
+//
+// steady: the title may change its swap interval while it runs - a 60 fps menu
+// in front of a 30 fps game, a loading screen - and a new rate reinitialises
+// RetroArch's audio, so from retro_run a rate is taken once it has held for
+// a second. Option changes and the start of a title take it at once.
+static void libretro_update_output_fps(bool steady = false)
 {
+	static double s_pending_fps = 0.0;
+	static std::chrono::steady_clock::time_point s_pending_since{};
 	const double wanted = libretro_wanted_fps();
 	if (wanted == s_output_fps)
+	{
+		s_pending_fps = 0.0;
 		return;
+	}
+	if (steady)
+	{
+		const auto now = std::chrono::steady_clock::now();
+		if (wanted != s_pending_fps)
+		{
+			s_pending_fps = wanted;
+			s_pending_since = now;
+			return;
+		}
+		if (now - s_pending_since < std::chrono::seconds(1))
+			return;
+	}
+	s_pending_fps = 0.0;
 	s_output_fps = wanted;
 	retro_system_av_info av{};
 	retro_get_system_av_info(&av);
@@ -5903,7 +5956,7 @@ RETRO_API bool retro_load_game(const struct retro_game_info* game)
 
 	libretro_reset_install_switches();
 
-	// Keys for the name entry of Rename Active Account
+	// Keys for the software keyboard, and for the name entry of Rename Active Account
 	{
 		struct retro_keyboard_callback keyboard{libretro_keyboard_event};
 		environ_cb(RETRO_ENVIRONMENT_SET_KEYBOARD_CALLBACK, &keyboard);
@@ -6445,6 +6498,69 @@ RETRO_API void retro_deinit()
 // Input mapping
 // ============================================================================
 
+// The Wii U's software keyboard (a name to type in Wind Waker HD, say). Cemu
+// draws it with imgui, which never reaches the screen in this core (see
+// cfg.notification.position), so the title sat waiting on a keyboard nobody
+// could see or use (NNshi). Its input, though, is Cemu's own: standalone
+// feeds it the host keyboard, and so does this, from RetroArch's keyboard
+// callback - with the text so far shown in RetroArch's OSD. Keys reach the
+// core only with Game Focus on (Scroll Lock by default) where the keyboard
+// also has hotkeys bound. For a setup with only a pad, Start accepts, and
+// types the account's Mii name first if nothing has been typed.
+static std::atomic_bool s_swkbd_text_changed{false};
+
+// A key for the software keyboard, when the name entry has not taken it
+static void libretro_software_keyboard_key(bool down, unsigned keycode, uint32_t character)
+{
+	if (!down || !s_game_loaded || !swkbd_hasKeyboardInputHook())
+		return;
+	if (keycode == RETROK_BACKSPACE)
+		swkbd_keyInput(8);
+	else if (keycode == RETROK_RETURN || keycode == RETROK_KP_ENTER)
+		swkbd_keyInput(13);
+	else if (character >= 32 && character != 127)
+		swkbd_keyInput(character);
+	else
+		return;
+	s_swkbd_text_changed = true;
+}
+
+static void libretro_update_software_keyboard()
+{
+	static bool s_was_active = false;
+	static bool s_start_held = false;
+	const bool active = s_game_loaded && swkbd_hasKeyboardInputHook();
+	const bool start = s_port_state[0].buttons[RETRO_DEVICE_ID_JOYPAD_START] != 0;
+	const bool start_pressed = start && !s_start_held;
+	s_start_held = start;
+
+	if (!active)
+	{
+		s_was_active = false;
+		return;
+	}
+	if (!s_was_active)
+	{
+		s_was_active = true;
+		s_swkbd_text_changed = false;
+		libretro_show_message(RETRO_LOG_INFO, 6000,
+			"Software keyboard: type with the keyboard (Game Focus on), Enter accepts. Start on the pad accepts, with the account's name if nothing is typed.");
+	}
+	if (start_pressed)
+	{
+		if (swkbd_getInputText().empty())
+		{
+			const uint32 persistentId = GetConfig().account.m_persistent_id;
+			for (wchar_t c : Account::GetAccount(persistentId).GetMiiName())
+				swkbd_keyInput((uint32)c);
+		}
+		swkbd_keyInput(13);
+		s_swkbd_text_changed = true;
+	}
+	if (s_swkbd_text_changed.exchange(false))
+		libretro_show_message(RETRO_LOG_INFO, 3000, "Keyboard: " + boost::nowide::narrow(swkbd_getInputText()) + "_");
+}
+
 // Rename Active Account: a name typed inside the core, since a core option
 // cannot hold free text and a frontend's own keyboard is not offered to cores
 // (Shoegzer, #28). Nothing of the core's is drawn over the picture (imgui
@@ -6493,7 +6609,10 @@ static void RETRO_CALLCONV libretro_keyboard_event(bool down, unsigned keycode, 
 		return;
 	std::lock_guard lock(s_name_entry.mutex);
 	if (!s_name_entry.active)
+	{
+		libretro_software_keyboard_key(down, keycode, character);
 		return;
+	}
 	if (keycode == RETROK_BACKSPACE)
 	{
 		if (!s_name_entry.text.empty())
@@ -7099,6 +7218,14 @@ static void libretro_finish_run(std::chrono::steady_clock::time_point start,
 	libretro_report_game_fps(presented);
 	libretro_log_thread_time(presented);
 
+	// Rendering ahead: the frame is handed over, so the next one may start
+	// now, while the frontend presents this one and waits for the vsync, and
+	// not only when the next retro_run comes. That gives it the whole frame
+	// interval instead of the most of a frame retro_run waits, at the cost of
+	// one frame of latency - what standalone Cemu's swapchain does anyway.
+	if (s_render_ahead)
+		libretro_frame_gate_grant();
+
 	LibretroAudioAPI::FlushAudio();
 	s_last_audio_wait_us = std::chrono::duration_cast<std::chrono::microseconds>(prof_clock::now() - presented).count();
 
@@ -7333,17 +7460,23 @@ RETRO_API void retro_run()
 		libretro_update_output_fps();
 	}
 
+	// The title's swap interval
+	libretro_update_output_fps(true);
+
 	// Poll input
 	libretro_poll_input();
 	libretro_update_name_entry();
 	libretro_update_rumble();
+	libretro_update_software_keyboard();
 
 	using prof_clock = std::chrono::steady_clock;
 	const auto profStart = prof_clock::now();
 	bool profTimedOut = false;
 
 	// Ask for a frame: the GPU thread is parked at the gate after the last swap.
-	libretro_frame_gate_grant();
+	// Rendering ahead, it was asked at the end of the last retro_run instead.
+	if (!s_render_ahead)
+		libretro_frame_gate_grant();
 	// And for the audio of the time since the last retro_run, at 48000 Hz,
 	// less what of it went on waiting in the frontend's audio callback.
 	//
@@ -7396,17 +7529,16 @@ RETRO_API void retro_run()
 		snd_core::AXOut_LibretroGrantSamples(samples);
 	}
 
-	// Wait for frame from GPU thread - but not for long. retro_run has to keep
-	// coming at the rate the core reports (60 Hz unless a graphic pack says
-	// otherwise) whatever rate the title renders at, because each one is one
-	// frame's worth of audio: a 30 fps title waited on for up to 33 ms made
-	// retro_run itself 30 Hz and the audio half speed. Most of a frame - 12 ms
-	// at 60 Hz - leaves a frame that is a little late its chance;
-	// a frame that is not there by then shows up in the next retro_run, and
-	// this one presents the last image again.
+	// Wait for the frame from the GPU thread, at most one frame time at the
+	// rate reported - which follows the title's swap interval, so a 30 fps
+	// title gets 33 ms. A frame not there by then shows up in the next
+	// retro_run, and this one presents the last image again. "Most of a
+	// Frame" (cemu_frame_wait) waits 72 % of it, the 12 ms at 60 Hz this used
+	// to be fixed at, which keeps retro_run at the reported rate when the GPU
+	// runs late; NNshi asked for the whole frame time, as standalone gives it.
 	{
 		std::unique_lock lock(s_frame_mutex);
-		profTimedOut = !s_frame_cv.wait_for(lock, std::chrono::microseconds((int64_t)(720000.0 / s_output_fps)), [] {
+		profTimedOut = !s_frame_cv.wait_for(lock, std::chrono::microseconds((int64_t)(1000000.0 * s_frame_wait_share / s_output_fps)), [] {
 			return s_frame_ready.load();
 		});
 		s_frame_ready = false;
