@@ -119,9 +119,9 @@ public:
 	// (5.1 through the multi-channel one). Set at load, before AX starts.
 	static void SetOutput(unsigned channels, MultiAudioCallback multi);
 
-	// Drain whatever was produced since the last call, push to the frontend.
-	// Call once per retro_run.
-	static void FlushAudio();
+	// Push one frame's worth (frames, at the rate the core reports) to the
+	// frontend, more only to work off a backlog. Call once per retro_run.
+	static void FlushAudio(size_t frames);
 
 	static void Reset();
 

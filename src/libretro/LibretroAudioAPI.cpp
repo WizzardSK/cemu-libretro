@@ -123,18 +123,22 @@ void LibretroAudioAPI::SetOutput(unsigned channels, MultiAudioCallback multi)
 	s_ring_buffer.Reset();
 }
 
-void LibretroAudioAPI::FlushAudio()
+void LibretroAudioAPI::FlushAudio(size_t frames)
 {
 	if (!s_audio_callback)
 		return;
 
-	// Drain whatever Cemu produced since the last retro_run, up to the ring's
-	// capacity. RetroArch's audio driver handles variable per-call frame counts
-	// (its own buffer + DRC resampler), so capping the delivery is the wrong
-	// shape: when Cemu's audio thread runs slightly faster than retro_run on
-	// the host clock, the excess accumulates until FeedBlock starts dropping
-	// samples, which is what shows up as crackling.
+	// One frame's worth per retro_run, as other cores hand over. Handing over
+	// whatever AX had made by then gave RetroArch a different amount every
+	// run - AX makes a run's audio over the whole frame, so how much of it was
+	// there at the end of retro_run varied - and its buffer swung between
+	// blocking and running dry without ever settling, where rpcs3's or
+	// xenia's settle within a few thousand frames (NNshi). What is not handed
+	// over stays in the ring for the next run. Only a backlog of more than two
+	// frames goes out on top, so the ring cannot grow without bound.
+	const size_t channels = s_out_channels;
 	const size_t availableSamples = s_ring_buffer.GetReadAvailableSamples();
+	const size_t frameSamples = frames * channels;
 	if (availableSamples == 0)
 	{
 		if (s_log_stats)
@@ -146,14 +150,17 @@ void LibretroAudioAPI::FlushAudio()
 		return;
 	}
 
+	size_t wanted = frameSamples;
+	if (availableSamples > 3 * frameSamples)
+		wanted = availableSamples - 2 * frameSamples;
+	wanted -= wanted % channels;
 	const size_t bufferCap = s_flush_buffer.size();
-	const size_t samplesToRead = (availableSamples <= bufferCap) ? availableSamples : bufferCap;
+	const size_t samplesToRead = std::min({availableSamples, wanted, bufferCap});
 	const size_t samplesRead = s_ring_buffer.Read(s_flush_buffer.data(), samplesToRead);
 
 	if (samplesRead == 0)
 		return;
 
-	const size_t channels = s_out_channels;
 	const size_t framesRead = samplesRead / channels;
 
 	// retro_audio_sample_batch_t may consume fewer frames than offered; loop so

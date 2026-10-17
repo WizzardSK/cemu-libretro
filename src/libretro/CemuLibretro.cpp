@@ -7226,7 +7226,7 @@ static void libretro_finish_run(std::chrono::steady_clock::time_point start,
 	if (s_render_ahead)
 		libretro_frame_gate_grant();
 
-	LibretroAudioAPI::FlushAudio();
+	LibretroAudioAPI::FlushAudio((size_t)(48000.0 / s_output_fps));
 	s_last_audio_wait_us = std::chrono::duration_cast<std::chrono::microseconds>(prof_clock::now() - presented).count();
 
 	if (LibretroAudioAPI::IsStatsLogging())

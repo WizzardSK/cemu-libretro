@@ -2,6 +2,11 @@
 
 What changed in the libretro core of this fork, newest first. Changes that come with a merge of upstream Cemu are in upstream's own history; a merge is noted here with the upstream version it brought in.
 
+## Unreleased
+
+- Sound: each frame hands RetroArch one frame's worth of audio, as other cores do, and more only to work off a backlog. It handed over whatever the game had made by the end of the frame, a different amount every frame, so RetroArch's audio buffer swung between blocking and running dry without settling (NNshi).
+- Sound: the game's audio frames are made at the console's pace, one every 3 ms, and faster only to catch up. At 30 fps each frame's 33 ms of audio was made in a 19 ms burst followed by a 14 ms gap, so streaming voices were fed unevenly, with pops and crackles standalone Cemu does not have (NNshi, Wind Waker HD).
+
 ## October 2026
 
 ### Upstream

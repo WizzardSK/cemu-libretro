@@ -544,10 +544,13 @@ namespace snd_core
 	// with a long burst to catch up, while a slow device's retro_run, 100 ms
 	// or more apart, still fits a grant on top of what is left of the last.
 	static std::atomic<int32_t> s_libretro_ax_budget{0};
+	// The last grant: what one retro_run hands over, 33 ms of audio at 30 fps
+	static std::atomic<int32_t> s_libretro_ax_last_grant{0};
 
 	void AXOut_LibretroGrantSamples(int32_t samples)
 	{
 		constexpr int32_t kCap = 15 * 800; // 250 ms
+		s_libretro_ax_last_grant.store(samples, std::memory_order_relaxed);
 		int32_t cur = s_libretro_ax_budget.load(std::memory_order_relaxed);
 		while (!s_libretro_ax_budget.compare_exchange_weak(cur, std::min(cur + samples, kCap), std::memory_order_relaxed))
 			;
@@ -570,6 +573,13 @@ namespace snd_core
 		// does too - fast enough to catch up on a backlog at nearly twice real
 		// time, slow enough to leave the title room between frames.
 		constexpr static auto kLibretroMinSpacing = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::microseconds(1700));
+		// But only when there is a backlog to catch up on. A grant of no more
+		// than one retro_run's worth is spent a frame per 3 ms, the console's
+		// own rate: at 1.7 ms a 30 fps title's 33 ms grant was made in 19 ms
+		// and then nothing for 14, so its streaming voices were asked for
+		// data in bursts with gaps between, as standalone never asks - pops
+		// and crackles in Wind Waker HD that standalone does not have (NNshi).
+		constexpr static auto kLibretroFrameSpacing = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::microseconds(3000));
 		// steady_clock, on every platform: it is monotonic everywhere the core
 		// is built - QueryPerformanceCounter on Windows with MSVC and MinGW
 		// alike, CLOCK_MONOTONIC with libstdc++, the monotonic clocks with
@@ -578,7 +588,8 @@ namespace snd_core
 		// until it caught up with where it had been.
 		const auto libretroNow = std::chrono::steady_clock::now();
 		static auto s_libretro_last_frame = libretroNow - kLibretroMinSpacing;
-		if ((libretroNow - s_libretro_last_frame) < kLibretroMinSpacing)
+		const bool backlog = s_libretro_ax_budget.load(std::memory_order_relaxed) > s_libretro_ax_last_grant.load(std::memory_order_relaxed);
+		if ((libretroNow - s_libretro_last_frame) < (backlog ? kLibretroMinSpacing : kLibretroFrameSpacing))
 			return;
 
 		g_ax_update_passed.fetch_add(1, std::memory_order_relaxed);
