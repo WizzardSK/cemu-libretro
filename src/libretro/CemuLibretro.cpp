@@ -81,6 +81,7 @@
 #include "interface/WindowSystem.h"
 
 #include "LibretroAudioAPI.h"
+#include "libretro_addon_titles.h"
 #include "Cafe/Filesystem/ZArchiveVFS.h"
 #include <zarchive/zarchivereader.h>
 
@@ -742,10 +743,6 @@ std::atomic_bool s_frame_ready{false};
 // title. The Vulkan renderer used to store the flag on its own and did exactly
 // that, while the OpenGL path signalled properly, which is why one was half the
 // speed of the other.
-// Frames the title finished, for the Show Game FPS option. Not
-// s_prof_frames_ready, which the profiling log resets on its own schedule.
-static std::atomic<uint32_t> s_game_frames{0};
-static bool s_show_game_fps = false;
 // The share of a frame retro_run waits for the game's frame (cemu_frame_wait)
 static double s_frame_wait_share = 1.0;
 
@@ -783,7 +780,6 @@ static double libretro_wanted_fps()
 void libretro_signal_frame_ready()
 {
 	s_prof_frames_ready.fetch_add(1, std::memory_order_relaxed);
-	s_game_frames.fetch_add(1, std::memory_order_relaxed);
 	{
 		std::lock_guard lock(s_frame_mutex);
 		s_frame_ready.store(true, std::memory_order_release);
@@ -2148,7 +2144,9 @@ static bool libretro_parse_enabled_disabled(const char* v, bool& out)
 static std::optional<CPUMode> libretro_parse_cpu_mode(const char* v)
 {
 	if (!v) return std::nullopt;
-	if (libretro_iequals(v, "auto")) return CPUMode::Auto;
+	// Auto is no override: the game profile's mode, else Cemu's own pick, as
+	// standalone (it overrode the 27 profiles that set a mode; NNshi)
+	if (libretro_iequals(v, "auto")) return std::nullopt;
 	if (libretro_iequals(v, "singlecore_interpreter")) return CPUMode::SinglecoreInterpreter;
 	if (libretro_iequals(v, "singlecore_recompiler")) return CPUMode::SinglecoreRecompiler;
 	if (libretro_iequals(v, "multicore_recompiler")) return CPUMode::MulticoreRecompiler;
@@ -2169,7 +2167,8 @@ static bool libretro_is_multicore_interpreter(const char* v)
 static std::optional<PrecompiledShaderOption> libretro_parse_precompiled_shaders(const char* v)
 {
 	if (!v) return std::nullopt;
-	if (libretro_iequals(v, "auto")) return PrecompiledShaderOption::Auto;
+	// Auto is no override: the game profile's setting, else Auto
+	if (libretro_iequals(v, "auto")) return std::nullopt;
 	if (libretro_iequals(v, "enabled")) return PrecompiledShaderOption::Enable;
 	if (libretro_iequals(v, "disabled")) return PrecompiledShaderOption::Disable;
 	return std::nullopt;
@@ -2470,6 +2469,41 @@ static void libretro_update_convert_visibility()
 	}
 }
 
+// The emulated add-ons (Skylanders' portal, Disney Infinity's base, LEGO
+// Dimensions' toy pad): each option shown only while one of its games is
+// loaded (NNshi), by the base title's ID (libretro_addon_titles.h)
+static void libretro_update_addon_visibility()
+{
+	if (!environ_cb)
+		return;
+	static std::string s_checked_path;
+	static TitleId s_base_title = 0;
+	if (s_checked_path != s_game_path)
+	{
+		s_checked_path = s_game_path;
+		s_base_title = 0;
+		if (!s_game_path.empty())
+		{
+			TitleInfo title(_utf8ToPath(s_game_path));
+			if (title.IsValid() && !CafeTitleList::FindBaseTitleId(title.GetAppTitleId(), s_base_title))
+				s_base_title = title.GetAppTitleId();
+		}
+	}
+	const auto has = [](std::span<const uint64_t> ids) {
+		return s_base_title != 0 && std::find(ids.begin(), ids.end(), s_base_title) != ids.end();
+	};
+	const std::pair<const char*, bool> addons[] = {
+		{"cemu_emulate_skylander_portal", has(kSkylandersTitleIds)},
+		{"cemu_emulate_infinity_base", has(kDisneyInfinityTitleIds)},
+		{"cemu_emulate_dimensions_toypad", has(kLegoDimensionsTitleIds)},
+	};
+	for (const auto& [key, shown] : addons)
+	{
+		struct retro_core_option_display display{key, shown};
+		environ_cb(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &display);
+	}
+}
+
 static void libretro_update_screen_layout_visibility()
 {
 	if (!environ_cb)
@@ -2515,6 +2549,7 @@ static bool RETRO_CALLCONV libretro_update_options_display()
 	libretro_update_convert_visibility();
 	libretro_update_resolution_visibility();
 	libretro_update_pack_visibility();
+	libretro_update_addon_visibility();
 	return true;
 }
 
@@ -2682,10 +2717,13 @@ static void libretro_request_conversion()
 // where no profile load follows.
 static void libretro_apply_profile_options()
 {
+	// Auto leaves the game profile's value, as standalone, which has this per
+	// game only: On by default overrode the profiles that turn it off
+	// (Super Mario 3D World, Captain Toad, Xenoblade Chronicles X; NNshi)
 	if (const char* v = libretro_get_option_value("cemu_accurate_shader_mul"))
 	{
 		bool enabled;
-		if (libretro_parse_enabled_disabled(v, enabled) && g_current_game_profile)
+		if (!libretro_iequals(v, "auto") && libretro_parse_enabled_disabled(v, enabled) && g_current_game_profile)
 			g_current_game_profile->SetAccurateShaderMul(enabled ? AccurateShaderMulOption::True : AccurateShaderMulOption::False);
 	}
 
@@ -3101,19 +3139,20 @@ static void libretro_apply_core_options()
 	if (const char* v = libretro_get_option_value("cemu_frame_wait"))
 		s_frame_wait_share = strcmp(v, "most") == 0 ? 0.72 : 1.0;
 
-	if (const char* v = libretro_get_option_value("cemu_show_game_fps"))
-	{
-		bool b;
-		if (libretro_parse_enabled_disabled(v, b))
-			s_show_game_fps = b;
-	}
-
 	// Async shader compilation
 	if (const char* v = libretro_get_option_value("cemu_async_shader_compile"))
 	{
 		bool b;
 		if (libretro_parse_enabled_disabled(v, b))
 			cfg.async_compile = b;
+	}
+
+	// Accurate Barriers (Vulkan), standalone's option; read at each draw
+	if (const char* v = libretro_get_option_value("cemu_vk_accurate_barriers"))
+	{
+		bool b;
+		if (libretro_parse_enabled_disabled(v, b))
+			cfg.vk_accurate_barriers = b;
 	}
 
 	// GX2DrawDone sync
@@ -3873,13 +3912,9 @@ static void libretro_publish_core_options(retro_environment_t cb, bool withRepla
 		// An option the core declares is an option the frontend writes into
 		// its .opt file, so with nothing to convert to the pair is not
 		// declared at all - hiding them would still leave their names behind
-		// in there. They are the last two definitions, so ending the list here
-		// drops both and nothing else.
+		// in there. They are left out where the list is put together below.
 		if (s_wua_destinations.empty())
-		{
-			def.key = nullptr;
 			break;
-		}
 
 		// The output directory is whatever the frontend turned out to allow,
 		// so its values are built here rather than written in the header.
@@ -3897,28 +3932,37 @@ static void libretro_publish_core_options(retro_environment_t cb, bool withRepla
 		break;
 	}
 
-	// The fixed options, then the loaded title's graphic packs, then Logging.
+	// The fixed options (System to Logging), then the loaded title's graphic
+	// packs, then its cheats, then the add-on options, which have no category.
 	// RetroArch lists the categories in the order their first option comes
-	// in, not in the order of the category table, so Logging goes last by
-	// coming last here - after the packs, which are only known at run time.
+	// in, not in the order of the category table, and an option without a
+	// category where it comes, so this order is the menu's (NNshi).
 	static std::vector<struct retro_core_option_v2_definition> all;
 	all.clear();
-	std::vector<struct retro_core_option_v2_definition> logging;
+	std::vector<struct retro_core_option_v2_definition> addons;
 	for (const struct retro_core_option_v2_definition& def : option_defs_us)
 	{
 		if (!def.key)
 			break;
 		if (!accountsKnown && (!strcmp(def.key, "cemu_account") || !strcmp(def.key, "cemu_create_account") || !strcmp(def.key, "cemu_rename_account") || !strcmp(def.key, "cemu_remove_account")))
 			continue;
-		if (def.category_key && !strcmp(def.category_key, "logging"))
-			logging.push_back(def);
+		if (s_wua_destinations.empty() && (!strcmp(def.key, "cemu_wua_output_dir") || !strcmp(def.key, "cemu_convert_to_wua")))
+			continue;
+		if (!def.category_key)
+			addons.push_back(def);
 		else
 			all.push_back(def);
 	}
-	for (size_t i = 0; i < s_pack_option_defs.size(); i++)
-		if (withReplacements || s_pack_options[i].originalKey.empty())
-			all.push_back(s_pack_option_defs[i]);
-	all.insert(all.end(), logging.begin(), logging.end());
+	for (const bool cheats : {false, true})
+	{
+		for (size_t i = 0; i < s_pack_option_defs.size(); i++)
+		{
+			const bool cheat = s_pack_option_defs[i].category_key && !strcmp(s_pack_option_defs[i].category_key, "cheats");
+			if (cheat == cheats && (withReplacements || s_pack_options[i].originalKey.empty()))
+				all.push_back(s_pack_option_defs[i]);
+		}
+	}
+	all.insert(all.end(), addons.begin(), addons.end());
 	all.push_back({});
 	options_us.definitions = all.data();
 
@@ -3934,6 +3978,7 @@ static void libretro_publish_core_options(retro_environment_t cb, bool withRepla
 	libretro_update_convert_visibility();
 	libretro_update_resolution_visibility();
 	libretro_update_pack_visibility();
+	libretro_update_addon_visibility();
 }
 
 RETRO_API void retro_set_video_refresh(retro_video_refresh_t cb) { video_cb = cb; }
@@ -7059,65 +7104,6 @@ extern GLuint libretro_getBackbufferRBO();
 // frontend's audio callback (see the audio grant in retro_run).
 static int64_t s_last_audio_wait_us = 0;
 
-// The game's own frame rate, once a second, as a status line on the
-// frontend's OSD. RetroArch's FPS counter cannot show it: retro_run keeps
-// coming at 60 Hz whatever the title renders at, presenting the last image
-// again when no new one is ready, so a title dropping to 40 still counts 60
-// there and only the frame time shows it (NNshi).
-static void libretro_report_game_fps(std::chrono::steady_clock::time_point now)
-{
-	static std::chrono::steady_clock::time_point s_since{};
-	static bool s_have_ext = false, s_checked_ext = false;
-	static std::string s_text;
-
-	if (!s_show_game_fps || !environ_cb)
-	{
-		s_since = {};
-		s_game_frames.store(0, std::memory_order_relaxed);
-		return;
-	}
-	if (!s_checked_ext)
-	{
-		unsigned version = 0;
-		s_have_ext = environ_cb(RETRO_ENVIRONMENT_GET_MESSAGE_INTERFACE_VERSION, &version) && version >= 1;
-		s_checked_ext = true;
-	}
-	if (s_since == std::chrono::steady_clock::time_point{})
-	{
-		s_since = now;
-		s_game_frames.store(0, std::memory_order_relaxed);
-		return;
-	}
-
-	const double seconds = std::chrono::duration<double>(now - s_since).count();
-	if (seconds < 1.0)
-		return;
-
-	const uint32_t frames = s_game_frames.exchange(0, std::memory_order_relaxed);
-	s_since = now;
-	s_text = fmt::format("Game: {:.1f} FPS", frames / seconds);
-
-	if (s_have_ext)
-	{
-		// A status message is the frontend's line for figures like this one,
-		// replaced in place rather than stacked up as notifications.
-		struct retro_message_ext message = {};
-		message.msg = s_text.c_str();
-		message.duration = 1500;
-		message.priority = 1;
-		message.level = RETRO_LOG_INFO;
-		message.target = RETRO_MESSAGE_TARGET_OSD;
-		message.type = RETRO_MESSAGE_TYPE_STATUS;
-		message.progress = -1;
-		environ_cb(RETRO_ENVIRONMENT_SET_MESSAGE_EXT, &message);
-	}
-	else
-	{
-		struct retro_message message{s_text.c_str(), 90};
-		environ_cb(RETRO_ENVIRONMENT_SET_MESSAGE, &message);
-	}
-}
-
 // How busy each thread that can hold a frame up was (cemu_log_thread_time):
 // CPU time each spent in the last second, against the wall clock. The PPC core
 // threads and the GPU thread are read from outside by their handles; they
@@ -7282,7 +7268,6 @@ static void libretro_finish_run(std::chrono::steady_clock::time_point start,
 {
 	using prof_clock = std::chrono::steady_clock;
 	const auto presented = prof_clock::now();
-	libretro_report_game_fps(presented);
 	libretro_log_thread_time(presented);
 
 	// Rendering ahead: the frame is handed over, so the next one may start

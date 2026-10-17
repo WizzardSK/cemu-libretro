@@ -4,6 +4,11 @@ What changed in the libretro core of this fork, newest first. Changes that come 
 
 ## Unreleased
 
+- Core options rearranged (NNshi): categories System, Graphics, Controller, Title Manager, Core, Logging, then Graphic Packs and Cheats. Video and Shaders are now Graphics, Screen is Controller (with Rumble Strength and GamePad Motion), Content and Convert to WUA are Title Manager, the accounts are under System, and the core's own options (Internal Resolution, Frame Wait, Render Ahead One Frame, Reduce BC1 Texture Memory) are under Core. Every option that applies only once the game is started again says (Restart) in its name; Graphic Packs and Cheats say it in the category's.
+- CPU Mode, Accurate Shader Multiplication and Precompiled Shaders follow the game profile on Auto, as standalone: Auto used to override the profiles, which set the CPU mode for 27 games and turn accurate multiplication off for Super Mario 3D World, Captain Toad and Xenoblade Chronicles X. Accurate Shader Multiplication now has Auto, the default.
+- New option Graphics > Accurate Barriers (Vulkan), standalone's, on by default.
+- The Skylanders, Disney Infinity and LEGO Dimensions add-on options are shown only while one of their games is loaded, below all categories.
+- Show Game FPS removed (NNshi).
 - Options the core hides (Internal Resolution while a resolution graphic pack is on, the screen layout slots above Number of Screen Layouts) are hidden again right after the options are declared anew, which happens at a game's start; they showed in the menu until another option was changed (NNshi).
 - Start Conversion to WUA is also offered for a `.wua` that lacks an installed update or DLC, or has an older version of one: a new `.wua` is written with them. Its help text says which of the three cases it is: the game alone, the game with its update and DLC, or a `.wua` to add them to. An existing file is never replaced; a taken name gets a number after it, where the conversion used to overwrite a `.wua` of the same name (sco8487).
 - Sound: each frame hands RetroArch one frame's worth of audio, as other cores do, and more only to work off a backlog. It handed over whatever the game had made by the end of the frame, a different amount every frame, so RetroArch's audio buffer swung between blocking and running dry without settling (NNshi).
