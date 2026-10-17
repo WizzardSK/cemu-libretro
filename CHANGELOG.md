@@ -4,6 +4,7 @@ What changed in the libretro core of this fork, newest first. Changes that come 
 
 ## Unreleased
 
+- Start Conversion to WUA is also offered for a `.wua` that lacks an installed update or DLC, or has an older version of one: a new `.wua` is written with them. Its help text says which of the three cases it is: the game alone, the game with its update and DLC, or a `.wua` to add them to. An existing file is never replaced; a taken name gets a number after it, where the conversion used to overwrite a `.wua` of the same name (sco8487).
 - Sound: each frame hands RetroArch one frame's worth of audio, as other cores do, and more only to work off a backlog. It handed over whatever the game had made by the end of the frame, a different amount every frame, so RetroArch's audio buffer swung between blocking and running dry without settling (NNshi).
 - Sound: the game's audio frames are made at the console's pace, one every 3 ms, and faster only to catch up. At 30 fps each frame's 33 ms of audio was made in a 19 ms burst followed by a 14 ms gap, so streaming voices were fed unevenly, with pops and crackles standalone Cemu does not have (NNshi, Wind Waker HD).
 

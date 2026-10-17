@@ -134,6 +134,7 @@ if(ENABLE_LIBRETRO)
 		CemuInput
 		CemuUtil
 		CemuResource
+		ZArchive::zarchive
 	)
 
 	# glslang built without its 'opt' feature does not reference SPIRV-Tools at

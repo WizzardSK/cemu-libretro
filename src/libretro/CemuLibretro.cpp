@@ -81,6 +81,8 @@
 #include "interface/WindowSystem.h"
 
 #include "LibretroAudioAPI.h"
+#include "Cafe/Filesystem/ZArchiveVFS.h"
+#include <zarchive/zarchivereader.h>
 
 #include "Cafe/HW/MMU/MMU.h"
 #include "LibretroVkQueue.h"
@@ -541,13 +543,13 @@ struct LibretroWuaDestination
 {
 	std::string path;
 	std::string label;
-	// A .wua for this title is already sitting there. Not a reason to drop the
-	// destination - the label says so and the conversion overwrites it if that
-	// is what the user picks.
-	bool hasExisting{false};
 };
 static std::vector<LibretroWuaDestination> s_wua_destinations;
 static std::string s_wua_unavailable_reason;
+// Why Start Conversion to WUA is offered, as its help text says (sco8487): the
+// title alone, the title with its installed update and DLC, or a .wua that
+// lacks an installed update or DLC (or has an older one).
+static std::string s_wua_convert_help;
 // Set as soon as a Vulkan/OpenGL device or renderer has been created, i.e. as soon as
 // normal C++ static-destructor teardown of this DLL becomes unsafe (see retro_unload_game /
 // retro_deinit). This is intentionally separate from s_emu_initialized/s_game_loaded, which
@@ -2230,9 +2232,8 @@ static bool libretro_directory_is_writable(const std::string& dir)
 // The name the .wua is written under: the content's own, or for a title loaded
 // as title.tmd the game's name from its meta.xml, then what it carries besides
 // the base game (i30817, #23): " (vNN)" for the update, replacing a version
-// already in the name, and " (DLC)". info is null where the title list has not
-// told yet whether there is an update or DLC (the destination labels).
-static std::string libretro_wua_output_name(const fs::path& contentPath, GameInfo2* info)
+// already in the name, and " (DLC)".
+static std::string libretro_wua_output_name(const fs::path& contentPath, GameInfo2& info)
 {
 	std::string name = _pathToUtf8(contentPath.stem());
 	if (name.empty() || boost::iequals(name, "title"))
@@ -2245,16 +2246,16 @@ static std::string libretro_wua_output_name(const fs::path& contentPath, GameInf
 	for (char& c : name)
 		if (c == '\n' || c == '\r' || c == '/' || c == '\\' || c == ':' || c == '*' || c == '?' || c == '"' || c == '<' || c == '>' || c == '|')
 			c = (c == '\n' || c == '\r') ? ' ' : '_';
-	if (info && info->HasUpdate())
+	if (info.HasUpdate())
 	{
-		const std::string version = fmt::format("(v{})", info->GetUpdate().GetAppTitleVersion());
+		const std::string version = fmt::format("(v{})", info.GetUpdate().GetAppTitleVersion());
 		static const std::regex versionInName(R"(\(v\d+\))", std::regex::icase);
 		if (std::regex_search(name, versionInName))
 			name = std::regex_replace(name, versionInName, version, std::regex_constants::format_first_only);
 		else
 			name += " " + version;
 	}
-	if (info && !info->GetAOC().empty() && !boost::icontains(name, "(DLC)"))
+	if (!info.GetAOC().empty() && !boost::icontains(name, "(DLC)"))
 		name += " (DLC)";
 	return name + ".wua";
 }
@@ -2268,6 +2269,7 @@ static void libretro_collect_wua_destinations(bool force = false)
 	s_wua_destinations_collected = true;
 	s_wua_destinations.clear();
 	s_wua_unavailable_reason.clear();
+	s_wua_convert_help.clear();
 
 	if (s_game_path.empty())
 	{
@@ -2277,13 +2279,55 @@ static void libretro_collect_wua_destinations(bool force = false)
 
 	const fs::path contentPath = _utf8ToPath(s_game_path);
 	const std::string extension = _pathToUtf8(contentPath.extension());
-	if (libretro_iequals(extension.c_str(), ".wua"))
-	{
-		s_wua_unavailable_reason = "this title is already a .wua";
-		return;
-	}
+	const bool isWua = libretro_iequals(extension.c_str(), ".wua");
 
-	const std::string outputName = libretro_wua_output_name(contentPath, nullptr);
+	// What the title is made of where it runs: the highest version of the
+	// update and of each DLC among every copy Cemu sees, as both running and
+	// converting pick them (GameInfo2)
+	TitleInfo contentTitle(contentPath);
+	TitleId baseTitleId = 0;
+	if (!contentTitle.IsValid() || !CafeTitleList::FindBaseTitleId(contentTitle.GetAppTitleId(), baseTitleId))
+		baseTitleId = contentTitle.IsValid() ? contentTitle.GetAppTitleId() : 0;
+	GameInfo2 gameInfo = baseTitleId ? CafeTitleList::GetGameInfo(baseTitleId) : GameInfo2();
+
+	if (isWua)
+	{
+		// What this .wua itself holds, by title id and version: its title
+		// folders, read from the archive, as the title list reads them
+		std::map<TitleId, uint16> inWua;
+		if (std::unique_ptr<ZArchiveReader> zar{ZArchive_OpenFromPath(contentPath)})
+		{
+			const ZArchiveNodeHandle root = zar->LookUp("", false, true);
+			for (uint32 i = 0; root != ZARCHIVE_INVALID_NODE && i < zar->GetDirEntryCount(root); i++)
+			{
+				ZArchiveReader::DirEntry entry;
+				TitleId id;
+				uint16 version;
+				if (zar->GetDirEntry(root, i, entry) && entry.isDirectory &&
+					TitleInfo::ParseWuaTitleFolderName(entry.name, id, version))
+					inWua[id] = std::max(inWua[id], version);
+			}
+		}
+		auto lacks = [&inWua](const TitleInfo& title) {
+			if (!title.IsValid())
+				return false;
+			const auto it = inWua.find(title.GetAppTitleId());
+			return it == inWua.end() || it->second < title.GetAppTitleVersion();
+		};
+		bool lacking = gameInfo.HasUpdate() && lacks(gameInfo.GetUpdate());
+		for (const TitleInfo& aoc : gameInfo.GetAOC())
+			lacking = lacking || lacks(aoc);
+		if (!lacking)
+		{
+			s_wua_unavailable_reason = "this .wua already has the installed update and DLC";
+			return;
+		}
+		s_wua_convert_help = "Click to update this game wua to add updates and dlcs.";
+	}
+	else if (gameInfo.HasUpdate() || gameInfo.HasAOC())
+		s_wua_convert_help = "Click to convert this game, update and dlcs to wua.";
+	else
+		s_wua_convert_help = "Click to convert this game to wua.";
 
 	std::vector<LibretroWuaDestination> candidates;
 	auto add = [&candidates](std::string path, std::string label) {
@@ -2328,7 +2372,6 @@ static void libretro_collect_wua_destinations(bool force = false)
 				candidate.path.c_str());
 			continue;
 		}
-		candidate.hasExisting = VFSFileStream::Exists(_utf8ToPath(libretro_path_join(candidate.path, outputName)));
 		s_wua_destinations.push_back(std::move(candidate));
 	}
 
@@ -2408,7 +2451,8 @@ static void libretro_apply_screen_layout()
 }
 
 // Both conversion options are pointless without a destination - the title is
-// already a .wua, or nothing the core may write to is free - so they come off
+// a .wua with everything installed in it already, or nothing the core may
+// write to is free - so they come off
 // the menu entirely, and the help text of the one that remains visible in the
 // .opt file says why.
 static void libretro_update_convert_visibility()
@@ -3811,6 +3855,16 @@ static void libretro_publish_core_options(retro_environment_t cb, bool withRepla
 		break;
 	}
 
+	// Start Conversion to WUA says why it is offered: what the conversion will
+	// put into the .wua for the loaded title
+	for (struct retro_core_option_v2_definition& def : option_defs_us)
+	{
+		if (!def.key || strcmp(def.key, "cemu_convert_to_wua") != 0 || s_wua_convert_help.empty())
+			continue;
+		def.info = keep(s_wua_convert_help + " The game keeps running meanwhile. An existing file is never replaced: when the name is taken, the new .wua gets a number after it.");
+		break;
+	}
+
 	for (struct retro_core_option_v2_definition& def : option_defs_us)
 	{
 		if (!def.key || strcmp(def.key, "cemu_wua_output_dir") != 0)
@@ -3835,9 +3889,7 @@ static void libretro_publish_core_options(retro_environment_t cb, bool withRepla
 			if (index + 1 >= RETRO_NUM_CORE_OPTION_VALUES_MAX)
 				break;
 			def.values[index].value = keep(destination.path);
-			def.values[index].label = keep(destination.hasExisting
-				? fmt::format("{} ({}) - overwrites", destination.label, destination.path)
-				: fmt::format("{} ({})", destination.label, destination.path));
+			def.values[index].label = keep(fmt::format("{} ({})", destination.label, destination.path));
 			++index;
 		}
 		def.values[index] = {nullptr, nullptr};
@@ -4603,8 +4655,17 @@ static void libretro_start_wua_conversion(TitleId baseTitleId, const fs::path& g
 		return;
 	}
 
-	const std::string outputName = libretro_wua_output_name(gamePath, s_convert_game_info.get());
-	const fs::path outputPath = _utf8ToPath(libretro_path_join(outputDir, outputName));
+	// Never over a file that is there (sco8487): the content itself may be a
+	// .wua of that name, the title may still be running from it, and adding an
+	// update changes what the name says only sometimes. A taken name gets a
+	// number after it instead.
+	const std::string outputName = libretro_wua_output_name(gamePath, *s_convert_game_info);
+	fs::path outputPath = _utf8ToPath(libretro_path_join(outputDir, outputName));
+	{
+		const std::string stem = outputName.substr(0, outputName.size() - 4); // without ".wua"
+		for (int n = 2; VFSFileStream::Exists(outputPath) || VFSFileStream::Exists(fs::path(outputPath).concat(".tmp")); n++)
+			outputPath = _utf8ToPath(libretro_path_join(outputDir, fmt::format("{} ({}).wua", stem, n)));
+	}
 
 	// The preconditions are checked again here rather than trusted from the
 	// menu: that was built when the content loaded, and the folder is somebody
@@ -4615,11 +4676,6 @@ static void libretro_start_wua_conversion(TitleId baseTitleId, const fs::path& g
 		s_convert_finished = true;
 		return;
 	}
-	// An existing .wua is not a refusal: the destination said so in its label,
-	// and picking it anyway is picking to replace it. It goes just before the
-	// finished archive is moved into place, not here, so a conversion that
-	// fails leaves the old one where it was.
-
 	// Room for it, where that can be asked. A saf:// destination cannot be
 	// asked - nothing in the VFS reports free space - so there the write is
 	// what finds out, but a local folder can say no before the user spends
@@ -6434,6 +6490,7 @@ RETRO_API void retro_unload_game()
 	s_wua_destinations_collected = false;
 	s_wua_destinations.clear();
 	s_wua_unavailable_reason.clear();
+	s_wua_convert_help.clear();
 	s_frontend_read_fbo = 0;
 	s_frontend_read_rbo_attached = 0;
 	s_frontend_upload_tex = 0;

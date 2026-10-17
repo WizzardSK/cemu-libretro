@@ -176,13 +176,6 @@ namespace TitleConverter
 		// bytes across and dropping the temporary file afterwards.
 		bool MoveIntoPlace(const fs::path& from, const fs::path& to)
 		{
-			// Only now, with a finished archive in hand: replacing what was
-			// there is what the user chose when they picked a destination whose
-			// label said it would be overwritten, but a conversion that failed
-			// on the way should have left it alone.
-			if (VFSFileStream::Exists(to))
-				VFSFileStream::Remove(to);
-
 			if (VFSFileStream::Rename(from, to))
 				return true;
 
@@ -462,6 +455,14 @@ namespace TitleConverter
 		}
 		reader.reset();
 
+		// Never over a file that is there: the caller picked a free name, but
+		// one may have turned up while the archive was written.
+		if (VFSFileStream::Exists(outputPath))
+		{
+			error = "a file of that name appeared in the meantime";
+			VFSFileStream::Remove(outputPathTmp);
+			return false;
+		}
 		if (!MoveIntoPlace(outputPathTmp, outputPath))
 		{
 			error = "could not move the archive into place";
