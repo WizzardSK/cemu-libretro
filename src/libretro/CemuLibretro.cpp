@@ -3924,6 +3924,16 @@ static void libretro_publish_core_options(retro_environment_t cb, bool withRepla
 
 	bool categories_supported = false;
 	libretro_set_core_options(cb, &categories_supported);
+
+	// Declaring the options again shows every one of them, and the frontend
+	// asks libretro_update_options_display only after a value changes: an
+	// option hidden before (Internal Resolution under a resolution pack, the
+	// layout slots above the count) stayed in the menu until the next change
+	// (NNshi). Hidden again here, as soon as they are declared.
+	libretro_update_screen_layout_visibility();
+	libretro_update_convert_visibility();
+	libretro_update_resolution_visibility();
+	libretro_update_pack_visibility();
 }
 
 RETRO_API void retro_set_video_refresh(retro_video_refresh_t cb) { video_cb = cb; }
