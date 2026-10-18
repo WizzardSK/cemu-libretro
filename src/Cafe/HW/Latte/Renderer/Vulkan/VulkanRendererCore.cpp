@@ -1643,17 +1643,18 @@ void VulkanRenderer::draw_execute_continued(uint32 baseVertex, uint32 baseInstan
 		return;
 	}
 
-	VkDescriptorSetInfo *vertexDS = nullptr, *pixelDS = nullptr, *geometryDS = nullptr;
-	if (m_state.activeVertexDS)
+	// The first draw of the run found the pipeline still compiling (async shader compile) and
+	// skipped, leaving no descriptor sets; it has finished since, so they are made here, as the
+	// first draw would have. This used to assert and end the process.
+	if (!m_state.activeVertexDS)
 	{
-		vertexDS = m_state.activeVertexDS;
-		pixelDS = m_state.activePixelDS;
-		geometryDS = m_state.activeGeometryDS;
+		draw_prepareDescriptorSets(pipeline_info, m_state.activeVertexDS, m_state.activePixelDS, m_state.activeGeometryDS);
+		m_state.descriptorSetsChanged = true;
+		stageUniformModifiedMask = 0x7;
 	}
-	else
-	{
-		cemu_assert(false); // should never happen unless draw_prepareDescriptorSets can fail?
-	}
+	VkDescriptorSetInfo* vertexDS = m_state.activeVertexDS;
+	VkDescriptorSetInfo* pixelDS = m_state.activePixelDS;
+	VkDescriptorSetInfo* geometryDS = m_state.activeGeometryDS;
 
 	draw_setRenderPass();
 
