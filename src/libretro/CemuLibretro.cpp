@@ -81,6 +81,7 @@
 #include "interface/WindowSystem.h"
 
 #include "LibretroAudioAPI.h"
+#include "libretro_addon_titles.h"
 #include "Cafe/Filesystem/ZArchiveVFS.h"
 #include <zarchive/zarchivereader.h>
 
@@ -2148,7 +2149,9 @@ static bool libretro_parse_enabled_disabled(const char* v, bool& out)
 static std::optional<CPUMode> libretro_parse_cpu_mode(const char* v)
 {
 	if (!v) return std::nullopt;
-	if (libretro_iequals(v, "auto")) return CPUMode::Auto;
+	// Auto is no override: the game profile's mode, else Cemu's own pick, as
+	// standalone (it overrode the 27 profiles that set a mode; NNshi)
+	if (libretro_iequals(v, "auto")) return std::nullopt;
 	if (libretro_iequals(v, "singlecore_interpreter")) return CPUMode::SinglecoreInterpreter;
 	if (libretro_iequals(v, "singlecore_recompiler")) return CPUMode::SinglecoreRecompiler;
 	if (libretro_iequals(v, "multicore_recompiler")) return CPUMode::MulticoreRecompiler;
@@ -2169,7 +2172,8 @@ static bool libretro_is_multicore_interpreter(const char* v)
 static std::optional<PrecompiledShaderOption> libretro_parse_precompiled_shaders(const char* v)
 {
 	if (!v) return std::nullopt;
-	if (libretro_iequals(v, "auto")) return PrecompiledShaderOption::Auto;
+	// Auto is no override: the game profile's setting, else Auto
+	if (libretro_iequals(v, "auto")) return std::nullopt;
 	if (libretro_iequals(v, "enabled")) return PrecompiledShaderOption::Enable;
 	if (libretro_iequals(v, "disabled")) return PrecompiledShaderOption::Disable;
 	return std::nullopt;
@@ -2470,6 +2474,41 @@ static void libretro_update_convert_visibility()
 	}
 }
 
+// The emulated add-ons (Skylanders' portal, Disney Infinity's base, LEGO
+// Dimensions' toy pad): each option shown only while one of its games is
+// loaded (NNshi), by the base title's ID (libretro_addon_titles.h)
+static void libretro_update_addon_visibility()
+{
+	if (!environ_cb)
+		return;
+	static std::string s_checked_path;
+	static TitleId s_base_title = 0;
+	if (s_checked_path != s_game_path)
+	{
+		s_checked_path = s_game_path;
+		s_base_title = 0;
+		if (!s_game_path.empty())
+		{
+			TitleInfo title(_utf8ToPath(s_game_path));
+			if (title.IsValid() && !CafeTitleList::FindBaseTitleId(title.GetAppTitleId(), s_base_title))
+				s_base_title = title.GetAppTitleId();
+		}
+	}
+	const auto has = [](std::span<const uint64_t> ids) {
+		return s_base_title != 0 && std::find(ids.begin(), ids.end(), s_base_title) != ids.end();
+	};
+	const std::pair<const char*, bool> addons[] = {
+		{"cemu_emulate_skylander_portal", has(kSkylandersTitleIds)},
+		{"cemu_emulate_infinity_base", has(kDisneyInfinityTitleIds)},
+		{"cemu_emulate_dimensions_toypad", has(kLegoDimensionsTitleIds)},
+	};
+	for (const auto& [key, shown] : addons)
+	{
+		struct retro_core_option_display display{key, shown};
+		environ_cb(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &display);
+	}
+}
+
 static void libretro_update_screen_layout_visibility()
 {
 	if (!environ_cb)
@@ -2489,7 +2528,6 @@ static void libretro_update_screen_layout_visibility()
 // when the count changes is not enough on its own: the menu is built from what
 // the frontend knows at the time it builds it.
 static void libretro_handle_install_requests();
-static void libretro_update_resolution_visibility();
 static void libretro_update_pack_visibility();
 
 static bool RETRO_CALLCONV libretro_update_options_display()
@@ -2513,8 +2551,8 @@ static bool RETRO_CALLCONV libretro_update_options_display()
 	if (!s_convert_mode.load())
 		libretro_collect_wua_destinations();
 	libretro_update_convert_visibility();
-	libretro_update_resolution_visibility();
 	libretro_update_pack_visibility();
+	libretro_update_addon_visibility();
 	return true;
 }
 
@@ -2682,10 +2720,13 @@ static void libretro_request_conversion()
 // where no profile load follows.
 static void libretro_apply_profile_options()
 {
+	// Auto leaves the game profile's value, as standalone, which has this per
+	// game only: On by default overrode the profiles that turn it off
+	// (Super Mario 3D World, Captain Toad, Xenoblade Chronicles X; NNshi)
 	if (const char* v = libretro_get_option_value("cemu_accurate_shader_mul"))
 	{
 		bool enabled;
-		if (libretro_parse_enabled_disabled(v, enabled) && g_current_game_profile)
+		if (!libretro_iequals(v, "auto") && libretro_parse_enabled_disabled(v, enabled) && g_current_game_profile)
 			g_current_game_profile->SetAccurateShaderMul(enabled ? AccurateShaderMulOption::True : AccurateShaderMulOption::False);
 	}
 
@@ -3099,7 +3140,7 @@ static void libretro_apply_core_options()
 	cfg.notification.position = ScreenPosition::kDisabled;
 
 	if (const char* v = libretro_get_option_value("cemu_frame_wait"))
-		s_frame_wait_share = strcmp(v, "most") == 0 ? 0.72 : 1.0;
+		s_frame_wait_share = strcmp(v, "enabled") == 0 ? 0.72 : 1.0;
 
 	if (const char* v = libretro_get_option_value("cemu_show_game_fps"))
 	{
@@ -3114,6 +3155,14 @@ static void libretro_apply_core_options()
 		bool b;
 		if (libretro_parse_enabled_disabled(v, b))
 			cfg.async_compile = b;
+	}
+
+	// Accurate Barriers (Vulkan), standalone's option; read at each draw
+	if (const char* v = libretro_get_option_value("cemu_vk_accurate_barriers"))
+	{
+		bool b;
+		if (libretro_parse_enabled_disabled(v, b))
+			cfg.vk_accurate_barriers = b;
 	}
 
 	// GX2DrawDone sync
@@ -3142,24 +3191,6 @@ static void libretro_apply_core_options()
 		auto lang = libretro_parse_console_language(v);
 		if (lang.has_value())
 			cfg.console_language = lang.value();
-	}
-
-	// Upscale filter
-	if (const char* v = libretro_get_option_value("cemu_upscale_filter"))
-	{
-		if (libretro_iequals(v, "linear")) cfg.upscale_filter = kLinearFilter;
-		else if (libretro_iequals(v, "bicubic")) cfg.upscale_filter = kBicubicFilter;
-		else if (libretro_iequals(v, "bicubic_hermite")) cfg.upscale_filter = kBicubicHermiteFilter;
-		else if (libretro_iequals(v, "nearest")) cfg.upscale_filter = kNearestNeighborFilter;
-	}
-
-	// Downscale filter
-	if (const char* v = libretro_get_option_value("cemu_downscale_filter"))
-	{
-		if (libretro_iequals(v, "linear")) cfg.downscale_filter = kLinearFilter;
-		else if (libretro_iequals(v, "bicubic")) cfg.downscale_filter = kBicubicFilter;
-		else if (libretro_iequals(v, "bicubic_hermite")) cfg.downscale_filter = kBicubicHermiteFilter;
-		else if (libretro_iequals(v, "nearest")) cfg.downscale_filter = kNearestNeighborFilter;
 	}
 
 	// Fullscreen Scaling was an option once, but did nothing here: the frame
@@ -3382,7 +3413,6 @@ struct LibretroPackOption
 	std::string category;    // preset group, empty for packs with a single one
 	bool controlsEnable;     // the pack's Enabled/Disabled switch
 	std::vector<std::string> presets;
-	bool setsResolution;     // the pack resizes the game's render targets
 	// The pack as loaded when the options were collected: a copy of its own,
 	// not the one the running title uses, to work out which preset groups
 	// the current choices leave visible.
@@ -3525,18 +3555,6 @@ static void libretro_collect_pack_options(const std::string& gamePath)
 		auto categorized = gp->GetCategorizedPresets(order);
 		const bool enabled = gp->IsDefaultEnabled(); // workarounds enable themselves
 
-		// Texture rules are only parsed when a pack is activated, so a
-		// resolution pack is told apart by what its rules.txt redefines
-		bool setsResolution = false;
-		{
-			if (const auto text = FileStream::LoadIntoMemory(gp->GetRulesPath()))
-			{
-				std::string lower(text->begin(), text->end());
-				std::transform(lower.begin(), lower.end(), lower.begin(), [](unsigned char c) { return (char)std::tolower(c); });
-				setsResolution = lower.find("overwritewidth") != std::string::npos;
-			}
-		}
-
 		// Cheats get a submenu of their own rather than coming first among the
 		// graphic packs: a pack whose path is "<game>/Cheats/..."
 		const std::string& virtualPath = gp->GetVirtualPath();
@@ -3552,7 +3570,7 @@ static void libretro_collect_pack_options(const std::string& gamePath)
 			const std::string keyCategory = controlsEnable ? enableCategory : category;
 			LibretroPackOption option{libretro_pack_option_key(folder, keyCategory, custom), folder, custom, replaced,
 				replacement ? libretro_pack_option_key(folder, keyCategory, false) : std::string(),
-				category, controlsEnable, std::move(presets), setsResolution, gp};
+				category, controlsEnable, std::move(presets), gp};
 
 			retro_core_option_v2_definition def{};
 			def.key = keep(option.key);
@@ -3729,25 +3747,6 @@ static void libretro_update_pack_visibility()
 	}
 }
 
-// The generic Internal Resolution option is a fallback for games without a
-// resolution pack; with one enabled the pack decides, so the option goes.
-static void libretro_update_resolution_visibility()
-{
-	if (!environ_cb)
-		return;
-	bool packSetsResolution = false;
-	for (const LibretroPackOption& option : s_pack_options)
-	{
-		if (!option.controlsEnable || !option.setsResolution || option.replaced)
-			continue;
-		const char* value = libretro_get_option_value(option.key.c_str());
-		if (value && strcmp(value, "disabled") != 0)
-			packSetsResolution = true;
-	}
-	struct retro_core_option_display display{"cemu_internal_resolution", !packSetsResolution};
-	environ_cb(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &display);
-}
-
 // Sets each of the title's packs the way its options say.
 static void libretro_apply_pack_options()
 {
@@ -3873,13 +3872,9 @@ static void libretro_publish_core_options(retro_environment_t cb, bool withRepla
 		// An option the core declares is an option the frontend writes into
 		// its .opt file, so with nothing to convert to the pair is not
 		// declared at all - hiding them would still leave their names behind
-		// in there. They are the last two definitions, so ending the list here
-		// drops both and nothing else.
+		// in there. They are left out where the list is put together below.
 		if (s_wua_destinations.empty())
-		{
-			def.key = nullptr;
 			break;
-		}
 
 		// The output directory is whatever the frontend turned out to allow,
 		// so its values are built here rather than written in the header.
@@ -3897,33 +3892,51 @@ static void libretro_publish_core_options(retro_environment_t cb, bool withRepla
 		break;
 	}
 
-	// The fixed options, then the loaded title's graphic packs, then Logging.
+	// The fixed options (System to Logging), then the loaded title's graphic
+	// packs, then its cheats, then the add-on options, which have no category.
 	// RetroArch lists the categories in the order their first option comes
-	// in, not in the order of the category table, so Logging goes last by
-	// coming last here - after the packs, which are only known at run time.
+	// in, not in the order of the category table, and an option without a
+	// category where it comes, so this order is the menu's (NNshi).
 	static std::vector<struct retro_core_option_v2_definition> all;
 	all.clear();
-	std::vector<struct retro_core_option_v2_definition> logging;
+	std::vector<struct retro_core_option_v2_definition> addons;
 	for (const struct retro_core_option_v2_definition& def : option_defs_us)
 	{
 		if (!def.key)
 			break;
 		if (!accountsKnown && (!strcmp(def.key, "cemu_account") || !strcmp(def.key, "cemu_create_account") || !strcmp(def.key, "cemu_rename_account") || !strcmp(def.key, "cemu_remove_account")))
 			continue;
-		if (def.category_key && !strcmp(def.category_key, "logging"))
-			logging.push_back(def);
+		if (s_wua_destinations.empty() && (!strcmp(def.key, "cemu_wua_output_dir") || !strcmp(def.key, "cemu_convert_to_wua")))
+			continue;
+		if (!def.category_key)
+			addons.push_back(def);
 		else
 			all.push_back(def);
 	}
-	for (size_t i = 0; i < s_pack_option_defs.size(); i++)
-		if (withReplacements || s_pack_options[i].originalKey.empty())
-			all.push_back(s_pack_option_defs[i]);
-	all.insert(all.end(), logging.begin(), logging.end());
+	for (const bool cheats : {false, true})
+	{
+		for (size_t i = 0; i < s_pack_option_defs.size(); i++)
+		{
+			const bool cheat = s_pack_option_defs[i].category_key && !strcmp(s_pack_option_defs[i].category_key, "cheats");
+			if (cheat == cheats && (withReplacements || s_pack_options[i].originalKey.empty()))
+				all.push_back(s_pack_option_defs[i]);
+		}
+	}
+	all.insert(all.end(), addons.begin(), addons.end());
 	all.push_back({});
 	options_us.definitions = all.data();
 
 	bool categories_supported = false;
 	libretro_set_core_options(cb, &categories_supported);
+
+	// Declaring the options again shows every one of them, and the frontend
+	// asks libretro_update_options_display only after a value changes: an
+	// option hidden before (the layout slots above the count) stayed in the menu until the next change
+	// (NNshi). Hidden again here, as soon as they are declared.
+	libretro_update_screen_layout_visibility();
+	libretro_update_convert_visibility();
+	libretro_update_pack_visibility();
+	libretro_update_addon_visibility();
 }
 
 RETRO_API void retro_set_video_refresh(retro_video_refresh_t cb) { video_cb = cb; }
@@ -6215,7 +6228,6 @@ RETRO_API bool retro_load_game(const struct retro_game_info* game)
 		libretro_publish_core_options(environ_cb);
 	}
 	libretro_update_convert_visibility();
-	libretro_update_resolution_visibility();
 	libretro_update_pack_visibility();
 
 	// Vulkan: context_reset is called by RetroArch after RETRO_HW_CONTEXT_VULKAN is set up
@@ -7050,10 +7062,8 @@ extern GLuint libretro_getBackbufferRBO();
 static int64_t s_last_audio_wait_us = 0;
 
 // The game's own frame rate, once a second, as a status line on the
-// frontend's OSD. RetroArch's FPS counter cannot show it: retro_run keeps
-// coming at 60 Hz whatever the title renders at, presenting the last image
-// again when no new one is ready, so a title dropping to 40 still counts 60
-// there and only the frame time shows it (NNshi).
+// frontend's OSD. RetroArch's FPS counter counts runs, not the title's
+// frames: a run that presents the last image again counts there too (NNshi).
 static void libretro_report_game_fps(std::chrono::steady_clock::time_point now)
 {
 	static std::chrono::steady_clock::time_point s_since{};
@@ -7589,8 +7599,8 @@ RETRO_API void retro_run()
 	// Wait for the frame from the GPU thread, at most one frame time at the
 	// rate reported - which follows the title's swap interval, so a 30 fps
 	// title gets 33 ms. A frame not there by then shows up in the next
-	// retro_run, and this one presents the last image again. "Most of a
-	// Frame" (cemu_frame_wait) waits 72 % of it, the 12 ms at 60 Hz this used
+	// retro_run, and this one presents the last image again. Frame Wait
+	// on (cemu_frame_wait) waits 72 % of it, the 12 ms at 60 Hz this used
 	// to be fixed at, which keeps retro_run at the reported rate when the GPU
 	// runs late; NNshi asked for the whole frame time, as standalone gives it.
 	{

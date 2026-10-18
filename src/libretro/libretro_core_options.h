@@ -52,28 +52,27 @@ extern "C" {
  */
 
 struct retro_core_option_v2_category option_cats_us[] = {
-	{ "video", "Video", "Resolution, scaling and frame pacing." },
-	{ "shaders", "Shaders", "Shader translation, caching and compilation." },
-	{ "screen", "Screen", "Which Wii U screen is shown, and how." },
-	// No Input category: what a port drives is a frontend device type, not
-	// a core option, and an empty submenu is worse than no submenu.
-	{ "system", "System", "CPU, language and scheduling." },
-	{ "addons", "Add-ons", "Skylanders, Infinity and Dimensions portals." },
-	{ "accounts", "Accounts", "Manage accounts in the Wii U's account directory (saves/Cemu/mlc01/usr/save/system/act)." },
-	{ "install", "Content", "Manage games, title updates and DLC in saves/Cemu/mlc01, the emulated console's storage." },
-	{ "convert", "Convert to WUA", "Write the loaded title out as a .wua archive." },
-	{ "graphic_packs", "Graphic Packs", "The loaded game's graphic packs and their presets. Changes apply the next time the game is loaded. Your own packs, or changed copies of the built-in ones, go in system/Cemu/customGraphicPacks." },
-	{ "cheats", "Cheats", "The loaded game's cheat packs, from the graphic packs' Cheats folder. Changes apply the next time the game is loaded." },
+	// In the order RetroArch shows them, which is the order of their first
+	// options below (Graphic Packs and Cheats come after Logging, as their
+	// options are added at run time)
+	{ "system", "System", "CPU, language, audio channels and accounts." },
+	{ "graphics", "Graphics (Restart)", "Graphics API and shaders. They apply once the game is started again, unless the option says otherwise." },
+	// What a port drives is a frontend device type, not a core option
+	{ "controller", "Controller", "Rumble, motion and which Wii U screen is shown, and how." },
+	{ "title_manager", "Title Manager", "Install and uninstall games, title updates and DLC in saves/Cemu/mlc01, the emulated console's storage, and convert the loaded title to a .wua." },
+	{ "core", "Core", "Options of this core that standalone Cemu does not have." },
 	{ "logging", "Logging", "Extra log output, for diagnosing problems." },
+	{ "graphic_packs", "Graphic Packs (Restart)", "The loaded game's graphic packs and their presets. Your own packs, or changed copies of the built-in ones, go in system/Cemu/customGraphicPacks." },
+	{ "cheats", "Cheats (Restart)", "The loaded game's cheat packs, from the graphic packs' Cheats folder." },
 	{ NULL, NULL, NULL },
 };
 
 struct retro_core_option_v2_definition option_defs_us[] = {
 	{
 		"cemu_cpu_mode",
-		"CPU Mode",
+		"CPU Mode (Restart)",
 		NULL,
-		"How the Wii U's PowerPC cores are emulated. Auto takes the multicore recompiler on a CPU with four or more physical cores and the single-core one otherwise. The interpreters are far slower and are meant for debugging. (Restart required)",
+		"How the Wii U's PowerPC cores are emulated. Auto: the game profile's mode where it has one, as standalone; else the multicore recompiler on a CPU with four or more physical cores and the single-core one otherwise. The interpreters are far slower and are meant for debugging.",
 		NULL,
 		"system",
 		{
@@ -87,37 +86,25 @@ struct retro_core_option_v2_definition option_defs_us[] = {
 		"auto"
 	},
 	{
-		"cemu_gamepad_motion",
-		"GamePad Motion",
+		"cemu_thread_quantum",
+		"Thread Quantum",
 		NULL,
-		"The GamePad's gyroscope and accelerometer from the sensors RetroArch reads on port 1: a phone's or tablet's own, or a controller's where RetroArch's input driver gives them (DualShock 4, DualSense and others). Games aiming or steering by tilting the GamePad need it. Off: the GamePad lies still, as with standalone's motion turned off.",
 		NULL,
-		"system",
-		{
-			{ "disabled", "Disabled" },
-			{ "enabled", "Enabled" },
-			{ NULL, NULL },
-		},
-		"disabled"
-	},
-	{
-		"cemu_audio_channels",
-		"Audio Channels (Restart)",
-		NULL,
-		"The TV the console reports to games, as standalone's TV channels setting: games that support it mix for that many speakers. Surround 5.1 goes to RetroArch as six channels when it has multi-channel audio output, else mixed down to stereo.",
 		NULL,
 		"system",
 		{
-			{ "mono", "Mono" },
-			{ "stereo", "Stereo" },
-			{ "surround", "Surround 5.1" },
+			{ "20000", NULL },
+			{ "45000", NULL },
+			{ "60000", NULL },
+			{ "80000", NULL },
+			{ "100000", NULL },
 			{ NULL, NULL },
 		},
-		"stereo"
+		"45000"
 	},
 	{
 		"cemu_console_language",
-		"Console Language",
+		"Console Language (Restart)",
 		NULL,
 		NULL,
 		NULL,
@@ -140,40 +127,97 @@ struct retro_core_option_v2_definition option_defs_us[] = {
 		"English"
 	},
 	{
-		"cemu_async_shader_compile",
-		"Async Shader Compile",
+		"cemu_audio_channels",
+		"Audio Channels (Restart)",
 		NULL,
+		"The TV the console reports to games, as standalone's TV channels setting: games that support it mix for that many speakers. Surround 5.1 goes to RetroArch as six channels when it has multi-channel audio output, else mixed down to stereo.",
 		NULL,
-		NULL,
-		"shaders",
+		"system",
 		{
-			{ "enabled", NULL },
-			{ "disabled", NULL },
+			{ "mono", "Mono" },
+			{ "stereo", "Stereo" },
+			{ "surround", "Surround 5.1" },
 			{ NULL, NULL },
 		},
-		"enabled"
+		"stereo"
 	},
 	{
-		"cemu_gx2drawdone_sync",
-		"GX2DrawDone Sync",
+		"cemu_account",
+		"Active Account (Restart)",
 		NULL,
+		"The Wii U account the game runs as, each with its own saves and Mii. The list is the accounts in the account directory.\n\nUntil the game is started again the running game keeps saving to the account it was started with.",
 		NULL,
-		NULL,
-		"shaders",
+		"system",
 		{
+			{ "80000001", NULL },
+			{ NULL, NULL },
+		},
+		"80000001"
+	},
+	{
+		"cemu_create_account",
+		"Create Account",
+		NULL,
+		"Creates a new account, named Player 2, Player 3 and so on, and makes it the active account. Then this returns to OFF. The new account appears in the list of accounts once this menu has been exited and opened again. The console holds up to 12 accounts.",
+		NULL,
+		"system",
+		{
+			{ "disabled", NULL },
 			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_rename_account",
+		"Rename Active Account",
+		NULL,
+		"Opens the name entry for the active account when this menu is exited, and returns to OFF. The name so far is shown as a notification over the game, so the frontend's on-screen notifications have to be on.\n\nWith a pad: Up and Down change the last character, Right adds one, Left removes one, Start accepts, Select cancels.\n\nWith a keyboard: type, Backspace removes, Enter accepts, Escape cancels (the frontend may need Game Focus on to pass keys to the core).\n\nA name has up to 10 characters. The game gets no input until the entry is closed, and a running game shows the new name once it is started again.",
+		NULL,
+		"system",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_remove_account",
+		"Remove Account",
+		NULL,
+		"Removes the selected account from the account directory (saves/Cemu/mlc01/usr/save/system/act), as deleting a user on the console does, when this menu is exited. The option shows OFF again on return to the menu.\n\nThe active account cannot be removed, nor can the account the running game was started with until that game is closed.\n\nWARNING: removing an account also permanently deletes the saves made under it in every game. Back up any saves you want to keep before removing it.",
+		NULL,
+		"system",
+		{
 			{ "disabled", NULL },
 			{ NULL, NULL },
 		},
-		"enabled"
+		"disabled"
 	},
+#if defined(ENABLE_VULKAN) && defined(ENABLE_OPENGL)
+	{
+		"cemu_gpu_api",
+		"Graphics API",
+		NULL,
+		"The graphics API Cemu renders with.",
+		NULL,
+		"graphics",
+		{
+			{ "OpenGL", NULL },
+			{ "Vulkan", NULL },
+			{ NULL, NULL },
+		},
+		"Vulkan"
+	},
+#endif
 	{
 		"cemu_precompiled_shaders",
-		"Precompiled Shaders",
+		"Precompiled Shaders (OpenGL)",
 		NULL,
+		"A cache of compiled shader programs. Auto: the game profile's setting where it has one, as standalone; else off on Nvidia, whose driver keeps its own cache, and on elsewhere.",
 		NULL,
-		NULL,
-		"shaders",
+		"graphics",
 		{
 			{ "auto", "Auto" },
 			{ "enabled", NULL },
@@ -183,12 +227,12 @@ struct retro_core_option_v2_definition option_defs_us[] = {
 		"auto"
 	},
 	{
-		"cemu_accurate_shader_mul",
-		"Accurate Shader Multiplication",
+		"cemu_async_shader_compile",
+		"Async Shader Compile (Vulkan)",
 		NULL,
 		NULL,
 		NULL,
-		"shaders",
+		"graphics",
 		{
 			{ "enabled", NULL },
 			{ "disabled", NULL },
@@ -197,100 +241,47 @@ struct retro_core_option_v2_definition option_defs_us[] = {
 		"enabled"
 	},
 	{
-		"cemu_show_game_fps",
-		"Show Game FPS",
+		"cemu_accurate_shader_mul",
+		"Accurate Shader Multiplication",
 		NULL,
-		"Show the frame rate the game renders at. RetroArch's own FPS counter counts how often the core runs, and that stays at 60 when the game drops frames, because every run carries a frame's worth of audio.",
+		"Emulates the GPU's multiplication exactly, as most games need. Auto: the game profile's setting where it has one, as standalone (Super Mario 3D World, Captain Toad and Xenoblade Chronicles X run with it off); else on.",
 		NULL,
-		"video",
+		"graphics",
 		{
-			{ "disabled", NULL },
+			{ "auto", "Auto" },
 			{ "enabled", NULL },
+			{ "disabled", NULL },
 			{ NULL, NULL },
 		},
-		"disabled"
+		"auto"
 	},
 	{
-		"cemu_upscale_filter",
-		"Upscale Filter",
+		"cemu_gx2drawdone_sync",
+		"GX2DrawDone Sync",
 		NULL,
+		"Makes the game wait until the GPU has finished all its work whenever it calls GX2DrawDone, as standalone's Full sync at GX2DrawDone. Some games need it to show correctly; off can be faster. Can be toggled during gameplay.",
 		NULL,
-		NULL,
-		"video",
+		"graphics",
 		{
-			{ "linear", "Linear" },
-			{ "bicubic", "Bicubic" },
-			{ "bicubic_hermite", "Bicubic Hermite" },
-			{ "nearest", "Nearest" },
+			{ "enabled", NULL },
+			{ "disabled", NULL },
 			{ NULL, NULL },
 		},
-		"linear"
+		"enabled"
 	},
 	{
-		"cemu_frame_wait",
-		"Frame Wait",
+		"cemu_vk_accurate_barriers",
+		"Accurate Barriers (Vulkan)",
 		NULL,
-		"How long each run waits for the game's frame before showing the last one again. 'Whole Frame' gives the GPU the whole frame time, as standalone Cemu does; a frame later than that slows the run, and the audio with it. 'Most of a Frame' waits 72 % of it, so a late frame is a repeated frame instead and the audio keeps its pace, at the cost of the last 28 % of the frame time.",
+		"Keeps the synchronization between draws that some games need to render correctly, as standalone's option of that name. Off can be faster, with glitches in those games. Can be toggled during gameplay.",
 		NULL,
-		"video",
+		"graphics",
 		{
-			{ "whole", "Whole Frame" },
-			{ "most", "Most of a Frame" },
+			{ "enabled", NULL },
+			{ "disabled", NULL },
 			{ NULL, NULL },
 		},
-		"whole"
-	},
-	{
-		"cemu_downscale_filter",
-		"Downscale Filter",
-		NULL,
-		NULL,
-		NULL,
-		"video",
-		{
-			{ "linear", "Linear" },
-			{ "bicubic", "Bicubic" },
-			{ "bicubic_hermite", "Bicubic Hermite" },
-			{ "nearest", "Nearest" },
-			{ NULL, NULL },
-		},
-		"linear"
-	},
-	{
-		"cemu_internal_resolution",
-		"Internal Resolution",
-		NULL,
-		"A generic fallback for games without a resolution graphic pack: resizes every screen-shaped render target, which some games use for things that break when resized. A multiple of the game's own resolution: for a 720p game 0.5x is 640x360, a quarter of the pixels, and 2x is 2560x1440; for a 1080p game 0.5x is 960x540. When a resolution pack is enabled for the loaded game (Graphic Packs), the pack sets the resolution and this option is hidden.",
-		NULL,
-		"video",
-		{
-			{ "0.25x", "0.25x (320x180 at 720p)" },
-			{ "0.5x", "0.5x (640x360 at 720p)" },
-			{ "0.75x", "0.75x (960x540 at 720p)" },
-			{ "native", "Native" },
-			{ "1.5x", "1.5x (1920x1080 at 720p)" },
-			{ "2x", "2x (2560x1440 at 720p)" },
-			{ "3x", "3x (3840x2160 at 720p)" },
-			{ NULL, NULL },
-		},
-		"native"
-	},
-	{
-		"cemu_thread_quantum",
-		"Thread Quantum",
-		NULL,
-		NULL,
-		NULL,
-		"system",
-		{
-			{ "20000", NULL },
-			{ "45000", NULL },
-			{ "60000", NULL },
-			{ "80000", NULL },
-			{ "100000", NULL },
-			{ NULL, NULL },
-		},
-		"45000"
+		"enabled"
 	},
 	{
 		"cemu_rumble_strength",
@@ -298,7 +289,7 @@ struct retro_core_option_v2_definition option_defs_us[] = {
 		NULL,
 		"How strongly the controller vibrates when the game asks for it: the GamePad's motor, and the Wii Remote's or Pro Controller's. Off sends the frontend no rumble at all.",
 		NULL,
-		"system",
+		"controller",
 		{
 			{ "0", "Off" },
 			{ "25", "25%" },
@@ -310,43 +301,15 @@ struct retro_core_option_v2_definition option_defs_us[] = {
 		"100"
 	},
 	{
-		"cemu_emulate_skylander_portal",
-		"Emulate Skylanders Portal of Power",
+		"cemu_gamepad_motion",
+		"GamePad Motion",
 		NULL,
+		"The GamePad's gyroscope and accelerometer from the sensors RetroArch reads on port 1: a phone's or tablet's own, or a controller's where RetroArch's input driver gives them (DualShock 4, DualSense and others). Games aiming or steering by tilting the GamePad need it. Off: the GamePad lies still, as with standalone's motion turned off.",
 		NULL,
-		NULL,
-		"addons",
+		"controller",
 		{
-			{ "disabled", NULL },
-			{ "enabled", NULL },
-			{ NULL, NULL },
-		},
-		"disabled"
-	},
-	{
-		"cemu_emulate_infinity_base",
-		"Emulate Infinity Base",
-		NULL,
-		NULL,
-		NULL,
-		"addons",
-		{
-			{ "disabled", NULL },
-			{ "enabled", NULL },
-			{ NULL, NULL },
-		},
-		"disabled"
-	},
-	{
-		"cemu_emulate_dimensions_toypad",
-		"Emulate Dimensions Toy Pad",
-		NULL,
-		NULL,
-		NULL,
-		"addons",
-		{
-			{ "disabled", NULL },
-			{ "enabled", NULL },
+			{ "disabled", "Disabled" },
+			{ "enabled", "Enabled" },
 			{ NULL, NULL },
 		},
 		"disabled"
@@ -357,7 +320,7 @@ struct retro_core_option_v2_definition option_defs_us[] = {
 		NULL,
 		NULL,
 		NULL,
-		"screen",
+		"controller",
 		{
 			{ "1", NULL },
 			{ "2", NULL },
@@ -374,7 +337,7 @@ struct retro_core_option_v2_definition option_defs_us[] = {
 		NULL,
 		NULL,
 		NULL,
-		"screen",
+		"controller",
 		{
 			{ "Default Screen", NULL },
 			{ "GamePad Screen", NULL },
@@ -391,7 +354,7 @@ struct retro_core_option_v2_definition option_defs_us[] = {
 		NULL,
 		NULL,
 		NULL,
-		"screen",
+		"controller",
 		{
 			{ "Default Screen", NULL },
 			{ "GamePad Screen", NULL },
@@ -408,7 +371,7 @@ struct retro_core_option_v2_definition option_defs_us[] = {
 		NULL,
 		NULL,
 		NULL,
-		"screen",
+		"controller",
 		{
 			{ "Default Screen", NULL },
 			{ "GamePad Screen", NULL },
@@ -425,7 +388,7 @@ struct retro_core_option_v2_definition option_defs_us[] = {
 		NULL,
 		NULL,
 		NULL,
-		"screen",
+		"controller",
 		{
 			{ "Default Screen", NULL },
 			{ "GamePad Screen", NULL },
@@ -442,7 +405,7 @@ struct retro_core_option_v2_definition option_defs_us[] = {
 		NULL,
 		NULL,
 		NULL,
-		"screen",
+		"controller",
 		{
 			{ "Default Screen", NULL },
 			{ "GamePad Screen", NULL },
@@ -459,7 +422,7 @@ struct retro_core_option_v2_definition option_defs_us[] = {
 		NULL,
 		NULL,
 		NULL,
-		"screen",
+		"controller",
 		{
 			{ "Disabled", NULL },
 			{ "L + R + L2 + R2 + L3 + R3", NULL },
@@ -476,13 +439,185 @@ struct retro_core_option_v2_definition option_defs_us[] = {
 		NULL,
 		NULL,
 		NULL,
-		"screen",
+		"controller",
 		{
 			{ "normal", "Normal" },
 			{ "swapped", "Swapped" },
 			{ NULL, NULL },
 		},
 		"normal"
+	},
+	{
+		"cemu_install_game",
+		"Install Games",
+		NULL,
+		"Installs every game from the source directory (system/Cemu/titles), subfolders included, into the emulated Wii U's installed game directory (saves/Cemu/mlc01/usr/title/00050000), as the console installs a game from its disc. A game is a disc image (.wud, .wux, .iso) or a .wua; the title update and DLC a .wua holds are installed with it. An encrypted disc image (.wud, .wux) needs its disc key: in a file beside it with the same name and the extension .key (game.wux, game.key), or in system/Cemu/keys.txt. A game already installed in the same or a newer version is left alone.\n\nWhen this is ON, installing begins immediately, with its progress shown as a notification, and it turns OFF again when all games are installed and this menu is exited or another option is changed. An installed game is started by loading the .rpx in its code folder in the installed game directory; its disc image is not needed any more.",
+		NULL,
+		"title_manager",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_uninstall_game",
+		"Uninstall Game",
+		NULL,
+		"Uninstalls the running game and all associated title updates and DLC from the installed directory (saves/Cemu/mlc01/usr/title) once the game is closed or reset; the option stays ON until then. Saves for the game's title ID (saves/Cemu/mlc01/usr/save/<title id>) are not removed.",
+		NULL,
+		"title_manager",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_install_titles",
+		"Install Content",
+		NULL,
+		"Installs every title update and DLC from the source directory (system/Cemu/titles), subfolders included, into the installed directory (saves/Cemu/mlc01/usr/title). Each one goes in a folder of its own in the source directory; a NUS download (.app files) needs its title.tmd and its title.tik, the decryption key, next to them. A version already installed that is the same or newer is left alone.\n\nWhen this is ON, installing begins immediately, with its progress shown as a notification, and it turns OFF again when all content is installed and this menu is exited or another option is changed. The game uses the installed content once it is restarted.\n\nContent from other locations can be installed with RetroArch's Main Menu > Load Content, by selecting the corresponding title.tmd, with its title.tik beside it.",
+		NULL,
+		"title_manager",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_uninstall_titles",
+		"Uninstall Content",
+		NULL,
+		"Uninstalls the running game's title update and DLC from the installed directory (saves/Cemu/mlc01/usr/title) once the game is closed or reset; the option stays ON until then. Copies in the source directory (system/Cemu/titles) are left alone.",
+		NULL,
+		"title_manager",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_install_remove_source",
+		"Remove Files After Installing",
+		NULL,
+		"Removes what Install Games and Install Content have installed from the source directory (system/Cemu/titles): a title update's or DLC's folder once it is installed, and a disc image (with its .key file) or .wua once everything it holds is installed. Files the running game uses are removed when it is closed or reset.\n\nWARNING: this permanently removes files from the source directory. That directory is for the core to manage; keep game data you want to archive elsewhere.",
+		NULL,
+		"title_manager",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_wua_output_dir",
+		"Output Directory",
+		NULL,
+		"Where the .wua is written. Needs room for it.",
+		NULL,
+		"title_manager",
+		{
+			// Filled in at run time with wherever the frontend lets the core write.
+			{ NULL, NULL },
+		},
+		NULL
+	},
+	{
+		"cemu_convert_to_wua",
+		"Start Conversion to WUA",
+		NULL,
+		"Writes the title to the output directory as a .wua. It keeps running while this happens.",
+		NULL,
+		"title_manager",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_internal_resolution",
+		"Internal Resolution (Restart)",
+		NULL,
+		"A generic fallback for games without a resolution graphic pack: resizes every screen-shaped render target, which some games use for things that break when resized. A multiple of the game's own resolution: for a 720p game 0.5x is 640x360, a quarter of the pixels, and 2x is 2560x1440; for a 1080p game 0.5x is 960x540. When a resolution pack is enabled for the loaded game (Graphic Packs), the pack sets the resolution.",
+		NULL,
+		"core",
+		{
+			{ "0.25x", "0.25x (320x180 at 720p)" },
+			{ "0.5x", "0.5x (640x360 at 720p)" },
+			{ "0.75x", "0.75x (960x540 at 720p)" },
+			{ "native", "Native" },
+			{ "1.5x", "1.5x (1920x1080 at 720p)" },
+			{ "2x", "2x (2560x1440 at 720p)" },
+			{ "3x", "3x (3840x2160 at 720p)" },
+			{ NULL, NULL },
+		},
+		"native"
+	},
+	{
+		"cemu_frame_wait",
+		"Frame Wait",
+		NULL,
+		"How long each run waits for the game's frame before showing the last one again. Off: the whole frame time, as standalone Cemu does; a frame later than that slows the run. On: 72 % of it, so a late frame is a repeated frame instead, at the cost of the last 28 % of the frame time.",
+		NULL,
+		"core",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_render_ahead",
+		"Render Ahead One Frame",
+		NULL,
+		"Lets Cemu start drawing the next frame while RetroArch shows the last one, as standalone Cemu does. Smoother where frames take most of the frame time to draw, with one frame more input latency.",
+		NULL,
+		"core",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_bc1_16bit",
+		"Reduce BC1 Texture Memory (Restart)",
+		NULL,
+		"Halves what BC1 textures cost on a GPU that cannot sample BC, at the price of one bit of green. No effect where BC is supported.",
+		NULL,
+		"core",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
+		"cemu_show_game_fps",
+		"Show Game FPS",
+		NULL,
+		"Shows the frame rate the game renders at on RetroArch's on-screen display, once a second.",
+		NULL,
+		"core",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
 	},
 	{
 		"cemu_log_to_file",
@@ -611,12 +746,12 @@ struct retro_core_option_v2_definition option_defs_us[] = {
 		"disabled"
 	},
 	{
-		"cemu_render_ahead",
-		"Render Ahead One Frame",
+		"cemu_emulate_skylander_portal",
+		"Emulate Skylanders Portal of Power (Restart)",
 		NULL,
-		"Lets Cemu start drawing the next frame while RetroArch shows the last one, as standalone Cemu does. Smoother where frames take most of the frame time to draw, with one frame more input latency. Disabled, a frame not drawn within 12 ms is shown as the previous one again.",
 		NULL,
-		"video",
+		NULL,
+		NULL,
 		{
 			{ "disabled", NULL },
 			{ "enabled", NULL },
@@ -625,55 +760,12 @@ struct retro_core_option_v2_definition option_defs_us[] = {
 		"disabled"
 	},
 	{
-		"cemu_bc1_16bit",
-		"Reduce BC1 Texture Memory",
+		"cemu_emulate_infinity_base",
+		"Emulate Infinity Base (Restart)",
 		NULL,
-		"Halves what BC1 textures cost on a GPU that cannot sample BC, at the price of one bit of green. No effect where BC is supported.",
 		NULL,
-		"video",
-		{
-			{ "disabled", NULL },
-			{ "enabled", NULL },
-			{ NULL, NULL },
-		},
-		"disabled"
-	},
-#if defined(ENABLE_VULKAN) && defined(ENABLE_OPENGL)
-	{
-		"cemu_gpu_api",
-		"Graphics API",
 		NULL,
-		"The graphics API Cemu renders with. (Restart required)",
 		NULL,
-		"video",
-		{
-			{ "OpenGL", NULL },
-			{ "Vulkan", NULL },
-			{ NULL, NULL },
-		},
-		"OpenGL"
-	},
-#endif
-	{
-		"cemu_account",
-		"Active Account",
-		NULL,
-		"The Wii U account the game runs as, each with its own saves and Mii. The list is the accounts in the account directory.\n\nA change applies when the title is closed and started again, or reset. Until then the running title keeps saving to the account it was started with.",
-		NULL,
-		"accounts",
-		{
-			{ "80000001", NULL },
-			{ NULL, NULL },
-		},
-		"80000001"
-	},
-	{
-		"cemu_create_account",
-		"Create Account",
-		NULL,
-		"Creates a new account, named Player 2, Player 3 and so on, and makes it the active account. Then this returns to OFF. The new account appears in the list of accounts once this menu has been exited and opened again. The console holds up to 12 accounts.",
-		NULL,
-		"accounts",
 		{
 			{ "disabled", NULL },
 			{ "enabled", NULL },
@@ -682,122 +774,12 @@ struct retro_core_option_v2_definition option_defs_us[] = {
 		"disabled"
 	},
 	{
-		"cemu_rename_account",
-		"Rename Active Account",
+		"cemu_emulate_dimensions_toypad",
+		"Emulate Dimensions Toy Pad (Restart)",
 		NULL,
-		"Opens the name entry for the active account when this menu is exited, and returns to OFF. The name so far is shown as a notification over the game, so the frontend's on-screen notifications have to be on.\n\nWith a pad: Up and Down change the last character, Right adds one, Left removes one, Start accepts, Select cancels.\n\nWith a keyboard: type, Backspace removes, Enter accepts, Escape cancels (the frontend may need Game Focus on to pass keys to the core).\n\nA name has up to 10 characters. The game gets no input until the entry is closed, and a running game shows the new name once it is started again.",
 		NULL,
-		"accounts",
-		{
-			{ "disabled", NULL },
-			{ "enabled", NULL },
-			{ NULL, NULL },
-		},
-		"disabled"
-	},
-	{
-		"cemu_remove_account",
-		"Remove Account",
 		NULL,
-		"Removes the selected account from the account directory (saves/Cemu/mlc01/usr/save/system/act), as deleting a user on the console does, when this menu is exited. The option shows OFF again on return to the menu.\n\nThe active account cannot be removed, nor can the account the running game was started with until that game is closed.\n\nWARNING: removing an account also permanently deletes the saves made under it in every game. Back up any saves you want to keep before removing it.",
 		NULL,
-		"accounts",
-		{
-			{ "disabled", NULL },
-			{ NULL, NULL },
-		},
-		"disabled"
-	},
-	{
-		"cemu_install_game",
-		"Install Games",
-		NULL,
-		"Installs every game from the source directory (system/Cemu/titles), subfolders included, into the emulated Wii U's installed game directory (saves/Cemu/mlc01/usr/title/00050000), as the console installs a game from its disc. A game is a disc image (.wud, .wux, .iso) or a .wua; the title update and DLC a .wua holds are installed with it. An encrypted disc image (.wud, .wux) needs its disc key: in a file beside it with the same name and the extension .key (game.wux, game.key), or in system/Cemu/keys.txt. A game already installed in the same or a newer version is left alone.\n\nWhen this is ON, installing begins immediately, with its progress shown as a notification, and it turns OFF again when all games are installed and this menu is exited or another option is changed. An installed game is started by loading the .rpx in its code folder in the installed game directory; its disc image is not needed any more.",
-		NULL,
-		"install",
-		{
-			{ "disabled", NULL },
-			{ "enabled", NULL },
-			{ NULL, NULL },
-		},
-		"disabled"
-	},
-	{
-		"cemu_uninstall_game",
-		"Uninstall Game",
-		NULL,
-		"Uninstalls the running game and all associated title updates and DLC from the installed directory (saves/Cemu/mlc01/usr/title) once the game is closed or reset; the option stays ON until then. Saves for the game's title ID (saves/Cemu/mlc01/usr/save/<title id>) are not removed.",
-		NULL,
-		"install",
-		{
-			{ "disabled", NULL },
-			{ "enabled", NULL },
-			{ NULL, NULL },
-		},
-		"disabled"
-	},
-	{
-		"cemu_install_titles",
-		"Install Content",
-		NULL,
-		"Installs every title update and DLC from the source directory (system/Cemu/titles), subfolders included, into the installed directory (saves/Cemu/mlc01/usr/title). Each one goes in a folder of its own in the source directory; a NUS download (.app files) needs its title.tmd and its title.tik, the decryption key, next to them. A version already installed that is the same or newer is left alone.\n\nWhen this is ON, installing begins immediately, with its progress shown as a notification, and it turns OFF again when all content is installed and this menu is exited or another option is changed. The game uses the installed content once it is restarted.\n\nContent from other locations can be installed with RetroArch's Main Menu > Load Content, by selecting the corresponding title.tmd, with its title.tik beside it.",
-		NULL,
-		"install",
-		{
-			{ "disabled", NULL },
-			{ "enabled", NULL },
-			{ NULL, NULL },
-		},
-		"disabled"
-	},
-	{
-		"cemu_uninstall_titles",
-		"Uninstall Content",
-		NULL,
-		"Uninstalls the running game's title update and DLC from the installed directory (saves/Cemu/mlc01/usr/title) once the game is closed or reset; the option stays ON until then. Copies in the source directory (system/Cemu/titles) are left alone.",
-		NULL,
-		"install",
-		{
-			{ "disabled", NULL },
-			{ "enabled", NULL },
-			{ NULL, NULL },
-		},
-		"disabled"
-	},
-	{
-		"cemu_install_remove_source",
-		"Remove Files After Installing",
-		NULL,
-		"Removes what Install Games and Install Content have installed from the source directory (system/Cemu/titles): a title update's or DLC's folder once it is installed, and a disc image (with its .key file) or .wua once everything it holds is installed. Files the running game uses are removed when it is closed or reset.\n\nWARNING: this permanently removes files from the source directory. That directory is for the core to manage; keep game data you want to archive elsewhere.",
-		NULL,
-		"install",
-		{
-			{ "disabled", NULL },
-			{ "enabled", NULL },
-			{ NULL, NULL },
-		},
-		"disabled"
-	},
-	{
-		"cemu_wua_output_dir",
-		"Output Directory",
-		NULL,
-		"Where the .wua is written. Needs room for it.",
-		NULL,
-		"convert",
-		{
-			// Filled in at run time with wherever the frontend lets the core write.
-			{ NULL, NULL },
-		},
-		NULL
-	},
-	{
-		"cemu_convert_to_wua",
-		"Start Conversion to WUA",
-		NULL,
-		"Writes the title to the output directory as a .wua. It keeps running while this happens.",
-		NULL,
-		"convert",
 		{
 			{ "disabled", NULL },
 			{ "enabled", NULL },

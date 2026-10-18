@@ -4,6 +4,17 @@ What changed in the libretro core of this fork, newest first. Changes that come 
 
 ## Unreleased
 
+- Core options rearranged (NNshi): categories System, Graphics, Controller, Title Manager, Core, Logging, then Graphic Packs and Cheats. Video and Shaders are now Graphics, Screen is Controller (with Rumble Strength and GamePad Motion), Content and Convert to WUA are Title Manager, the accounts are under System, and the core's own options (Internal Resolution, Frame Wait, Render Ahead One Frame, Reduce BC1 Texture Memory) are under Core. Every option that applies only once the game is started again says (Restart) in its name; Graphic Packs and Cheats say it in the category's.
+- CPU Mode, Accurate Shader Multiplication and Precompiled Shaders follow the game profile on Auto, as standalone: Auto used to override the profiles, which set the CPU mode for 27 games and turn accurate multiplication off for Super Mario 3D World, Captain Toad and Xenoblade Chronicles X. Accurate Shader Multiplication now has Auto, the default.
+- New option Graphics > Accurate Barriers (Vulkan), standalone's, on by default.
+- The Skylanders, Disney Infinity and LEGO Dimensions add-on options are shown only while one of their games is loaded, below all categories.
+- Graphics is Graphics (Restart): its options apply once the game is started again, except GX2DrawDone Sync and Accurate Barriers, whose help says they can be toggled during gameplay. An option for one graphics API says which in its name: Precompiled Shaders (OpenGL), Async Shader Compile (Vulkan), Accurate Barriers (Vulkan) (NNshi).
+- Vulkan is the default graphics API, as in standalone Cemu (NNshi).
+- Upscale Filter and Downscale Filter removed: they acted only on the GamePad picture in the composite screen layouts, never on the TV picture RetroArch scales (NNshi).
+- Frame Wait is an Off/On switch: Off waits the whole frame time (Whole Frame before, still the default), On waits 72 % of it (Most of a Frame) (NNshi).
+- Internal Resolution is no longer hidden while a resolution graphic pack is on (NNshi).
+- Show Game FPS is under Core, at the bottom: it shows the game's own frame rate where RetroArch's counter does not (NNshi).
+- Options the core hides (the screen layout slots above Number of Screen Layouts) are hidden again right after the options are declared anew, which happens at a game's start; they showed in the menu until another option was changed (NNshi).
 - Start Conversion to WUA is also offered for a `.wua` that lacks an installed update or DLC, or has an older version of one: a new `.wua` is written with them. Its help text says which of the three cases it is: the game alone, the game with its update and DLC, or a `.wua` to add them to. An existing file is never replaced; a taken name gets a number after it, where the conversion used to overwrite a `.wua` of the same name (sco8487).
 - Sound: each frame hands RetroArch one frame's worth of audio, as other cores do, and more only to work off a backlog. It handed over whatever the game had made by the end of the frame, a different amount every frame, so RetroArch's audio buffer swung between blocking and running dry without settling (NNshi).
 - Sound: the game's audio frames are made at the console's pace, one every 3 ms, and faster only to catch up. At 30 fps each frame's 33 ms of audio was made in a 19 ms burst followed by a 14 ms gap, so streaming voices were fed unevenly, with pops and crackles standalone Cemu does not have (NNshi, Wind Waker HD).
