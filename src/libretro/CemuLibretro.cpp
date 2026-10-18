@@ -747,8 +747,6 @@ std::atomic_bool s_frame_ready{false};
 // s_prof_frames_ready, which the profiling log resets on its own schedule.
 static std::atomic<uint32_t> s_game_frames{0};
 static bool s_show_game_fps = false;
-// The share of a frame retro_run waits for the game's frame (cemu_frame_wait)
-static double s_frame_wait_share = 1.0;
 
 // The rate retro_run is reported to come at: each retro_run lets the game
 // render one frame and carries one frame's worth of audio.
@@ -3138,9 +3136,6 @@ static void libretro_apply_core_options()
 	// OSD, which is a different piece of work: forward
 	// LatteOverlay_pushNotification to SET_MESSAGE_EXT.
 	cfg.notification.position = ScreenPosition::kDisabled;
-
-	if (const char* v = libretro_get_option_value("cemu_frame_wait"))
-		s_frame_wait_share = strcmp(v, "enabled") == 0 ? 0.72 : 1.0;
 
 	if (const char* v = libretro_get_option_value("cemu_show_game_fps"))
 	{
@@ -7599,13 +7594,12 @@ RETRO_API void retro_run()
 	// Wait for the frame from the GPU thread, at most one frame time at the
 	// rate reported - which follows the title's swap interval, so a 30 fps
 	// title gets 33 ms. A frame not there by then shows up in the next
-	// retro_run, and this one presents the last image again. Frame Wait
-	// on (cemu_frame_wait) waits 72 % of it, the 12 ms at 60 Hz this used
-	// to be fixed at, which keeps retro_run at the reported rate when the GPU
-	// runs late; NNshi asked for the whole frame time, as standalone gives it.
+	// retro_run, and this one presents the last image again. The whole frame
+	// time, as standalone gives it (NNshi); waiting 72 % of it (the old fixed
+	// 12 ms at 60 Hz) measured no faster on a PC or a phone.
 	{
 		std::unique_lock lock(s_frame_mutex);
-		profTimedOut = !s_frame_cv.wait_for(lock, std::chrono::microseconds((int64_t)(1000000.0 * s_frame_wait_share / s_output_fps)), [] {
+		profTimedOut = !s_frame_cv.wait_for(lock, std::chrono::microseconds((int64_t)(1000000.0 / s_output_fps)), [] {
 			return s_frame_ready.load();
 		});
 		s_frame_ready = false;

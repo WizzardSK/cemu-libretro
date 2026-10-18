@@ -4,14 +4,14 @@ What changed in the libretro core of this fork, newest first. Changes that come 
 
 ## Unreleased
 
-- Core options rearranged (NNshi): categories System, Graphics, Controller, Title Manager, Core, Logging, then Graphic Packs and Cheats. Video and Shaders are now Graphics, Screen is Controller (with Rumble Strength and GamePad Motion), Content and Convert to WUA are Title Manager, the accounts are under System, and the core's own options (Internal Resolution, Frame Wait, Render Ahead One Frame, Reduce BC1 Texture Memory) are under Core. Every option that applies only once the game is started again says (Restart) in its name; Graphic Packs and Cheats say it in the category's.
+- Core options rearranged (NNshi): categories System, Graphics, Controller, Title Manager, Core, Logging, then Graphic Packs and Cheats. Video and Shaders are now Graphics, Screen is Controller (with Rumble Strength and GamePad Motion), Content and Convert to WUA are Title Manager, the accounts are under System, and the core's own options (Internal Resolution, Render Ahead One Frame, Reduce BC1 Texture Memory) are under Core. Every option that applies only once the game is started again says (Restart) in its name; Graphic Packs and Cheats say it in the category's.
 - CPU Mode, Accurate Shader Multiplication and Precompiled Shaders follow the game profile on Auto, as standalone: Auto used to override the profiles, which set the CPU mode for 27 games and turn accurate multiplication off for Super Mario 3D World, Captain Toad and Xenoblade Chronicles X. Accurate Shader Multiplication now has Auto, the default.
 - New option Graphics > Accurate Barriers (Vulkan), standalone's, on by default.
 - The Skylanders, Disney Infinity and LEGO Dimensions add-on options are shown only while one of their games is loaded, below all categories.
 - Graphics is Graphics (Restart): its options apply once the game is started again, except GX2DrawDone Sync and Accurate Barriers, whose help says they can be toggled during gameplay. An option for one graphics API says which in its name: Precompiled Shaders (OpenGL), Async Shader Compile (Vulkan), Accurate Barriers (Vulkan) (NNshi).
 - Vulkan is the default graphics API, as in standalone Cemu (NNshi).
 - Upscale Filter and Downscale Filter removed: they acted only on the GamePad picture in the composite screen layouts, never on the TV picture RetroArch scales (NNshi).
-- Frame Wait is an Off/On switch: Off waits the whole frame time (Whole Frame before, still the default), On waits 72 % of it (Most of a Frame) (NNshi).
+- Frame Wait removed: each run waits the whole frame time for the game's frame, as the default did. Waiting 72 % of it made no measurable difference on a PC or a phone (NNshi, sco8487).
 - Internal Resolution is no longer hidden while a resolution graphic pack is on (NNshi).
 - Show Game FPS is under Core, at the bottom: it shows the game's own frame rate where RetroArch's counter does not (NNshi).
 - Options the core hides (the screen layout slots above Number of Screen Layouts) are hidden again right after the options are declared anew, which happens at a game's start; they showed in the menu until another option was changed (NNshi).

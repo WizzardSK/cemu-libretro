@@ -564,20 +564,6 @@ struct retro_core_option_v2_definition option_defs_us[] = {
 		"native"
 	},
 	{
-		"cemu_frame_wait",
-		"Frame Wait",
-		NULL,
-		"How long each run waits for the game's frame before showing the last one again. Off: the whole frame time, as standalone Cemu does; a frame later than that slows the run. On: 72 % of it, so a late frame is a repeated frame instead, at the cost of the last 28 % of the frame time.",
-		NULL,
-		"core",
-		{
-			{ "disabled", NULL },
-			{ "enabled", NULL },
-			{ NULL, NULL },
-		},
-		"disabled"
-	},
-	{
 		"cemu_render_ahead",
 		"Render Ahead One Frame",
 		NULL,
