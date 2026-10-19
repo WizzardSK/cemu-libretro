@@ -25,6 +25,7 @@ uint64_t LibretroAudioAPI::s_stat_sent = 0;
 uint64_t LibretroAudioAPI::s_stat_flushes = 0;
 uint64_t LibretroAudioAPI::s_stat_empty_flushes = 0;
 LibretroAudioRingBuffer LibretroAudioAPI::s_ring_buffer;
+std::atomic_bool LibretroAudioAPI::s_thread_mode{false};
 LibretroAudioAPI::MultiAudioCallback LibretroAudioAPI::s_multi_callback = nullptr;
 unsigned LibretroAudioAPI::s_out_channels = 2;
 std::vector<int16_t> LibretroAudioAPI::s_flush_buffer;
@@ -181,6 +182,53 @@ void LibretroAudioAPI::FlushAudio(size_t frames)
 	}
 
 	AccountFlush(samplesRead, framesSent * channels);
+}
+
+size_t LibretroAudioAPI::PullAudio(size_t maxFrames)
+{
+	if (!s_audio_callback)
+		return 0;
+	const size_t channels = s_out_channels;
+
+	// AX makes the audio by the host's clock and RetroArch plays it by the
+	// sound card's, which drift apart, so the ring would slowly fill and the
+	// sound lag further behind the picture. Past 4096 frames (85 ms) the
+	// oldest is dropped.
+	constexpr size_t kMaxBufferedFrames = 4096;
+	const size_t available = s_ring_buffer.GetReadAvailableSamples();
+	if (available > kMaxBufferedFrames * channels)
+	{
+		size_t excess = available - kMaxBufferedFrames * channels;
+		s_ring_buffer.Discard(excess - excess % channels);
+	}
+
+	// Its own buffer: s_flush_buffer belongs to retro_run's FlushAudio
+	static std::array<int16_t, 1024 * LibretroAudioRingBuffer::kChannels> s_pull_buffer;
+	const size_t wanted = std::min<size_t>(maxFrames, 1024) * channels;
+	const size_t samplesRead = s_ring_buffer.Read(s_pull_buffer.data(), wanted);
+	const size_t framesRead = samplesRead / channels;
+
+	size_t framesSent = 0;
+	const int16_t* cursor = s_pull_buffer.data();
+	while (framesSent < framesRead)
+	{
+		constexpr unsigned k51 = 0x001 | 0x002 | 0x004 | 0x008 | 0x200 | 0x400;
+		const size_t accepted = channels == 6
+			? s_multi_callback(cursor, framesRead - framesSent, 6, k51)
+			: s_audio_callback(cursor, framesRead - framesSent);
+		if (accepted == 0)
+			break;
+		framesSent += accepted;
+		cursor += accepted * channels;
+	}
+	if (samplesRead)
+		AccountFlush(samplesRead, framesSent * channels);
+	return framesSent;
+}
+
+void LibretroAudioAPI::DropBuffered()
+{
+	s_ring_buffer.Discard(s_ring_buffer.GetReadAvailableSamples());
 }
 
 void LibretroAudioAPI::SetStatsLogging(bool enabled)

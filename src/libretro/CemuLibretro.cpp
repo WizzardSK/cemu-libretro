@@ -800,6 +800,28 @@ static std::atomic_bool s_reset_requested{false};
 // and set again when a title is loaded.
 static std::atomic_bool s_audio_submission_allowed{true};
 
+// Audio Thread (cemu_audio_thread): RetroArch calls this on its audio thread
+// whenever it wants audio, and set_state when that thread starts or stops
+// (a paused frontend). What was buffered across a pause is dropped, so it
+// does not play late.
+static std::atomic_bool s_audio_thread_active{false};
+static void RETRO_CALLCONV libretro_audio_thread_pull()
+{
+	if (!s_audio_thread_active.load(std::memory_order_relaxed) ||
+		LibretroAudioAPI::PullAudio(512) == 0)
+	{
+		// Nothing to give: RetroArch calls again at once, so wait a little
+		// rather than spin
+		std::this_thread::sleep_for(std::chrono::milliseconds(1));
+	}
+}
+static void RETRO_CALLCONV libretro_audio_thread_state(bool enabled)
+{
+	if (enabled && !s_audio_thread_active.load(std::memory_order_relaxed))
+		LibretroAudioAPI::DropBuffered();
+	s_audio_thread_active.store(enabled, std::memory_order_relaxed);
+}
+
 // Framebuffer for software readback
 static constexpr uint32_t SCREEN_WIDTH = 1280;
 static constexpr uint32_t SCREEN_HEIGHT = 720;
@@ -6051,6 +6073,26 @@ RETRO_API bool retro_load_game(const struct retro_game_info* game)
 		libretro_log(RETRO_LOG_INFO, "audio: %u channels to the frontend\n", s_multi.batch_int16 ? 6u : 2u);
 	}
 
+	// Audio Thread: asked for at load, as the frontend takes the callback
+	// only then; a frontend without it keeps the audio with the frames
+	{
+		const char* v = libretro_get_option_value("cemu_audio_thread");
+		bool threaded = false;
+		libretro_parse_enabled_disabled(v ? v : "disabled", threaded);
+		s_audio_thread_active = false;
+		if (threaded)
+		{
+			struct retro_audio_callback cb{libretro_audio_thread_pull, libretro_audio_thread_state};
+			if (!environ_cb(RETRO_ENVIRONMENT_SET_AUDIO_CALLBACK, &cb))
+			{
+				libretro_log(RETRO_LOG_WARN, "audio: the frontend has no audio thread for cores, the audio stays with the frames\n");
+				threaded = false;
+			}
+		}
+		LibretroAudioAPI::SetThreadMode(threaded);
+		libretro_log(RETRO_LOG_INFO, "audio: %s\n", threaded ? "on RetroArch's audio thread, AX by the clock" : "handed over with each frame");
+	}
+
 	// Set up pixel format
 	enum retro_pixel_format fmt = RETRO_PIXEL_FORMAT_XRGB8888;
 	if (!environ_cb(RETRO_ENVIRONMENT_SET_PIXEL_FORMAT, &fmt))
@@ -7288,7 +7330,9 @@ static void libretro_finish_run(std::chrono::steady_clock::time_point start,
 	if (s_render_ahead)
 		libretro_frame_gate_grant();
 
-	LibretroAudioAPI::FlushAudio((size_t)(48000.0 / s_output_fps));
+	// With Audio Thread on, RetroArch pulls the audio itself
+	if (!LibretroAudioAPI::IsThreadMode())
+		LibretroAudioAPI::FlushAudio((size_t)(48000.0 / s_output_fps));
 	s_last_audio_wait_us = std::chrono::duration_cast<std::chrono::microseconds>(prof_clock::now() - presented).count();
 
 	if (LibretroAudioAPI::IsStatsLogging())
@@ -7588,7 +7632,9 @@ RETRO_API void retro_run()
 			s_audio_bucket -= int64_t(samples) * 1000;
 		}
 		s_last_audio_grant = now;
-		snd_core::AXOut_LibretroGrantSamples(samples);
+		// With Audio Thread on, AX runs by the clock and needs no grant
+		if (!LibretroAudioAPI::IsThreadMode())
+			snd_core::AXOut_LibretroGrantSamples(samples);
 	}
 
 	// Wait for the frame from the GPU thread, at most one frame time at the

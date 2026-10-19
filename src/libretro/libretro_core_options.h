@@ -578,6 +578,20 @@ struct retro_core_option_v2_definition option_defs_us[] = {
 		"disabled"
 	},
 	{
+		"cemu_audio_thread",
+		"Audio Thread (Restart)",
+		NULL,
+		"On: RetroArch takes the audio on its own thread, and the Wii U's audio runs by the clock as in standalone Cemu, so it does not break up while a frame is late (loading, shader compilation). RetroArch's Audio Sync then no longer paces the frames; Vertical Sync does, and RetroArch's audio statistics stay empty. Off: the audio is handed over with each frame.",
+		NULL,
+		"core",
+		{
+			{ "disabled", NULL },
+			{ "enabled", NULL },
+			{ NULL, NULL },
+		},
+		"disabled"
+	},
+	{
 		"cemu_bc1_16bit",
 		"Reduce BC1 Texture Memory (Restart)",
 		NULL,

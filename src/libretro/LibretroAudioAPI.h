@@ -80,6 +80,17 @@ public:
 		m_read_pos.store(0, std::memory_order_relaxed);
 	}
 
+	// Drops the oldest samples, from the reading side, so it is safe while
+	// the writer goes on (Reset() is not)
+	void Discard(size_t sampleCount)
+	{
+		const size_t w = m_write_pos.load(std::memory_order_acquire);
+		const size_t r = m_read_pos.load(std::memory_order_relaxed);
+		const size_t available = (w >= r) ? (w - r) : (kBufferSamples - r + w);
+		const size_t toSkip = (sampleCount <= available) ? sampleCount : available;
+		m_read_pos.store((r + toSkip) % kBufferSamples, std::memory_order_release);
+	}
+
 private:
 	std::array<int16_t, kBufferSamples> m_buffer{};
 	std::atomic<size_t> m_write_pos{0};
@@ -123,6 +134,18 @@ public:
 	// frontend, more only to work off a backlog. Call once per retro_run.
 	static void FlushAudio(size_t frames);
 
+	// Audio Thread (cemu_audio_thread): RetroArch pulls the audio on its own
+	// thread instead of retro_run handing it over, and AX runs by the wall
+	// clock as in standalone Cemu, so a late retro_run (loading, shader
+	// compilation) does not stop the audio.
+	static void SetThreadMode(bool enabled) { s_thread_mode.store(enabled, std::memory_order_relaxed); }
+	static bool IsThreadMode() { return s_thread_mode.load(std::memory_order_relaxed); }
+	// Called from RetroArch's audio thread: hands over up to maxFrames of
+	// what is buffered and returns how many frames went out
+	static size_t PullAudio(size_t maxFrames);
+	// Drops what is buffered (after a pause, so it is not played late)
+	static void DropBuffered();
+
 	static void Reset();
 
 	// Once a second, report what AX produced, what the ring had to drop and
@@ -144,6 +167,7 @@ private:
 	// One block converted to the output's channels
 	std::vector<int16_t> m_convert;
 	static LibretroAudioRingBuffer s_ring_buffer;
+	static std::atomic_bool s_thread_mode;
 	static std::vector<int16_t> s_flush_buffer;
 
 	static bool s_log_stats;

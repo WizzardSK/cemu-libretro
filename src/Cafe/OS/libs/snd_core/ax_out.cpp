@@ -559,49 +559,56 @@ namespace snd_core
 	void AXOut_update()
 	{
 		g_ax_update_calls.fetch_add(1, std::memory_order_relaxed);
-		if (s_libretro_ax_budget.load(std::memory_order_relaxed) < AX_SAMPLES_PER_3MS_48KHZ)
-			return;
-
-		// The budget says how much audio to make, not how fast. A slow device's
-		// retro_run grants 100 ms or more at once, and spent as soon as it
-		// arrived that is thirty-odd 3 ms frames back to back - with no time
-		// between them for the title's own threads, which is when a streaming
-		// voice gets its next buffer. Starved of that, the voice loops what it
-		// already has: sco8487's Deus Ex repeating a line ("stand stand
-		// stand") while the NPCs wait for it to end. The wall-clock path below
-		// keeps frames at least 1.7 ms apart for the same reason, so this one
-		// does too - fast enough to catch up on a backlog at nearly twice real
-		// time, slow enough to leave the title room between frames.
-		constexpr static auto kLibretroMinSpacing = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::microseconds(1700));
-		// But only when there is a backlog to catch up on. A grant of no more
-		// than one retro_run's worth is spent a frame per 3 ms, the console's
-		// own rate: at 1.7 ms a 30 fps title's 33 ms grant was made in 19 ms
-		// and then nothing for 14, so its streaming voices were asked for
-		// data in bursts with gaps between, as standalone never asks - pops
-		// and crackles in Wind Waker HD that standalone does not have (NNshi).
-		constexpr static auto kLibretroFrameSpacing = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::microseconds(3000));
-		// steady_clock, on every platform: it is monotonic everywhere the core
-		// is built - QueryPerformanceCounter on Windows with MSVC and MinGW
-		// alike, CLOCK_MONOTONIC with libstdc++, the monotonic clocks with
-		// libc++. now_cached() is not: with libstdc++ (Linux, webOS, BSD) it is
-		// CLOCK_REALTIME, and a system clock stepped back would have held AX
-		// until it caught up with where it had been.
-		const auto libretroNow = std::chrono::steady_clock::now();
-		static auto s_libretro_last_frame = libretroNow - kLibretroMinSpacing;
-		const bool backlog = s_libretro_ax_budget.load(std::memory_order_relaxed) > s_libretro_ax_last_grant.load(std::memory_order_relaxed);
-		if ((libretroNow - s_libretro_last_frame) < (backlog ? kLibretroMinSpacing : kLibretroFrameSpacing))
-			return;
-
-		g_ax_update_passed.fetch_add(1, std::memory_order_relaxed);
-		if (snd_core::isInitialized() && numQueuedFramesSndGeneric == snd_core::getNumProcessedFrames())
+		// With Audio Thread on, RetroArch pulls the audio on its own thread
+		// and AX runs by the wall clock below, as standalone does: the grants
+		// from retro_run, which a late retro_run held back, do not apply.
+		if (!LibretroAudioAPI::IsThreadMode())
 		{
-			AXOut_updateDevicePlayState(true);
-			snd_core::AXIst_QueueFrame();
-			numQueuedFramesSndGeneric++;
-			s_libretro_ax_budget.fetch_sub(AX_SAMPLES_PER_3MS_48KHZ, std::memory_order_relaxed);
-			s_libretro_last_frame = libretroNow;
+			if (s_libretro_ax_budget.load(std::memory_order_relaxed) < AX_SAMPLES_PER_3MS_48KHZ)
+				return;
+
+			// The budget says how much audio to make, not how fast. A slow device's
+			// retro_run grants 100 ms or more at once, and spent as soon as it
+			// arrived that is thirty-odd 3 ms frames back to back - with no time
+			// between them for the title's own threads, which is when a streaming
+			// voice gets its next buffer. Starved of that, the voice loops what it
+			// already has: sco8487's Deus Ex repeating a line ("stand stand
+			// stand") while the NPCs wait for it to end. The wall-clock path below
+			// keeps frames at least 1.7 ms apart for the same reason, so this one
+			// does too - fast enough to catch up on a backlog at nearly twice real
+			// time, slow enough to leave the title room between frames.
+			constexpr static auto kLibretroMinSpacing = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::microseconds(1700));
+			// But only when there is a backlog to catch up on. A grant of no more
+			// than one retro_run's worth is spent a frame per 3 ms, the console's
+			// own rate: at 1.7 ms a 30 fps title's 33 ms grant was made in 19 ms
+			// and then nothing for 14, so its streaming voices were asked for
+			// data in bursts with gaps between, as standalone never asks - pops
+			// and crackles in Wind Waker HD that standalone does not have (NNshi).
+			constexpr static auto kLibretroFrameSpacing = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::microseconds(3000));
+			// steady_clock, on every platform: it is monotonic everywhere the core
+			// is built - QueryPerformanceCounter on Windows with MSVC and MinGW
+			// alike, CLOCK_MONOTONIC with libstdc++, the monotonic clocks with
+			// libc++. now_cached() is not: with libstdc++ (Linux, webOS, BSD) it is
+			// CLOCK_REALTIME, and a system clock stepped back would have held AX
+			// until it caught up with where it had been.
+			const auto libretroNow = std::chrono::steady_clock::now();
+			static auto s_libretro_last_frame = libretroNow - kLibretroMinSpacing;
+			const bool backlog = s_libretro_ax_budget.load(std::memory_order_relaxed) > s_libretro_ax_last_grant.load(std::memory_order_relaxed);
+			if ((libretroNow - s_libretro_last_frame) < (backlog ? kLibretroMinSpacing : kLibretroFrameSpacing))
+				return;
+
+			g_ax_update_passed.fetch_add(1, std::memory_order_relaxed);
+			if (snd_core::isInitialized() && numQueuedFramesSndGeneric == snd_core::getNumProcessedFrames())
+			{
+				AXOut_updateDevicePlayState(true);
+				snd_core::AXIst_QueueFrame();
+				numQueuedFramesSndGeneric++;
+				s_libretro_ax_budget.fetch_sub(AX_SAMPLES_PER_3MS_48KHZ, std::memory_order_relaxed);
+				s_libretro_last_frame = libretroNow;
+			}
+			return;
 		}
-		return;
+
 		constexpr static auto kTimeout = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::milliseconds(((IAudioAPI::kBlockCount * 3) / 4) * (AX_FRAMES_PER_GROUP * 3)));
 		constexpr static auto kWaitDuration = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::milliseconds(3));
 		constexpr static auto kWaitDurationFast = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::microseconds(2900));
