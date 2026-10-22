@@ -640,14 +640,15 @@ void OpenGLRenderer::DrawBackbufferQuad(LatteTextureView* texView, RendererOutpu
 	catchOpenGLError();
 	GLCanvas_MakeCurrent(padView);
 
-	// The backbuffer takes the size the TV picture is rendered at, before it
-	// is bound below
-	if (!padView)
+	// The backbuffer takes the size the TV picture is rendered at (the
+	// GamePad's with the GamePad Screen layout), before it is bound below
+	extern bool LibretroDRC_OutputFollowsScreen(bool padView);
+	if (LibretroDRC_OutputFollowsScreen(padView))
 	{
-		extern void libretro_gl_tv_picture_size(int width, int height);
-		sint32 tvWidth, tvHeight;
-		texView->baseTexture->GetEffectiveSize(tvWidth, tvHeight, 0);
-		libretro_gl_tv_picture_size(tvWidth, tvHeight);
+		extern void libretro_gl_picture_size(int width, int height, bool padView);
+		sint32 width, height;
+		texView->baseTexture->GetEffectiveSize(width, height, 0);
+		libretro_gl_picture_size(width, height, padView);
 	}
 
 	renderstate_resetColorControl();

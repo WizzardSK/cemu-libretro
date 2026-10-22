@@ -683,7 +683,7 @@ public:
 	// With a resolution graphic pack active, makes the image the size the pack
 	// renders the TV picture at, so the frontend gets it at that size rather
 	// than scaled into the core option's.
-	void UpdatePresentationImageSize(uint32 tvWidth, uint32 tvHeight);
+	void UpdatePresentationImageSize(uint32 width, uint32 height, bool padView);
 	void DestroyPresentationImage();
 	// Replaced images the frontend may still be drawing from; freed a few
 	// frames after they were replaced.

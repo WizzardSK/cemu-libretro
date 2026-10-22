@@ -31,3 +31,11 @@ void LibretroDRC_ComputeViewport(bool padView,
 	int dstWidth, int dstHeight,
 	int& outX, int& outY, int& outWidth, int& outHeight);
 
+// The screen whose size the frame handed to the frontend takes: the GamePad's
+// with the GamePad Screen layout, the TV's with every other one.
+bool LibretroDRC_OutputFollowsScreen(bool padView);
+
+// The size the core's output started at (the Internal Resolution option),
+// which the TV picture is handed over at unless a resolution pack sets it.
+void LibretroDRC_DefaultOutputSize(uint32& width, uint32& height);
+

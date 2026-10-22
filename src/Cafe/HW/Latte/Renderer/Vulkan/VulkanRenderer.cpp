@@ -1110,20 +1110,27 @@ void VulkanRenderer::UpdatePresentationImageColorSpace()
 	CreatePresentationImage(width, height);
 }
 
-void VulkanRenderer::UpdatePresentationImageSize(uint32 tvWidth, uint32 tvHeight)
+// The presentation image takes the size of the screen the output follows
+// (LibretroDRC_OutputFollowsScreen): the GamePad picture's with the GamePad
+// Screen layout (NNshi: 854x480, not 1280x720), the TV picture's when a
+// resolution pack sets it, and otherwise the size the core started at - which
+// is also where it goes back to from the GamePad Screen layout.
+void VulkanRenderer::UpdatePresentationImageSize(uint32 width, uint32 height, bool padView)
 {
 	// The frontend was told it may get up to four times 1280x720
 	constexpr uint32 maxWidth = 1280 * 4, maxHeight = 720 * 4;
-	if (m_presentImage == VK_NULL_HANDLE || !LatteTexture_graphicPackSetsResolution())
+	if (m_presentImage == VK_NULL_HANDLE)
 		return;
-	if (tvWidth < 16 || tvHeight < 16 || tvWidth > maxWidth || tvHeight > maxHeight)
+	if (!padView && !LatteTexture_graphicPackSetsResolution())
+		LibretroDRC_DefaultOutputSize(width, height);
+	if (width < 16 || height < 16 || width > maxWidth || height > maxHeight)
 		return;
-	if (tvWidth == m_presentWidth && tvHeight == m_presentHeight)
+	if (width == m_presentWidth && height == m_presentHeight)
 		return;
 
-	cemuLog_log(LogType::Force, "[Vulkan-LR] the resolution pack renders the TV picture at {}x{}; presenting at that size", tvWidth, tvHeight);
+	cemuLog_log(LogType::Force, "[Vulkan-LR] the {} picture is {}x{}; presenting at that size", padView ? "GamePad" : "TV", width, height);
 	RetirePresentationImage();
-	CreatePresentationImage(tvWidth, tvHeight);
+	CreatePresentationImage(width, height);
 }
 
 // The frontend is handed the image by retro_run and draws from it after that
@@ -3790,11 +3797,11 @@ void VulkanRenderer::DrawBackbufferQuad(LatteTextureView* texView, RendererOutpu
 			// the same frame preserve prior content (SHADER_READ_ONLY → TRANSFER_DST).
 			UpdatePresentationImageColorSpace();
 			FreeRetiredPresentationImages(false);
-			if (!padView)
+			if (LibretroDRC_OutputFollowsScreen(padView))
 			{
-				sint32 tvWidth, tvHeight;
-				baseTexture->GetEffectiveSize(tvWidth, tvHeight, 0);
-				UpdatePresentationImageSize((uint32)tvWidth, (uint32)tvHeight);
+				sint32 width, height;
+				baseTexture->GetEffectiveSize(width, height, 0);
+				UpdatePresentationImageSize((uint32)width, (uint32)height, padView);
 			}
 
 			m_presentImageHasContent = true;

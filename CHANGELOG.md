@@ -4,6 +4,7 @@ What changed in the libretro core of this fork, newest first. Changes that come 
 
 ## Unreleased
 
+- With the GamePad Screen layout, the picture is handed to RetroArch at the GamePad's own size (854x480, times the Internal Resolution, or a GamePad resolution pack's size) instead of stretched to the TV's 1280x720, so RetroArch's scaling and shaders get the GamePad's pixels. The other layouts stay at the TV's size (NNshi).
 - Controller > Rumble Strength goes in steps of 10% (Off, 10% to 100%) instead of 25% (NNshi).
 - Vulkan: a title's pipeline cache (`shaderCache/transferable/<title>_vkpipeline.bin`) is closed when the title is closed, instead of when the next one starts, so it is no longer left locked on Windows (NNshi).
 - New option Core > Audio Thread (Restart), off by default: RetroArch takes the audio on its own thread and the Wii U's audio runs by the clock, as in standalone Cemu, so it no longer breaks up while a frame is late, during loading or shader compilation (NNshi). With it on, Vertical Sync rather than Audio Sync paces the frames, and RetroArch's audio statistics stay empty.

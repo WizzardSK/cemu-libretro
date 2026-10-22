@@ -850,7 +850,8 @@ static SelectedGraphicsAPI s_graphics_api = SelectedGraphicsAPI::OpenGL;
 // taken when the renderer's presentation image is made, and a change of the
 // option takes effect for the output at the next content load, as the GPU
 // thread draws into that image the whole time. The OpenGL path follows the TV
-// picture instead (libretro_gl_tv_picture_size).
+// picture instead (libretro_gl_picture_size). With the GamePad Screen layout
+// both follow the GamePad picture.
 static uint32_t s_out_width = SCREEN_WIDTH, s_out_height = SCREEN_HEIGHT;
 static bool s_out_size_taken = false;
 static uint32_t s_wanted_out_width = SCREEN_WIDTH, s_wanted_out_height = SCREEN_HEIGHT;
@@ -862,7 +863,8 @@ static uint32_t libretro_out_height();
 
 // Once the presentation image exists, its size is the output size: the
 // renderer resizes it to what a resolution graphic pack renders the TV picture
-// at (VulkanRenderer::UpdatePresentationImageSize).
+// at, or to the GamePad picture with the GamePad Screen layout
+// (VulkanRenderer::UpdatePresentationImageSize).
 static uint32_t libretro_out_width()
 {
 	if (s_graphics_api != SelectedGraphicsAPI::Vulkan) return s_gl_shown_width;
@@ -927,13 +929,15 @@ static void libretro_report_out_size()
 // the size the TV picture is rendered at; while a resolution pack or the
 // internal resolution option resizes it, the window - and with it the
 // backbuffer and the frame handed over - takes that size, as Vulkan's
-// presentation image does (VulkanRenderer::UpdatePresentationImageSize).
-void libretro_gl_tv_picture_size(int width, int height)
+// presentation image does (VulkanRenderer::UpdatePresentationImageSize). With
+// the GamePad Screen layout it is called with the GamePad picture's size
+// instead, which the frame then always takes (NNshi: 854x480, not 1280x720).
+void libretro_gl_picture_size(int width, int height, bool padView)
 {
 	extern float g_libretroRenderScale;
 	extern bool LatteTexture_graphicPackSetsResolution();
 	int w = SCREEN_WIDTH, h = SCREEN_HEIGHT;
-	if ((LatteTexture_graphicPackSetsResolution() || g_libretroRenderScale != 1.0f) &&
+	if ((padView || LatteTexture_graphicPackSetsResolution() || g_libretroRenderScale != 1.0f) &&
 		width >= 16 && height >= 16 && width <= 8192 && height <= 8192)
 	{
 		w = width;
@@ -942,7 +946,7 @@ void libretro_gl_tv_picture_size(int width, int height)
 	auto& windowInfo = WindowSystem::GetWindowInfo();
 	if (windowInfo.phys_width == w && windowInfo.phys_height == h)
 		return;
-	cemuLog_log(LogType::Force, "[libretro] the TV picture is rendered at {}x{}; handing it over at that size", w, h);
+	cemuLog_log(LogType::Force, "[libretro] the {} picture is rendered at {}x{}; handing it over at that size", padView ? "GamePad" : "TV", w, h);
 	windowInfo.width = w;
 	windowInfo.height = h;
 	windowInfo.phys_width = w;
@@ -1393,6 +1397,17 @@ bool LibretroDRC_ShouldRenderScreen(bool padView)
 	return !padView;
 }
 
+bool LibretroDRC_OutputFollowsScreen(bool padView)
+{
+	return padView == (g_libretroScreenLayout == LibretroScreenLayout::GamePad);
+}
+
+void LibretroDRC_DefaultOutputSize(uint32& width, uint32& height)
+{
+	width = s_out_width;
+	height = s_out_height;
+}
+
 void LibretroDRC_ComputeViewport(bool padView,
 	int dstWidth, int dstHeight,
 	int& outX, int& outY, int& outWidth, int& outHeight)
@@ -1585,7 +1600,7 @@ public:
 		if (swapTV || swapDRC)
 		{
 			// Read pixels from our backbuffer FBO on the GPU thread (where GL context is valid)
-			// At the size the backbuffer was drawn at (libretro_gl_tv_picture_size)
+			// At the size the backbuffer was drawn at (libretro_gl_picture_size)
 			extern GLuint libretro_getBackbufferFBO(int, int);
 			int width, height;
 			WindowSystem::GetWindowPhysSize(width, height);
