@@ -42,6 +42,9 @@ public:
 	void EndLoading();
 	void LoadPipelineFromCache(std::span<uint8> fileData);
     void Close(); // called on title exit
+	// libretro: closes the cache file Close() keeps open, once nothing is left
+	// that could still reach it; returns false and keeps it when something is
+	bool ReleaseCacheFile();
 
 	bool HasPipelineCached(uint64 baseHash, uint64 pipelineStateHash);
 	void AddCurrentStateToCache(uint64 baseHash, uint64 pipelineStateHash);

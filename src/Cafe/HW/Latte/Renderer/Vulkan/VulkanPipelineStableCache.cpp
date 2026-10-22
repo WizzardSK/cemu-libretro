@@ -61,7 +61,7 @@ uint32 VulkanPipelineStableCache::BeginLoading(uint64 cacheTitleId)
 
 	// open cache file or create it
 	// Close() leaves the previous title's cache behind rather than deleting it,
-	// so this is where it goes. The reason is ownership: Close() runs while the
+	// so unless retro_unload_game released it, this is where it goes. The reason is ownership: Close() runs while the
 	// GPU thread may still be part-way through UpdateLoading, and freeing it
 	// there is a use-after-free on that thread - closing content a second after
 	// opening it did exactly that. Here there is no loading in flight, because
@@ -186,8 +186,28 @@ void VulkanPipelineStableCache::Close()
 	m_pipelineIsCachedLock.lock();
 	m_pipelineIsCached.clear();
 	m_pipelineIsCachedLock.unlock();
-	// The cache file is deliberately not freed here; BeginLoading does it for
+	// The cache file is deliberately not freed here: retro_unload_game does it
+	// once the GPU thread is gone (ReleaseCacheFile), or else BeginLoading for
 	// the next title. See the note there.
+}
+
+
+bool VulkanPipelineStableCache::ReleaseCacheFile()
+{
+	// Runs on: the frontend's thread, in retro_unload_game, after the GPU
+	// thread was joined. Close() leaves the file open for BeginLoading to free
+	// (see the note there), which kept <titleid>_vkpipeline.bin open - and on
+	// Windows locked - until the next title or the end of the process (NNshi).
+	// With Close() done (no compiler or writer thread left) and no GPU thread
+	// that could be inside UpdateLoading, nothing can reach it any more.
+	if (!s_cache)
+		return true;
+	if (m_pipelineCacheStoreThread || !m_compilerThreads.empty())
+		return false;
+	s_cache->Flush();
+	delete s_cache;
+	s_cache = nullptr;
+	return true;
 }
 
 

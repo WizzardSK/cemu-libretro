@@ -4,6 +4,7 @@ What changed in the libretro core of this fork, newest first. Changes that come 
 
 ## Unreleased
 
+- Vulkan: a title's pipeline cache (`shaderCache/transferable/<title>_vkpipeline.bin`) is closed when the title is closed, instead of when the next one starts, so it is no longer left locked on Windows (NNshi).
 - New option Core > Audio Thread (Restart), off by default: RetroArch takes the audio on its own thread and the Wii U's audio runs by the clock, as in standalone Cemu, so it no longer breaks up while a frame is late, during loading or shader compilation (NNshi). With it on, Vertical Sync rather than Audio Sync paces the frames, and RetroArch's audio statistics stay empty.
 - Vulkan: no crash when a game's shader finished compiling in the middle of a run of draws. The first draw had skipped while it compiled (Async Shader Compile), and the next one found no descriptor sets and stopped the core on an assert; it now makes them (NNshi, The Wonderful 101).
 - Core options rearranged (NNshi): categories System, Graphics, Controller, Title Manager, Core, Logging, then Graphic Packs and Cheats. Video and Shaders are now Graphics, Screen is Controller (with Rumble Strength and GamePad Motion), Content and Convert to WUA are Title Manager, the accounts are under System, and the core's own options (Internal Resolution, Render Ahead One Frame, Reduce BC1 Texture Memory) are under Core. Every option that applies only once the game is started again says (Restart) in its name; Graphic Packs and Cheats say it in the category's.

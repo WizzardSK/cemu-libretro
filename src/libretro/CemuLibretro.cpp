@@ -6497,6 +6497,15 @@ RETRO_API void retro_unload_game()
 		cemuLog_log(LogType::Force, "[LatteThread] waiting for the GPU thread from this run to finish leaving");
 	Latte_JoinGpuThreadIfLeft();
 
+#ifdef ENABLE_VULKAN
+	// The title's pipeline cache file is closed now rather than at the next
+	// title, so it is not left open (locked, on Windows) after the close. Only
+	// with the GPU thread gone: it reads the file while the title starts.
+	if (s_graphics_api == SelectedGraphicsAPI::Vulkan && !Latte_IsGpuThreadAlive()
+		&& !VulkanPipelineStableCache::GetInstance().ReleaseCacheFile())
+		cemuLog_log(LogType::Force, "[libretro] pipeline cache still in use at unload; kept open until the next title");
+#endif
+
 #ifdef ENABLE_OPENGL
 	s_gl_callbacks.reset();
 #endif
