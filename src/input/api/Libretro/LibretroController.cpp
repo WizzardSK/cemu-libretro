@@ -6,6 +6,7 @@
 // the VPAD hooks in vpad.cpp.
 extern bool libretro_get_joypad_button(uint32_t port, uint32_t retro_id);
 extern void libretro_get_joypad_analog(uint32_t port, float* lx, float* ly, float* rx, float* ry);
+extern float libretro_stick_deadzone(uint32_t port);
 extern void libretro_set_port_rumble(uint32_t port, bool on);
 
 namespace
@@ -44,6 +45,16 @@ void LibretroController::stop_rumble()
 
 ControllerState LibretroController::raw_state()
 {
+	// The port's Stick Dead Zone option, as the sticks' axis setting, which
+	// ControllerBase applies to what this returns. Checked at every read, so a
+	// change in the menu applies at once.
+	const float deadzone = libretro_stick_deadzone(m_port);
+	if (get_settings().axis.deadzone != deadzone)
+	{
+		set_axis_settings(AxisSetting(deadzone));
+		set_rotation_settings(AxisSetting(deadzone));
+	}
+
 	ControllerState result{};
 
 	boost::container::small_vector<uint32, 16> pressedButtons;

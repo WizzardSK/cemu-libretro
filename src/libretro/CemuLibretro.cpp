@@ -2,6 +2,7 @@
 // Routes video/audio/input through libretro frontend callbacks
 
 #include <algorithm>
+#include <cmath>
 #include <thread>
 #include <chrono>
 #include <deque>
@@ -1818,6 +1819,10 @@ bool libretro_get_gamepad_motion(MotionSample& out)
 // to the core, which plays it the way VPADController::update does - one bit per
 // 1/60 s, at most five patterns queued.
 static retro_set_rumble_state_t s_rumble_cb = nullptr;
+
+// Stick dead zone, per the Stick Dead Zone options: [0] player 1 (the GamePad,
+// or the controller on port 1), [1] ports 2 to 4. A fraction of full travel.
+static std::atomic<float> s_stick_deadzone[2] = {0.25f, 0.25f};
 static std::atomic<uint16_t> s_rumble_strength{0xFFFF};
 static std::atomic<bool> s_port_rumble[kLibretroMaxPorts]{};
 static uint16_t s_rumble_sent[kLibretroMaxPorts]{};
@@ -3045,6 +3050,11 @@ static void libretro_apply_core_options()
 		libretro_publish_core_options(environ_cb);
 		libretro_set_option_value("cemu_remove_account", "disabled");
 	}
+
+	if (const char* v = libretro_get_option_value("cemu_stick_deadzone_p1"))
+		s_stick_deadzone[0].store(std::clamp(atoi(v), 0, 50) / 100.0f, std::memory_order_relaxed);
+	if (const char* v = libretro_get_option_value("cemu_stick_deadzone_p2"))
+		s_stick_deadzone[1].store(std::clamp(atoi(v), 0, 50) / 100.0f, std::memory_order_relaxed);
 
 	if (const char* v = libretro_get_option_value("cemu_rumble_strength"))
 	{
@@ -7118,12 +7128,39 @@ void libretro_get_joypad_analog(uint32_t port, float* lx, float* ly, float* rx, 
 	*ry = -(pad.right_y / 32767.0f);
 }
 
+float libretro_stick_deadzone(uint32_t port)
+{
+	return s_stick_deadzone[port == 0 ? 0 : 1].load(std::memory_order_relaxed);
+}
+
+// The GamePad's sticks reach vpad.cpp straight from here, not through
+// ControllerBase like a Pro Controller's or a Wii Remote's (LibretroController
+// hands those the same option as their axis setting), so the dead zone is
+// applied here, the way ControllerBase does it: scaled radial, the length
+// below it is nothing and the rest is stretched to fill 0..1. Without one the
+// slightest touch moved the character (demifiend9, Smash 4).
+static void libretro_apply_stick_deadzone(float& x, float& y, float deadzone)
+{
+	const float len = std::sqrt(x * x + y * y);
+	if (len <= deadzone)
+	{
+		x = y = 0.0f;
+		return;
+	}
+	const float scaled = std::min(1.0f, (len - deadzone) / (1.0f - deadzone));
+	x = x / len * scaled;
+	y = y / len * scaled;
+}
+
 void libretro_get_analog_state(float* lx, float* ly, float* rx, float* ry)
 {
 	*lx = s_input_state.left_x / 32767.0f;
 	*ly = -(s_input_state.left_y / 32767.0f);
 	*rx = s_input_state.right_x / 32767.0f;
 	*ry = -(s_input_state.right_y / 32767.0f);
+	const float deadzone = libretro_stick_deadzone(0);
+	libretro_apply_stick_deadzone(*lx, *ly, deadzone);
+	libretro_apply_stick_deadzone(*rx, *ry, deadzone);
 }
 
 bool libretro_get_touch_state(uint16_t* x, uint16_t* y)
