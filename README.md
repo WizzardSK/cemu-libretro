@@ -73,7 +73,7 @@ Port 1 is the Wii U GamePad by default; ports 2-4 start with nothing plugged in.
 - **Screens:** **Controller → Number of Screen Layouts** and **Layout 1-5** choose which layouts to cycle through (Default Screen, GamePad Screen, Side by Side, Top Bottom, Picture in Picture). **Next Screen Layout** picks the button combination that switches between them.
 - **Portals:** Skylanders, Disney Infinity and LEGO Dimensions portals are emulated: the option for each (Emulate Skylanders Portal of Power, Emulate Infinity Base, Emulate Dimensions Toy Pad) is at the bottom of the core options, shown only while one of its games is loaded.
 
-## Status (2026-10-03)
+## Status (2026-10-23)
 
 Games boot and run on Vulkan and on OpenGL, with sound, controllers, both screens and graphic packs. The core is synced with upstream Cemu (see below), and its options are translated through libretro's Crowdin.
 
@@ -84,7 +84,7 @@ Known issues:
 - **The core stays loaded between games.** RetroArch unloads it, but the library itself stays in memory (on Linux on purpose, see `-z nodelete` below). Any state Cemu keeps for the whole process can leak from one game into the next. The known cases (DLC list, graphic pack module list, controller callbacks) are fixed.
 - **OpenGL on Wayland renders black.** Use Vulkan there; OpenGL works on X11 (GLX).
 
-Planned: a separate submenu for the Cheats graphic packs, output above 60 fps for games with high frame rate packs, and installing updates and DLC from the core options (branch `install-titles`).
+Planned: output above 60 fps for games with high frame rate packs. The Cheats graphic packs have their own category, and games, updates and DLC are installed from the core options (Title Manager).
 
 ## Architecture
 
