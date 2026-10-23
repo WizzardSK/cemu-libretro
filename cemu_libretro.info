@@ -6,7 +6,7 @@ corename = "Cemu"
 categories = "Emulator"
 license = "MPL-2.0"
 permissions = ""
-display_version = "2.6-356-gaa20e2f8"
+display_version = "2.6-372-g29f2f1fa"
 
 # Hardware Information
 manufacturer = "Nintendo"

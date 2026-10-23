@@ -4152,7 +4152,7 @@ RETRO_API unsigned retro_api_version()
 RETRO_API void retro_get_system_info(struct retro_system_info* info)
 {
 	info->library_name = "Cemu";
-	info->library_version = "2.6-356-gaa20e2f8";
+	info->library_version = "2.6-372-g29f2f1fa";
 	info->need_fullpath = true;
 	// tmd: NUS/WUP dumps are a directory of .app files next to a title.tmd,
 	// and pointing the core at that title.tmd loads the title.
