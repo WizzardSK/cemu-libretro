@@ -697,6 +697,11 @@ public:
 	std::vector<RetiredPresentImage> m_retiredPresentImages;
 	void RetirePresentationImage();
 	void FreeRetiredPresentationImages(bool all);
+	// The core's mouse cursor, copied into the presentation image row by row
+	// from a small buffer of white and black pixels, after the frame's blits.
+	VkBuffer m_cursorBuffer = VK_NULL_HANDLE;
+	VkDeviceMemory m_cursorBufferMemory = VK_NULL_HANDLE;
+	void DrawLibretroCursor();
 private:
 
 	// placeholder objects to simulate NULL buffers and textures

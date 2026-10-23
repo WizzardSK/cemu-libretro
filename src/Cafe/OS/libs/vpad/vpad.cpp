@@ -287,17 +287,26 @@ namespace vpad
 			if (libretro_get_button_state(15)) status->hold |= LR_VPAD_STICK_L;
 			if (libretro_get_button_state(16)) status->hold |= LR_VPAD_STICK_R;
 
-			// Touchscreen
+			// Touchscreen. As VPADController::update_touch: x/y keep the last
+			// touched position after release, which NGDK games rely on.
+			static uint16_t s_last_tp_x = 0, s_last_tp_y = 0;
 			uint16_t tp_x, tp_y;
 			if (libretro_get_touch_state(&tp_x, &tp_y))
 			{
-				status->tpData.x = tp_x;
-				status->tpData.y = tp_y;
-				status->tpData.touch = 1; // touched
-				status->tpData.validity = 0; // valid
-				status->tpProcessed1 = status->tpData;
-				status->tpProcessed2 = status->tpData;
+				s_last_tp_x = tp_x;
+				s_last_tp_y = tp_y;
+				status->tpData.touch = kTpTouchOn;
+				status->tpData.validity = kTpValid;
 			}
+			else
+			{
+				status->tpData.touch = kTpTouchOff;
+				status->tpData.validity = kTpInvalid;
+			}
+			status->tpData.x = s_last_tp_x;
+			status->tpData.y = s_last_tp_y;
+			status->tpProcessed1 = status->tpData;
+			status->tpProcessed2 = status->tpData;
 
 			float lx, ly, rx, ry;
 			libretro_get_analog_state(&lx, &ly, &rx, &ry);

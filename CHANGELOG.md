@@ -4,6 +4,7 @@ What changed in the libretro core of this fork, newest first. Changes that come 
 
 ## Unreleased
 
+- GamePad touch screen: a tap or click lands where it is made. The core handed games the position in screen pixels where they expect the touch panel's raw values, as standalone Cemu sends them, so every touch landed in the lower-left corner (NNshi). With a mouse, an arrow cursor now shows over the GamePad picture while it moves, and hides after 3 s without movement or a tap elsewhere; Vulkan and OpenGL (sco8487).
 - With the GamePad Screen layout, the picture is handed to RetroArch at the GamePad's own size (854x480, times the Internal Resolution, or a GamePad resolution pack's size) instead of stretched to the TV's 1280x720, so RetroArch's scaling and shaders get the GamePad's pixels. The other layouts stay at the TV's size (NNshi).
 - Controller > Rumble Strength goes in steps of 10% (Off, 10% to 100%) instead of 25% (NNshi).
 - Vulkan: a title's pipeline cache (`shaderCache/transferable/<title>_vkpipeline.bin`) is closed when the title is closed, instead of when the next one starts, so it is no longer left locked on Windows (NNshi).

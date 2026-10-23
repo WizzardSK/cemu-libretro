@@ -39,3 +39,11 @@ bool LibretroDRC_OutputFollowsScreen(bool padView);
 // which the TV picture is handed over at unless a resolution pack sets it.
 void LibretroDRC_DefaultOutputSize(uint32& width, uint32& height);
 
+// The core's mouse cursor over the GamePad picture (RetroArch draws none).
+// Where to draw it in an output image of width x height, top-left origin,
+// and how many output pixels one cursor pixel takes; false while hidden or
+// off the GamePad picture. Defined in CemuLibretro.cpp.
+bool libretro_cursor_position(int width, int height, int& x, int& y, int& scale);
+// The arrow, one string per row: 'B' outline, 'W' fill, '.' transparent.
+extern const char* const g_libretro_cursor_shape[];
+extern const int g_libretro_cursor_rows;

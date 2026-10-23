@@ -1654,6 +1654,70 @@ struct LibretroInputState
 
 static LibretroInputState s_input_state;
 
+// Mouse cursor over the GamePad screen. RetroArch draws none, so the core
+// draws an arrow at the pointer, on the GamePad picture only. It shows once
+// the pointer moves with nothing pressed, which only a mouse does; a press
+// that jumps to a new spot (a touchscreen) or three seconds without movement
+// hide it again. Written by retro_run, read by the renderer thread.
+static std::atomic<int32_t> s_cursor_x{0}, s_cursor_y{0};
+static std::atomic_bool s_cursor_shown{false};
+static bool s_cursor_prev_pressed = false;
+static std::chrono::steady_clock::time_point s_cursor_last_move;
+
+static void libretro_update_cursor(bool pressed, int16_t px, int16_t py)
+{
+	const auto now = std::chrono::steady_clock::now();
+	const int32_t dx = (int32_t)px - s_cursor_x.load(std::memory_order_relaxed);
+	const int32_t dy = (int32_t)py - s_cursor_y.load(std::memory_order_relaxed);
+	const bool moved = dx != 0 || dy != 0;
+	if (pressed && !s_cursor_prev_pressed)
+	{
+		// A mouse clicks where it already is; a finger lands somewhere new.
+		if (std::abs(dx) > 0x400 || std::abs(dy) > 0x400)
+			s_cursor_shown.store(false, std::memory_order_relaxed);
+	}
+	else if (moved && !pressed && !s_cursor_prev_pressed && (px != 0 || py != 0))
+	{
+		// (0,0) is what a touchscreen reports once the finger is gone.
+		s_cursor_shown.store(true, std::memory_order_relaxed);
+		s_cursor_last_move = now;
+	}
+	else if (moved && pressed)
+		s_cursor_last_move = now;
+	if (!pressed && s_cursor_shown.load(std::memory_order_relaxed) && now - s_cursor_last_move > std::chrono::seconds(3))
+		s_cursor_shown.store(false, std::memory_order_relaxed);
+	if (moved && !(px == 0 && py == 0 && !pressed))
+	{
+		s_cursor_x.store(px, std::memory_order_relaxed);
+		s_cursor_y.store(py, std::memory_order_relaxed);
+	}
+	s_cursor_prev_pressed = pressed;
+}
+
+// 12x19 arrow: 'B' outline, 'W' fill, '.' transparent.
+const char* const g_libretro_cursor_shape[] = {
+	"B...........",
+	"BB..........",
+	"BWB.........",
+	"BWWB........",
+	"BWWWB.......",
+	"BWWWWB......",
+	"BWWWWWB.....",
+	"BWWWWWWB....",
+	"BWWWWWWWB...",
+	"BWWWWWWWWB..",
+	"BWWWWWWWWWB.",
+	"BWWWWWWBBBBB",
+	"BWWWBWWB....",
+	"BWWBBWWB....",
+	"BWB..BWWB...",
+	"BB...BWWB...",
+	"B.....BWWB..",
+	"......BWWB..",
+	".......BB...",
+};
+const int g_libretro_cursor_rows = (int)(sizeof(g_libretro_cursor_shape) / sizeof(g_libretro_cursor_shape[0]));
+
 // Raw per-port RetroPad state. The GamePad above is built from port 0 only;
 // this is what LibretroController hands to Cemu's InputManager, which is what
 // drives the Wii Remotes.
@@ -7006,11 +7070,14 @@ static void libretro_poll_input()
 
 	// Touchscreen (mouse/pointer mapped to GamePad touchscreen)
 	state.touch_pressed = input_state_cb(0, RETRO_DEVICE_POINTER, 0, RETRO_DEVICE_ID_POINTER_PRESSED) != 0;
+	const int16_t pointerX = input_state_cb(0, RETRO_DEVICE_POINTER, 0, RETRO_DEVICE_ID_POINTER_X);
+	const int16_t pointerY = input_state_cb(0, RETRO_DEVICE_POINTER, 0, RETRO_DEVICE_ID_POINTER_Y);
 	if (state.touch_pressed)
 	{
-		state.touch_x = input_state_cb(0, RETRO_DEVICE_POINTER, 0, RETRO_DEVICE_ID_POINTER_X);
-		state.touch_y = input_state_cb(0, RETRO_DEVICE_POINTER, 0, RETRO_DEVICE_ID_POINTER_Y);
+		state.touch_x = pointerX;
+		state.touch_y = pointerY;
 	}
+	libretro_update_cursor(state.touch_pressed, pointerX, pointerY);
 }
 
 // Expose input state to the VPAD emulation
@@ -7068,6 +7135,9 @@ bool libretro_get_touch_state(uint16_t* x, uint16_t* y)
 	// virtual canvas. In composite DRC modes (SBS / TopBottom / PiP) only the
 	// DRC sub-rect is the touchable area; clicks elsewhere don't belong on the
 	// GamePad. Map pointer → canvas → DRC sub-rect → GamePad touchscreen.
+	// The result is in the touch panel's raw units, as VPADController hands
+	// them to games (x 92..3975, y 3841..147 from top to bottom): games
+	// calibrate tpData themselves, so screen pixels land in one corner.
 	const int canvasX = (int)(((int32_t)s_input_state.touch_x + 0x7fff) * (int)libretro_out_width()  / (2 * 0x7fff));
 	const int canvasY = (int)(((int32_t)s_input_state.touch_y + 0x7fff) * (int)libretro_out_height() / (2 * 0x7fff));
 	int drcX, drcY, drcW, drcH;
@@ -7076,10 +7146,88 @@ bool libretro_get_touch_state(uint16_t* x, uint16_t* y)
 		return false;
 	if (canvasX < drcX || canvasX >= drcX + drcW || canvasY < drcY || canvasY >= drcY + drcH)
 		return false;
-	*x = (uint16_t)((canvasX - drcX) * 853 / drcW);
-	*y = (uint16_t)((canvasY - drcY) * 479 / drcH);
+	const float nx = (float)(canvasX - drcX) / (float)drcW;
+	const float ny = (float)(canvasY - drcY) / (float)drcH;
+	*x = (uint16_t)(nx * 3883.0f + 92.0f);
+	*y = (uint16_t)(4095.0f - ny * 3694.0f - 254.0f);
 	return true;
 }
+
+// Where to draw the cursor in an output image of width x height, top-left
+// origin, with the size of one cursor pixel. False while it is hidden, or
+// when the pointer is not over the GamePad picture.
+bool libretro_cursor_position(int width, int height, int& x, int& y, int& scale)
+{
+	if (!s_cursor_shown.load(std::memory_order_relaxed) || width <= 0 || height <= 0)
+		return false;
+	if (!LibretroDRC_ShouldRenderScreen(true))
+		return false;
+	x = (int)((s_cursor_x.load(std::memory_order_relaxed) + 0x7fff) * (int64_t)width  / (2 * 0x7fff));
+	y = (int)((s_cursor_y.load(std::memory_order_relaxed) + 0x7fff) * (int64_t)height / (2 * 0x7fff));
+	int drcX, drcY, drcW, drcH;
+	LibretroDRC_ComputeViewport(true, width, height, drcX, drcY, drcW, drcH);
+	if (drcW <= 0 || drcH <= 0 || x < drcX || x >= drcX + drcW || y < drcY || y >= drcY + drcH)
+		return false;
+	scale = std::max(1, height / 720);
+	return true;
+}
+
+#ifdef ENABLE_OPENGL
+// The OpenGL path: the cursor goes on top of the frame in the frontend's
+// framebuffer, one scissored clear per run of same-coloured cursor pixels,
+// so nothing is left behind when the same frame is shown again.
+static void libretro_draw_cursor_gl(int width, int height)
+{
+	int cx, cy, scale;
+	if (!libretro_cursor_position(width, height, cx, cy, scale))
+		return;
+	typedef void (*PFNGLSCISSORPROC_)(int, int, int, int);
+	typedef void (*PFNGLCLEARCOLORPROC_)(float, float, float, float);
+	typedef void (*PFNGLCLEARPROC_)(unsigned int);
+	typedef void (*PFNGLCAPPROC_)(unsigned int);
+	static PFNGLSCISSORPROC_ _glScissor = nullptr;
+	static PFNGLCLEARCOLORPROC_ _glClearColor = nullptr;
+	static PFNGLCLEARPROC_ _glClear = nullptr;
+	static PFNGLCAPPROC_ _glEnable = nullptr, _glDisable = nullptr;
+	if (!_glScissor)
+	{
+		_glScissor = (PFNGLSCISSORPROC_)cemu_gl_get_proc("glScissor");
+		_glClearColor = (PFNGLCLEARCOLORPROC_)cemu_gl_get_proc("glClearColor");
+		_glClear = (PFNGLCLEARPROC_)cemu_gl_get_proc("glClear");
+		_glEnable = (PFNGLCAPPROC_)cemu_gl_get_proc("glEnable");
+		_glDisable = (PFNGLCAPPROC_)cemu_gl_get_proc("glDisable");
+	}
+	if (!_glScissor || !_glClearColor || !_glClear || !_glEnable || !_glDisable)
+		return;
+	constexpr unsigned int kScissorTest = 0x0C11, kColorBufferBit = 0x00004000;
+	_glEnable(kScissorTest);
+	for (int pass = 0; pass < 2; pass++)
+	{
+		const char want = pass == 0 ? 'B' : 'W';
+		const float v = want == 'W' ? 1.0f : 0.0f;
+		_glClearColor(v, v, v, 1.0f);
+		for (int row = 0; row < g_libretro_cursor_rows; row++)
+		{
+			const char* line = g_libretro_cursor_shape[row];
+			for (int col = 0; line[col]; )
+			{
+				int run = 1;
+				while (line[col + run] == line[col])
+					run++;
+				if (line[col] == want)
+				{
+					// Bottom-up, as the frame was blitted.
+					const int y0 = cy + row * scale;
+					_glScissor(cx + col * scale, height - y0 - scale, run * scale, scale);
+					_glClear(kColorBufferBit);
+				}
+				col += run;
+			}
+		}
+	}
+	_glDisable(kScissorTest);
+}
+#endif
 
 // ============================================================================
 // Main run loop
@@ -7822,6 +7970,7 @@ RETRO_API void retro_run()
 					GL_COLOR_BUFFER_BIT_, GL_NEAREST_);
 
 				s_glBindFramebuffer(GL_READ_FRAMEBUFFER_EXT, 0);
+				libretro_draw_cursor_gl((int)frameWidth, (int)frameHeight);
 			}
 		}
 	}

@@ -1184,6 +1184,10 @@ VulkanRenderer::~VulkanRenderer()
 		WaitDeviceIdle();
 	}
 	DestroyPresentationImage();
+	if (m_cursorBuffer != VK_NULL_HANDLE)
+		vkDestroyBuffer(m_logicalDevice, m_cursorBuffer, nullptr);
+	if (m_cursorBufferMemory != VK_NULL_HANDLE)
+		vkFreeMemory(m_logicalDevice, m_cursorBufferMemory, nullptr);
 	FreeRetiredPresentationImages(true);
 	// make sure compilation threads have been shut down
 	RendererShaderVk::Shutdown();
@@ -3649,6 +3653,108 @@ void VulkanRenderer::SwapBuffer(bool mainWindow)
 	chainInfo.swapchainImageIndex = -1;
 }
 
+// One cursor pixel per copy region would be hundreds of regions; a run of
+// same-coloured pixels in a row is one region, read from a buffer that holds a
+// line of white and a line of black. A copy cannot blend, so the arrow has no
+// soft edge - what the transparent cells need is simply no region.
+void VulkanRenderer::DrawLibretroCursor()
+{
+	if (m_presentImage == VK_NULL_HANDLE || !m_presentImageHasContent)
+		return;
+	int cx, cy, scale;
+	if (!libretro_cursor_position((int)m_presentWidth, (int)m_presentHeight, cx, cy, scale))
+		return;
+
+	constexpr uint32 kLinePixels = 256;
+	if (m_cursorBuffer == VK_NULL_HANDLE)
+	{
+		if (!memoryManager->CreateBuffer(kLinePixels * 4 * 2, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+				VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, m_cursorBuffer, m_cursorBufferMemory))
+		{
+			m_cursorBuffer = VK_NULL_HANDLE;
+			return;
+		}
+		void* data = nullptr;
+		if (vkMapMemory(m_logicalDevice, m_cursorBufferMemory, 0, kLinePixels * 4 * 2, 0, &data) != VK_SUCCESS)
+			return;
+		uint8* px = (uint8*)data;
+		std::memset(px, 0xFF, kLinePixels * 4); // white
+		for (uint32 i = 0; i < kLinePixels; i++) // black, opaque
+		{
+			px[(kLinePixels + i) * 4 + 0] = 0;
+			px[(kLinePixels + i) * 4 + 1] = 0;
+			px[(kLinePixels + i) * 4 + 2] = 0;
+			px[(kLinePixels + i) * 4 + 3] = 0xFF;
+		}
+		vkUnmapMemory(m_logicalDevice, m_cursorBufferMemory);
+	}
+
+	std::vector<VkBufferImageCopy> regions;
+	for (int row = 0; row < g_libretro_cursor_rows; row++)
+	{
+		const char* line = g_libretro_cursor_shape[row];
+		for (int col = 0; line[col]; )
+		{
+			const char c = line[col];
+			int run = 1;
+			while (line[col + run] == c)
+				run++;
+			if (c == 'W' || c == 'B')
+			{
+				int x0 = cx + col * scale, y0 = cy + row * scale;
+				int x1 = std::min(x0 + run * scale, (int)m_presentWidth);
+				int y1 = std::min(y0 + scale, (int)m_presentHeight);
+				if (x1 > x0 && y1 > y0 && (uint32)(x1 - x0) <= kLinePixels)
+				{
+					VkBufferImageCopy r{};
+					r.bufferOffset = (c == 'W') ? 0 : kLinePixels * 4;
+					r.bufferRowLength = 0; // tightly packed
+					r.bufferImageHeight = 0;
+					r.imageSubresource = {VK_IMAGE_ASPECT_COLOR_BIT, 0, 0, 1};
+					r.imageOffset = {x0, y0, 0};
+					r.imageExtent = {(uint32)(x1 - x0), 1, 1};
+					for (int y = y0; y < y1; y++)
+					{
+						r.imageOffset.y = y;
+						regions.push_back(r);
+					}
+				}
+			}
+			col += run;
+		}
+	}
+	if (regions.empty())
+		return;
+
+	draw_endRenderPass();
+	VkImageSubresourceRange fullRange{VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1};
+	VkImageMemoryBarrier toDst{};
+	toDst.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+	toDst.srcAccessMask = VK_ACCESS_SHADER_READ_BIT;
+	toDst.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+	toDst.oldLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+	toDst.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+	toDst.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+	toDst.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+	toDst.image = m_presentImage;
+	toDst.subresourceRange = fullRange;
+	vkCmdPipelineBarrier(m_state.currentCommandBuffer,
+		VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
+		0, 0, nullptr, 0, nullptr, 1, &toDst);
+
+	vkCmdCopyBufferToImage(m_state.currentCommandBuffer, m_cursorBuffer, m_presentImage,
+		VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, (uint32)regions.size(), regions.data());
+
+	VkImageMemoryBarrier toRead = toDst;
+	toRead.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+	toRead.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+	toRead.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+	toRead.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+	vkCmdPipelineBarrier(m_state.currentCommandBuffer,
+		VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+		0, 0, nullptr, 0, nullptr, 1, &toRead);
+}
+
 void VulkanRenderer::Flush(bool waitIdle)
 {
 	if (m_recordedDrawcalls > 0 || m_submitOnIdle)
@@ -3670,6 +3776,8 @@ void VulkanRenderer::SwapBuffers(bool swapTV, bool swapDRC)
 	// In libretro HW render mode, frame_ready is set in DrawBackbufferQuad
 	// No swapchain presentation needed
 
+	if (m_libretroFramePending)
+		DrawLibretroCursor();
 	SubmitCommandBuffer();
 
 	// The blit into the presentation image is on the queue now, ahead of
