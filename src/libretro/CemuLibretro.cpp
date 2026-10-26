@@ -1,6 +1,7 @@
 // Cemu libretro core - main implementation
 // Routes video/audio/input through libretro frontend callbacks
 
+#include <openssl/crypto.h>
 #include <algorithm>
 #include <cmath>
 #include <thread>
@@ -4064,6 +4065,13 @@ RETRO_API void retro_init()
 	// here leaves nothing behind at all - which is exactly what jacklavin saw
 	// when it started crashing at core selection, before any content.
 	libretro_log(RETRO_LOG_INFO, "retro_init: start (%s)\n", BUILD_VERSION_WITH_NAME_STRING);
+
+	// OpenSSL without the system's openssl.cnf, before anything uses it. The
+	// config can load an engine (pkcs11 on Linux distributions), a library of
+	// the system's that stays loaded after the core is unloaded and keeps
+	// pointers into the first copy of the core's OpenSSL: the next content
+	// loaded in the same RetroArch then crashed in it (UTIL_CTX_set_module)
+	OPENSSL_init_crypto(OPENSSL_INIT_NO_LOAD_CONFIG, nullptr);
 
 	LibretroAudioAPI::SetAudioCallback([](const int16_t* data, size_t frames) -> size_t {
 		if (s_audio_submission_allowed && audio_batch_cb && data && frames > 0)
