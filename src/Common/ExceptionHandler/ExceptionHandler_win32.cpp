@@ -153,6 +153,9 @@ void DumpThreadStackTrace()
 	free(symbol);
 }
 
+static bool s_handCrashesToPrevious = false;
+static LPTOP_LEVEL_EXCEPTION_FILTER s_previousExceptionFilter = nullptr;
+
 void createCrashlog(EXCEPTION_POINTERS* e, PCONTEXT context)
 {
     if(!CrashLog_Create())
@@ -238,9 +241,9 @@ void createCrashlog(EXCEPTION_POINTERS* e, PCONTEXT context)
 		fs::copy_file(ActiveSettings::GetUserDataPath("log.txt"), p, ec);
 	}
 
+	if (s_handCrashesToPrevious)
+		return;
 	exit(0);
-
-	return;
 }
 
 bool logCrashlog;
@@ -276,11 +279,17 @@ LONG WINAPI VectoredExceptionHandler(PEXCEPTION_POINTERS pExceptionInfo)
 LONG WINAPI cemu_unhandledExceptionFilter(EXCEPTION_POINTERS* pExceptionInfo)
 {
 	createCrashlog(pExceptionInfo, pExceptionInfo->ContextRecord);
+	if (s_handCrashesToPrevious)
+		return s_previousExceptionFilter ? s_previousExceptionFilter(pExceptionInfo) : EXCEPTION_CONTINUE_SEARCH;
 	return EXCEPTION_NONCONTINUABLE_EXCEPTION;
 }
 
-static LPTOP_LEVEL_EXCEPTION_FILTER s_previousExceptionFilter = nullptr;
 static PVOID s_vectoredHandler = nullptr;
+
+void ExceptionHandler_HandCrashesToPrevious()
+{
+	s_handCrashesToPrevious = true;
+}
 
 void ExceptionHandler_Init()
 {

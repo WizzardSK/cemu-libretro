@@ -179,6 +179,9 @@ void DemangleAndPrintBacktrace(char** backtrace, size_t size)
 #endif
 
 // handle signals that would dump core, print stacktrace and then dump depending on config
+static bool s_handCrashesToPrevious = false;
+static void HandToPrevious(int sig, siginfo_t* info);
+
 void handlerDumpingSignal(int sig, siginfo_t *info, void *context)
 {
 #if defined(ARCH_X86_64) && BOOST_OS_LINUX
@@ -289,6 +292,11 @@ void handlerDumpingSignal(int sig, siginfo_t *info, void *context)
     ExceptionHandler_LogGeneralInfo();
     CrashLog_SetOutputChannels(true, true);
 
+	if (s_handCrashesToPrevious)
+	{
+		HandToPrevious(sig, info);
+		return;
+	}
 	if (GetConfig().crash_dump == CrashDump::Enabled)
 	{
 		// reset signal handler to default and re-raise signal to dump core
@@ -318,6 +326,28 @@ static const int s_handledSignals[] = { SIGINT, SIGTERM, SIGABRT, SIGBUS, SIGFPE
 static struct sigaction s_previousActions[std::size(s_handledSignals)];
 static bool s_handlersInstalled = false;
 
+void ExceptionHandler_HandCrashesToPrevious()
+{
+	s_handCrashesToPrevious = true;
+}
+
+// The previous action back for this signal, and the signal to it: a fault
+// runs its instruction again under it, a sent signal (abort, raise, kill) is
+// sent again, delivered once this handler returns
+static void HandToPrevious(int sig, siginfo_t* info)
+{
+	for (size_t i = 0; i < std::size(s_handledSignals); i++)
+	{
+		if (s_handledSignals[i] == sig)
+		{
+			sigaction(sig, &s_previousActions[i], nullptr);
+			break;
+		}
+	}
+	if (info->si_code <= 0 || sig == SIGTRAP)
+		raise(sig);
+}
+
 void ExceptionHandler_Init()
 {
 	for (size_t i = 0; i < std::size(s_handledSignals); i++)
@@ -328,9 +358,12 @@ void ExceptionHandler_Init()
 	action.sa_flags = 0;
 	sigfillset(&action.sa_mask); // don't allow signals to be interrupted
 
-	action.sa_handler = handler_SIGINT;
-	sigaction(SIGINT, &action, nullptr);
-	sigaction(SIGTERM, &action, nullptr);
+	if (!s_handCrashesToPrevious)
+	{
+		action.sa_handler = handler_SIGINT;
+		sigaction(SIGINT, &action, nullptr);
+		sigaction(SIGTERM, &action, nullptr);
+	}
 
     action.sa_flags = SA_SIGINFO;
     action.sa_handler = nullptr;

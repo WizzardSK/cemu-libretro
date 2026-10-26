@@ -453,8 +453,9 @@ static void libretro_set_log_to_file(bool toFile)
 
 	What happens after abort(): SIGABRT lands in the handler this core installs
 	for the whole process (ExceptionHandler_Init, by way of CemuCommonInit),
-	which writes log.txt and then _Exit(1) unless crash dumps are enabled - so
-	there is a log ending in the line below, and usually no core dump.
+	which writes log.txt and then hands the signal to the handler there was
+	before (ExceptionHandler_HandCrashesToPrevious) - so there is a log ending
+	in the line below, and the system's crash report (Android's tombstone).
 */
 [[noreturn]] static void libretro_fail_fast(const char* tag, const std::string& what)
 {
@@ -5475,7 +5476,10 @@ static void libretro_launch_game()
 
 	libretro_log(RETRO_LOG_INFO, "Initializing emulator...\n");
 
-	// Initialize emulator common systems
+	// Initialize emulator common systems. A crash is logged by Cemu's handlers
+	// and then the frontend's, or the system's, to report: the process is not
+	// the core's to end.
+	ExceptionHandler_HandCrashesToPrevious();
 	CemuCommonInit();
 	s_cafe_system_initialized = true;
 
