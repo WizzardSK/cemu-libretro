@@ -212,16 +212,12 @@ libretro-build-windows-x64:
   before_script:
     # Repeated from the template, whose before_script this one replaces.
     - export NUMPROC=$(($(nproc)/5))
-    # The Android image carries the SDK and the NDK and not much else, while
     # vcpkg needs a host compiler for the x64-linux ports it builds first, the
     # autotools most of its ports configure with, and make - the generator the
-    # template's cmake line falls back to. Without these the job dies in
-    # "Detecting compiler hash for triplet x64-linux" before anything is built.
-    # nasm, zip and ca-certificates come with the image (since October 2026).
-    - apt-get update -qq
-    - apt-get install -y --no-install-recommends
-      build-essential make ninja-build autoconf automake libtool
-      pkg-config python3 unzip curl git
+    # template's cmake line falls back to; the Android image has them all
+    # (Ubuntu 26.04, October 2026: gcc, g++, make, ninja, autoconf, automake,
+    # libtool, pkg-config, python3, unzip, curl, git, nasm, zip), so nothing is
+    # installed here.
     # .core-defs asks for gcc-12, which the Linux image has and this one does
     # not. Leaving CC/CXX set to anything at all is worse than dropping them:
     # the cmake ports ignore them and take the NDK's clang, but openssl builds
