@@ -114,6 +114,15 @@ extern "C" {
 #define OPTION_VAL_80_AR NULL
 #define OPTION_VAL_90_AR NULL
 #define OPTION_VAL_100_AR NULL
+#define CEMU_STICK_DEADZONE_P1_LABEL_AR NULL
+#define CEMU_STICK_DEADZONE_P1_INFO_0_AR NULL
+#define OPTION_VAL_5_AR NULL
+#define OPTION_VAL_15_AR NULL
+#define OPTION_VAL_25_AR NULL
+#define OPTION_VAL_35_AR NULL
+#define OPTION_VAL_45_AR NULL
+#define CEMU_STICK_DEADZONE_P2_LABEL_AR NULL
+#define CEMU_STICK_DEADZONE_P2_INFO_0_AR NULL
 #define CEMU_GAMEPAD_MOTION_LABEL_AR NULL
 #define CEMU_GAMEPAD_MOTION_INFO_0_AR NULL
 #define CEMU_NUMBER_OF_SCREEN_LAYOUTS_LABEL_AR NULL
@@ -437,6 +446,52 @@ struct retro_core_option_v2_definition option_defs_ar[] = {
 			{ NULL, NULL },
 		},
 		"100"
+	},
+	{
+		"cemu_stick_deadzone_p1",
+		CEMU_STICK_DEADZONE_P1_LABEL_AR,
+		NULL,
+		CEMU_STICK_DEADZONE_P1_INFO_0_AR,
+		NULL,
+		"controller",
+		{
+			{ "0", "Off" },
+			{ "5", OPTION_VAL_5_AR },
+			{ "10", OPTION_VAL_10_AR },
+			{ "15", OPTION_VAL_15_AR },
+			{ "20", OPTION_VAL_20_AR },
+			{ "25", OPTION_VAL_25_AR },
+			{ "30", OPTION_VAL_30_AR },
+			{ "35", OPTION_VAL_35_AR },
+			{ "40", OPTION_VAL_40_AR },
+			{ "45", OPTION_VAL_45_AR },
+			{ "50", OPTION_VAL_50_AR },
+			{ NULL, NULL },
+		},
+		"25"
+	},
+	{
+		"cemu_stick_deadzone_p2",
+		CEMU_STICK_DEADZONE_P2_LABEL_AR,
+		NULL,
+		CEMU_STICK_DEADZONE_P2_INFO_0_AR,
+		NULL,
+		"controller",
+		{
+			{ "0", "Off" },
+			{ "5", OPTION_VAL_5_AR },
+			{ "10", OPTION_VAL_10_AR },
+			{ "15", OPTION_VAL_15_AR },
+			{ "20", OPTION_VAL_20_AR },
+			{ "25", OPTION_VAL_25_AR },
+			{ "30", OPTION_VAL_30_AR },
+			{ "35", OPTION_VAL_35_AR },
+			{ "40", OPTION_VAL_40_AR },
+			{ "45", OPTION_VAL_45_AR },
+			{ "50", OPTION_VAL_50_AR },
+			{ NULL, NULL },
+		},
+		"25"
 	},
 	{
 		"cemu_gamepad_motion",
@@ -1009,6 +1064,15 @@ struct retro_core_options_v2 options_ar = {
 #define OPTION_VAL_80_AST NULL
 #define OPTION_VAL_90_AST NULL
 #define OPTION_VAL_100_AST NULL
+#define CEMU_STICK_DEADZONE_P1_LABEL_AST NULL
+#define CEMU_STICK_DEADZONE_P1_INFO_0_AST NULL
+#define OPTION_VAL_5_AST NULL
+#define OPTION_VAL_15_AST NULL
+#define OPTION_VAL_25_AST NULL
+#define OPTION_VAL_35_AST NULL
+#define OPTION_VAL_45_AST NULL
+#define CEMU_STICK_DEADZONE_P2_LABEL_AST NULL
+#define CEMU_STICK_DEADZONE_P2_INFO_0_AST NULL
 #define CEMU_GAMEPAD_MOTION_LABEL_AST NULL
 #define CEMU_GAMEPAD_MOTION_INFO_0_AST NULL
 #define CEMU_NUMBER_OF_SCREEN_LAYOUTS_LABEL_AST NULL
@@ -1332,6 +1396,52 @@ struct retro_core_option_v2_definition option_defs_ast[] = {
 			{ NULL, NULL },
 		},
 		"100"
+	},
+	{
+		"cemu_stick_deadzone_p1",
+		CEMU_STICK_DEADZONE_P1_LABEL_AST,
+		NULL,
+		CEMU_STICK_DEADZONE_P1_INFO_0_AST,
+		NULL,
+		"controller",
+		{
+			{ "0", "Off" },
+			{ "5", OPTION_VAL_5_AST },
+			{ "10", OPTION_VAL_10_AST },
+			{ "15", OPTION_VAL_15_AST },
+			{ "20", OPTION_VAL_20_AST },
+			{ "25", OPTION_VAL_25_AST },
+			{ "30", OPTION_VAL_30_AST },
+			{ "35", OPTION_VAL_35_AST },
+			{ "40", OPTION_VAL_40_AST },
+			{ "45", OPTION_VAL_45_AST },
+			{ "50", OPTION_VAL_50_AST },
+			{ NULL, NULL },
+		},
+		"25"
+	},
+	{
+		"cemu_stick_deadzone_p2",
+		CEMU_STICK_DEADZONE_P2_LABEL_AST,
+		NULL,
+		CEMU_STICK_DEADZONE_P2_INFO_0_AST,
+		NULL,
+		"controller",
+		{
+			{ "0", "Off" },
+			{ "5", OPTION_VAL_5_AST },
+			{ "10", OPTION_VAL_10_AST },
+			{ "15", OPTION_VAL_15_AST },
+			{ "20", OPTION_VAL_20_AST },
+			{ "25", OPTION_VAL_25_AST },
+			{ "30", OPTION_VAL_30_AST },
+			{ "35", OPTION_VAL_35_AST },
+			{ "40", OPTION_VAL_40_AST },
+			{ "45", OPTION_VAL_45_AST },
+			{ "50", OPTION_VAL_50_AST },
+			{ NULL, NULL },
+		},
+		"25"
 	},
 	{
 		"cemu_gamepad_motion",
@@ -1904,6 +2014,15 @@ struct retro_core_options_v2 options_ast = {
 #define OPTION_VAL_80_BE "80 %"
 #define OPTION_VAL_90_BE "90 %"
 #define OPTION_VAL_100_BE "100 %"
+#define CEMU_STICK_DEADZONE_P1_LABEL_BE NULL
+#define CEMU_STICK_DEADZONE_P1_INFO_0_BE NULL
+#define OPTION_VAL_5_BE NULL
+#define OPTION_VAL_15_BE "15 %"
+#define OPTION_VAL_25_BE NULL
+#define OPTION_VAL_35_BE "35 %"
+#define OPTION_VAL_45_BE NULL
+#define CEMU_STICK_DEADZONE_P2_LABEL_BE NULL
+#define CEMU_STICK_DEADZONE_P2_INFO_0_BE NULL
 #define CEMU_GAMEPAD_MOTION_LABEL_BE NULL
 #define CEMU_GAMEPAD_MOTION_INFO_0_BE NULL
 #define CEMU_NUMBER_OF_SCREEN_LAYOUTS_LABEL_BE NULL
@@ -2227,6 +2346,52 @@ struct retro_core_option_v2_definition option_defs_be[] = {
 			{ NULL, NULL },
 		},
 		"100"
+	},
+	{
+		"cemu_stick_deadzone_p1",
+		CEMU_STICK_DEADZONE_P1_LABEL_BE,
+		NULL,
+		CEMU_STICK_DEADZONE_P1_INFO_0_BE,
+		NULL,
+		"controller",
+		{
+			{ "0", "Off" },
+			{ "5", OPTION_VAL_5_BE },
+			{ "10", OPTION_VAL_10_BE },
+			{ "15", OPTION_VAL_15_BE },
+			{ "20", OPTION_VAL_20_BE },
+			{ "25", OPTION_VAL_25_BE },
+			{ "30", OPTION_VAL_30_BE },
+			{ "35", OPTION_VAL_35_BE },
+			{ "40", OPTION_VAL_40_BE },
+			{ "45", OPTION_VAL_45_BE },
+			{ "50", OPTION_VAL_50_BE },
+			{ NULL, NULL },
+		},
+		"25"
+	},
+	{
+		"cemu_stick_deadzone_p2",
+		CEMU_STICK_DEADZONE_P2_LABEL_BE,
+		NULL,
+		CEMU_STICK_DEADZONE_P2_INFO_0_BE,
+		NULL,
+		"controller",
+		{
+			{ "0", "Off" },
+			{ "5", OPTION_VAL_5_BE },
+			{ "10", OPTION_VAL_10_BE },
+			{ "15", OPTION_VAL_15_BE },
+			{ "20", OPTION_VAL_20_BE },
+			{ "25", OPTION_VAL_25_BE },
+			{ "30", OPTION_VAL_30_BE },
+			{ "35", OPTION_VAL_35_BE },
+			{ "40", OPTION_VAL_40_BE },
+			{ "45", OPTION_VAL_45_BE },
+			{ "50", OPTION_VAL_50_BE },
+			{ NULL, NULL },
+		},
+		"25"
 	},
 	{
 		"cemu_gamepad_motion",
@@ -2799,6 +2964,15 @@ struct retro_core_options_v2 options_be = {
 #define OPTION_VAL_80_BG NULL
 #define OPTION_VAL_90_BG NULL
 #define OPTION_VAL_100_BG NULL
+#define CEMU_STICK_DEADZONE_P1_LABEL_BG NULL
+#define CEMU_STICK_DEADZONE_P1_INFO_0_BG NULL
+#define OPTION_VAL_5_BG NULL
+#define OPTION_VAL_15_BG NULL
+#define OPTION_VAL_25_BG NULL
+#define OPTION_VAL_35_BG NULL
+#define OPTION_VAL_45_BG NULL
+#define CEMU_STICK_DEADZONE_P2_LABEL_BG NULL
+#define CEMU_STICK_DEADZONE_P2_INFO_0_BG NULL
 #define CEMU_GAMEPAD_MOTION_LABEL_BG NULL
 #define CEMU_GAMEPAD_MOTION_INFO_0_BG NULL
 #define CEMU_NUMBER_OF_SCREEN_LAYOUTS_LABEL_BG NULL
@@ -3122,6 +3296,52 @@ struct retro_core_option_v2_definition option_defs_bg[] = {
 			{ NULL, NULL },
 		},
 		"100"
+	},
+	{
+		"cemu_stick_deadzone_p1",
+		CEMU_STICK_DEADZONE_P1_LABEL_BG,
+		NULL,
+		CEMU_STICK_DEADZONE_P1_INFO_0_BG,
+		NULL,
+		"controller",
+		{
+			{ "0", "Off" },
+			{ "5", OPTION_VAL_5_BG },
+			{ "10", OPTION_VAL_10_BG },
+			{ "15", OPTION_VAL_15_BG },
+			{ "20", OPTION_VAL_20_BG },
+			{ "25", OPTION_VAL_25_BG },
+			{ "30", OPTION_VAL_30_BG },
+			{ "35", OPTION_VAL_35_BG },
+			{ "40", OPTION_VAL_40_BG },
+			{ "45", OPTION_VAL_45_BG },
+			{ "50", OPTION_VAL_50_BG },
+			{ NULL, NULL },
+		},
+		"25"
+	},
+	{
+		"cemu_stick_deadzone_p2",
+		CEMU_STICK_DEADZONE_P2_LABEL_BG,
+		NULL,
+		CEMU_STICK_DEADZONE_P2_INFO_0_BG,
+		NULL,
+		"controller",
+		{
+			{ "0", "Off" },
+			{ "5", OPTION_VAL_5_BG },
+			{ "10", OPTION_VAL_10_BG },
+			{ "15", OPTION_VAL_15_BG },
+			{ "20", OPTION_VAL_20_BG },
+			{ "25", OPTION_VAL_25_BG },
+			{ "30", OPTION_VAL_30_BG },
+			{ "35", OPTION_VAL_35_BG },
+			{ "40", OPTION_VAL_40_BG },
+			{ "45", OPTION_VAL_45_BG },
+			{ "50", OPTION_VAL_50_BG },
+			{ NULL, NULL },
+		},
+		"25"
 	},
 	{
 		"cemu_gamepad_motion",
@@ -3694,6 +3914,15 @@ struct retro_core_options_v2 options_bg = {
 #define OPTION_VAL_80_CA NULL
 #define OPTION_VAL_90_CA NULL
 #define OPTION_VAL_100_CA NULL
+#define CEMU_STICK_DEADZONE_P1_LABEL_CA "Zona morta de la palanca (Jugador 1)"
+#define CEMU_STICK_DEADZONE_P1_INFO_0_CA "Indica quant s'han de moure les palanques del jugador 1 (les del GamePad o les del comandament connectat al port 1) perquè el joc les detecti, expressat com a fracció del seu recorregut total; la resta del recorregut s'estén per cobrir tot l'interval. El 25 % és el valor predeterminat del Cemu. Un valor més baix és adequat per a palanques que reposen al centre (efecte Hall, TMR); augmenteu-lo si el personatge o element del joc es mou tot sol."
+#define OPTION_VAL_5_CA NULL
+#define OPTION_VAL_15_CA NULL
+#define OPTION_VAL_25_CA NULL
+#define OPTION_VAL_35_CA NULL
+#define OPTION_VAL_45_CA NULL
+#define CEMU_STICK_DEADZONE_P2_LABEL_CA "Zona morta de la palanca (Jugadors 2-4)"
+#define CEMU_STICK_DEADZONE_P2_INFO_0_CA "Indica quant s'han de moir els sticks dels comandaments Wii Remote, Pro i Classic (connectats als ports 2 a 4) perquè el joc els detecti, expressat com a fracció del seu recorregut total; la resta del recorregut s'estén per cobrir tot l'interval. El valor predeterminat al Cemu és del 25 %. Un valor més baix és adequat per a sticks que reposen al centre (com els de tecnologia Hall o TMR); augmenteu-lo si el personatge o element del joc es mou tot sol."
 #define CEMU_GAMEPAD_MOTION_LABEL_CA "Moviment del GamePad"
 #define CEMU_GAMEPAD_MOTION_INFO_0_CA "Es tracta del giroscopi i l'acceleròmetre del comandament que RetroArch llegeix al port 1: ja siguin els del propi telèfon o tauleta, o els d'un comandament que els proporcioni a través del controlador d'entrada de RetroArch (com ara el DualShock 4, el DualSense i d'altres). Aquesta funció és necessària per als jocs que permeten apuntar o dirigir el moviment inclinant el comandament. Desactivat: el comandament roman immòbil, tal com passa quan es desactiva el control per moviment a l'aplicació autònoma."
 #define CEMU_NUMBER_OF_SCREEN_LAYOUTS_LABEL_CA "# de disposicons de pantalla"
@@ -4017,6 +4246,52 @@ struct retro_core_option_v2_definition option_defs_ca[] = {
 			{ NULL, NULL },
 		},
 		"100"
+	},
+	{
+		"cemu_stick_deadzone_p1",
+		CEMU_STICK_DEADZONE_P1_LABEL_CA,
+		NULL,
+		CEMU_STICK_DEADZONE_P1_INFO_0_CA,
+		NULL,
+		"controller",
+		{
+			{ "0", "Off" },
+			{ "5", OPTION_VAL_5_CA },
+			{ "10", OPTION_VAL_10_CA },
+			{ "15", OPTION_VAL_15_CA },
+			{ "20", OPTION_VAL_20_CA },
+			{ "25", OPTION_VAL_25_CA },
+			{ "30", OPTION_VAL_30_CA },
+			{ "35", OPTION_VAL_35_CA },
+			{ "40", OPTION_VAL_40_CA },
+			{ "45", OPTION_VAL_45_CA },
+			{ "50", OPTION_VAL_50_CA },
+			{ NULL, NULL },
+		},
+		"25"
+	},
+	{
+		"cemu_stick_deadzone_p2",
+		CEMU_STICK_DEADZONE_P2_LABEL_CA,
+		NULL,
+		CEMU_STICK_DEADZONE_P2_INFO_0_CA,
+		NULL,
+		"controller",
+		{
+			{ "0", "Off" },
+			{ "5", OPTION_VAL_5_CA },
+			{ "10", OPTION_VAL_10_CA },
+			{ "15", OPTION_VAL_15_CA },
+			{ "20", OPTION_VAL_20_CA },
+			{ "25", OPTION_VAL_25_CA },
+			{ "30", OPTION_VAL_30_CA },
+			{ "35", OPTION_VAL_35_CA },
+			{ "40", OPTION_VAL_40_CA },
+			{ "45", OPTION_VAL_45_CA },
+			{ "50", OPTION_VAL_50_CA },
+			{ NULL, NULL },
+		},
+		"25"
 	},
 	{
 		"cemu_gamepad_motion",
@@ -4515,30 +4790,30 @@ struct retro_core_options_v2 options_ca = {
 /* RETRO_LANGUAGE_CHS */
 
 #define CATEGORY_SYSTEM_LABEL_CHS "系统"
-#define CATEGORY_SYSTEM_INFO_0_CHS NULL
-#define CATEGORY_GRAPHICS_LABEL_CHS NULL
-#define CATEGORY_GRAPHICS_INFO_0_CHS NULL
+#define CATEGORY_SYSTEM_INFO_0_CHS "CPU、语言、音频声道与账户设置。"
+#define CATEGORY_GRAPHICS_LABEL_CHS "图形设置 (需重启)"
+#define CATEGORY_GRAPHICS_INFO_0_CHS "图形 API 与着色器设置。除非选项另有说明，否则在重新启动游戏后生效。"
 #define CATEGORY_CONTROLLER_LABEL_CHS "手柄"
-#define CATEGORY_CONTROLLER_INFO_0_CHS NULL
-#define CATEGORY_TITLE_MANAGER_LABEL_CHS NULL
-#define CATEGORY_TITLE_MANAGER_INFO_0_CHS NULL
+#define CATEGORY_CONTROLLER_INFO_0_CHS "震动、体感，以及 Wii U 双屏的显示画面与显示方式。"
+#define CATEGORY_TITLE_MANAGER_LABEL_CHS "游戏标题管理器"
+#define CATEGORY_TITLE_MANAGER_INFO_0_CHS "在模拟主机的存储路径 saves/Cemu/mlc01 中安装和卸载游戏、游戏更新及 DLC，并将加载的游戏标题转换为 .wua 格式。"
 #define CATEGORY_CORE_LABEL_CHS "核心"
-#define CATEGORY_CORE_INFO_0_CHS NULL
+#define CATEGORY_CORE_INFO_0_CHS "此 Libretro 核心独有、而独立版 Cemu 所没有的选项。"
 #define CATEGORY_LOGGING_LABEL_CHS "日志"
 #define CATEGORY_LOGGING_INFO_0_CHS "额外日志输出，用于诊断问题。"
-#define CATEGORY_GRAPHIC_PACKS_LABEL_CHS NULL
-#define CATEGORY_GRAPHIC_PACKS_INFO_0_CHS NULL
-#define CATEGORY_CHEATS_LABEL_CHS NULL
-#define CATEGORY_CHEATS_INFO_0_CHS NULL
-#define CEMU_CPU_MODE_LABEL_CHS NULL
-#define CEMU_CPU_MODE_INFO_0_CHS NULL
+#define CATEGORY_GRAPHIC_PACKS_LABEL_CHS "图形包 (需重启)"
+#define CATEGORY_GRAPHIC_PACKS_INFO_0_CHS "当前加载游戏的图形包及其预设。您自己的图形包或对内置图形包修改后的副本，应放入 system/Cemu/customGraphicPackages 目录中。"
+#define CATEGORY_CHEATS_LABEL_CHS "金手指/作弊码 (需重启)"
+#define CATEGORY_CHEATS_INFO_0_CHS "当前加载游戏的作弊补丁包，来源于图形包的 Cheats 文件夹。"
+#define CEMU_CPU_MODE_LABEL_CHS "CPU 运行模式 (需重启)"
+#define CEMU_CPU_MODE_INFO_0_CHS "设置 Wii U 的 PowerPC 内核如何被模拟。“自动”：若游戏配置文件中有指定模式，则按独立版的设定运行；否则在拥有 4 个或更多物理核心的 CPU 上启用多核动态重编译，其余情况启用单核重编译。解释器模式速度极慢，仅用于调试。"
 #define OPTION_VAL_AUTO_CHS "自动"
 #define OPTION_VAL_SINGLECORE_INTERPRETER_CHS "单核解释器"
 #define OPTION_VAL_SINGLECORE_RECOMPILER_CHS "单核重编译器"
 #define OPTION_VAL_MULTICORE_RECOMPILER_CHS "多核重编译器"
 #define OPTION_VAL_MULTICORE_INTERPRETER_CHS "多核解释器"
 #define CEMU_THREAD_QUANTUM_LABEL_CHS "线程时间片 (Thread Quantum)   "
-#define CEMU_CONSOLE_LANGUAGE_LABEL_CHS NULL
+#define CEMU_CONSOLE_LANGUAGE_LABEL_CHS "主机系统语言 (需重启)"
 #define OPTION_VAL_ENGLISH_CHS "英语"
 #define OPTION_VAL_JAPANESE_CHS "日语"
 #define OPTION_VAL_FRENCH_CHS "法语"
@@ -4556,8 +4831,8 @@ struct retro_core_options_v2 options_ca = {
 #define OPTION_VAL_MONO_CHS "单声道"
 #define OPTION_VAL_STEREO_CHS "立体声"
 #define OPTION_VAL_SURROUND_CHS "环绕声5.1"
-#define CEMU_ACCOUNT_LABEL_CHS NULL
-#define CEMU_ACCOUNT_INFO_0_CHS NULL
+#define CEMU_ACCOUNT_LABEL_CHS "当前激活账户 (需重启)   "
+#define CEMU_ACCOUNT_INFO_0_CHS "游戏运行所使用的 Wii U 账户，每个账户拥有各自的存档和 Mii 形象。列表显示的是账户目录中的所有账户。\n\n在重新启动游戏之前，正在运行的游戏会一直保存数据到最初启动时的账户。"
 #define CEMU_CREATE_ACCOUNT_LABEL_CHS "创建账户"
 #define CEMU_CREATE_ACCOUNT_INFO_0_CHS "创建一个名为 Player 2、Player 3 等的新账户，并将其设为当前激活账户。随后此选项会自动切回“关闭”状态。退出并重新进入此菜单后，新账户将显示在账户列表中。主机最多可容纳 12 个账户。"
 #define CEMU_RENAME_ACCOUNT_LABEL_CHS "重命名活动账户"
@@ -4565,18 +4840,18 @@ struct retro_core_options_v2 options_ca = {
 #define CEMU_REMOVE_ACCOUNT_LABEL_CHS "删除账户"
 #define CEMU_REMOVE_ACCOUNT_INFO_0_CHS "退出此菜单时，从账户目录（saves/Cemu/mlc01/usr/save/system/act）中删除选定的账户，效果等同于在主机上删除用户。返回菜单时该选项会重新显示为“关闭”状态。\n\n当前激活的账户无法被删除，运行中游戏所使用的账户在游戏关闭前也无法被删除。\n\n警告：删除账户将永久删除该账户在所有游戏中的存档数据。删除前请务必备份所有需要保留的存档。"
 #define CEMU_GPU_API_LABEL_CHS "图形 API"
-#define CEMU_GPU_API_INFO_0_CHS NULL
+#define CEMU_GPU_API_INFO_0_CHS "Cemu 用于渲染的图形 API。"
 #define OPTION_VAL_OPENGL_CHS NULL
 #define OPTION_VAL_VULKAN_CHS NULL
-#define CEMU_PRECOMPILED_SHADERS_LABEL_CHS NULL
-#define CEMU_PRECOMPILED_SHADERS_INFO_0_CHS NULL
-#define CEMU_ASYNC_SHADER_COMPILE_LABEL_CHS NULL
+#define CEMU_PRECOMPILED_SHADERS_LABEL_CHS "预编译着色器 (OpenGL)   "
+#define CEMU_PRECOMPILED_SHADERS_INFO_0_CHS "已编译着色器程序的缓存。“自动”：若游戏配置文件中有指定设定，则采用独立版方案；否则在自带缓存管理的 Nvidia 显卡上关闭，在其他环境下同样默认关闭。"
+#define CEMU_ASYNC_SHADER_COMPILE_LABEL_CHS "异步着色器编译 (Vulkan)"
 #define CEMU_ACCURATE_SHADER_MUL_LABEL_CHS "精确着色器乘法计算"
-#define CEMU_ACCURATE_SHADER_MUL_INFO_0_CHS NULL
+#define CEMU_ACCURATE_SHADER_MUL_INFO_0_CHS "精确模拟 GPU 的乘法运算，大多数游戏运行必需。“自动”：若游戏配置文件有特定设定则按独立版处理（例如《超级马力欧 3D 世界》、《前进！奇诺比奥队长》和《异度神剑 X》默认关闭此项）；其余情况默认开启。"
 #define CEMU_GX2DRAWDONE_SYNC_LABEL_CHS "GX2DrawDone 画面同步"
-#define CEMU_GX2DRAWDONE_SYNC_INFO_0_CHS NULL
-#define CEMU_VK_ACCURATE_BARRIERS_LABEL_CHS NULL
-#define CEMU_VK_ACCURATE_BARRIERS_INFO_0_CHS NULL
+#define CEMU_GX2DRAWDONE_SYNC_INFO_0_CHS "每当调用 GX2DrawDone 时，强制游戏等待直到 GPU 完成所有任务，效果对应独立版的“GX2DrawDone 完整同步”。部分游戏需要此项才能正常渲染画面；关闭它可能会带来更高性能。可在游戏运行过程中切换。"
+#define CEMU_VK_ACCURATE_BARRIERS_LABEL_CHS "精确屏障 (Vulkan)"
+#define CEMU_VK_ACCURATE_BARRIERS_INFO_0_CHS "保持绘制之间的同步，部分游戏正确渲染画面所必需，对应独立版的同名选项。关闭可能会更快，但此类游戏可能会出现画面故障。可在游戏运行过程中切换。"
 #define CEMU_RUMBLE_STRENGTH_LABEL_CHS "震动强度"
 #define CEMU_RUMBLE_STRENGTH_INFO_0_CHS "当游戏请求震动时手柄的振动强度：包括 GamePad 马达、Wii 双节棍手柄或 Pro 手柄。关闭时将完全不向前端发送震动信号。"
 #define OPTION_VAL_10_CHS NULL
@@ -4589,6 +4864,15 @@ struct retro_core_options_v2 options_ca = {
 #define OPTION_VAL_80_CHS NULL
 #define OPTION_VAL_90_CHS NULL
 #define OPTION_VAL_100_CHS NULL
+#define CEMU_STICK_DEADZONE_P1_LABEL_CHS "摇杆死区 (1 号玩家)"
+#define CEMU_STICK_DEADZONE_P1_INFO_0_CHS "设置 1 号玩家（GamePad 或端口 1 手柄）的摇杆在被游戏识别到之前需要推动的行程比例（占全行程的份额）；超出死区后的剩余行程会被拉伸至整个范围。25% 是独立版 Cemu 的默认值。较小的死区适合中心回正精准的摇杆（如磁吸霍尔效应、TMR 摇杆）；如果游戏出现角色自动移动的漂移现象，请调高此数值。"
+#define OPTION_VAL_5_CHS NULL
+#define OPTION_VAL_15_CHS NULL
+#define OPTION_VAL_25_CHS NULL
+#define OPTION_VAL_35_CHS NULL
+#define OPTION_VAL_45_CHS NULL
+#define CEMU_STICK_DEADZONE_P2_LABEL_CHS "摇杆死区 (2-4 号玩家)"
+#define CEMU_STICK_DEADZONE_P2_INFO_0_CHS "设置端口 2 至 4 上的 Wii 遥控器、Pro 手柄及经典手柄的摇杆在被游戏识别到之前需要推动的行程比例（占全行程的份额）；超出死区后的剩余行程会被拉伸至整个范围。25% 是独立版 Cemu 的默认值。较小的死区适合中心回正精准的摇杆（如磁吸霍尔效应、TMR 摇杆）；如果游戏出现自动移动现象，请调高此数值。"
 #define CEMU_GAMEPAD_MOTION_LABEL_CHS "GamePad 动作感应/体感"
 #define CEMU_GAMEPAD_MOTION_INFO_0_CHS "从 RetroArch 在端口 1 读取的传感器中获取 GamePad 的陀螺仪和加速度计数据：可以是手机/平板自带的传感器，或输入驱动支持的手柄（如 DualShock 4、DualSense 等）。通过倾斜 GamePad 来瞄准或转向的游戏需要开启此选项。关闭：GamePad 保持静止，效果等同于独立版中关闭体感。"
 #define CEMU_NUMBER_OF_SCREEN_LAYOUTS_LABEL_CHS "屏幕布局数量"
@@ -4624,8 +4908,8 @@ struct retro_core_options_v2 options_ca = {
 #define CEMU_WUA_OUTPUT_DIR_INFO_0_CHS "导出生成的 .wua 文件的保存位置。需要保证有足够的存储空间。"
 #define CEMU_CONVERT_TO_WUA_LABEL_CHS "开始转换为 WUA 格式"
 #define CEMU_CONVERT_TO_WUA_INFO_0_CHS "将当前游戏打包写入指定输出目录为 .wua 归档文件。转换过程中游戏仍会正常维持运行。"
-#define CEMU_INTERNAL_RESOLUTION_LABEL_CHS NULL
-#define CEMU_INTERNAL_RESOLUTION_INFO_0_CHS NULL
+#define CEMU_INTERNAL_RESOLUTION_LABEL_CHS "内部渲染分辨率 (需重启)"
+#define CEMU_INTERNAL_RESOLUTION_INFO_0_CHS "针对没有配备分辨率图形包的游戏的通用备用方案：调整每个屏幕形状的渲染目标的大小，部分游戏在调整大小时可能会影响某些特定功能的渲染。按游戏原生分辨率的倍数缩放：对于 720p 的游戏，0.5x 相当于 640x360（即四分之一的像素），2x 相当于 2560x1440；对于 1080p 的游戏，0.5x 相当于 960x540。当已加载的游戏启用了专属分辨率图形包（图形包）时，将优先由图形包来设定分辨率。"
 #define OPTION_VAL_0_25X_CHS NULL
 #define OPTION_VAL_0_5X_CHS NULL
 #define OPTION_VAL_0_75X_CHS NULL
@@ -4633,14 +4917,14 @@ struct retro_core_options_v2 options_ca = {
 #define OPTION_VAL_1_5X_CHS NULL
 #define OPTION_VAL_2X_CHS NULL
 #define OPTION_VAL_3X_CHS "3x (3840x2160, at 720p)"
-#define CEMU_RENDER_AHEAD_LABEL_CHS NULL
-#define CEMU_RENDER_AHEAD_INFO_0_CHS NULL
-#define CEMU_AUDIO_THREAD_LABEL_CHS NULL
-#define CEMU_AUDIO_THREAD_INFO_0_CHS NULL
-#define CEMU_BC1_16BIT_LABEL_CHS NULL
+#define CEMU_RENDER_AHEAD_LABEL_CHS "提前渲染一帧"
+#define CEMU_RENDER_AHEAD_INFO_0_CHS "允许 Cemu 在 RetroArch 显示上一帧的同时开始绘制下一帧，效果与独立版 Cemu 相同。在渲染占用大部分帧时间的场景下画面更流畅，但会增加一帧的输入延迟。"
+#define CEMU_AUDIO_THREAD_LABEL_CHS "独立音频线程 (需重启)"
+#define CEMU_AUDIO_THREAD_INFO_0_CHS "开启：RetroArch 在其自己的线程中处理音频，Wii U 的音频像独立版 Cemu 一样按时钟运行，因此在帧渲染延迟时（如加载、着色器编译）不会出现音频断续。此时 RetroArch 的音频同步不再控制帧率；改由垂直同步控制，且 RetroArch 的音频统计信息将保持为空。关闭：音频随每一帧同步传递。"
+#define CEMU_BC1_16BIT_LABEL_CHS "减少 BC1 纹理内存占用 (需重启)"
 #define CEMU_BC1_16BIT_INFO_0_CHS "在不支持直接采样 BC 格式的 GPU 上将 BC1 纹理的内存开销减半，代价是损失 1 位的绿色色彩精度。在支持 BC 采样的设备上无效果。"
 #define CEMU_SHOW_GAME_FPS_LABEL_CHS "显示游戏帧率 (FPS)"
-#define CEMU_SHOW_GAME_FPS_INFO_0_CHS NULL
+#define CEMU_SHOW_GAME_FPS_INFO_0_CHS "每秒一次，在 RetroArch 的屏幕显示 (OSD) 上显示游戏实际渲染的帧率。"
 #define CEMU_LOG_TO_FILE_LABEL_CHS "写入 Cemu 日志至 log.txt"
 #define CEMU_LOG_FILESYSTEM_LABEL_CHS "记录文件系统访问（调试用）"
 #define CEMU_LOG_THREAD_SYNC_LABEL_CHS "记录线程同步（调试用）"
@@ -4655,9 +4939,9 @@ struct retro_core_options_v2 options_ca = {
 #define CEMU_LOG_THREAD_TIME_INFO_0_CHS "每秒记录一次各模拟 PowerPC 核心线程、GPU 线程及前端线程的占用率（以占用单个宿主核心的百分比表示）。占用率接近 100% 的线程即为导致游戏变慢的瓶颈所在。"
 #define CEMU_DUMP_SHADERS_LABEL_CHS "转储着色器（调试用）"
 #define CEMU_DUMP_SHADERS_INFO_0_CHS "将游戏使用的每个着色器源码写入 system/Cemu/dump/shaders 目录，文件名取自 log.txt 中显示的哈希值。用于提交或报告在特定 GPU 上编译失败或渲染错误的着色器。这会拖慢着色器编译速度并迅速填满文件夹，因此使用完毕后请及时关闭。"
-#define CEMU_EMULATE_SKYLANDER_PORTAL_LABEL_CHS NULL
-#define CEMU_EMULATE_INFINITY_BASE_LABEL_CHS NULL
-#define CEMU_EMULATE_DIMENSIONS_TOYPAD_LABEL_CHS NULL
+#define CEMU_EMULATE_SKYLANDER_PORTAL_LABEL_CHS "模拟《宝贝龙世界 (Skylanders)》力量之门 (需重启)"
+#define CEMU_EMULATE_INFINITY_BASE_LABEL_CHS "模拟《迪士尼：无限 (Disney Infinity)》底座 (需重启)"
+#define CEMU_EMULATE_DIMENSIONS_TOYPAD_LABEL_CHS "模拟《乐高维度 (Lego Dimensions)》玩具板 (需重启)"
 
 struct retro_core_option_v2_category option_cats_chs[] = {
 	// In the order RetroArch shows them, which is the order of their first
@@ -4912,6 +5196,52 @@ struct retro_core_option_v2_definition option_defs_chs[] = {
 			{ NULL, NULL },
 		},
 		"100"
+	},
+	{
+		"cemu_stick_deadzone_p1",
+		CEMU_STICK_DEADZONE_P1_LABEL_CHS,
+		NULL,
+		CEMU_STICK_DEADZONE_P1_INFO_0_CHS,
+		NULL,
+		"controller",
+		{
+			{ "0", "Off" },
+			{ "5", OPTION_VAL_5_CHS },
+			{ "10", OPTION_VAL_10_CHS },
+			{ "15", OPTION_VAL_15_CHS },
+			{ "20", OPTION_VAL_20_CHS },
+			{ "25", OPTION_VAL_25_CHS },
+			{ "30", OPTION_VAL_30_CHS },
+			{ "35", OPTION_VAL_35_CHS },
+			{ "40", OPTION_VAL_40_CHS },
+			{ "45", OPTION_VAL_45_CHS },
+			{ "50", OPTION_VAL_50_CHS },
+			{ NULL, NULL },
+		},
+		"25"
+	},
+	{
+		"cemu_stick_deadzone_p2",
+		CEMU_STICK_DEADZONE_P2_LABEL_CHS,
+		NULL,
+		CEMU_STICK_DEADZONE_P2_INFO_0_CHS,
+		NULL,
+		"controller",
+		{
+			{ "0", "Off" },
+			{ "5", OPTION_VAL_5_CHS },
+			{ "10", OPTION_VAL_10_CHS },
+			{ "15", OPTION_VAL_15_CHS },
+			{ "20", OPTION_VAL_20_CHS },
+			{ "25", OPTION_VAL_25_CHS },
+			{ "30", OPTION_VAL_30_CHS },
+			{ "35", OPTION_VAL_35_CHS },
+			{ "40", OPTION_VAL_40_CHS },
+			{ "45", OPTION_VAL_45_CHS },
+			{ "50", OPTION_VAL_50_CHS },
+			{ NULL, NULL },
+		},
+		"25"
 	},
 	{
 		"cemu_gamepad_motion",
@@ -5484,6 +5814,15 @@ struct retro_core_options_v2 options_chs = {
 #define OPTION_VAL_80_CHT NULL
 #define OPTION_VAL_90_CHT NULL
 #define OPTION_VAL_100_CHT NULL
+#define CEMU_STICK_DEADZONE_P1_LABEL_CHT NULL
+#define CEMU_STICK_DEADZONE_P1_INFO_0_CHT NULL
+#define OPTION_VAL_5_CHT NULL
+#define OPTION_VAL_15_CHT NULL
+#define OPTION_VAL_25_CHT NULL
+#define OPTION_VAL_35_CHT NULL
+#define OPTION_VAL_45_CHT NULL
+#define CEMU_STICK_DEADZONE_P2_LABEL_CHT NULL
+#define CEMU_STICK_DEADZONE_P2_INFO_0_CHT NULL
 #define CEMU_GAMEPAD_MOTION_LABEL_CHT NULL
 #define CEMU_GAMEPAD_MOTION_INFO_0_CHT NULL
 #define CEMU_NUMBER_OF_SCREEN_LAYOUTS_LABEL_CHT NULL
@@ -5807,6 +6146,52 @@ struct retro_core_option_v2_definition option_defs_cht[] = {
 			{ NULL, NULL },
 		},
 		"100"
+	},
+	{
+		"cemu_stick_deadzone_p1",
+		CEMU_STICK_DEADZONE_P1_LABEL_CHT,
+		NULL,
+		CEMU_STICK_DEADZONE_P1_INFO_0_CHT,
+		NULL,
+		"controller",
+		{
+			{ "0", "Off" },
+			{ "5", OPTION_VAL_5_CHT },
+			{ "10", OPTION_VAL_10_CHT },
+			{ "15", OPTION_VAL_15_CHT },
+			{ "20", OPTION_VAL_20_CHT },
+			{ "25", OPTION_VAL_25_CHT },
+			{ "30", OPTION_VAL_30_CHT },
+			{ "35", OPTION_VAL_35_CHT },
+			{ "40", OPTION_VAL_40_CHT },
+			{ "45", OPTION_VAL_45_CHT },
+			{ "50", OPTION_VAL_50_CHT },
+			{ NULL, NULL },
+		},
+		"25"
+	},
+	{
+		"cemu_stick_deadzone_p2",
+		CEMU_STICK_DEADZONE_P2_LABEL_CHT,
+		NULL,
+		CEMU_STICK_DEADZONE_P2_INFO_0_CHT,
+		NULL,
+		"controller",
+		{
+			{ "0", "Off" },
+			{ "5", OPTION_VAL_5_CHT },
+			{ "10", OPTION_VAL_10_CHT },
+			{ "15", OPTION_VAL_15_CHT },
+			{ "20", OPTION_VAL_20_CHT },
+			{ "25", OPTION_VAL_25_CHT },
+			{ "30", OPTION_VAL_30_CHT },
+			{ "35", OPTION_VAL_35_CHT },
+			{ "40", OPTION_VAL_40_CHT },
+			{ "45", OPTION_VAL_45_CHT },
+			{ "50", OPTION_VAL_50_CHT },
+			{ NULL, NULL },
+		},
+		"25"
 	},
 	{
 		"cemu_gamepad_motion",
@@ -6379,6 +6764,15 @@ struct retro_core_options_v2 options_cht = {
 #define OPTION_VAL_80_CS NULL
 #define OPTION_VAL_90_CS NULL
 #define OPTION_VAL_100_CS NULL
+#define CEMU_STICK_DEADZONE_P1_LABEL_CS NULL
+#define CEMU_STICK_DEADZONE_P1_INFO_0_CS NULL
+#define OPTION_VAL_5_CS NULL
+#define OPTION_VAL_15_CS NULL
+#define OPTION_VAL_25_CS NULL
+#define OPTION_VAL_35_CS NULL
+#define OPTION_VAL_45_CS NULL
+#define CEMU_STICK_DEADZONE_P2_LABEL_CS NULL
+#define CEMU_STICK_DEADZONE_P2_INFO_0_CS NULL
 #define CEMU_GAMEPAD_MOTION_LABEL_CS NULL
 #define CEMU_GAMEPAD_MOTION_INFO_0_CS NULL
 #define CEMU_NUMBER_OF_SCREEN_LAYOUTS_LABEL_CS NULL
@@ -6702,6 +7096,52 @@ struct retro_core_option_v2_definition option_defs_cs[] = {
 			{ NULL, NULL },
 		},
 		"100"
+	},
+	{
+		"cemu_stick_deadzone_p1",
+		CEMU_STICK_DEADZONE_P1_LABEL_CS,
+		NULL,
+		CEMU_STICK_DEADZONE_P1_INFO_0_CS,
+		NULL,
+		"controller",
+		{
+			{ "0", "Off" },
+			{ "5", OPTION_VAL_5_CS },
+			{ "10", OPTION_VAL_10_CS },
+			{ "15", OPTION_VAL_15_CS },
+			{ "20", OPTION_VAL_20_CS },
+			{ "25", OPTION_VAL_25_CS },
+			{ "30", OPTION_VAL_30_CS },
+			{ "35", OPTION_VAL_35_CS },
+			{ "40", OPTION_VAL_40_CS },
+			{ "45", OPTION_VAL_45_CS },
+			{ "50", OPTION_VAL_50_CS },
+			{ NULL, NULL },
+		},
+		"25"
+	},
+	{
+		"cemu_stick_deadzone_p2",
+		CEMU_STICK_DEADZONE_P2_LABEL_CS,
+		NULL,
+		CEMU_STICK_DEADZONE_P2_INFO_0_CS,
+		NULL,
+		"controller",
+		{
+			{ "0", "Off" },
+			{ "5", OPTION_VAL_5_CS },
+			{ "10", OPTION_VAL_10_CS },
+			{ "15", OPTION_VAL_15_CS },
+			{ "20", OPTION_VAL_20_CS },
+			{ "25", OPTION_VAL_25_CS },
+			{ "30", OPTION_VAL_30_CS },
+			{ "35", OPTION_VAL_35_CS },
+			{ "40", OPTION_VAL_40_CS },
+			{ "45", OPTION_VAL_45_CS },
+			{ "50", OPTION_VAL_50_CS },
+			{ NULL, NULL },
+		},
+		"25"
 	},
 	{
 		"cemu_gamepad_motion",
@@ -7274,6 +7714,15 @@ struct retro_core_options_v2 options_cs = {
 #define OPTION_VAL_80_CY NULL
 #define OPTION_VAL_90_CY NULL
 #define OPTION_VAL_100_CY NULL
+#define CEMU_STICK_DEADZONE_P1_LABEL_CY NULL
+#define CEMU_STICK_DEADZONE_P1_INFO_0_CY NULL
+#define OPTION_VAL_5_CY NULL
+#define OPTION_VAL_15_CY NULL
+#define OPTION_VAL_25_CY NULL
+#define OPTION_VAL_35_CY NULL
+#define OPTION_VAL_45_CY NULL
+#define CEMU_STICK_DEADZONE_P2_LABEL_CY NULL
+#define CEMU_STICK_DEADZONE_P2_INFO_0_CY NULL
 #define CEMU_GAMEPAD_MOTION_LABEL_CY NULL
 #define CEMU_GAMEPAD_MOTION_INFO_0_CY NULL
 #define CEMU_NUMBER_OF_SCREEN_LAYOUTS_LABEL_CY NULL
@@ -7597,6 +8046,52 @@ struct retro_core_option_v2_definition option_defs_cy[] = {
 			{ NULL, NULL },
 		},
 		"100"
+	},
+	{
+		"cemu_stick_deadzone_p1",
+		CEMU_STICK_DEADZONE_P1_LABEL_CY,
+		NULL,
+		CEMU_STICK_DEADZONE_P1_INFO_0_CY,
+		NULL,
+		"controller",
+		{
+			{ "0", "Off" },
+			{ "5", OPTION_VAL_5_CY },
+			{ "10", OPTION_VAL_10_CY },
+			{ "15", OPTION_VAL_15_CY },
+			{ "20", OPTION_VAL_20_CY },
+			{ "25", OPTION_VAL_25_CY },
+			{ "30", OPTION_VAL_30_CY },
+			{ "35", OPTION_VAL_35_CY },
+			{ "40", OPTION_VAL_40_CY },
+			{ "45", OPTION_VAL_45_CY },
+			{ "50", OPTION_VAL_50_CY },
+			{ NULL, NULL },
+		},
+		"25"
+	},
+	{
+		"cemu_stick_deadzone_p2",
+		CEMU_STICK_DEADZONE_P2_LABEL_CY,
+		NULL,
+		CEMU_STICK_DEADZONE_P2_INFO_0_CY,
+		NULL,
+		"controller",
+		{
+			{ "0", "Off" },
+			{ "5", OPTION_VAL_5_CY },
+			{ "10", OPTION_VAL_10_CY },
+			{ "15", OPTION_VAL_15_CY },
+			{ "20", OPTION_VAL_20_CY },
+			{ "25", OPTION_VAL_25_CY },
+			{ "30", OPTION_VAL_30_CY },
+			{ "35", OPTION_VAL_35_CY },
+			{ "40", OPTION_VAL_40_CY },
+			{ "45", OPTION_VAL_45_CY },
+			{ "50", OPTION_VAL_50_CY },
+			{ NULL, NULL },
+		},
+		"25"
 	},
 	{
 		"cemu_gamepad_motion",
@@ -8169,6 +8664,15 @@ struct retro_core_options_v2 options_cy = {
 #define OPTION_VAL_80_DA NULL
 #define OPTION_VAL_90_DA NULL
 #define OPTION_VAL_100_DA NULL
+#define CEMU_STICK_DEADZONE_P1_LABEL_DA NULL
+#define CEMU_STICK_DEADZONE_P1_INFO_0_DA NULL
+#define OPTION_VAL_5_DA NULL
+#define OPTION_VAL_15_DA NULL
+#define OPTION_VAL_25_DA NULL
+#define OPTION_VAL_35_DA NULL
+#define OPTION_VAL_45_DA NULL
+#define CEMU_STICK_DEADZONE_P2_LABEL_DA NULL
+#define CEMU_STICK_DEADZONE_P2_INFO_0_DA NULL
 #define CEMU_GAMEPAD_MOTION_LABEL_DA NULL
 #define CEMU_GAMEPAD_MOTION_INFO_0_DA NULL
 #define CEMU_NUMBER_OF_SCREEN_LAYOUTS_LABEL_DA NULL
@@ -8492,6 +8996,52 @@ struct retro_core_option_v2_definition option_defs_da[] = {
 			{ NULL, NULL },
 		},
 		"100"
+	},
+	{
+		"cemu_stick_deadzone_p1",
+		CEMU_STICK_DEADZONE_P1_LABEL_DA,
+		NULL,
+		CEMU_STICK_DEADZONE_P1_INFO_0_DA,
+		NULL,
+		"controller",
+		{
+			{ "0", "Off" },
+			{ "5", OPTION_VAL_5_DA },
+			{ "10", OPTION_VAL_10_DA },
+			{ "15", OPTION_VAL_15_DA },
+			{ "20", OPTION_VAL_20_DA },
+			{ "25", OPTION_VAL_25_DA },
+			{ "30", OPTION_VAL_30_DA },
+			{ "35", OPTION_VAL_35_DA },
+			{ "40", OPTION_VAL_40_DA },
+			{ "45", OPTION_VAL_45_DA },
+			{ "50", OPTION_VAL_50_DA },
+			{ NULL, NULL },
+		},
+		"25"
+	},
+	{
+		"cemu_stick_deadzone_p2",
+		CEMU_STICK_DEADZONE_P2_LABEL_DA,
+		NULL,
+		CEMU_STICK_DEADZONE_P2_INFO_0_DA,
+		NULL,
+		"controller",
+		{
+			{ "0", "Off" },
+			{ "5", OPTION_VAL_5_DA },
+			{ "10", OPTION_VAL_10_DA },
+			{ "15", OPTION_VAL_15_DA },
+			{ "20", OPTION_VAL_20_DA },
+			{ "25", OPTION_VAL_25_DA },
+			{ "30", OPTION_VAL_30_DA },
+			{ "35", OPTION_VAL_35_DA },
+			{ "40", OPTION_VAL_40_DA },
+			{ "45", OPTION_VAL_45_DA },
+			{ "50", OPTION_VAL_50_DA },
+			{ NULL, NULL },
+		},
+		"25"
 	},
 	{
 		"cemu_gamepad_motion",
@@ -9064,6 +9614,15 @@ struct retro_core_options_v2 options_da = {
 #define OPTION_VAL_80_DE "80 %"
 #define OPTION_VAL_90_DE "90 %"
 #define OPTION_VAL_100_DE "100 %"
+#define CEMU_STICK_DEADZONE_P1_LABEL_DE "Deadzone des Sticks (Spieler 1)"
+#define CEMU_STICK_DEADZONE_P1_INFO_0_DE "Wie weit die Sticks von Spieler 1 (des GamePads oder des Controllers an Port 1) bewegt werden müssen, bevor das Spiel die Bewegung erkennt, angegeben als Anteil des gesamten Bewegungswegs. Der verbleibende Bewegungsweg wird anschließend auf den gesamten Wertebereich gestreckt. 25 % ist der Standardwert von Cemu als eigenständigem Programm. Ein niedrigerer Wert eignet sich für Sticks, die in der Mittelstellung ruhen (Hall-Effekt, TMR). Den Wert erhöhen, wenn sich das Spiel von selbst bewegt."
+#define OPTION_VAL_5_DE "5 %"
+#define OPTION_VAL_15_DE "15 %"
+#define OPTION_VAL_25_DE "25 %"
+#define OPTION_VAL_35_DE "35 %"
+#define OPTION_VAL_45_DE "45 %"
+#define CEMU_STICK_DEADZONE_P2_LABEL_DE "Deadzone des Sticks (Spieler 2–4)"
+#define CEMU_STICK_DEADZONE_P2_INFO_0_DE "Wie weit die Sticks der Wii Remotes, Pro Controller und Classic Controller an den Ports 2 bis 4 bewegt werden müssen, bevor das Spiel die Bewegung erkennt, angegeben als Anteil des gesamten Bewegungswegs. Der verbleibende Bewegungsweg wird anschließend auf den gesamten Wertebereich gestreckt. 25 % ist der Standardwert von Cemu als eigenständigem Programm. Ein niedrigerer Wert eignet sich für Sticks, die in der Mittelstellung ruhen (Hall-Effekt, TMR). Den Wert erhöhen, wenn sich das Spiel von selbst bewegt."
 #define CEMU_GAMEPAD_MOTION_LABEL_DE "Bewegungssteuerung des GamePads"
 #define CEMU_GAMEPAD_MOTION_INFO_0_DE "Kreisel- und Beschleunigungssensor des GamePads, ausgelesen von RetroArch an Port 1: die Sensoren eines Smartphones oder Tablets oder die eines Controllers, sofern der Eingabetreiber von RetroArch sie unterstützt (DualShock 4, DualSense und andere). Spiele, bei denen durch Neigen des GamePads gezielt oder gelenkt wird, benötigen diese Funktion. Aus: Das GamePad bleibt unbewegt, wie bei deaktivierter Bewegungssteuerung im Standalone-Modus."
 #define CEMU_NUMBER_OF_SCREEN_LAYOUTS_LABEL_DE "Anzahl der Bildschirmlayouts"
@@ -9387,6 +9946,52 @@ struct retro_core_option_v2_definition option_defs_de[] = {
 			{ NULL, NULL },
 		},
 		"100"
+	},
+	{
+		"cemu_stick_deadzone_p1",
+		CEMU_STICK_DEADZONE_P1_LABEL_DE,
+		NULL,
+		CEMU_STICK_DEADZONE_P1_INFO_0_DE,
+		NULL,
+		"controller",
+		{
+			{ "0", "Off" },
+			{ "5", OPTION_VAL_5_DE },
+			{ "10", OPTION_VAL_10_DE },
+			{ "15", OPTION_VAL_15_DE },
+			{ "20", OPTION_VAL_20_DE },
+			{ "25", OPTION_VAL_25_DE },
+			{ "30", OPTION_VAL_30_DE },
+			{ "35", OPTION_VAL_35_DE },
+			{ "40", OPTION_VAL_40_DE },
+			{ "45", OPTION_VAL_45_DE },
+			{ "50", OPTION_VAL_50_DE },
+			{ NULL, NULL },
+		},
+		"25"
+	},
+	{
+		"cemu_stick_deadzone_p2",
+		CEMU_STICK_DEADZONE_P2_LABEL_DE,
+		NULL,
+		CEMU_STICK_DEADZONE_P2_INFO_0_DE,
+		NULL,
+		"controller",
+		{
+			{ "0", "Off" },
+			{ "5", OPTION_VAL_5_DE },
+			{ "10", OPTION_VAL_10_DE },
+			{ "15", OPTION_VAL_15_DE },
+			{ "20", OPTION_VAL_20_DE },
+			{ "25", OPTION_VAL_25_DE },
+			{ "30", OPTION_VAL_30_DE },
+			{ "35", OPTION_VAL_35_DE },
+			{ "40", OPTION_VAL_40_DE },
+			{ "45", OPTION_VAL_45_DE },
+			{ "50", OPTION_VAL_50_DE },
+			{ NULL, NULL },
+		},
+		"25"
 	},
 	{
 		"cemu_gamepad_motion",
@@ -9959,6 +10564,15 @@ struct retro_core_options_v2 options_de = {
 #define OPTION_VAL_80_EL "το 80%"
 #define OPTION_VAL_90_EL NULL
 #define OPTION_VAL_100_EL NULL
+#define CEMU_STICK_DEADZONE_P1_LABEL_EL NULL
+#define CEMU_STICK_DEADZONE_P1_INFO_0_EL NULL
+#define OPTION_VAL_5_EL NULL
+#define OPTION_VAL_15_EL NULL
+#define OPTION_VAL_25_EL NULL
+#define OPTION_VAL_35_EL NULL
+#define OPTION_VAL_45_EL NULL
+#define CEMU_STICK_DEADZONE_P2_LABEL_EL NULL
+#define CEMU_STICK_DEADZONE_P2_INFO_0_EL NULL
 #define CEMU_GAMEPAD_MOTION_LABEL_EL NULL
 #define CEMU_GAMEPAD_MOTION_INFO_0_EL NULL
 #define CEMU_NUMBER_OF_SCREEN_LAYOUTS_LABEL_EL NULL
@@ -10282,6 +10896,52 @@ struct retro_core_option_v2_definition option_defs_el[] = {
 			{ NULL, NULL },
 		},
 		"100"
+	},
+	{
+		"cemu_stick_deadzone_p1",
+		CEMU_STICK_DEADZONE_P1_LABEL_EL,
+		NULL,
+		CEMU_STICK_DEADZONE_P1_INFO_0_EL,
+		NULL,
+		"controller",
+		{
+			{ "0", "Off" },
+			{ "5", OPTION_VAL_5_EL },
+			{ "10", OPTION_VAL_10_EL },
+			{ "15", OPTION_VAL_15_EL },
+			{ "20", OPTION_VAL_20_EL },
+			{ "25", OPTION_VAL_25_EL },
+			{ "30", OPTION_VAL_30_EL },
+			{ "35", OPTION_VAL_35_EL },
+			{ "40", OPTION_VAL_40_EL },
+			{ "45", OPTION_VAL_45_EL },
+			{ "50", OPTION_VAL_50_EL },
+			{ NULL, NULL },
+		},
+		"25"
+	},
+	{
+		"cemu_stick_deadzone_p2",
+		CEMU_STICK_DEADZONE_P2_LABEL_EL,
+		NULL,
+		CEMU_STICK_DEADZONE_P2_INFO_0_EL,
+		NULL,
+		"controller",
+		{
+			{ "0", "Off" },
+			{ "5", OPTION_VAL_5_EL },
+			{ "10", OPTION_VAL_10_EL },
+			{ "15", OPTION_VAL_15_EL },
+			{ "20", OPTION_VAL_20_EL },
+			{ "25", OPTION_VAL_25_EL },
+			{ "30", OPTION_VAL_30_EL },
+			{ "35", OPTION_VAL_35_EL },
+			{ "40", OPTION_VAL_40_EL },
+			{ "45", OPTION_VAL_45_EL },
+			{ "50", OPTION_VAL_50_EL },
+			{ NULL, NULL },
+		},
+		"25"
 	},
 	{
 		"cemu_gamepad_motion",
@@ -10854,6 +11514,15 @@ struct retro_core_options_v2 options_el = {
 #define OPTION_VAL_80_EN NULL
 #define OPTION_VAL_90_EN NULL
 #define OPTION_VAL_100_EN NULL
+#define CEMU_STICK_DEADZONE_P1_LABEL_EN NULL
+#define CEMU_STICK_DEADZONE_P1_INFO_0_EN NULL
+#define OPTION_VAL_5_EN NULL
+#define OPTION_VAL_15_EN NULL
+#define OPTION_VAL_25_EN NULL
+#define OPTION_VAL_35_EN NULL
+#define OPTION_VAL_45_EN NULL
+#define CEMU_STICK_DEADZONE_P2_LABEL_EN NULL
+#define CEMU_STICK_DEADZONE_P2_INFO_0_EN NULL
 #define CEMU_GAMEPAD_MOTION_LABEL_EN NULL
 #define CEMU_GAMEPAD_MOTION_INFO_0_EN NULL
 #define CEMU_NUMBER_OF_SCREEN_LAYOUTS_LABEL_EN NULL
@@ -11177,6 +11846,52 @@ struct retro_core_option_v2_definition option_defs_en[] = {
 			{ NULL, NULL },
 		},
 		"100"
+	},
+	{
+		"cemu_stick_deadzone_p1",
+		CEMU_STICK_DEADZONE_P1_LABEL_EN,
+		NULL,
+		CEMU_STICK_DEADZONE_P1_INFO_0_EN,
+		NULL,
+		"controller",
+		{
+			{ "0", "Off" },
+			{ "5", OPTION_VAL_5_EN },
+			{ "10", OPTION_VAL_10_EN },
+			{ "15", OPTION_VAL_15_EN },
+			{ "20", OPTION_VAL_20_EN },
+			{ "25", OPTION_VAL_25_EN },
+			{ "30", OPTION_VAL_30_EN },
+			{ "35", OPTION_VAL_35_EN },
+			{ "40", OPTION_VAL_40_EN },
+			{ "45", OPTION_VAL_45_EN },
+			{ "50", OPTION_VAL_50_EN },
+			{ NULL, NULL },
+		},
+		"25"
+	},
+	{
+		"cemu_stick_deadzone_p2",
+		CEMU_STICK_DEADZONE_P2_LABEL_EN,
+		NULL,
+		CEMU_STICK_DEADZONE_P2_INFO_0_EN,
+		NULL,
+		"controller",
+		{
+			{ "0", "Off" },
+			{ "5", OPTION_VAL_5_EN },
+			{ "10", OPTION_VAL_10_EN },
+			{ "15", OPTION_VAL_15_EN },
+			{ "20", OPTION_VAL_20_EN },
+			{ "25", OPTION_VAL_25_EN },
+			{ "30", OPTION_VAL_30_EN },
+			{ "35", OPTION_VAL_35_EN },
+			{ "40", OPTION_VAL_40_EN },
+			{ "45", OPTION_VAL_45_EN },
+			{ "50", OPTION_VAL_50_EN },
+			{ NULL, NULL },
+		},
+		"25"
 	},
 	{
 		"cemu_gamepad_motion",
@@ -11749,6 +12464,15 @@ struct retro_core_options_v2 options_en = {
 #define OPTION_VAL_80_EO NULL
 #define OPTION_VAL_90_EO NULL
 #define OPTION_VAL_100_EO NULL
+#define CEMU_STICK_DEADZONE_P1_LABEL_EO NULL
+#define CEMU_STICK_DEADZONE_P1_INFO_0_EO NULL
+#define OPTION_VAL_5_EO NULL
+#define OPTION_VAL_15_EO NULL
+#define OPTION_VAL_25_EO NULL
+#define OPTION_VAL_35_EO NULL
+#define OPTION_VAL_45_EO NULL
+#define CEMU_STICK_DEADZONE_P2_LABEL_EO NULL
+#define CEMU_STICK_DEADZONE_P2_INFO_0_EO NULL
 #define CEMU_GAMEPAD_MOTION_LABEL_EO NULL
 #define CEMU_GAMEPAD_MOTION_INFO_0_EO NULL
 #define CEMU_NUMBER_OF_SCREEN_LAYOUTS_LABEL_EO NULL
@@ -12072,6 +12796,52 @@ struct retro_core_option_v2_definition option_defs_eo[] = {
 			{ NULL, NULL },
 		},
 		"100"
+	},
+	{
+		"cemu_stick_deadzone_p1",
+		CEMU_STICK_DEADZONE_P1_LABEL_EO,
+		NULL,
+		CEMU_STICK_DEADZONE_P1_INFO_0_EO,
+		NULL,
+		"controller",
+		{
+			{ "0", "Off" },
+			{ "5", OPTION_VAL_5_EO },
+			{ "10", OPTION_VAL_10_EO },
+			{ "15", OPTION_VAL_15_EO },
+			{ "20", OPTION_VAL_20_EO },
+			{ "25", OPTION_VAL_25_EO },
+			{ "30", OPTION_VAL_30_EO },
+			{ "35", OPTION_VAL_35_EO },
+			{ "40", OPTION_VAL_40_EO },
+			{ "45", OPTION_VAL_45_EO },
+			{ "50", OPTION_VAL_50_EO },
+			{ NULL, NULL },
+		},
+		"25"
+	},
+	{
+		"cemu_stick_deadzone_p2",
+		CEMU_STICK_DEADZONE_P2_LABEL_EO,
+		NULL,
+		CEMU_STICK_DEADZONE_P2_INFO_0_EO,
+		NULL,
+		"controller",
+		{
+			{ "0", "Off" },
+			{ "5", OPTION_VAL_5_EO },
+			{ "10", OPTION_VAL_10_EO },
+			{ "15", OPTION_VAL_15_EO },
+			{ "20", OPTION_VAL_20_EO },
+			{ "25", OPTION_VAL_25_EO },
+			{ "30", OPTION_VAL_30_EO },
+			{ "35", OPTION_VAL_35_EO },
+			{ "40", OPTION_VAL_40_EO },
+			{ "45", OPTION_VAL_45_EO },
+			{ "50", OPTION_VAL_50_EO },
+			{ NULL, NULL },
+		},
+		"25"
 	},
 	{
 		"cemu_gamepad_motion",
@@ -12607,7 +13377,7 @@ struct retro_core_options_v2 options_eo = {
 #define OPTION_VAL_RUSSIAN_ES "Ruso"
 #define OPTION_VAL_TAIWANESE_ES "Taiwanés"
 #define CEMU_AUDIO_CHANNELS_LABEL_ES "Canales de audio (es necesario reiniciar)"
-#define CEMU_AUDIO_CHANNELS_INFO_0_ES "Establece el tipo de televisor que indica la consola a los juegos (tal y como estaría configurado dicho televisor): los juegos que sean compatibles producirán una mezcla de audio para el número de altavoces indicado. 5.1 Surround se mostrará en RetroArch como seis canales si tiene activada la salida de audio multicanal, en caso contrario, se convertirá a estéreo."
+#define CEMU_AUDIO_CHANNELS_INFO_0_ES "Establece el tipo de televisor declarado por la consola a los juegos (tal y como estaría configurado dicho televisor): los juegos compatibles producirán una mezcla de audio para el número de altavoces indicado. 5.1 Surround se mostrará en RetroArch como seis canales si tiene activada la salida de audio multicanal, en caso contrario, se convertirá a estéreo."
 #define OPTION_VAL_MONO_ES "Monoaural"
 #define OPTION_VAL_STEREO_ES "Estéreo"
 #define OPTION_VAL_SURROUND_ES "5.1 Surround"
@@ -12624,7 +13394,7 @@ struct retro_core_options_v2 options_eo = {
 #define OPTION_VAL_OPENGL_ES NULL
 #define OPTION_VAL_VULKAN_ES NULL
 #define CEMU_PRECOMPILED_SHADERS_LABEL_ES "Shaders precompilados (OpenGL)"
-#define CEMU_PRECOMPILED_SHADERS_INFO_0_ES "Utiliza una caché de programas de shaders (sombreados) compliados. El valor automático utilizará el perfil del juego si existe, como haría la aplicación independiente, en caso contrario esta opción se desactivará en GPU de Nvidia, donde el controlador ya tiene una caché propia, y se mantendrá activada en el resto de casos."
+#define CEMU_PRECOMPILED_SHADERS_INFO_0_ES "Utiliza una caché para almacenar los programas de shaders compilados. El valor automático utilizará el perfil del juego si existe, como haría la aplicación independiente, en caso contrario esta opción se desactivará en las GPU de Nvidia, donde el controlador ya tiene una caché propia, y se mantendrá activada en el resto de casos."
 #define CEMU_ASYNC_SHADER_COMPILE_LABEL_ES "Compilación asincrónica de shaders (Vulkan)"
 #define CEMU_ACCURATE_SHADER_MUL_LABEL_ES "Multiplicación precisa de shaders"
 #define CEMU_ACCURATE_SHADER_MUL_INFO_0_ES "Emula las multiplicaciones dentro de la GPU de forma exacta, necesarias para la mayoría de juegos. El valor automático utilizará el perfil del juego si existe, como haría la aplicación independiente (Super Mario 3D World, Captain Toad y Xenoblade Chronicles X la desactivarán), en caso contrario, esta opción se mantendrá activada."
@@ -12644,6 +13414,15 @@ struct retro_core_options_v2 options_eo = {
 #define OPTION_VAL_80_ES "80 %"
 #define OPTION_VAL_90_ES "90 %"
 #define OPTION_VAL_100_ES "100 %"
+#define CEMU_STICK_DEADZONE_P1_LABEL_ES "Zona muerta de stick (jugador 1)"
+#define CEMU_STICK_DEADZONE_P1_INFO_0_ES "Establece la distancia (en porcentaje de su recorrido total) que deben recorrer las palancas de control del jugador 1 (ya sea del GamePad o del mando en el puerto 1) para que el juego las reconozca, a partir de ese punto, el resto del recorrido cubrirá la totalidad del rango. 25 % es el valor predeterminado de la versión independiente de Cemu. Un valor inferior es ideal para sticks cuya posición de reposo sea el centro absoluto (con efecto Hall, TMR); aumenta este valor si los juegos se mueven solos."
+#define OPTION_VAL_5_ES "5 %"
+#define OPTION_VAL_15_ES "15 %"
+#define OPTION_VAL_25_ES "25 %"
+#define OPTION_VAL_35_ES "35 %"
+#define OPTION_VAL_45_ES "45 %"
+#define CEMU_STICK_DEADZONE_P2_LABEL_ES "Zona muerta de stick (jugadores 2-4)"
+#define CEMU_STICK_DEADZONE_P2_INFO_0_ES "Establece la distancia (en porcentaje de su recorrido total) que deben recorrer las palancas de control de los mandos de Wii, mandos Pro y mandos clásicos de los puertos 2 a 4 para que el juego las reconozca, a partir de ese punto, el resto del recorrido cubrirá la totalidad del rango. 25 % es el valor predeterminado de la versión independiente de Cemu. Un valor inferior es ideal para sticks cuya posición de reposo sea el centro absoluto (con efecto Hall, TMR); aumenta este valor si los juegos se mueven solos."
 #define CEMU_GAMEPAD_MOTION_LABEL_ES "Movimientos del GamePad"
 #define CEMU_GAMEPAD_MOTION_INFO_0_ES "Asigna el giroscopio y acelerómetro del GamePad a los sensores que leerá el RetroPad del puerto 1: los de un smartphone o tablet por un lado, o los de un mando que pueda reconocer el controlador de entrada de RetroArch por el otro (DualShock 4, DualSense, entre otros). Necesario para juegos en los que se apunte o conduzca con el GamePad. Desactiva esta opción para que el GamePad se quede quieto, desactivando sus movimientos."
 #define CEMU_NUMBER_OF_SCREEN_LAYOUTS_LABEL_ES "N.º de disposiciones de pantalla"
@@ -12967,6 +13746,52 @@ struct retro_core_option_v2_definition option_defs_es[] = {
 			{ NULL, NULL },
 		},
 		"100"
+	},
+	{
+		"cemu_stick_deadzone_p1",
+		CEMU_STICK_DEADZONE_P1_LABEL_ES,
+		NULL,
+		CEMU_STICK_DEADZONE_P1_INFO_0_ES,
+		NULL,
+		"controller",
+		{
+			{ "0", "Off" },
+			{ "5", OPTION_VAL_5_ES },
+			{ "10", OPTION_VAL_10_ES },
+			{ "15", OPTION_VAL_15_ES },
+			{ "20", OPTION_VAL_20_ES },
+			{ "25", OPTION_VAL_25_ES },
+			{ "30", OPTION_VAL_30_ES },
+			{ "35", OPTION_VAL_35_ES },
+			{ "40", OPTION_VAL_40_ES },
+			{ "45", OPTION_VAL_45_ES },
+			{ "50", OPTION_VAL_50_ES },
+			{ NULL, NULL },
+		},
+		"25"
+	},
+	{
+		"cemu_stick_deadzone_p2",
+		CEMU_STICK_DEADZONE_P2_LABEL_ES,
+		NULL,
+		CEMU_STICK_DEADZONE_P2_INFO_0_ES,
+		NULL,
+		"controller",
+		{
+			{ "0", "Off" },
+			{ "5", OPTION_VAL_5_ES },
+			{ "10", OPTION_VAL_10_ES },
+			{ "15", OPTION_VAL_15_ES },
+			{ "20", OPTION_VAL_20_ES },
+			{ "25", OPTION_VAL_25_ES },
+			{ "30", OPTION_VAL_30_ES },
+			{ "35", OPTION_VAL_35_ES },
+			{ "40", OPTION_VAL_40_ES },
+			{ "45", OPTION_VAL_45_ES },
+			{ "50", OPTION_VAL_50_ES },
+			{ NULL, NULL },
+		},
+		"25"
 	},
 	{
 		"cemu_gamepad_motion",
@@ -13539,6 +14364,15 @@ struct retro_core_options_v2 options_es = {
 #define OPTION_VAL_80_FA NULL
 #define OPTION_VAL_90_FA NULL
 #define OPTION_VAL_100_FA NULL
+#define CEMU_STICK_DEADZONE_P1_LABEL_FA NULL
+#define CEMU_STICK_DEADZONE_P1_INFO_0_FA NULL
+#define OPTION_VAL_5_FA NULL
+#define OPTION_VAL_15_FA NULL
+#define OPTION_VAL_25_FA NULL
+#define OPTION_VAL_35_FA NULL
+#define OPTION_VAL_45_FA NULL
+#define CEMU_STICK_DEADZONE_P2_LABEL_FA NULL
+#define CEMU_STICK_DEADZONE_P2_INFO_0_FA NULL
 #define CEMU_GAMEPAD_MOTION_LABEL_FA NULL
 #define CEMU_GAMEPAD_MOTION_INFO_0_FA NULL
 #define CEMU_NUMBER_OF_SCREEN_LAYOUTS_LABEL_FA NULL
@@ -13862,6 +14696,52 @@ struct retro_core_option_v2_definition option_defs_fa[] = {
 			{ NULL, NULL },
 		},
 		"100"
+	},
+	{
+		"cemu_stick_deadzone_p1",
+		CEMU_STICK_DEADZONE_P1_LABEL_FA,
+		NULL,
+		CEMU_STICK_DEADZONE_P1_INFO_0_FA,
+		NULL,
+		"controller",
+		{
+			{ "0", "Off" },
+			{ "5", OPTION_VAL_5_FA },
+			{ "10", OPTION_VAL_10_FA },
+			{ "15", OPTION_VAL_15_FA },
+			{ "20", OPTION_VAL_20_FA },
+			{ "25", OPTION_VAL_25_FA },
+			{ "30", OPTION_VAL_30_FA },
+			{ "35", OPTION_VAL_35_FA },
+			{ "40", OPTION_VAL_40_FA },
+			{ "45", OPTION_VAL_45_FA },
+			{ "50", OPTION_VAL_50_FA },
+			{ NULL, NULL },
+		},
+		"25"
+	},
+	{
+		"cemu_stick_deadzone_p2",
+		CEMU_STICK_DEADZONE_P2_LABEL_FA,
+		NULL,
+		CEMU_STICK_DEADZONE_P2_INFO_0_FA,
+		NULL,
+		"controller",
+		{
+			{ "0", "Off" },
+			{ "5", OPTION_VAL_5_FA },
+			{ "10", OPTION_VAL_10_FA },
+			{ "15", OPTION_VAL_15_FA },
+			{ "20", OPTION_VAL_20_FA },
+			{ "25", OPTION_VAL_25_FA },
+			{ "30", OPTION_VAL_30_FA },
+			{ "35", OPTION_VAL_35_FA },
+			{ "40", OPTION_VAL_40_FA },
+			{ "45", OPTION_VAL_45_FA },
+			{ "50", OPTION_VAL_50_FA },
+			{ NULL, NULL },
+		},
+		"25"
 	},
 	{
 		"cemu_gamepad_motion",
@@ -14434,6 +15314,15 @@ struct retro_core_options_v2 options_fa = {
 #define OPTION_VAL_80_FI "80 %"
 #define OPTION_VAL_90_FI "90 %"
 #define OPTION_VAL_100_FI "100 %"
+#define CEMU_STICK_DEADZONE_P1_LABEL_FI NULL
+#define CEMU_STICK_DEADZONE_P1_INFO_0_FI NULL
+#define OPTION_VAL_5_FI NULL
+#define OPTION_VAL_15_FI "15 %"
+#define OPTION_VAL_25_FI NULL
+#define OPTION_VAL_35_FI "35 %"
+#define OPTION_VAL_45_FI NULL
+#define CEMU_STICK_DEADZONE_P2_LABEL_FI NULL
+#define CEMU_STICK_DEADZONE_P2_INFO_0_FI NULL
 #define CEMU_GAMEPAD_MOTION_LABEL_FI NULL
 #define CEMU_GAMEPAD_MOTION_INFO_0_FI NULL
 #define CEMU_NUMBER_OF_SCREEN_LAYOUTS_LABEL_FI NULL
@@ -14757,6 +15646,52 @@ struct retro_core_option_v2_definition option_defs_fi[] = {
 			{ NULL, NULL },
 		},
 		"100"
+	},
+	{
+		"cemu_stick_deadzone_p1",
+		CEMU_STICK_DEADZONE_P1_LABEL_FI,
+		NULL,
+		CEMU_STICK_DEADZONE_P1_INFO_0_FI,
+		NULL,
+		"controller",
+		{
+			{ "0", "Off" },
+			{ "5", OPTION_VAL_5_FI },
+			{ "10", OPTION_VAL_10_FI },
+			{ "15", OPTION_VAL_15_FI },
+			{ "20", OPTION_VAL_20_FI },
+			{ "25", OPTION_VAL_25_FI },
+			{ "30", OPTION_VAL_30_FI },
+			{ "35", OPTION_VAL_35_FI },
+			{ "40", OPTION_VAL_40_FI },
+			{ "45", OPTION_VAL_45_FI },
+			{ "50", OPTION_VAL_50_FI },
+			{ NULL, NULL },
+		},
+		"25"
+	},
+	{
+		"cemu_stick_deadzone_p2",
+		CEMU_STICK_DEADZONE_P2_LABEL_FI,
+		NULL,
+		CEMU_STICK_DEADZONE_P2_INFO_0_FI,
+		NULL,
+		"controller",
+		{
+			{ "0", "Off" },
+			{ "5", OPTION_VAL_5_FI },
+			{ "10", OPTION_VAL_10_FI },
+			{ "15", OPTION_VAL_15_FI },
+			{ "20", OPTION_VAL_20_FI },
+			{ "25", OPTION_VAL_25_FI },
+			{ "30", OPTION_VAL_30_FI },
+			{ "35", OPTION_VAL_35_FI },
+			{ "40", OPTION_VAL_40_FI },
+			{ "45", OPTION_VAL_45_FI },
+			{ "50", OPTION_VAL_50_FI },
+			{ NULL, NULL },
+		},
+		"25"
 	},
 	{
 		"cemu_gamepad_motion",
@@ -15329,6 +16264,15 @@ struct retro_core_options_v2 options_fi = {
 #define OPTION_VAL_80_FR "80 %"
 #define OPTION_VAL_90_FR "90 %"
 #define OPTION_VAL_100_FR "100 %"
+#define CEMU_STICK_DEADZONE_P1_LABEL_FR NULL
+#define CEMU_STICK_DEADZONE_P1_INFO_0_FR NULL
+#define OPTION_VAL_5_FR NULL
+#define OPTION_VAL_15_FR "15 %"
+#define OPTION_VAL_25_FR NULL
+#define OPTION_VAL_35_FR "35 %"
+#define OPTION_VAL_45_FR NULL
+#define CEMU_STICK_DEADZONE_P2_LABEL_FR NULL
+#define CEMU_STICK_DEADZONE_P2_INFO_0_FR NULL
 #define CEMU_GAMEPAD_MOTION_LABEL_FR "Mouvement du GamePad"
 #define CEMU_GAMEPAD_MOTION_INFO_0_FR "Le gyroscope et l'accéléromètre du GamePad depuis les capteurs de RetroArch se lisent sur le port 1 : ceux d'un téléphone ou d'une tablette, ou d'une manette où le pilote d'entrée de RetroArch les donne (DualShock 4, DualSense et autres). Les jeux visant ou dirigeant en inclinant le GamePad en ont besoin. Désactivé : le GemePad reste immobile, comme avec le mouvement désactivé dans la version autonome."
 #define CEMU_NUMBER_OF_SCREEN_LAYOUTS_LABEL_FR "Nombre de dispositions d'écran"
@@ -15652,6 +16596,52 @@ struct retro_core_option_v2_definition option_defs_fr[] = {
 			{ NULL, NULL },
 		},
 		"100"
+	},
+	{
+		"cemu_stick_deadzone_p1",
+		CEMU_STICK_DEADZONE_P1_LABEL_FR,
+		NULL,
+		CEMU_STICK_DEADZONE_P1_INFO_0_FR,
+		NULL,
+		"controller",
+		{
+			{ "0", "Off" },
+			{ "5", OPTION_VAL_5_FR },
+			{ "10", OPTION_VAL_10_FR },
+			{ "15", OPTION_VAL_15_FR },
+			{ "20", OPTION_VAL_20_FR },
+			{ "25", OPTION_VAL_25_FR },
+			{ "30", OPTION_VAL_30_FR },
+			{ "35", OPTION_VAL_35_FR },
+			{ "40", OPTION_VAL_40_FR },
+			{ "45", OPTION_VAL_45_FR },
+			{ "50", OPTION_VAL_50_FR },
+			{ NULL, NULL },
+		},
+		"25"
+	},
+	{
+		"cemu_stick_deadzone_p2",
+		CEMU_STICK_DEADZONE_P2_LABEL_FR,
+		NULL,
+		CEMU_STICK_DEADZONE_P2_INFO_0_FR,
+		NULL,
+		"controller",
+		{
+			{ "0", "Off" },
+			{ "5", OPTION_VAL_5_FR },
+			{ "10", OPTION_VAL_10_FR },
+			{ "15", OPTION_VAL_15_FR },
+			{ "20", OPTION_VAL_20_FR },
+			{ "25", OPTION_VAL_25_FR },
+			{ "30", OPTION_VAL_30_FR },
+			{ "35", OPTION_VAL_35_FR },
+			{ "40", OPTION_VAL_40_FR },
+			{ "45", OPTION_VAL_45_FR },
+			{ "50", OPTION_VAL_50_FR },
+			{ NULL, NULL },
+		},
+		"25"
 	},
 	{
 		"cemu_gamepad_motion",
@@ -16224,6 +17214,15 @@ struct retro_core_options_v2 options_fr = {
 #define OPTION_VAL_80_GA NULL
 #define OPTION_VAL_90_GA NULL
 #define OPTION_VAL_100_GA NULL
+#define CEMU_STICK_DEADZONE_P1_LABEL_GA "Crios Marbh an Luamháin (Imreoir 1)"
+#define CEMU_STICK_DEADZONE_P1_INFO_0_GA "An fad a chaithfidh maidí rialaithe Imreoir 1 (an GamePad, nó an rialtóir i bport 1) bogadh sula n-aithníonn an cluiche iad — arna shloinneadh mar chodán den raon gluaiseachta iomlán; déantar an chuid eile den ghluaiseacht a shíneadh thar an bpointe sin chun an raon iomlán a chlúdach. Is é 25% an socrú réamhshocraithe i Cemu. Tá luach níos ísle oiriúnach do mhaidí a fhanann sa lár (teicneolaíocht Hall effect nó TMR); méadaigh an luach má bhogann an carachtar sa chluiche leis féin."
+#define OPTION_VAL_5_GA NULL
+#define OPTION_VAL_15_GA NULL
+#define OPTION_VAL_25_GA NULL
+#define OPTION_VAL_35_GA NULL
+#define OPTION_VAL_45_GA NULL
+#define CEMU_STICK_DEADZONE_P2_LABEL_GA "Crios Marbh an Luamháin (Imreoirí 2-4)"
+#define CEMU_STICK_DEADZONE_P2_INFO_0_GA NULL
 #define CEMU_GAMEPAD_MOTION_LABEL_GA "Gluaiseacht an GamePad"
 #define CEMU_GAMEPAD_MOTION_INFO_0_GA "Baineann sé seo le gíreascóp agus luasghéaraitheoir an GamePad — na braiteoirí a léann RetroArch ar phort 1: cibé acu braiteoirí an fhóin nó an táibléid féin iad, nó braiteoirí rialaitheora a sholáthraíonn tiománaí ionchuir RetroArch (amhail DualShock 4, DualSense, agus eile). Bíonn gá leis seo i gcás cluichí ina ndéantar díriú nó stiúradh trí chlaonadh a dhéanamh ar an GamePad. As: fanann an GamePad ina stad, díreach mar a bhíonn nuair a bhíonn gné na gluaiseachta múchta i bhfeidhmchlár neamhspleách."
 #define CEMU_NUMBER_OF_SCREEN_LAYOUTS_LABEL_GA "Líon na Leagan Amach Scáileáin"
@@ -16547,6 +17546,52 @@ struct retro_core_option_v2_definition option_defs_ga[] = {
 			{ NULL, NULL },
 		},
 		"100"
+	},
+	{
+		"cemu_stick_deadzone_p1",
+		CEMU_STICK_DEADZONE_P1_LABEL_GA,
+		NULL,
+		CEMU_STICK_DEADZONE_P1_INFO_0_GA,
+		NULL,
+		"controller",
+		{
+			{ "0", "Off" },
+			{ "5", OPTION_VAL_5_GA },
+			{ "10", OPTION_VAL_10_GA },
+			{ "15", OPTION_VAL_15_GA },
+			{ "20", OPTION_VAL_20_GA },
+			{ "25", OPTION_VAL_25_GA },
+			{ "30", OPTION_VAL_30_GA },
+			{ "35", OPTION_VAL_35_GA },
+			{ "40", OPTION_VAL_40_GA },
+			{ "45", OPTION_VAL_45_GA },
+			{ "50", OPTION_VAL_50_GA },
+			{ NULL, NULL },
+		},
+		"25"
+	},
+	{
+		"cemu_stick_deadzone_p2",
+		CEMU_STICK_DEADZONE_P2_LABEL_GA,
+		NULL,
+		CEMU_STICK_DEADZONE_P2_INFO_0_GA,
+		NULL,
+		"controller",
+		{
+			{ "0", "Off" },
+			{ "5", OPTION_VAL_5_GA },
+			{ "10", OPTION_VAL_10_GA },
+			{ "15", OPTION_VAL_15_GA },
+			{ "20", OPTION_VAL_20_GA },
+			{ "25", OPTION_VAL_25_GA },
+			{ "30", OPTION_VAL_30_GA },
+			{ "35", OPTION_VAL_35_GA },
+			{ "40", OPTION_VAL_40_GA },
+			{ "45", OPTION_VAL_45_GA },
+			{ "50", OPTION_VAL_50_GA },
+			{ NULL, NULL },
+		},
+		"25"
 	},
 	{
 		"cemu_gamepad_motion",
@@ -17119,6 +18164,15 @@ struct retro_core_options_v2 options_ga = {
 #define OPTION_VAL_80_GL NULL
 #define OPTION_VAL_90_GL NULL
 #define OPTION_VAL_100_GL NULL
+#define CEMU_STICK_DEADZONE_P1_LABEL_GL NULL
+#define CEMU_STICK_DEADZONE_P1_INFO_0_GL NULL
+#define OPTION_VAL_5_GL NULL
+#define OPTION_VAL_15_GL NULL
+#define OPTION_VAL_25_GL NULL
+#define OPTION_VAL_35_GL NULL
+#define OPTION_VAL_45_GL NULL
+#define CEMU_STICK_DEADZONE_P2_LABEL_GL NULL
+#define CEMU_STICK_DEADZONE_P2_INFO_0_GL NULL
 #define CEMU_GAMEPAD_MOTION_LABEL_GL NULL
 #define CEMU_GAMEPAD_MOTION_INFO_0_GL NULL
 #define CEMU_NUMBER_OF_SCREEN_LAYOUTS_LABEL_GL NULL
@@ -17442,6 +18496,52 @@ struct retro_core_option_v2_definition option_defs_gl[] = {
 			{ NULL, NULL },
 		},
 		"100"
+	},
+	{
+		"cemu_stick_deadzone_p1",
+		CEMU_STICK_DEADZONE_P1_LABEL_GL,
+		NULL,
+		CEMU_STICK_DEADZONE_P1_INFO_0_GL,
+		NULL,
+		"controller",
+		{
+			{ "0", "Off" },
+			{ "5", OPTION_VAL_5_GL },
+			{ "10", OPTION_VAL_10_GL },
+			{ "15", OPTION_VAL_15_GL },
+			{ "20", OPTION_VAL_20_GL },
+			{ "25", OPTION_VAL_25_GL },
+			{ "30", OPTION_VAL_30_GL },
+			{ "35", OPTION_VAL_35_GL },
+			{ "40", OPTION_VAL_40_GL },
+			{ "45", OPTION_VAL_45_GL },
+			{ "50", OPTION_VAL_50_GL },
+			{ NULL, NULL },
+		},
+		"25"
+	},
+	{
+		"cemu_stick_deadzone_p2",
+		CEMU_STICK_DEADZONE_P2_LABEL_GL,
+		NULL,
+		CEMU_STICK_DEADZONE_P2_INFO_0_GL,
+		NULL,
+		"controller",
+		{
+			{ "0", "Off" },
+			{ "5", OPTION_VAL_5_GL },
+			{ "10", OPTION_VAL_10_GL },
+			{ "15", OPTION_VAL_15_GL },
+			{ "20", OPTION_VAL_20_GL },
+			{ "25", OPTION_VAL_25_GL },
+			{ "30", OPTION_VAL_30_GL },
+			{ "35", OPTION_VAL_35_GL },
+			{ "40", OPTION_VAL_40_GL },
+			{ "45", OPTION_VAL_45_GL },
+			{ "50", OPTION_VAL_50_GL },
+			{ NULL, NULL },
+		},
+		"25"
 	},
 	{
 		"cemu_gamepad_motion",
@@ -18014,6 +19114,15 @@ struct retro_core_options_v2 options_gl = {
 #define OPTION_VAL_80_HE NULL
 #define OPTION_VAL_90_HE NULL
 #define OPTION_VAL_100_HE NULL
+#define CEMU_STICK_DEADZONE_P1_LABEL_HE NULL
+#define CEMU_STICK_DEADZONE_P1_INFO_0_HE NULL
+#define OPTION_VAL_5_HE NULL
+#define OPTION_VAL_15_HE NULL
+#define OPTION_VAL_25_HE NULL
+#define OPTION_VAL_35_HE NULL
+#define OPTION_VAL_45_HE NULL
+#define CEMU_STICK_DEADZONE_P2_LABEL_HE NULL
+#define CEMU_STICK_DEADZONE_P2_INFO_0_HE NULL
 #define CEMU_GAMEPAD_MOTION_LABEL_HE NULL
 #define CEMU_GAMEPAD_MOTION_INFO_0_HE NULL
 #define CEMU_NUMBER_OF_SCREEN_LAYOUTS_LABEL_HE NULL
@@ -18337,6 +19446,52 @@ struct retro_core_option_v2_definition option_defs_he[] = {
 			{ NULL, NULL },
 		},
 		"100"
+	},
+	{
+		"cemu_stick_deadzone_p1",
+		CEMU_STICK_DEADZONE_P1_LABEL_HE,
+		NULL,
+		CEMU_STICK_DEADZONE_P1_INFO_0_HE,
+		NULL,
+		"controller",
+		{
+			{ "0", "Off" },
+			{ "5", OPTION_VAL_5_HE },
+			{ "10", OPTION_VAL_10_HE },
+			{ "15", OPTION_VAL_15_HE },
+			{ "20", OPTION_VAL_20_HE },
+			{ "25", OPTION_VAL_25_HE },
+			{ "30", OPTION_VAL_30_HE },
+			{ "35", OPTION_VAL_35_HE },
+			{ "40", OPTION_VAL_40_HE },
+			{ "45", OPTION_VAL_45_HE },
+			{ "50", OPTION_VAL_50_HE },
+			{ NULL, NULL },
+		},
+		"25"
+	},
+	{
+		"cemu_stick_deadzone_p2",
+		CEMU_STICK_DEADZONE_P2_LABEL_HE,
+		NULL,
+		CEMU_STICK_DEADZONE_P2_INFO_0_HE,
+		NULL,
+		"controller",
+		{
+			{ "0", "Off" },
+			{ "5", OPTION_VAL_5_HE },
+			{ "10", OPTION_VAL_10_HE },
+			{ "15", OPTION_VAL_15_HE },
+			{ "20", OPTION_VAL_20_HE },
+			{ "25", OPTION_VAL_25_HE },
+			{ "30", OPTION_VAL_30_HE },
+			{ "35", OPTION_VAL_35_HE },
+			{ "40", OPTION_VAL_40_HE },
+			{ "45", OPTION_VAL_45_HE },
+			{ "50", OPTION_VAL_50_HE },
+			{ NULL, NULL },
+		},
+		"25"
 	},
 	{
 		"cemu_gamepad_motion",
@@ -18909,6 +20064,15 @@ struct retro_core_options_v2 options_he = {
 #define OPTION_VAL_80_HR NULL
 #define OPTION_VAL_90_HR NULL
 #define OPTION_VAL_100_HR NULL
+#define CEMU_STICK_DEADZONE_P1_LABEL_HR NULL
+#define CEMU_STICK_DEADZONE_P1_INFO_0_HR NULL
+#define OPTION_VAL_5_HR NULL
+#define OPTION_VAL_15_HR NULL
+#define OPTION_VAL_25_HR NULL
+#define OPTION_VAL_35_HR NULL
+#define OPTION_VAL_45_HR NULL
+#define CEMU_STICK_DEADZONE_P2_LABEL_HR NULL
+#define CEMU_STICK_DEADZONE_P2_INFO_0_HR NULL
 #define CEMU_GAMEPAD_MOTION_LABEL_HR NULL
 #define CEMU_GAMEPAD_MOTION_INFO_0_HR NULL
 #define CEMU_NUMBER_OF_SCREEN_LAYOUTS_LABEL_HR NULL
@@ -19232,6 +20396,52 @@ struct retro_core_option_v2_definition option_defs_hr[] = {
 			{ NULL, NULL },
 		},
 		"100"
+	},
+	{
+		"cemu_stick_deadzone_p1",
+		CEMU_STICK_DEADZONE_P1_LABEL_HR,
+		NULL,
+		CEMU_STICK_DEADZONE_P1_INFO_0_HR,
+		NULL,
+		"controller",
+		{
+			{ "0", "Off" },
+			{ "5", OPTION_VAL_5_HR },
+			{ "10", OPTION_VAL_10_HR },
+			{ "15", OPTION_VAL_15_HR },
+			{ "20", OPTION_VAL_20_HR },
+			{ "25", OPTION_VAL_25_HR },
+			{ "30", OPTION_VAL_30_HR },
+			{ "35", OPTION_VAL_35_HR },
+			{ "40", OPTION_VAL_40_HR },
+			{ "45", OPTION_VAL_45_HR },
+			{ "50", OPTION_VAL_50_HR },
+			{ NULL, NULL },
+		},
+		"25"
+	},
+	{
+		"cemu_stick_deadzone_p2",
+		CEMU_STICK_DEADZONE_P2_LABEL_HR,
+		NULL,
+		CEMU_STICK_DEADZONE_P2_INFO_0_HR,
+		NULL,
+		"controller",
+		{
+			{ "0", "Off" },
+			{ "5", OPTION_VAL_5_HR },
+			{ "10", OPTION_VAL_10_HR },
+			{ "15", OPTION_VAL_15_HR },
+			{ "20", OPTION_VAL_20_HR },
+			{ "25", OPTION_VAL_25_HR },
+			{ "30", OPTION_VAL_30_HR },
+			{ "35", OPTION_VAL_35_HR },
+			{ "40", OPTION_VAL_40_HR },
+			{ "45", OPTION_VAL_45_HR },
+			{ "50", OPTION_VAL_50_HR },
+			{ NULL, NULL },
+		},
+		"25"
 	},
 	{
 		"cemu_gamepad_motion",
@@ -19804,6 +21014,15 @@ struct retro_core_options_v2 options_hr = {
 #define OPTION_VAL_80_HU NULL
 #define OPTION_VAL_90_HU NULL
 #define OPTION_VAL_100_HU NULL
+#define CEMU_STICK_DEADZONE_P1_LABEL_HU NULL
+#define CEMU_STICK_DEADZONE_P1_INFO_0_HU NULL
+#define OPTION_VAL_5_HU NULL
+#define OPTION_VAL_15_HU NULL
+#define OPTION_VAL_25_HU NULL
+#define OPTION_VAL_35_HU NULL
+#define OPTION_VAL_45_HU NULL
+#define CEMU_STICK_DEADZONE_P2_LABEL_HU NULL
+#define CEMU_STICK_DEADZONE_P2_INFO_0_HU NULL
 #define CEMU_GAMEPAD_MOTION_LABEL_HU NULL
 #define CEMU_GAMEPAD_MOTION_INFO_0_HU NULL
 #define CEMU_NUMBER_OF_SCREEN_LAYOUTS_LABEL_HU NULL
@@ -20127,6 +21346,52 @@ struct retro_core_option_v2_definition option_defs_hu[] = {
 			{ NULL, NULL },
 		},
 		"100"
+	},
+	{
+		"cemu_stick_deadzone_p1",
+		CEMU_STICK_DEADZONE_P1_LABEL_HU,
+		NULL,
+		CEMU_STICK_DEADZONE_P1_INFO_0_HU,
+		NULL,
+		"controller",
+		{
+			{ "0", "Off" },
+			{ "5", OPTION_VAL_5_HU },
+			{ "10", OPTION_VAL_10_HU },
+			{ "15", OPTION_VAL_15_HU },
+			{ "20", OPTION_VAL_20_HU },
+			{ "25", OPTION_VAL_25_HU },
+			{ "30", OPTION_VAL_30_HU },
+			{ "35", OPTION_VAL_35_HU },
+			{ "40", OPTION_VAL_40_HU },
+			{ "45", OPTION_VAL_45_HU },
+			{ "50", OPTION_VAL_50_HU },
+			{ NULL, NULL },
+		},
+		"25"
+	},
+	{
+		"cemu_stick_deadzone_p2",
+		CEMU_STICK_DEADZONE_P2_LABEL_HU,
+		NULL,
+		CEMU_STICK_DEADZONE_P2_INFO_0_HU,
+		NULL,
+		"controller",
+		{
+			{ "0", "Off" },
+			{ "5", OPTION_VAL_5_HU },
+			{ "10", OPTION_VAL_10_HU },
+			{ "15", OPTION_VAL_15_HU },
+			{ "20", OPTION_VAL_20_HU },
+			{ "25", OPTION_VAL_25_HU },
+			{ "30", OPTION_VAL_30_HU },
+			{ "35", OPTION_VAL_35_HU },
+			{ "40", OPTION_VAL_40_HU },
+			{ "45", OPTION_VAL_45_HU },
+			{ "50", OPTION_VAL_50_HU },
+			{ NULL, NULL },
+		},
+		"25"
 	},
 	{
 		"cemu_gamepad_motion",
@@ -20699,6 +21964,15 @@ struct retro_core_options_v2 options_hu = {
 #define OPTION_VAL_80_ID NULL
 #define OPTION_VAL_90_ID NULL
 #define OPTION_VAL_100_ID NULL
+#define CEMU_STICK_DEADZONE_P1_LABEL_ID NULL
+#define CEMU_STICK_DEADZONE_P1_INFO_0_ID NULL
+#define OPTION_VAL_5_ID NULL
+#define OPTION_VAL_15_ID NULL
+#define OPTION_VAL_25_ID NULL
+#define OPTION_VAL_35_ID NULL
+#define OPTION_VAL_45_ID NULL
+#define CEMU_STICK_DEADZONE_P2_LABEL_ID NULL
+#define CEMU_STICK_DEADZONE_P2_INFO_0_ID NULL
 #define CEMU_GAMEPAD_MOTION_LABEL_ID NULL
 #define CEMU_GAMEPAD_MOTION_INFO_0_ID NULL
 #define CEMU_NUMBER_OF_SCREEN_LAYOUTS_LABEL_ID NULL
@@ -21022,6 +22296,52 @@ struct retro_core_option_v2_definition option_defs_id[] = {
 			{ NULL, NULL },
 		},
 		"100"
+	},
+	{
+		"cemu_stick_deadzone_p1",
+		CEMU_STICK_DEADZONE_P1_LABEL_ID,
+		NULL,
+		CEMU_STICK_DEADZONE_P1_INFO_0_ID,
+		NULL,
+		"controller",
+		{
+			{ "0", "Off" },
+			{ "5", OPTION_VAL_5_ID },
+			{ "10", OPTION_VAL_10_ID },
+			{ "15", OPTION_VAL_15_ID },
+			{ "20", OPTION_VAL_20_ID },
+			{ "25", OPTION_VAL_25_ID },
+			{ "30", OPTION_VAL_30_ID },
+			{ "35", OPTION_VAL_35_ID },
+			{ "40", OPTION_VAL_40_ID },
+			{ "45", OPTION_VAL_45_ID },
+			{ "50", OPTION_VAL_50_ID },
+			{ NULL, NULL },
+		},
+		"25"
+	},
+	{
+		"cemu_stick_deadzone_p2",
+		CEMU_STICK_DEADZONE_P2_LABEL_ID,
+		NULL,
+		CEMU_STICK_DEADZONE_P2_INFO_0_ID,
+		NULL,
+		"controller",
+		{
+			{ "0", "Off" },
+			{ "5", OPTION_VAL_5_ID },
+			{ "10", OPTION_VAL_10_ID },
+			{ "15", OPTION_VAL_15_ID },
+			{ "20", OPTION_VAL_20_ID },
+			{ "25", OPTION_VAL_25_ID },
+			{ "30", OPTION_VAL_30_ID },
+			{ "35", OPTION_VAL_35_ID },
+			{ "40", OPTION_VAL_40_ID },
+			{ "45", OPTION_VAL_45_ID },
+			{ "50", OPTION_VAL_50_ID },
+			{ NULL, NULL },
+		},
+		"25"
 	},
 	{
 		"cemu_gamepad_motion",
@@ -21594,6 +22914,15 @@ struct retro_core_options_v2 options_id = {
 #define OPTION_VAL_80_IT NULL
 #define OPTION_VAL_90_IT NULL
 #define OPTION_VAL_100_IT NULL
+#define CEMU_STICK_DEADZONE_P1_LABEL_IT NULL
+#define CEMU_STICK_DEADZONE_P1_INFO_0_IT NULL
+#define OPTION_VAL_5_IT NULL
+#define OPTION_VAL_15_IT NULL
+#define OPTION_VAL_25_IT NULL
+#define OPTION_VAL_35_IT NULL
+#define OPTION_VAL_45_IT NULL
+#define CEMU_STICK_DEADZONE_P2_LABEL_IT NULL
+#define CEMU_STICK_DEADZONE_P2_INFO_0_IT NULL
 #define CEMU_GAMEPAD_MOTION_LABEL_IT NULL
 #define CEMU_GAMEPAD_MOTION_INFO_0_IT NULL
 #define CEMU_NUMBER_OF_SCREEN_LAYOUTS_LABEL_IT NULL
@@ -21917,6 +23246,52 @@ struct retro_core_option_v2_definition option_defs_it[] = {
 			{ NULL, NULL },
 		},
 		"100"
+	},
+	{
+		"cemu_stick_deadzone_p1",
+		CEMU_STICK_DEADZONE_P1_LABEL_IT,
+		NULL,
+		CEMU_STICK_DEADZONE_P1_INFO_0_IT,
+		NULL,
+		"controller",
+		{
+			{ "0", "Off" },
+			{ "5", OPTION_VAL_5_IT },
+			{ "10", OPTION_VAL_10_IT },
+			{ "15", OPTION_VAL_15_IT },
+			{ "20", OPTION_VAL_20_IT },
+			{ "25", OPTION_VAL_25_IT },
+			{ "30", OPTION_VAL_30_IT },
+			{ "35", OPTION_VAL_35_IT },
+			{ "40", OPTION_VAL_40_IT },
+			{ "45", OPTION_VAL_45_IT },
+			{ "50", OPTION_VAL_50_IT },
+			{ NULL, NULL },
+		},
+		"25"
+	},
+	{
+		"cemu_stick_deadzone_p2",
+		CEMU_STICK_DEADZONE_P2_LABEL_IT,
+		NULL,
+		CEMU_STICK_DEADZONE_P2_INFO_0_IT,
+		NULL,
+		"controller",
+		{
+			{ "0", "Off" },
+			{ "5", OPTION_VAL_5_IT },
+			{ "10", OPTION_VAL_10_IT },
+			{ "15", OPTION_VAL_15_IT },
+			{ "20", OPTION_VAL_20_IT },
+			{ "25", OPTION_VAL_25_IT },
+			{ "30", OPTION_VAL_30_IT },
+			{ "35", OPTION_VAL_35_IT },
+			{ "40", OPTION_VAL_40_IT },
+			{ "45", OPTION_VAL_45_IT },
+			{ "50", OPTION_VAL_50_IT },
+			{ NULL, NULL },
+		},
+		"25"
 	},
 	{
 		"cemu_gamepad_motion",
@@ -22489,6 +23864,15 @@ struct retro_core_options_v2 options_it = {
 #define OPTION_VAL_80_JA NULL
 #define OPTION_VAL_90_JA NULL
 #define OPTION_VAL_100_JA NULL
+#define CEMU_STICK_DEADZONE_P1_LABEL_JA NULL
+#define CEMU_STICK_DEADZONE_P1_INFO_0_JA NULL
+#define OPTION_VAL_5_JA NULL
+#define OPTION_VAL_15_JA NULL
+#define OPTION_VAL_25_JA NULL
+#define OPTION_VAL_35_JA NULL
+#define OPTION_VAL_45_JA NULL
+#define CEMU_STICK_DEADZONE_P2_LABEL_JA NULL
+#define CEMU_STICK_DEADZONE_P2_INFO_0_JA NULL
 #define CEMU_GAMEPAD_MOTION_LABEL_JA NULL
 #define CEMU_GAMEPAD_MOTION_INFO_0_JA NULL
 #define CEMU_NUMBER_OF_SCREEN_LAYOUTS_LABEL_JA NULL
@@ -22812,6 +24196,52 @@ struct retro_core_option_v2_definition option_defs_ja[] = {
 			{ NULL, NULL },
 		},
 		"100"
+	},
+	{
+		"cemu_stick_deadzone_p1",
+		CEMU_STICK_DEADZONE_P1_LABEL_JA,
+		NULL,
+		CEMU_STICK_DEADZONE_P1_INFO_0_JA,
+		NULL,
+		"controller",
+		{
+			{ "0", "Off" },
+			{ "5", OPTION_VAL_5_JA },
+			{ "10", OPTION_VAL_10_JA },
+			{ "15", OPTION_VAL_15_JA },
+			{ "20", OPTION_VAL_20_JA },
+			{ "25", OPTION_VAL_25_JA },
+			{ "30", OPTION_VAL_30_JA },
+			{ "35", OPTION_VAL_35_JA },
+			{ "40", OPTION_VAL_40_JA },
+			{ "45", OPTION_VAL_45_JA },
+			{ "50", OPTION_VAL_50_JA },
+			{ NULL, NULL },
+		},
+		"25"
+	},
+	{
+		"cemu_stick_deadzone_p2",
+		CEMU_STICK_DEADZONE_P2_LABEL_JA,
+		NULL,
+		CEMU_STICK_DEADZONE_P2_INFO_0_JA,
+		NULL,
+		"controller",
+		{
+			{ "0", "Off" },
+			{ "5", OPTION_VAL_5_JA },
+			{ "10", OPTION_VAL_10_JA },
+			{ "15", OPTION_VAL_15_JA },
+			{ "20", OPTION_VAL_20_JA },
+			{ "25", OPTION_VAL_25_JA },
+			{ "30", OPTION_VAL_30_JA },
+			{ "35", OPTION_VAL_35_JA },
+			{ "40", OPTION_VAL_40_JA },
+			{ "45", OPTION_VAL_45_JA },
+			{ "50", OPTION_VAL_50_JA },
+			{ NULL, NULL },
+		},
+		"25"
 	},
 	{
 		"cemu_gamepad_motion",
@@ -23384,6 +24814,15 @@ struct retro_core_options_v2 options_ja = {
 #define OPTION_VAL_80_KO NULL
 #define OPTION_VAL_90_KO NULL
 #define OPTION_VAL_100_KO NULL
+#define CEMU_STICK_DEADZONE_P1_LABEL_KO NULL
+#define CEMU_STICK_DEADZONE_P1_INFO_0_KO NULL
+#define OPTION_VAL_5_KO NULL
+#define OPTION_VAL_15_KO NULL
+#define OPTION_VAL_25_KO NULL
+#define OPTION_VAL_35_KO NULL
+#define OPTION_VAL_45_KO NULL
+#define CEMU_STICK_DEADZONE_P2_LABEL_KO NULL
+#define CEMU_STICK_DEADZONE_P2_INFO_0_KO NULL
 #define CEMU_GAMEPAD_MOTION_LABEL_KO NULL
 #define CEMU_GAMEPAD_MOTION_INFO_0_KO NULL
 #define CEMU_NUMBER_OF_SCREEN_LAYOUTS_LABEL_KO "화면 레이아웃 개수"
@@ -23707,6 +25146,52 @@ struct retro_core_option_v2_definition option_defs_ko[] = {
 			{ NULL, NULL },
 		},
 		"100"
+	},
+	{
+		"cemu_stick_deadzone_p1",
+		CEMU_STICK_DEADZONE_P1_LABEL_KO,
+		NULL,
+		CEMU_STICK_DEADZONE_P1_INFO_0_KO,
+		NULL,
+		"controller",
+		{
+			{ "0", "Off" },
+			{ "5", OPTION_VAL_5_KO },
+			{ "10", OPTION_VAL_10_KO },
+			{ "15", OPTION_VAL_15_KO },
+			{ "20", OPTION_VAL_20_KO },
+			{ "25", OPTION_VAL_25_KO },
+			{ "30", OPTION_VAL_30_KO },
+			{ "35", OPTION_VAL_35_KO },
+			{ "40", OPTION_VAL_40_KO },
+			{ "45", OPTION_VAL_45_KO },
+			{ "50", OPTION_VAL_50_KO },
+			{ NULL, NULL },
+		},
+		"25"
+	},
+	{
+		"cemu_stick_deadzone_p2",
+		CEMU_STICK_DEADZONE_P2_LABEL_KO,
+		NULL,
+		CEMU_STICK_DEADZONE_P2_INFO_0_KO,
+		NULL,
+		"controller",
+		{
+			{ "0", "Off" },
+			{ "5", OPTION_VAL_5_KO },
+			{ "10", OPTION_VAL_10_KO },
+			{ "15", OPTION_VAL_15_KO },
+			{ "20", OPTION_VAL_20_KO },
+			{ "25", OPTION_VAL_25_KO },
+			{ "30", OPTION_VAL_30_KO },
+			{ "35", OPTION_VAL_35_KO },
+			{ "40", OPTION_VAL_40_KO },
+			{ "45", OPTION_VAL_45_KO },
+			{ "50", OPTION_VAL_50_KO },
+			{ NULL, NULL },
+		},
+		"25"
 	},
 	{
 		"cemu_gamepad_motion",
@@ -24279,6 +25764,15 @@ struct retro_core_options_v2 options_ko = {
 #define OPTION_VAL_80_NL NULL
 #define OPTION_VAL_90_NL NULL
 #define OPTION_VAL_100_NL NULL
+#define CEMU_STICK_DEADZONE_P1_LABEL_NL NULL
+#define CEMU_STICK_DEADZONE_P1_INFO_0_NL NULL
+#define OPTION_VAL_5_NL NULL
+#define OPTION_VAL_15_NL NULL
+#define OPTION_VAL_25_NL NULL
+#define OPTION_VAL_35_NL NULL
+#define OPTION_VAL_45_NL NULL
+#define CEMU_STICK_DEADZONE_P2_LABEL_NL NULL
+#define CEMU_STICK_DEADZONE_P2_INFO_0_NL NULL
 #define CEMU_GAMEPAD_MOTION_LABEL_NL NULL
 #define CEMU_GAMEPAD_MOTION_INFO_0_NL NULL
 #define CEMU_NUMBER_OF_SCREEN_LAYOUTS_LABEL_NL NULL
@@ -24602,6 +26096,52 @@ struct retro_core_option_v2_definition option_defs_nl[] = {
 			{ NULL, NULL },
 		},
 		"100"
+	},
+	{
+		"cemu_stick_deadzone_p1",
+		CEMU_STICK_DEADZONE_P1_LABEL_NL,
+		NULL,
+		CEMU_STICK_DEADZONE_P1_INFO_0_NL,
+		NULL,
+		"controller",
+		{
+			{ "0", "Off" },
+			{ "5", OPTION_VAL_5_NL },
+			{ "10", OPTION_VAL_10_NL },
+			{ "15", OPTION_VAL_15_NL },
+			{ "20", OPTION_VAL_20_NL },
+			{ "25", OPTION_VAL_25_NL },
+			{ "30", OPTION_VAL_30_NL },
+			{ "35", OPTION_VAL_35_NL },
+			{ "40", OPTION_VAL_40_NL },
+			{ "45", OPTION_VAL_45_NL },
+			{ "50", OPTION_VAL_50_NL },
+			{ NULL, NULL },
+		},
+		"25"
+	},
+	{
+		"cemu_stick_deadzone_p2",
+		CEMU_STICK_DEADZONE_P2_LABEL_NL,
+		NULL,
+		CEMU_STICK_DEADZONE_P2_INFO_0_NL,
+		NULL,
+		"controller",
+		{
+			{ "0", "Off" },
+			{ "5", OPTION_VAL_5_NL },
+			{ "10", OPTION_VAL_10_NL },
+			{ "15", OPTION_VAL_15_NL },
+			{ "20", OPTION_VAL_20_NL },
+			{ "25", OPTION_VAL_25_NL },
+			{ "30", OPTION_VAL_30_NL },
+			{ "35", OPTION_VAL_35_NL },
+			{ "40", OPTION_VAL_40_NL },
+			{ "45", OPTION_VAL_45_NL },
+			{ "50", OPTION_VAL_50_NL },
+			{ NULL, NULL },
+		},
+		"25"
 	},
 	{
 		"cemu_gamepad_motion",
@@ -25174,6 +26714,15 @@ struct retro_core_options_v2 options_nl = {
 #define OPTION_VAL_80_NO NULL
 #define OPTION_VAL_90_NO NULL
 #define OPTION_VAL_100_NO NULL
+#define CEMU_STICK_DEADZONE_P1_LABEL_NO NULL
+#define CEMU_STICK_DEADZONE_P1_INFO_0_NO NULL
+#define OPTION_VAL_5_NO NULL
+#define OPTION_VAL_15_NO NULL
+#define OPTION_VAL_25_NO NULL
+#define OPTION_VAL_35_NO NULL
+#define OPTION_VAL_45_NO NULL
+#define CEMU_STICK_DEADZONE_P2_LABEL_NO NULL
+#define CEMU_STICK_DEADZONE_P2_INFO_0_NO NULL
 #define CEMU_GAMEPAD_MOTION_LABEL_NO NULL
 #define CEMU_GAMEPAD_MOTION_INFO_0_NO NULL
 #define CEMU_NUMBER_OF_SCREEN_LAYOUTS_LABEL_NO NULL
@@ -25497,6 +27046,52 @@ struct retro_core_option_v2_definition option_defs_no[] = {
 			{ NULL, NULL },
 		},
 		"100"
+	},
+	{
+		"cemu_stick_deadzone_p1",
+		CEMU_STICK_DEADZONE_P1_LABEL_NO,
+		NULL,
+		CEMU_STICK_DEADZONE_P1_INFO_0_NO,
+		NULL,
+		"controller",
+		{
+			{ "0", "Off" },
+			{ "5", OPTION_VAL_5_NO },
+			{ "10", OPTION_VAL_10_NO },
+			{ "15", OPTION_VAL_15_NO },
+			{ "20", OPTION_VAL_20_NO },
+			{ "25", OPTION_VAL_25_NO },
+			{ "30", OPTION_VAL_30_NO },
+			{ "35", OPTION_VAL_35_NO },
+			{ "40", OPTION_VAL_40_NO },
+			{ "45", OPTION_VAL_45_NO },
+			{ "50", OPTION_VAL_50_NO },
+			{ NULL, NULL },
+		},
+		"25"
+	},
+	{
+		"cemu_stick_deadzone_p2",
+		CEMU_STICK_DEADZONE_P2_LABEL_NO,
+		NULL,
+		CEMU_STICK_DEADZONE_P2_INFO_0_NO,
+		NULL,
+		"controller",
+		{
+			{ "0", "Off" },
+			{ "5", OPTION_VAL_5_NO },
+			{ "10", OPTION_VAL_10_NO },
+			{ "15", OPTION_VAL_15_NO },
+			{ "20", OPTION_VAL_20_NO },
+			{ "25", OPTION_VAL_25_NO },
+			{ "30", OPTION_VAL_30_NO },
+			{ "35", OPTION_VAL_35_NO },
+			{ "40", OPTION_VAL_40_NO },
+			{ "45", OPTION_VAL_45_NO },
+			{ "50", OPTION_VAL_50_NO },
+			{ NULL, NULL },
+		},
+		"25"
 	},
 	{
 		"cemu_gamepad_motion",
@@ -26069,6 +27664,15 @@ struct retro_core_options_v2 options_no = {
 #define OPTION_VAL_80_OR NULL
 #define OPTION_VAL_90_OR NULL
 #define OPTION_VAL_100_OR NULL
+#define CEMU_STICK_DEADZONE_P1_LABEL_OR NULL
+#define CEMU_STICK_DEADZONE_P1_INFO_0_OR NULL
+#define OPTION_VAL_5_OR NULL
+#define OPTION_VAL_15_OR NULL
+#define OPTION_VAL_25_OR NULL
+#define OPTION_VAL_35_OR NULL
+#define OPTION_VAL_45_OR NULL
+#define CEMU_STICK_DEADZONE_P2_LABEL_OR NULL
+#define CEMU_STICK_DEADZONE_P2_INFO_0_OR NULL
 #define CEMU_GAMEPAD_MOTION_LABEL_OR NULL
 #define CEMU_GAMEPAD_MOTION_INFO_0_OR NULL
 #define CEMU_NUMBER_OF_SCREEN_LAYOUTS_LABEL_OR NULL
@@ -26392,6 +27996,52 @@ struct retro_core_option_v2_definition option_defs_or[] = {
 			{ NULL, NULL },
 		},
 		"100"
+	},
+	{
+		"cemu_stick_deadzone_p1",
+		CEMU_STICK_DEADZONE_P1_LABEL_OR,
+		NULL,
+		CEMU_STICK_DEADZONE_P1_INFO_0_OR,
+		NULL,
+		"controller",
+		{
+			{ "0", "Off" },
+			{ "5", OPTION_VAL_5_OR },
+			{ "10", OPTION_VAL_10_OR },
+			{ "15", OPTION_VAL_15_OR },
+			{ "20", OPTION_VAL_20_OR },
+			{ "25", OPTION_VAL_25_OR },
+			{ "30", OPTION_VAL_30_OR },
+			{ "35", OPTION_VAL_35_OR },
+			{ "40", OPTION_VAL_40_OR },
+			{ "45", OPTION_VAL_45_OR },
+			{ "50", OPTION_VAL_50_OR },
+			{ NULL, NULL },
+		},
+		"25"
+	},
+	{
+		"cemu_stick_deadzone_p2",
+		CEMU_STICK_DEADZONE_P2_LABEL_OR,
+		NULL,
+		CEMU_STICK_DEADZONE_P2_INFO_0_OR,
+		NULL,
+		"controller",
+		{
+			{ "0", "Off" },
+			{ "5", OPTION_VAL_5_OR },
+			{ "10", OPTION_VAL_10_OR },
+			{ "15", OPTION_VAL_15_OR },
+			{ "20", OPTION_VAL_20_OR },
+			{ "25", OPTION_VAL_25_OR },
+			{ "30", OPTION_VAL_30_OR },
+			{ "35", OPTION_VAL_35_OR },
+			{ "40", OPTION_VAL_40_OR },
+			{ "45", OPTION_VAL_45_OR },
+			{ "50", OPTION_VAL_50_OR },
+			{ NULL, NULL },
+		},
+		"25"
 	},
 	{
 		"cemu_gamepad_motion",
@@ -26964,6 +28614,15 @@ struct retro_core_options_v2 options_or = {
 #define OPTION_VAL_80_PL "80 %"
 #define OPTION_VAL_90_PL NULL
 #define OPTION_VAL_100_PL NULL
+#define CEMU_STICK_DEADZONE_P1_LABEL_PL NULL
+#define CEMU_STICK_DEADZONE_P1_INFO_0_PL NULL
+#define OPTION_VAL_5_PL NULL
+#define OPTION_VAL_15_PL NULL
+#define OPTION_VAL_25_PL NULL
+#define OPTION_VAL_35_PL NULL
+#define OPTION_VAL_45_PL NULL
+#define CEMU_STICK_DEADZONE_P2_LABEL_PL NULL
+#define CEMU_STICK_DEADZONE_P2_INFO_0_PL NULL
 #define CEMU_GAMEPAD_MOTION_LABEL_PL NULL
 #define CEMU_GAMEPAD_MOTION_INFO_0_PL NULL
 #define CEMU_NUMBER_OF_SCREEN_LAYOUTS_LABEL_PL NULL
@@ -27287,6 +28946,52 @@ struct retro_core_option_v2_definition option_defs_pl[] = {
 			{ NULL, NULL },
 		},
 		"100"
+	},
+	{
+		"cemu_stick_deadzone_p1",
+		CEMU_STICK_DEADZONE_P1_LABEL_PL,
+		NULL,
+		CEMU_STICK_DEADZONE_P1_INFO_0_PL,
+		NULL,
+		"controller",
+		{
+			{ "0", "Off" },
+			{ "5", OPTION_VAL_5_PL },
+			{ "10", OPTION_VAL_10_PL },
+			{ "15", OPTION_VAL_15_PL },
+			{ "20", OPTION_VAL_20_PL },
+			{ "25", OPTION_VAL_25_PL },
+			{ "30", OPTION_VAL_30_PL },
+			{ "35", OPTION_VAL_35_PL },
+			{ "40", OPTION_VAL_40_PL },
+			{ "45", OPTION_VAL_45_PL },
+			{ "50", OPTION_VAL_50_PL },
+			{ NULL, NULL },
+		},
+		"25"
+	},
+	{
+		"cemu_stick_deadzone_p2",
+		CEMU_STICK_DEADZONE_P2_LABEL_PL,
+		NULL,
+		CEMU_STICK_DEADZONE_P2_INFO_0_PL,
+		NULL,
+		"controller",
+		{
+			{ "0", "Off" },
+			{ "5", OPTION_VAL_5_PL },
+			{ "10", OPTION_VAL_10_PL },
+			{ "15", OPTION_VAL_15_PL },
+			{ "20", OPTION_VAL_20_PL },
+			{ "25", OPTION_VAL_25_PL },
+			{ "30", OPTION_VAL_30_PL },
+			{ "35", OPTION_VAL_35_PL },
+			{ "40", OPTION_VAL_40_PL },
+			{ "45", OPTION_VAL_45_PL },
+			{ "50", OPTION_VAL_50_PL },
+			{ NULL, NULL },
+		},
+		"25"
 	},
 	{
 		"cemu_gamepad_motion",
@@ -27859,6 +29564,15 @@ struct retro_core_options_v2 options_pl = {
 #define OPTION_VAL_80_PT_BR NULL
 #define OPTION_VAL_90_PT_BR NULL
 #define OPTION_VAL_100_PT_BR NULL
+#define CEMU_STICK_DEADZONE_P1_LABEL_PT_BR NULL
+#define CEMU_STICK_DEADZONE_P1_INFO_0_PT_BR NULL
+#define OPTION_VAL_5_PT_BR NULL
+#define OPTION_VAL_15_PT_BR NULL
+#define OPTION_VAL_25_PT_BR NULL
+#define OPTION_VAL_35_PT_BR NULL
+#define OPTION_VAL_45_PT_BR NULL
+#define CEMU_STICK_DEADZONE_P2_LABEL_PT_BR NULL
+#define CEMU_STICK_DEADZONE_P2_INFO_0_PT_BR NULL
 #define CEMU_GAMEPAD_MOTION_LABEL_PT_BR NULL
 #define CEMU_GAMEPAD_MOTION_INFO_0_PT_BR NULL
 #define CEMU_NUMBER_OF_SCREEN_LAYOUTS_LABEL_PT_BR NULL
@@ -28182,6 +29896,52 @@ struct retro_core_option_v2_definition option_defs_pt_br[] = {
 			{ NULL, NULL },
 		},
 		"100"
+	},
+	{
+		"cemu_stick_deadzone_p1",
+		CEMU_STICK_DEADZONE_P1_LABEL_PT_BR,
+		NULL,
+		CEMU_STICK_DEADZONE_P1_INFO_0_PT_BR,
+		NULL,
+		"controller",
+		{
+			{ "0", "Off" },
+			{ "5", OPTION_VAL_5_PT_BR },
+			{ "10", OPTION_VAL_10_PT_BR },
+			{ "15", OPTION_VAL_15_PT_BR },
+			{ "20", OPTION_VAL_20_PT_BR },
+			{ "25", OPTION_VAL_25_PT_BR },
+			{ "30", OPTION_VAL_30_PT_BR },
+			{ "35", OPTION_VAL_35_PT_BR },
+			{ "40", OPTION_VAL_40_PT_BR },
+			{ "45", OPTION_VAL_45_PT_BR },
+			{ "50", OPTION_VAL_50_PT_BR },
+			{ NULL, NULL },
+		},
+		"25"
+	},
+	{
+		"cemu_stick_deadzone_p2",
+		CEMU_STICK_DEADZONE_P2_LABEL_PT_BR,
+		NULL,
+		CEMU_STICK_DEADZONE_P2_INFO_0_PT_BR,
+		NULL,
+		"controller",
+		{
+			{ "0", "Off" },
+			{ "5", OPTION_VAL_5_PT_BR },
+			{ "10", OPTION_VAL_10_PT_BR },
+			{ "15", OPTION_VAL_15_PT_BR },
+			{ "20", OPTION_VAL_20_PT_BR },
+			{ "25", OPTION_VAL_25_PT_BR },
+			{ "30", OPTION_VAL_30_PT_BR },
+			{ "35", OPTION_VAL_35_PT_BR },
+			{ "40", OPTION_VAL_40_PT_BR },
+			{ "45", OPTION_VAL_45_PT_BR },
+			{ "50", OPTION_VAL_50_PT_BR },
+			{ NULL, NULL },
+		},
+		"25"
 	},
 	{
 		"cemu_gamepad_motion",
@@ -28754,6 +30514,15 @@ struct retro_core_options_v2 options_pt_br = {
 #define OPTION_VAL_80_PT_PT NULL
 #define OPTION_VAL_90_PT_PT NULL
 #define OPTION_VAL_100_PT_PT NULL
+#define CEMU_STICK_DEADZONE_P1_LABEL_PT_PT NULL
+#define CEMU_STICK_DEADZONE_P1_INFO_0_PT_PT NULL
+#define OPTION_VAL_5_PT_PT NULL
+#define OPTION_VAL_15_PT_PT NULL
+#define OPTION_VAL_25_PT_PT NULL
+#define OPTION_VAL_35_PT_PT NULL
+#define OPTION_VAL_45_PT_PT NULL
+#define CEMU_STICK_DEADZONE_P2_LABEL_PT_PT NULL
+#define CEMU_STICK_DEADZONE_P2_INFO_0_PT_PT NULL
 #define CEMU_GAMEPAD_MOTION_LABEL_PT_PT NULL
 #define CEMU_GAMEPAD_MOTION_INFO_0_PT_PT NULL
 #define CEMU_NUMBER_OF_SCREEN_LAYOUTS_LABEL_PT_PT NULL
@@ -29077,6 +30846,52 @@ struct retro_core_option_v2_definition option_defs_pt_pt[] = {
 			{ NULL, NULL },
 		},
 		"100"
+	},
+	{
+		"cemu_stick_deadzone_p1",
+		CEMU_STICK_DEADZONE_P1_LABEL_PT_PT,
+		NULL,
+		CEMU_STICK_DEADZONE_P1_INFO_0_PT_PT,
+		NULL,
+		"controller",
+		{
+			{ "0", "Off" },
+			{ "5", OPTION_VAL_5_PT_PT },
+			{ "10", OPTION_VAL_10_PT_PT },
+			{ "15", OPTION_VAL_15_PT_PT },
+			{ "20", OPTION_VAL_20_PT_PT },
+			{ "25", OPTION_VAL_25_PT_PT },
+			{ "30", OPTION_VAL_30_PT_PT },
+			{ "35", OPTION_VAL_35_PT_PT },
+			{ "40", OPTION_VAL_40_PT_PT },
+			{ "45", OPTION_VAL_45_PT_PT },
+			{ "50", OPTION_VAL_50_PT_PT },
+			{ NULL, NULL },
+		},
+		"25"
+	},
+	{
+		"cemu_stick_deadzone_p2",
+		CEMU_STICK_DEADZONE_P2_LABEL_PT_PT,
+		NULL,
+		CEMU_STICK_DEADZONE_P2_INFO_0_PT_PT,
+		NULL,
+		"controller",
+		{
+			{ "0", "Off" },
+			{ "5", OPTION_VAL_5_PT_PT },
+			{ "10", OPTION_VAL_10_PT_PT },
+			{ "15", OPTION_VAL_15_PT_PT },
+			{ "20", OPTION_VAL_20_PT_PT },
+			{ "25", OPTION_VAL_25_PT_PT },
+			{ "30", OPTION_VAL_30_PT_PT },
+			{ "35", OPTION_VAL_35_PT_PT },
+			{ "40", OPTION_VAL_40_PT_PT },
+			{ "45", OPTION_VAL_45_PT_PT },
+			{ "50", OPTION_VAL_50_PT_PT },
+			{ NULL, NULL },
+		},
+		"25"
 	},
 	{
 		"cemu_gamepad_motion",
@@ -29649,6 +31464,15 @@ struct retro_core_options_v2 options_pt_pt = {
 #define OPTION_VAL_80_RU NULL
 #define OPTION_VAL_90_RU NULL
 #define OPTION_VAL_100_RU NULL
+#define CEMU_STICK_DEADZONE_P1_LABEL_RU NULL
+#define CEMU_STICK_DEADZONE_P1_INFO_0_RU NULL
+#define OPTION_VAL_5_RU NULL
+#define OPTION_VAL_15_RU NULL
+#define OPTION_VAL_25_RU NULL
+#define OPTION_VAL_35_RU NULL
+#define OPTION_VAL_45_RU NULL
+#define CEMU_STICK_DEADZONE_P2_LABEL_RU NULL
+#define CEMU_STICK_DEADZONE_P2_INFO_0_RU NULL
 #define CEMU_GAMEPAD_MOTION_LABEL_RU NULL
 #define CEMU_GAMEPAD_MOTION_INFO_0_RU NULL
 #define CEMU_NUMBER_OF_SCREEN_LAYOUTS_LABEL_RU NULL
@@ -29972,6 +31796,52 @@ struct retro_core_option_v2_definition option_defs_ru[] = {
 			{ NULL, NULL },
 		},
 		"100"
+	},
+	{
+		"cemu_stick_deadzone_p1",
+		CEMU_STICK_DEADZONE_P1_LABEL_RU,
+		NULL,
+		CEMU_STICK_DEADZONE_P1_INFO_0_RU,
+		NULL,
+		"controller",
+		{
+			{ "0", "Off" },
+			{ "5", OPTION_VAL_5_RU },
+			{ "10", OPTION_VAL_10_RU },
+			{ "15", OPTION_VAL_15_RU },
+			{ "20", OPTION_VAL_20_RU },
+			{ "25", OPTION_VAL_25_RU },
+			{ "30", OPTION_VAL_30_RU },
+			{ "35", OPTION_VAL_35_RU },
+			{ "40", OPTION_VAL_40_RU },
+			{ "45", OPTION_VAL_45_RU },
+			{ "50", OPTION_VAL_50_RU },
+			{ NULL, NULL },
+		},
+		"25"
+	},
+	{
+		"cemu_stick_deadzone_p2",
+		CEMU_STICK_DEADZONE_P2_LABEL_RU,
+		NULL,
+		CEMU_STICK_DEADZONE_P2_INFO_0_RU,
+		NULL,
+		"controller",
+		{
+			{ "0", "Off" },
+			{ "5", OPTION_VAL_5_RU },
+			{ "10", OPTION_VAL_10_RU },
+			{ "15", OPTION_VAL_15_RU },
+			{ "20", OPTION_VAL_20_RU },
+			{ "25", OPTION_VAL_25_RU },
+			{ "30", OPTION_VAL_30_RU },
+			{ "35", OPTION_VAL_35_RU },
+			{ "40", OPTION_VAL_40_RU },
+			{ "45", OPTION_VAL_45_RU },
+			{ "50", OPTION_VAL_50_RU },
+			{ NULL, NULL },
+		},
+		"25"
 	},
 	{
 		"cemu_gamepad_motion",
@@ -30544,6 +32414,15 @@ struct retro_core_options_v2 options_ru = {
 #define OPTION_VAL_80_SK NULL
 #define OPTION_VAL_90_SK NULL
 #define OPTION_VAL_100_SK NULL
+#define CEMU_STICK_DEADZONE_P1_LABEL_SK "Mŕtva zóna páčky (hráč 1)"
+#define CEMU_STICK_DEADZONE_P1_INFO_0_SK "Ako ďaleko sa musia páčky hráča 1 (GamePadu alebo ovládača na porte 1) pohnúť, kým ich hra zaregistruje, ako podiel ich celého rozsahu; za touto hranicou sa zvyšok pohybu roztiahne na celý rozsah. 25 % je predvolené v samostatnom Cemu. Nižšia hodnota sa hodí pre páčky, ktoré sa vracajú presne do stredu (Hallov efekt, TMR); zvýšte ju, ak sa hra hýbe sama."
+#define OPTION_VAL_5_SK NULL
+#define OPTION_VAL_15_SK NULL
+#define OPTION_VAL_25_SK NULL
+#define OPTION_VAL_35_SK NULL
+#define OPTION_VAL_45_SK NULL
+#define CEMU_STICK_DEADZONE_P2_LABEL_SK "Mŕtva zóna páčky (hráči 2–4)"
+#define CEMU_STICK_DEADZONE_P2_INFO_0_SK "Ako ďaleko sa musia páčky Wii Remote, Pro a Classic Controllerov na portoch 2 až 4 pohnúť, kým ich hra zaregistruje, ako podiel ich celého rozsahu; za touto hranicou sa zvyšok pohybu roztiahne na celý rozsah. 25 % je predvolené v samostatnom Cemu. Nižšia hodnota sa hodí pre páčky, ktoré sa vracajú presne do stredu (Hallov efekt, TMR); zvýšte ju, ak sa hra hýbe sama."
 #define CEMU_GAMEPAD_MOTION_LABEL_SK "Pohyb GamePadu"
 #define CEMU_GAMEPAD_MOTION_INFO_0_SK "Gyroskop a akcelerometer GamePadu zo senzorov, ktoré RetroArch číta na porte 1: vlastné senzory telefónu alebo tabletu, alebo ovládača, kde ich poskytuje vstupný ovládač RetroArchu (DualShock 4, DualSense a ďalšie). Potrebujú to hry, v ktorých sa mieri alebo riadi nakláňaním GamePadu. Vypnuté: GamePad leží nehybne, ako pri vypnutom pohybe v samostatnej verzii."
 #define CEMU_NUMBER_OF_SCREEN_LAYOUTS_LABEL_SK "Počet rozložení obrazovky"
@@ -30867,6 +32746,52 @@ struct retro_core_option_v2_definition option_defs_sk[] = {
 			{ NULL, NULL },
 		},
 		"100"
+	},
+	{
+		"cemu_stick_deadzone_p1",
+		CEMU_STICK_DEADZONE_P1_LABEL_SK,
+		NULL,
+		CEMU_STICK_DEADZONE_P1_INFO_0_SK,
+		NULL,
+		"controller",
+		{
+			{ "0", "Off" },
+			{ "5", OPTION_VAL_5_SK },
+			{ "10", OPTION_VAL_10_SK },
+			{ "15", OPTION_VAL_15_SK },
+			{ "20", OPTION_VAL_20_SK },
+			{ "25", OPTION_VAL_25_SK },
+			{ "30", OPTION_VAL_30_SK },
+			{ "35", OPTION_VAL_35_SK },
+			{ "40", OPTION_VAL_40_SK },
+			{ "45", OPTION_VAL_45_SK },
+			{ "50", OPTION_VAL_50_SK },
+			{ NULL, NULL },
+		},
+		"25"
+	},
+	{
+		"cemu_stick_deadzone_p2",
+		CEMU_STICK_DEADZONE_P2_LABEL_SK,
+		NULL,
+		CEMU_STICK_DEADZONE_P2_INFO_0_SK,
+		NULL,
+		"controller",
+		{
+			{ "0", "Off" },
+			{ "5", OPTION_VAL_5_SK },
+			{ "10", OPTION_VAL_10_SK },
+			{ "15", OPTION_VAL_15_SK },
+			{ "20", OPTION_VAL_20_SK },
+			{ "25", OPTION_VAL_25_SK },
+			{ "30", OPTION_VAL_30_SK },
+			{ "35", OPTION_VAL_35_SK },
+			{ "40", OPTION_VAL_40_SK },
+			{ "45", OPTION_VAL_45_SK },
+			{ "50", OPTION_VAL_50_SK },
+			{ NULL, NULL },
+		},
+		"25"
 	},
 	{
 		"cemu_gamepad_motion",
@@ -31439,6 +33364,15 @@ struct retro_core_options_v2 options_sk = {
 #define OPTION_VAL_80_SR NULL
 #define OPTION_VAL_90_SR NULL
 #define OPTION_VAL_100_SR NULL
+#define CEMU_STICK_DEADZONE_P1_LABEL_SR NULL
+#define CEMU_STICK_DEADZONE_P1_INFO_0_SR NULL
+#define OPTION_VAL_5_SR NULL
+#define OPTION_VAL_15_SR NULL
+#define OPTION_VAL_25_SR NULL
+#define OPTION_VAL_35_SR NULL
+#define OPTION_VAL_45_SR NULL
+#define CEMU_STICK_DEADZONE_P2_LABEL_SR NULL
+#define CEMU_STICK_DEADZONE_P2_INFO_0_SR NULL
 #define CEMU_GAMEPAD_MOTION_LABEL_SR NULL
 #define CEMU_GAMEPAD_MOTION_INFO_0_SR NULL
 #define CEMU_NUMBER_OF_SCREEN_LAYOUTS_LABEL_SR NULL
@@ -31762,6 +33696,52 @@ struct retro_core_option_v2_definition option_defs_sr[] = {
 			{ NULL, NULL },
 		},
 		"100"
+	},
+	{
+		"cemu_stick_deadzone_p1",
+		CEMU_STICK_DEADZONE_P1_LABEL_SR,
+		NULL,
+		CEMU_STICK_DEADZONE_P1_INFO_0_SR,
+		NULL,
+		"controller",
+		{
+			{ "0", "Off" },
+			{ "5", OPTION_VAL_5_SR },
+			{ "10", OPTION_VAL_10_SR },
+			{ "15", OPTION_VAL_15_SR },
+			{ "20", OPTION_VAL_20_SR },
+			{ "25", OPTION_VAL_25_SR },
+			{ "30", OPTION_VAL_30_SR },
+			{ "35", OPTION_VAL_35_SR },
+			{ "40", OPTION_VAL_40_SR },
+			{ "45", OPTION_VAL_45_SR },
+			{ "50", OPTION_VAL_50_SR },
+			{ NULL, NULL },
+		},
+		"25"
+	},
+	{
+		"cemu_stick_deadzone_p2",
+		CEMU_STICK_DEADZONE_P2_LABEL_SR,
+		NULL,
+		CEMU_STICK_DEADZONE_P2_INFO_0_SR,
+		NULL,
+		"controller",
+		{
+			{ "0", "Off" },
+			{ "5", OPTION_VAL_5_SR },
+			{ "10", OPTION_VAL_10_SR },
+			{ "15", OPTION_VAL_15_SR },
+			{ "20", OPTION_VAL_20_SR },
+			{ "25", OPTION_VAL_25_SR },
+			{ "30", OPTION_VAL_30_SR },
+			{ "35", OPTION_VAL_35_SR },
+			{ "40", OPTION_VAL_40_SR },
+			{ "45", OPTION_VAL_45_SR },
+			{ "50", OPTION_VAL_50_SR },
+			{ NULL, NULL },
+		},
+		"25"
 	},
 	{
 		"cemu_gamepad_motion",
@@ -32264,9 +34244,9 @@ struct retro_core_options_v2 options_sr = {
 #define CATEGORY_GRAPHICS_LABEL_SV "Grafik (starta om)"
 #define CATEGORY_GRAPHICS_INFO_0_SV "Grafik-API och shaders. De tillämpas när spelet startas igen, om inget annat anges."
 #define CATEGORY_CONTROLLER_LABEL_SV "Spelkontroll"
-#define CATEGORY_CONTROLLER_INFO_0_SV "Rumble, rörelse och vilken Wii U-skärm som visas samt hur."
+#define CATEGORY_CONTROLLER_INFO_0_SV "Vibration, rörelse och vilken Wii U-skärm som visas samt hur."
 #define CATEGORY_TITLE_MANAGER_LABEL_SV "Titelhanterare"
-#define CATEGORY_TITLE_MANAGER_INFO_0_SV "Installera och avinstallera spel, titeluppdateringar och DLC i sparfiler/Cemu/mlc01, den emulerade konsolens lagring, och konvertera den inlästa titeln till en .wua."
+#define CATEGORY_TITLE_MANAGER_INFO_0_SV "Installera och avinstallera spel, titeluppdateringar och DLC i saves/Cemu/mlc01, den emulerade konsolens lagring, samt konvertera den inlästa titeln till en .wua."
 #define CATEGORY_CORE_LABEL_SV "Kärna"
 #define CATEGORY_CORE_INFO_0_SV "Alternativ för denna kärna som fristående Cemu saknar."
 #define CATEGORY_LOGGING_LABEL_SV "Loggning"
@@ -32274,12 +34254,12 @@ struct retro_core_options_v2 options_sr = {
 #define CATEGORY_GRAPHIC_PACKS_LABEL_SV "Grafikpaket (starta om)"
 #define CATEGORY_GRAPHIC_PACKS_INFO_0_SV "Det inlästa spelets grafikpaket och deras förinställningar. Egna paket eller ändrade kopior av de inbyggda placeras i system/Cemu/customGraphicPacks."
 #define CATEGORY_CHEATS_LABEL_SV "Fusk (starta om)"
-#define CATEGORY_CHEATS_INFO_0_SV "Det inlästa spelets fuskkoder från mappen Cheats i grafikpaketen."
+#define CATEGORY_CHEATS_INFO_0_SV "Det inlästa spelets fuskkodspaket från mappen Cheats i grafikpaketen."
 #define CEMU_CPU_MODE_LABEL_SV "CPU-läge (starta om)"
-#define CEMU_CPU_MODE_INFO_0_SV "Hur Wii U:s PowerPC-kärnor emuleras. Auto: spellägets profil när den finns, som i fristående Cemu; annars flerkärnig rekompilering på en CPU med minst fyra fysiska kärnor och enkärnig i övriga fall. Tolkarna är mycket långsammare och avsedda för felsökning."
-#define OPTION_VAL_AUTO_SV NULL
-#define OPTION_VAL_SINGLECORE_INTERPRETER_SV "Enkelkärnig tolk"
-#define OPTION_VAL_SINGLECORE_RECOMPILER_SV "Enkelkärnig omkompilerare"
+#define CEMU_CPU_MODE_INFO_0_SV "Hur Wii U:s PowerPC-kärnor emuleras. Automatiskt använder spellägets profil när den finns, som i fristående Cemu. Annars används flerkärnig rekompilering på en CPU med minst fyra fysiska kärnor och enkärnig rekommilering i övriga fall. Tolkarna är mycket långsammare och avsedda för felsökning."
+#define OPTION_VAL_AUTO_SV "Automatiskt"
+#define OPTION_VAL_SINGLECORE_INTERPRETER_SV "Enkärnig tolk"
+#define OPTION_VAL_SINGLECORE_RECOMPILER_SV "Enkärnig omkompilerare"
 #define OPTION_VAL_MULTICORE_RECOMPILER_SV "Flerkärnig omkompilerare"
 #define OPTION_VAL_MULTICORE_INTERPRETER_SV "Flerkärnig tolk"
 #define CEMU_THREAD_QUANTUM_LABEL_SV "Trådkvantum"
@@ -32297,45 +34277,54 @@ struct retro_core_options_v2 options_sr = {
 #define OPTION_VAL_RUSSIAN_SV "Ryska"
 #define OPTION_VAL_TAIWANESE_SV "Taiwanesiska"
 #define CEMU_AUDIO_CHANNELS_LABEL_SV "Ljudkanaler (omstart)"
-#define CEMU_AUDIO_CHANNELS_INFO_0_SV "Konsolen rapporterar till spelen vilken typ av TV/ljudsystem som används baserat på inställningen för TV-ljud; spel som har stöd för detta anpassar ljudmixen efter antalet högtalare. 5.1-surroundljud skickas till RetroArch som sex kanaler när flerkanaligt ljudutmatning används, annars mixas det ner till stereo."
+#define CEMU_AUDIO_CHANNELS_INFO_0_SV "Konsolen rapporterar följande tv-ljud till spelen: spel som stöder det anpassar mixen efter antalet högtalare. Surround 5.1 skickas till RetroArch som sex kanaler när flerkanalig ljudutmatning används, annars mixas ljudet ned till stereo."
 #define OPTION_VAL_MONO_SV NULL
 #define OPTION_VAL_STEREO_SV NULL
 #define OPTION_VAL_SURROUND_SV NULL
 #define CEMU_ACCOUNT_LABEL_SV "Aktivt konto (starta om)"
-#define CEMU_ACCOUNT_INFO_0_SV "Wii U-kontot som spelet körs som, med egna sparfiler och Mii för varje konto. Listan innehåller kontona i kontokatalogen.Tills spelet startas om fortsätter spelet att spara till kontot som användes vid starten."
+#define CEMU_ACCOUNT_INFO_0_SV "Wii U-kontot som spelet körs som, med egna sparfiler och Mii för varje konto. Listan innehåller kontona i kontokatalogen.\n\nTills spelet startas om fortsätter spelet att spara till kontot som användes vid starten."
 #define CEMU_CREATE_ACCOUNT_LABEL_SV "Skapa konto"
-#define CEMU_CREATE_ACCOUNT_INFO_0_SV "Skapar ett nytt konto med namnet Spelare 2, Spelare 3 och så vidare och gör det till det aktiva kontot. Därefter återgår detta till AV. Det nya kontot visas i kontolistan när den här menyn har stängts och öppnats igen. Konsolen rymmer upp till 12 konton."
+#define CEMU_CREATE_ACCOUNT_INFO_0_SV "Skapar ett nytt konto med namnet Spelare 2, Spelare 3 och så vidare och gör det till det aktiva kontot. Därefter återgår detta till Av. Det nya kontot visas i kontolistan när den här menyn har stängts och öppnats igen. Konsolen rymmer upp till 12 konton."
 #define CEMU_RENAME_ACCOUNT_LABEL_SV "Byt namn på aktivt konto"
-#define CEMU_RENAME_ACCOUNT_INFO_0_SV "Öppnar namninmatningen för det aktiva kontot när den här menyn stängs och återgår till AV. Namnet hittills visas som en notis över spelet, så gränssnittets skärmnotiser måste vara aktiverade.\n\nMed handkontroll: Upp och Ned ändrar det sista tecknet, Höger lägger till ett, Vänster tar bort ett, Start bekräftar, Select avbryter.\n\nMed tangentbord: skriv, Backsteg tar bort, Retur bekräftar, Escape avbryter (gränssnittet kan behöva ha spelfokus aktiverat för att skicka tangenterna till kärnan).\n\nEtt namn får ha högst 10 tecken. Spelet får ingen inmatning förrän inmatningen stängs och ett aktivt spel visar det nya namnet när det startas igen."
+#define CEMU_RENAME_ACCOUNT_INFO_0_SV "Öppnar namninmatningen för det aktiva kontot när den här menyn stängs och återgår till Av. Namnet hittills visas som en notis över spelet, så gränssnittets skärmnotiser måste vara aktiverade.\\n\\nMed handkontroll: Upp och Ned ändrar det sista tecknet, Höger lägger till ett, Vänster tar bort ett, Start bekräftar och Select avbryter.\\n\\nMed tangentbord: skriv, Backsteg tar bort, Retur bekräftar och Escape avbryter. Gränssnittet kan behöva ha spelfokus aktiverat för att skicka tangenterna till kärnan.\\n\\nEtt namn får ha högst 10 tecken. Spelet får ingen inmatning förrän inmatningen stängs och ett aktivt spel visar det nya namnet när det startas igen."
 #define CEMU_REMOVE_ACCOUNT_LABEL_SV "Ta bort konto"
-#define CEMU_REMOVE_ACCOUNT_INFO_0_SV "Tar bort det valda kontot från kontokatalogen (saves/Cemu/mlc01/usr/save/system/act), på samma sätt som när en användare tas bort på konsolen, när den här menyn stängs. Alternativet visar AV igen när du återvänder till menyn.Det aktiva kontot kan inte tas bort. Inte heller kontot som det körande spelet startades med förrän spelet har stängts.VARNING: om du tar bort ett konto raderas även sparfilerna under det permanent i alla spel. Säkerhetskopiera sparfiler som du vill behålla innan du tar bort det."
+#define CEMU_REMOVE_ACCOUNT_INFO_0_SV "Tar bort det valda kontot från kontokatalogen (saves/Cemu/mlc01/usr/save/system/act), på samma sätt som när en användare tas bort på konsolen, när den här menyn stängs. Alternativet visar Av igen när du återvänder till menyn.\\n\\nDet aktiva kontot kan inte tas bort. Inte heller kontot som det körande spelet startades med kan tas bort förrän spelet har stängts.\\n\\nVARNING: När ett konto tas bort raderas även dess sparfiler permanent i alla spel. Säkerhetskopiera sparfiler som du vill behålla innan kontot tas bort."
 #define CEMU_GPU_API_LABEL_SV "Grafik-API"
 #define CEMU_GPU_API_INFO_0_SV "Det grafik-API som Cemu använder för rendering."
 #define OPTION_VAL_OPENGL_SV NULL
 #define OPTION_VAL_VULKAN_SV NULL
 #define CEMU_PRECOMPILED_SHADERS_LABEL_SV "Förkompilerade shaders (OpenGL)"
-#define CEMU_PRECOMPILED_SHADERS_INFO_0_SV "En cache med kompilerade shaderprogram. Auto: spelprofilens inställning om den finns, som i fristående Cemu; annars av på Nvidia, vars drivrutin har en egen cache, och på i övriga fall."
+#define CEMU_PRECOMPILED_SHADERS_INFO_0_SV "En cache med kompilerade shaderprogram. Automatiskt: använd spelprofilens inställning när den finns, som i fristående Cemu. Annars är funktionen Av på Nvidia, vars drivrutin har en egen cache. På andra system är den På."
 #define CEMU_ASYNC_SHADER_COMPILE_LABEL_SV "Asynkron shaderkompilering (Vulkan)"
 #define CEMU_ACCURATE_SHADER_MUL_LABEL_SV "Noggrann shadermultiplikation"
-#define CEMU_ACCURATE_SHADER_MUL_INFO_0_SV "Emulerar GPU:ns multiplikation exakt, vilket de flesta spel behöver. Auto använder spelprofilens inställning när den finns, som för fristående spel. Super Mario 3D World, Captain Toad och Xenoblade Chronicles X körs med den avstängd. Annars används den."
+#define CEMU_ACCURATE_SHADER_MUL_INFO_0_SV "Emulerar GPU:ns multiplikation exakt, vilket de flesta spel behöver. Automatiskt använder spelprofilens inställning när den finns, som i fristående Cemu. Super Mario 3D World, Captain Toad och Xenoblade Chronicles X körs med funktionen avstängd. Annars används den."
 #define CEMU_GX2DRAWDONE_SYNC_LABEL_SV "GX2DrawDone-synkronisering"
-#define CEMU_GX2DRAWDONE_SYNC_INFO_0_SV "Gör att spelet väntar tills GPU:n har slutfört allt arbete när det anropar GX2DrawDone, som fristående Cemus Full sync at GX2DrawDone. Vissa spel behöver det för att visas korrekt; av kan vara snabbare. Kan växlas under spelets gång."
+#define CEMU_GX2DRAWDONE_SYNC_INFO_0_SV "Gör att spelet väntar tills GPU:n har slutfört allt arbete när det anropar GX2DrawDone, som Full sync at GX2DrawDone i fristående Cemu. Vissa spel behöver det för att visas korrekt. Av kan vara snabbare. Kan växlas under spelets gång."
 #define CEMU_VK_ACCURATE_BARRIERS_LABEL_SV "Noggranna barriärer (Vulkan)"
 #define CEMU_VK_ACCURATE_BARRIERS_INFO_0_SV "Behåller synkroniseringen mellan ritningar som vissa spel behöver för korrekt rendering, som motsvarande alternativ i fristående Cemu. Av kan vara snabbare men ge grafikfel i dessa spel. Kan växlas under spelets gång."
 #define CEMU_RUMBLE_STRENGTH_LABEL_SV "Vibrationsstyrka"
-#define CEMU_RUMBLE_STRENGTH_INFO_0_SV "Hur kraftigt handkontrollen vibrerar när spelet begär det: GamePadens motor och Wii-fjärrkontrollens eller Pro Controller-handkontrollens motor. Av skickar ingen vibration alls till front-endet."
+#define CEMU_RUMBLE_STRENGTH_INFO_0_SV "Hur kraftigt handkontrollen vibrerar när spelet begär det: GamePadens motor och motorn i Wii-fjärrkontrollen eller Pro Controller. Av skickar inga vibrationssignaler till gränssnittet."
 #define OPTION_VAL_10_SV "10 %"
-#define OPTION_VAL_20_SV NULL
-#define OPTION_VAL_30_SV NULL
-#define OPTION_VAL_40_SV NULL
+#define OPTION_VAL_20_SV "20 %"
+#define OPTION_VAL_30_SV "30 %"
+#define OPTION_VAL_40_SV "40 %"
 #define OPTION_VAL_50_SV NULL
-#define OPTION_VAL_60_SV NULL
-#define OPTION_VAL_70_SV NULL
-#define OPTION_VAL_80_SV NULL
-#define OPTION_VAL_90_SV NULL
+#define OPTION_VAL_60_SV "60 %"
+#define OPTION_VAL_70_SV "70 %"
+#define OPTION_VAL_80_SV "80 %"
+#define OPTION_VAL_90_SV "90 %"
 #define OPTION_VAL_100_SV NULL
+#define CEMU_STICK_DEADZONE_P1_LABEL_SV "Styrspakarnas dödzon (spelare 1)"
+#define CEMU_STICK_DEADZONE_P1_INFO_0_SV "Hur långt spelare 1:s styrspakar, GamePadens eller handkontrollens på port 1, måste flyttas innan spelet registrerar dem, som andel av hela rörelseomfånget. Utanför dödzonen sträcks återstående rörelse för att täcka hela intervallet. 25 % är standard i fristående Cemu. Ett lägre värde passar styrspakar som vilar i mitten, till exempel Hall-effekt eller TMR. Höj värdet om spelet rör sig av sig självt."
+#define OPTION_VAL_5_SV "5 %"
+#define OPTION_VAL_15_SV "15 %"
+#define OPTION_VAL_25_SV "25 %"
+#define OPTION_VAL_35_SV "35 %"
+#define OPTION_VAL_45_SV "45 %"
+#define CEMU_STICK_DEADZONE_P2_LABEL_SV "Styrspakarnas dödzon (spelare 2 till 4)"
+#define CEMU_STICK_DEADZONE_P2_INFO_0_SV "Hur långt styrspakarna på Wii-fjärrkontroller, Pro Controller och Classic Controller på port 2 till 4 måste flyttas innan spelet registrerar dem, som andel av hela rörelseomfånget. Utanför dödzonen sträcks återstående rörelse för att täcka hela intervallet. 25 % är standard i fristående Cemu. Ett lägre värde passar styrspakar som vilar i mitten, till exempel Hall-effekt eller TMR. Höj värdet om spelet rör sig av sig självt."
 #define CEMU_GAMEPAD_MOTION_LABEL_SV "GamePad-rörelse"
-#define CEMU_GAMEPAD_MOTION_INFO_0_SV "Använder GamePadens gyroskop och accelerometer från de sensorer som RetroArch läser på port 1. Det kan vara telefonens eller surfplattans egna sensorer, eller handkontrollens när RetroArchs inmatningsdrivrutin erbjuder dem, till exempel DualShock 4 och DualSense. Spel där man siktar eller styr genom att luta GamePaden behöver detta. Av: GamePaden ligger stilla, som när rörelsefunktionen är avstängd i det fristående programmet."
+#define CEMU_GAMEPAD_MOTION_INFO_0_SV "GamePadens gyroskop och accelerometer hämtas från de sensorer som RetroArch läser på port 1: telefonens eller surfplattans egna, eller en handkontrolls när RetroArchs inmatningsdrivrutin erbjuder dem, till exempel DualShock 4 och DualSense. Spel där GamePaden används för att sikta eller styra genom lutning behöver detta. Av: GamePaden ligger stilla, som när rörelsefunktionen i det fristående programmet är avstängd."
 #define CEMU_NUMBER_OF_SCREEN_LAYOUTS_LABEL_SV "Antal skärmlayouter"
 #define CEMU_SCREEN_LAYOUT1_LABEL_SV NULL
 #define OPTION_VAL_DEFAULT_SCREEN_SV "Standardskärm"
@@ -32356,32 +34345,32 @@ struct retro_core_options_v2 options_sr = {
 #define OPTION_VAL_NORMAL_SV NULL
 #define OPTION_VAL_SWAPPED_SV "Växlade"
 #define CEMU_INSTALL_GAME_LABEL_SV "Installera spel"
-#define CEMU_INSTALL_GAME_INFO_0_SV "Installerar varje spel från källkatalogen (system/Cemu/titles), inklusive underkataloger, i den emulerade Wii U-konsolens katalog för installerade spel (saves/Cemu/mlc01/usr/title/00050000), på samma sätt som konsolen installerar ett spel från skivan. Ett spel är en skivavbild (.wud, .wux, .iso) eller en .wua. Titeluppdateringen och DLC:n som en .wua innehåller installeras tillsammans med den. En krypterad skivavbild (.wud, .wux) behöver sin skivnyckel: i en fil bredvid den med samma namn och filändelsen .key (game.wux, game.key), eller i system/Cemu/keys.txt. Ett spel som redan är installerat i samma eller en nyare version lämnas orört.När detta är PÅ startar installationen genast, med framsteg som visas som en avisering. Alternativet återgår till AV när alla spel har installerats och menyn stängs eller ett annat alternativ ändras. Ett installerat spel startas genom att läsa in .rpx-filen i dess kodkatalog i katalogen för installerade spel. Skivavbilden behövs inte längre."
+#define CEMU_INSTALL_GAME_INFO_0_SV "Installerar varje spel från källkatalogen (system/Cemu/titles), inklusive underkataloger, i den emulerade Wii U-konsolens katalog för installerade spel (saves/Cemu/mlc01/usr/title/00050000), på samma sätt som konsolen installerar ett spel från skivan. Ett spel är en skivavbild (.wud, .wux, .iso) eller en .wua. Titeluppdateringen och DLC:n som en .wua innehåller installeras tillsammans med den. En krypterad skivavbild (.wud, .wux) behöver sin skivnyckel: i en fil bredvid med samma namn och filändelsen .key (game.wux, game.key), eller i system/Cemu/keys.txt. Ett spel som redan är installerat i samma eller en nyare version lämnas orört.\n\nNär detta är På startar installationen genast och framstegen visas som en avisering. Alternativet återgår till Av när alla spel har installerats och menyn stängs eller ett annat alternativ ändras. Ett installerat spel startas genom att läsa in .rpx-filen i dess kodkatalog i katalogen för installerade spel. Skivavbilden behövs inte längre."
 #define CEMU_UNINSTALL_GAME_LABEL_SV "Avinstallera spel"
 #define CEMU_UNINSTALL_GAME_INFO_0_SV "Avinstallerar det körande spelet och alla tillhörande titeluppdateringar och DLC från den installerade katalogen (saves/Cemu/mlc01/usr/title) när spelet stängs eller återställs. Alternativet förblir PÅ tills dess. Sparfiler för spelets titel-id (saves/Cemu/mlc01/usr/save/<title id>) tas inte bort."
 #define CEMU_INSTALL_TITLES_LABEL_SV "Installera innehåll"
-#define CEMU_INSTALL_TITLES_INFO_0_SV "Installerar varje titeluppdatering och DLC från källkatalogen (system/Cemu/titles), inklusive underkataloger, i den installerade katalogen (saves/Cemu/mlc01/usr/title). Varje objekt ska ligga i en egen katalog i källkatalogen. En NUS-hämtning (.app-filer) behöver title.tmd och title.tik, dekrypteringsnyckeln, bredvid dem. En redan installerad version som är samma eller nyare lämnas orörd.När detta är PÅ startar installationen genast, med framsteg som visas som en avisering. Alternativet återgår till AV när allt innehåll har installerats och menyn stängs eller ett annat alternativ ändras. Spelet använder det installerade innehållet när det startas om.Innehåll från andra platser kan installeras via RetroArchs huvudmeny > Läs in innehåll genom att välja motsvarande title.tmd med title.tik bredvid."
+#define CEMU_INSTALL_TITLES_INFO_0_SV "Installerar varje titeluppdatering och DLC från källkatalogen (system/Cemu/titles), inklusive underkataloger, i den installerade katalogen (saves/Cemu/mlc01/usr/title). Varje objekt ska ligga i en egen katalog i källkatalogen. En NUS-hämtning (.app-filer) behöver title.tmd och title.tik, dekrypteringsnyckeln, bredvid dem. En redan installerad version som är samma eller nyare lämnas orörd.\n\nNär detta är PÅ startar installationen genast, med framsteg som visas som en avisering. Alternativet återgår till AV när allt innehåll har installerats och menyn stängs eller ett annat alternativ ändras. Spelet använder det installerade innehållet när det startas om.\n\nInnehåll från andra platser kan installeras via RetroArchs huvudmeny > Läs in innehåll genom att välja motsvarande title.tmd med title.tik bredvid."
 #define CEMU_UNINSTALL_TITLES_LABEL_SV "Avinstallera innehåll"
 #define CEMU_UNINSTALL_TITLES_INFO_0_SV "Avinstallerar det körande spelets titeluppdatering och DLC från den installerade katalogen (saves/Cemu/mlc01/usr/title) när spelet stängs eller återställs. Alternativet förblir PÅ tills dess. Kopior i källkatalogen (system/Cemu/titles) lämnas orörda."
 #define CEMU_INSTALL_REMOVE_SOURCE_LABEL_SV "Ta bort filer efter installation"
-#define CEMU_INSTALL_REMOVE_SOURCE_INFO_0_SV "Tar bort det som Installera spel och Installera innehåll har installerat från källkatalogen (system/Cemu/titles): katalogen för en titeluppdatering eller DLC när den har installerats och en skivavbild med .key-filen eller en .wua när allt dess innehåll har installerats. Filer som det körande spelet använder tas bort när spelet stängs eller återställs.VARNING: Detta tar permanent bort filer från källkatalogen. Katalogen är avsedd att hanteras av kärnan. Spara speldata som du vill arkivera på en annan plats."
+#define CEMU_INSTALL_REMOVE_SOURCE_INFO_0_SV "Tar bort det som Installera spel och Installera innehåll har installerat från källkatalogen (system/Cemu/titles): katalogen för en titeluppdatering eller DLC när den har installerats och en skivavbild med .key-filen eller en .wua när allt dess innehåll har installerats. Filer som det körande spelet använder tas bort när spelet stängs eller återställs.\\n\\nVARNING: Detta tar permanent bort filer från källkatalogen. Katalogen är avsedd att hanteras av kärnan. Spara speldata som ska arkiveras på en annan plats."
 #define CEMU_WUA_OUTPUT_DIR_LABEL_SV "Utdatakatalog"
-#define CEMU_WUA_OUTPUT_DIR_INFO_0_SV "Där .wua-filen skrivs. Kräver utrymme för den."
+#define CEMU_WUA_OUTPUT_DIR_INFO_0_SV "Där .wua-filen skrivs. Kräver ledigt utrymme."
 #define CEMU_CONVERT_TO_WUA_LABEL_SV "Starta konvertering till WUA"
-#define CEMU_CONVERT_TO_WUA_INFO_0_SV "Skriver titeln till utdatakatalogen som en .wua-fil. Den fortsätter att köras medan detta sker."
+#define CEMU_CONVERT_TO_WUA_INFO_0_SV "Skriver titeln som en .wua-fil till utdatakatalogen. Den fortsätter att köras medan detta sker."
 #define CEMU_INTERNAL_RESOLUTION_LABEL_SV "Intern upplösning (starta om)"
-#define CEMU_INTERNAL_RESOLUTION_INFO_0_SV "Ett generellt reservläge för spel utan grafikpaket för upplösning: ändrar storlek på varje skärmformat renderingsmål, som vissa spel använder för sådant som slutar fungera när storleken ändras. En multipel av spelets egen upplösning: för ett 720p-spel är 0,5× 640×360, en fjärdedel så många bildpunkter, och 2× är 2560×1440; för ett 1080p-spel är 0,5× 960×540. När ett upplösningspaket är aktiverat för det inlästa spelet (Graphic Packs) anger paketet upplösningen."
-#define OPTION_VAL_0_25X_SV "0.25x (320x180 vid 720p)"
-#define OPTION_VAL_0_5X_SV "0.5x (640x360 vid 720p)"
-#define OPTION_VAL_0_75X_SV "0.75x (960x540 vid 720p)"
-#define OPTION_VAL_NATIVE_SV "Inbyggd"
-#define OPTION_VAL_1_5X_SV "1.5x (1920x1080 vid 720p)"
-#define OPTION_VAL_2X_SV "2x (2560x1440 vid 720p)"
-#define OPTION_VAL_3X_SV "3x (3840x2160 vid 720p)"
+#define CEMU_INTERNAL_RESOLUTION_INFO_0_SV "Ett generellt reservläge för spel utan upplösningsgrafikpaket: ändrar storleken på varje skärmformat renderingsmål, vilket vissa spel använder för sådant som slutar fungera när storleken ändras. Det är en multipel av spelets egen upplösning: för ett spel i 720p är 0,5× 640×360, en fjärdedel så många bildpunkter och 2× är 2560×1440. För ett spel i 1080p är 0,5× 960×540. När ett upplösningspaket är aktiverat för det inlästa spelet under Graphic Packs anger paketet upplösningen."
+#define OPTION_VAL_0_25X_SV "0,25× (320×180 vid 720p)"
+#define OPTION_VAL_0_5X_SV "0,5× (640×360 vid 720p)"
+#define OPTION_VAL_0_75X_SV "0,75× (960×540 vid 720p)"
+#define OPTION_VAL_NATIVE_SV "Ursprunglig"
+#define OPTION_VAL_1_5X_SV "1,5× (1920×1080 vid 720p)"
+#define OPTION_VAL_2X_SV "2× (2560×1440 vid 720p)"
+#define OPTION_VAL_3X_SV "3× (3840×2160 vid 720p)"
 #define CEMU_RENDER_AHEAD_LABEL_SV "Rendera en bildruta i förväg"
 #define CEMU_RENDER_AHEAD_INFO_0_SV "Låter Cemu börja rita nästa bildruta medan RetroArch visar den föregående, som fristående Cemu. Ger mjukare bild när ritningen tar merparten av bildrutetiden, med en bildruta högre inmatningsfördröjning."
 #define CEMU_AUDIO_THREAD_LABEL_SV "Ljudtråd (starta om)"
-#define CEMU_AUDIO_THREAD_INFO_0_SV "På: RetroArch hanterar ljudet i en egen tråd och Wii U-ljudet körs klockstyrt som i fristående Cemu, så att det inte hackar när en bildruta blir sen, till exempel vid inläsning eller shaderkompilering. RetroArchs ljudsynkronisering styr då inte längre bildrutorna; det gör vertikal synkronisering. Av: ljudet lämnas över med varje bildruta."
+#define CEMU_AUDIO_THREAD_INFO_0_SV "På: RetroArch hanterar ljudet i en egen tråd och Wii U-ljudet körs klockstyrt som i fristående Cemu, så att det inte hackar när en bildruta blir sen, till exempel vid inläsning eller shaderkompilering. RetroArchs ljudsynkronisering styr då inte längre bildrutorna, utan det gör vertikal synkronisering. Av: Ljudet lämnas över med varje bildruta."
 #define CEMU_BC1_16BIT_LABEL_SV "Minska BC1-texturminnet (starta om)"
 #define CEMU_BC1_16BIT_INFO_0_SV "Halverar vad BC1-texturer kostar på en GPU som inte kan sampla BC, på bekostnad av en bit grönt. Ingen effekt där BC stöds."
 #define CEMU_SHOW_GAME_FPS_LABEL_SV "Visa spelets bildfrekvens"
@@ -32393,12 +34382,12 @@ struct retro_core_options_v2 options_sr = {
 #define CEMU_LOG_TEXTURE_MEMORY_LABEL_SV "Logga texturminne (felsökning)"
 #define CEMU_LOG_TEXTURE_MEMORY_INFO_0_SV "Rapporterar hur mycket av texturminnet som är BC och som måste dekomprimeras eftersom denna GPU inte kan sampla det."
 #define CEMU_LOG_INPUT_API_LABEL_SV "Logga handkontrollens API-anrop (felsökning)"
-#define CEMU_LOG_INPUT_API_INFO_0_SV "Loggar varje handkontrollsanrop som ett spel gör – vilka handkontroller det undersökte och vad det fick veta. Ordrikt; använd i några sekunder åt gången."
+#define CEMU_LOG_INPUT_API_INFO_0_SV "Loggar varje handkontrollsanrop som en titel gör, vilka handkontroller den undersöker och vad den får veta. Ordrik loggning, använd den bara några sekunder åt gången."
 #define CEMU_LOG_AUDIO_LABEL_SV "Logga ljud och bildrutekadens (felsökning)"
-#define CEMU_LOG_AUDIO_INFO_0_SV "En gång per sekund: hur många samplingar AX producerade, hur många ringen måste släppa och hur många gränssnittet tog emot; samt hur många gånger gränssnittet körde kärnan, hur många bildrutor titeln avslutade och vart tiden tog vägen (väntan på GPU-tråden, presentation, ljud). Används för att avgöra om ett långsamt spel hålls tillbaka av den emulerade processorn, GPU:n eller gränssnittet."
+#define CEMU_LOG_AUDIO_INFO_0_SV "En gång per sekund: hur många samplingar AX producerade, hur många ringen måste släppa och hur många gränssnittet tog emot. Dessutom visas hur många gånger gränssnittet körde kärnan, hur många bildrutor titeln avslutade och vart tiden tog vägen, till exempel väntan på GPU-tråden, presentation och ljud. Används för att avgöra om ett långsamt spel begränsas av den emulerade CPU:n, GPU:n eller gränssnittet."
 #define CEMU_LOG_THREAD_TIME_LABEL_SV "Logga CPU-tid för trådar (felsökning)"
 #define CEMU_LOG_THREAD_TIME_INFO_0_SV "En gång per sekund: hur upptagen varje emulerad PowerPC-kärnas tråd, GPU-tråden och gränssnittets tråd var, som andel av en värdkärna. En tråd nära 100 % är den som ett långsamt spel väntar på."
-#define CEMU_DUMP_SHADERS_LABEL_SV "Dumpa shaderprogram (felsökning)"
+#define CEMU_DUMP_SHADERS_LABEL_SV "Spara shaderprogram (felsökning)"
 #define CEMU_DUMP_SHADERS_INFO_0_SV "Skriver källkoden för varje shaderprogram som spelet använder till system/Cemu/dump/shaders, namngiven efter dess hashar så som de visas i log.txt. Används för att rapportera ett shaderprogram som misslyckas eller ritas fel på en viss GPU. Det gör shaderkompilering långsammare och fyller katalogen snabbt, så stäng av funktionen igen efteråt."
 #define CEMU_EMULATE_SKYLANDER_PORTAL_LABEL_SV "Emulera Skylanders Portal of Power (starta om)"
 #define CEMU_EMULATE_INFINITY_BASE_LABEL_SV "Emulera Infinity Base (starta om)"
@@ -32657,6 +34646,52 @@ struct retro_core_option_v2_definition option_defs_sv[] = {
 			{ NULL, NULL },
 		},
 		"100"
+	},
+	{
+		"cemu_stick_deadzone_p1",
+		CEMU_STICK_DEADZONE_P1_LABEL_SV,
+		NULL,
+		CEMU_STICK_DEADZONE_P1_INFO_0_SV,
+		NULL,
+		"controller",
+		{
+			{ "0", "Off" },
+			{ "5", OPTION_VAL_5_SV },
+			{ "10", OPTION_VAL_10_SV },
+			{ "15", OPTION_VAL_15_SV },
+			{ "20", OPTION_VAL_20_SV },
+			{ "25", OPTION_VAL_25_SV },
+			{ "30", OPTION_VAL_30_SV },
+			{ "35", OPTION_VAL_35_SV },
+			{ "40", OPTION_VAL_40_SV },
+			{ "45", OPTION_VAL_45_SV },
+			{ "50", OPTION_VAL_50_SV },
+			{ NULL, NULL },
+		},
+		"25"
+	},
+	{
+		"cemu_stick_deadzone_p2",
+		CEMU_STICK_DEADZONE_P2_LABEL_SV,
+		NULL,
+		CEMU_STICK_DEADZONE_P2_INFO_0_SV,
+		NULL,
+		"controller",
+		{
+			{ "0", "Off" },
+			{ "5", OPTION_VAL_5_SV },
+			{ "10", OPTION_VAL_10_SV },
+			{ "15", OPTION_VAL_15_SV },
+			{ "20", OPTION_VAL_20_SV },
+			{ "25", OPTION_VAL_25_SV },
+			{ "30", OPTION_VAL_30_SV },
+			{ "35", OPTION_VAL_35_SV },
+			{ "40", OPTION_VAL_40_SV },
+			{ "45", OPTION_VAL_45_SV },
+			{ "50", OPTION_VAL_50_SV },
+			{ NULL, NULL },
+		},
+		"25"
 	},
 	{
 		"cemu_gamepad_motion",
@@ -33229,6 +35264,15 @@ struct retro_core_options_v2 options_sv = {
 #define OPTION_VAL_80_TH NULL
 #define OPTION_VAL_90_TH NULL
 #define OPTION_VAL_100_TH NULL
+#define CEMU_STICK_DEADZONE_P1_LABEL_TH NULL
+#define CEMU_STICK_DEADZONE_P1_INFO_0_TH NULL
+#define OPTION_VAL_5_TH NULL
+#define OPTION_VAL_15_TH NULL
+#define OPTION_VAL_25_TH NULL
+#define OPTION_VAL_35_TH NULL
+#define OPTION_VAL_45_TH NULL
+#define CEMU_STICK_DEADZONE_P2_LABEL_TH NULL
+#define CEMU_STICK_DEADZONE_P2_INFO_0_TH NULL
 #define CEMU_GAMEPAD_MOTION_LABEL_TH NULL
 #define CEMU_GAMEPAD_MOTION_INFO_0_TH NULL
 #define CEMU_NUMBER_OF_SCREEN_LAYOUTS_LABEL_TH NULL
@@ -33552,6 +35596,52 @@ struct retro_core_option_v2_definition option_defs_th[] = {
 			{ NULL, NULL },
 		},
 		"100"
+	},
+	{
+		"cemu_stick_deadzone_p1",
+		CEMU_STICK_DEADZONE_P1_LABEL_TH,
+		NULL,
+		CEMU_STICK_DEADZONE_P1_INFO_0_TH,
+		NULL,
+		"controller",
+		{
+			{ "0", "Off" },
+			{ "5", OPTION_VAL_5_TH },
+			{ "10", OPTION_VAL_10_TH },
+			{ "15", OPTION_VAL_15_TH },
+			{ "20", OPTION_VAL_20_TH },
+			{ "25", OPTION_VAL_25_TH },
+			{ "30", OPTION_VAL_30_TH },
+			{ "35", OPTION_VAL_35_TH },
+			{ "40", OPTION_VAL_40_TH },
+			{ "45", OPTION_VAL_45_TH },
+			{ "50", OPTION_VAL_50_TH },
+			{ NULL, NULL },
+		},
+		"25"
+	},
+	{
+		"cemu_stick_deadzone_p2",
+		CEMU_STICK_DEADZONE_P2_LABEL_TH,
+		NULL,
+		CEMU_STICK_DEADZONE_P2_INFO_0_TH,
+		NULL,
+		"controller",
+		{
+			{ "0", "Off" },
+			{ "5", OPTION_VAL_5_TH },
+			{ "10", OPTION_VAL_10_TH },
+			{ "15", OPTION_VAL_15_TH },
+			{ "20", OPTION_VAL_20_TH },
+			{ "25", OPTION_VAL_25_TH },
+			{ "30", OPTION_VAL_30_TH },
+			{ "35", OPTION_VAL_35_TH },
+			{ "40", OPTION_VAL_40_TH },
+			{ "45", OPTION_VAL_45_TH },
+			{ "50", OPTION_VAL_50_TH },
+			{ NULL, NULL },
+		},
+		"25"
 	},
 	{
 		"cemu_gamepad_motion",
@@ -34124,6 +36214,15 @@ struct retro_core_options_v2 options_th = {
 #define OPTION_VAL_80_TR "%80"
 #define OPTION_VAL_90_TR "%90"
 #define OPTION_VAL_100_TR "%100"
+#define CEMU_STICK_DEADZONE_P1_LABEL_TR NULL
+#define CEMU_STICK_DEADZONE_P1_INFO_0_TR NULL
+#define OPTION_VAL_5_TR NULL
+#define OPTION_VAL_15_TR "%15"
+#define OPTION_VAL_25_TR NULL
+#define OPTION_VAL_35_TR "%35"
+#define OPTION_VAL_45_TR NULL
+#define CEMU_STICK_DEADZONE_P2_LABEL_TR NULL
+#define CEMU_STICK_DEADZONE_P2_INFO_0_TR NULL
 #define CEMU_GAMEPAD_MOTION_LABEL_TR NULL
 #define CEMU_GAMEPAD_MOTION_INFO_0_TR NULL
 #define CEMU_NUMBER_OF_SCREEN_LAYOUTS_LABEL_TR NULL
@@ -34447,6 +36546,52 @@ struct retro_core_option_v2_definition option_defs_tr[] = {
 			{ NULL, NULL },
 		},
 		"100"
+	},
+	{
+		"cemu_stick_deadzone_p1",
+		CEMU_STICK_DEADZONE_P1_LABEL_TR,
+		NULL,
+		CEMU_STICK_DEADZONE_P1_INFO_0_TR,
+		NULL,
+		"controller",
+		{
+			{ "0", "Off" },
+			{ "5", OPTION_VAL_5_TR },
+			{ "10", OPTION_VAL_10_TR },
+			{ "15", OPTION_VAL_15_TR },
+			{ "20", OPTION_VAL_20_TR },
+			{ "25", OPTION_VAL_25_TR },
+			{ "30", OPTION_VAL_30_TR },
+			{ "35", OPTION_VAL_35_TR },
+			{ "40", OPTION_VAL_40_TR },
+			{ "45", OPTION_VAL_45_TR },
+			{ "50", OPTION_VAL_50_TR },
+			{ NULL, NULL },
+		},
+		"25"
+	},
+	{
+		"cemu_stick_deadzone_p2",
+		CEMU_STICK_DEADZONE_P2_LABEL_TR,
+		NULL,
+		CEMU_STICK_DEADZONE_P2_INFO_0_TR,
+		NULL,
+		"controller",
+		{
+			{ "0", "Off" },
+			{ "5", OPTION_VAL_5_TR },
+			{ "10", OPTION_VAL_10_TR },
+			{ "15", OPTION_VAL_15_TR },
+			{ "20", OPTION_VAL_20_TR },
+			{ "25", OPTION_VAL_25_TR },
+			{ "30", OPTION_VAL_30_TR },
+			{ "35", OPTION_VAL_35_TR },
+			{ "40", OPTION_VAL_40_TR },
+			{ "45", OPTION_VAL_45_TR },
+			{ "50", OPTION_VAL_50_TR },
+			{ NULL, NULL },
+		},
+		"25"
 	},
 	{
 		"cemu_gamepad_motion",
@@ -35019,6 +37164,15 @@ struct retro_core_options_v2 options_tr = {
 #define OPTION_VAL_80_TT NULL
 #define OPTION_VAL_90_TT NULL
 #define OPTION_VAL_100_TT NULL
+#define CEMU_STICK_DEADZONE_P1_LABEL_TT NULL
+#define CEMU_STICK_DEADZONE_P1_INFO_0_TT NULL
+#define OPTION_VAL_5_TT NULL
+#define OPTION_VAL_15_TT NULL
+#define OPTION_VAL_25_TT NULL
+#define OPTION_VAL_35_TT NULL
+#define OPTION_VAL_45_TT NULL
+#define CEMU_STICK_DEADZONE_P2_LABEL_TT NULL
+#define CEMU_STICK_DEADZONE_P2_INFO_0_TT NULL
 #define CEMU_GAMEPAD_MOTION_LABEL_TT NULL
 #define CEMU_GAMEPAD_MOTION_INFO_0_TT NULL
 #define CEMU_NUMBER_OF_SCREEN_LAYOUTS_LABEL_TT NULL
@@ -35342,6 +37496,52 @@ struct retro_core_option_v2_definition option_defs_tt[] = {
 			{ NULL, NULL },
 		},
 		"100"
+	},
+	{
+		"cemu_stick_deadzone_p1",
+		CEMU_STICK_DEADZONE_P1_LABEL_TT,
+		NULL,
+		CEMU_STICK_DEADZONE_P1_INFO_0_TT,
+		NULL,
+		"controller",
+		{
+			{ "0", "Off" },
+			{ "5", OPTION_VAL_5_TT },
+			{ "10", OPTION_VAL_10_TT },
+			{ "15", OPTION_VAL_15_TT },
+			{ "20", OPTION_VAL_20_TT },
+			{ "25", OPTION_VAL_25_TT },
+			{ "30", OPTION_VAL_30_TT },
+			{ "35", OPTION_VAL_35_TT },
+			{ "40", OPTION_VAL_40_TT },
+			{ "45", OPTION_VAL_45_TT },
+			{ "50", OPTION_VAL_50_TT },
+			{ NULL, NULL },
+		},
+		"25"
+	},
+	{
+		"cemu_stick_deadzone_p2",
+		CEMU_STICK_DEADZONE_P2_LABEL_TT,
+		NULL,
+		CEMU_STICK_DEADZONE_P2_INFO_0_TT,
+		NULL,
+		"controller",
+		{
+			{ "0", "Off" },
+			{ "5", OPTION_VAL_5_TT },
+			{ "10", OPTION_VAL_10_TT },
+			{ "15", OPTION_VAL_15_TT },
+			{ "20", OPTION_VAL_20_TT },
+			{ "25", OPTION_VAL_25_TT },
+			{ "30", OPTION_VAL_30_TT },
+			{ "35", OPTION_VAL_35_TT },
+			{ "40", OPTION_VAL_40_TT },
+			{ "45", OPTION_VAL_45_TT },
+			{ "50", OPTION_VAL_50_TT },
+			{ NULL, NULL },
+		},
+		"25"
 	},
 	{
 		"cemu_gamepad_motion",
@@ -35914,6 +38114,15 @@ struct retro_core_options_v2 options_tt = {
 #define OPTION_VAL_80_UK NULL
 #define OPTION_VAL_90_UK NULL
 #define OPTION_VAL_100_UK NULL
+#define CEMU_STICK_DEADZONE_P1_LABEL_UK NULL
+#define CEMU_STICK_DEADZONE_P1_INFO_0_UK NULL
+#define OPTION_VAL_5_UK NULL
+#define OPTION_VAL_15_UK NULL
+#define OPTION_VAL_25_UK NULL
+#define OPTION_VAL_35_UK NULL
+#define OPTION_VAL_45_UK NULL
+#define CEMU_STICK_DEADZONE_P2_LABEL_UK NULL
+#define CEMU_STICK_DEADZONE_P2_INFO_0_UK NULL
 #define CEMU_GAMEPAD_MOTION_LABEL_UK NULL
 #define CEMU_GAMEPAD_MOTION_INFO_0_UK NULL
 #define CEMU_NUMBER_OF_SCREEN_LAYOUTS_LABEL_UK NULL
@@ -36237,6 +38446,52 @@ struct retro_core_option_v2_definition option_defs_uk[] = {
 			{ NULL, NULL },
 		},
 		"100"
+	},
+	{
+		"cemu_stick_deadzone_p1",
+		CEMU_STICK_DEADZONE_P1_LABEL_UK,
+		NULL,
+		CEMU_STICK_DEADZONE_P1_INFO_0_UK,
+		NULL,
+		"controller",
+		{
+			{ "0", "Off" },
+			{ "5", OPTION_VAL_5_UK },
+			{ "10", OPTION_VAL_10_UK },
+			{ "15", OPTION_VAL_15_UK },
+			{ "20", OPTION_VAL_20_UK },
+			{ "25", OPTION_VAL_25_UK },
+			{ "30", OPTION_VAL_30_UK },
+			{ "35", OPTION_VAL_35_UK },
+			{ "40", OPTION_VAL_40_UK },
+			{ "45", OPTION_VAL_45_UK },
+			{ "50", OPTION_VAL_50_UK },
+			{ NULL, NULL },
+		},
+		"25"
+	},
+	{
+		"cemu_stick_deadzone_p2",
+		CEMU_STICK_DEADZONE_P2_LABEL_UK,
+		NULL,
+		CEMU_STICK_DEADZONE_P2_INFO_0_UK,
+		NULL,
+		"controller",
+		{
+			{ "0", "Off" },
+			{ "5", OPTION_VAL_5_UK },
+			{ "10", OPTION_VAL_10_UK },
+			{ "15", OPTION_VAL_15_UK },
+			{ "20", OPTION_VAL_20_UK },
+			{ "25", OPTION_VAL_25_UK },
+			{ "30", OPTION_VAL_30_UK },
+			{ "35", OPTION_VAL_35_UK },
+			{ "40", OPTION_VAL_40_UK },
+			{ "45", OPTION_VAL_45_UK },
+			{ "50", OPTION_VAL_50_UK },
+			{ NULL, NULL },
+		},
+		"25"
 	},
 	{
 		"cemu_gamepad_motion",
@@ -36809,6 +39064,15 @@ struct retro_core_options_v2 options_uk = {
 #define OPTION_VAL_80_VAL NULL
 #define OPTION_VAL_90_VAL NULL
 #define OPTION_VAL_100_VAL NULL
+#define CEMU_STICK_DEADZONE_P1_LABEL_VAL NULL
+#define CEMU_STICK_DEADZONE_P1_INFO_0_VAL NULL
+#define OPTION_VAL_5_VAL NULL
+#define OPTION_VAL_15_VAL NULL
+#define OPTION_VAL_25_VAL NULL
+#define OPTION_VAL_35_VAL NULL
+#define OPTION_VAL_45_VAL NULL
+#define CEMU_STICK_DEADZONE_P2_LABEL_VAL NULL
+#define CEMU_STICK_DEADZONE_P2_INFO_0_VAL NULL
 #define CEMU_GAMEPAD_MOTION_LABEL_VAL NULL
 #define CEMU_GAMEPAD_MOTION_INFO_0_VAL NULL
 #define CEMU_NUMBER_OF_SCREEN_LAYOUTS_LABEL_VAL NULL
@@ -37132,6 +39396,52 @@ struct retro_core_option_v2_definition option_defs_val[] = {
 			{ NULL, NULL },
 		},
 		"100"
+	},
+	{
+		"cemu_stick_deadzone_p1",
+		CEMU_STICK_DEADZONE_P1_LABEL_VAL,
+		NULL,
+		CEMU_STICK_DEADZONE_P1_INFO_0_VAL,
+		NULL,
+		"controller",
+		{
+			{ "0", "Off" },
+			{ "5", OPTION_VAL_5_VAL },
+			{ "10", OPTION_VAL_10_VAL },
+			{ "15", OPTION_VAL_15_VAL },
+			{ "20", OPTION_VAL_20_VAL },
+			{ "25", OPTION_VAL_25_VAL },
+			{ "30", OPTION_VAL_30_VAL },
+			{ "35", OPTION_VAL_35_VAL },
+			{ "40", OPTION_VAL_40_VAL },
+			{ "45", OPTION_VAL_45_VAL },
+			{ "50", OPTION_VAL_50_VAL },
+			{ NULL, NULL },
+		},
+		"25"
+	},
+	{
+		"cemu_stick_deadzone_p2",
+		CEMU_STICK_DEADZONE_P2_LABEL_VAL,
+		NULL,
+		CEMU_STICK_DEADZONE_P2_INFO_0_VAL,
+		NULL,
+		"controller",
+		{
+			{ "0", "Off" },
+			{ "5", OPTION_VAL_5_VAL },
+			{ "10", OPTION_VAL_10_VAL },
+			{ "15", OPTION_VAL_15_VAL },
+			{ "20", OPTION_VAL_20_VAL },
+			{ "25", OPTION_VAL_25_VAL },
+			{ "30", OPTION_VAL_30_VAL },
+			{ "35", OPTION_VAL_35_VAL },
+			{ "40", OPTION_VAL_40_VAL },
+			{ "45", OPTION_VAL_45_VAL },
+			{ "50", OPTION_VAL_50_VAL },
+			{ NULL, NULL },
+		},
+		"25"
 	},
 	{
 		"cemu_gamepad_motion",
@@ -37678,9 +39988,9 @@ struct retro_core_options_v2 options_val = {
 #define CEMU_RENAME_ACCOUNT_LABEL_VN "Đổi tên tài khoản đang hoạt động"
 #define CEMU_RENAME_ACCOUNT_INFO_0_VN "Mở giao diện nhập tên cho tài khoản đang hoạt động sau khi thoát khỏi menu này, rồi chuyển về TẮT. Tên đang nhập sẽ được hiển thị dưới dạng thông báo đè lên trò chơi, vì vậy thông báo trên màn hình của giao diện điều khiển phải được bật.\n\nVới tay cầm: Lên và Xuống thay đổi ký tự cuối cùng, Phải thêm một ký tự, Trái xóa một ký tự, Start xác nhận, Select hủy.\n\nVới bàn phím: nhập văn bản, Backspace xóa một ký tự, Enter xác nhận, Escape hủy (có thể cần bật Tập trung vào trò chơi trên giao diện điều khiển để chuyển phím đến lõi).\n\nTên có tối đa 10 ký tự. Trò chơi sẽ không nhận được thao tác điều khiển nào cho đến khi giao diện nhập tên được đóng, và trò chơi đang chạy sẽ hiển thị tên mới khi được khởi chạy lại."
 #define CEMU_REMOVE_ACCOUNT_LABEL_VN "Xóa tài khoản"
-#define CEMU_REMOVE_ACCOUNT_INFO_0_VN "Xóa tài khoản đã chọn khỏi thư mục tài khoản (saves/Cemu/mlc01/usr/save/system/act), tương tự thao tác xóa người dùng trên máy chơi game, khi thoát khỏi trình đơn này. Tùy chọn sẽ hiển thị lại TẮT khi quay lại trình đơn.\n\nKhông thể xóa tài khoản đang hoạt động, cũng như tài khoản đã dùng để khởi chạy trò chơi đang chạy cho đến khi trò chơi đó được đóng.\n\nCẢNH BÁO: xóa tài khoản cũng sẽ xóa vĩnh viễn dữ liệu lưu của tài khoản đó trong tất cả trò chơi. Hãy sao lưu mọi dữ liệu lưu muốn giữ lại trước khi xóa tài khoản."
+#define CEMU_REMOVE_ACCOUNT_INFO_0_VN "Xóa tài khoản đã chọn khỏi thư mục tài khoản (saves/Cemu/mlc01/usr/save/system/act), tương tự thao tác xóa người dùng trên máy chơi game, khi thoát khỏi Menu này. Tùy chọn sẽ hiển thị lại TẮT khi quay lại Menu.\n\nKhông thể xóa tài khoản đang hoạt động, cũng như tài khoản đã dùng để khởi chạy trò chơi đang chạy cho đến khi trò chơi đó được đóng.\n\nCẢNH BÁO: xóa tài khoản cũng sẽ xóa vĩnh viễn dữ liệu lưu của tài khoản đó trong tất cả trò chơi. Hãy sao lưu mọi dữ liệu lưu muốn giữ lại trước khi xóa tài khoản."
 #define CEMU_GPU_API_LABEL_VN "Giao diện đồ họa"
-#define CEMU_GPU_API_INFO_0_VN "Giao diện lập trình đồ họa mà Cemu sử dụng để dựng hình."
+#define CEMU_GPU_API_INFO_0_VN "Giao diện lập trình đồ họa mà Cemu sử dụng để Dựng hình."
 #define OPTION_VAL_OPENGL_VN NULL
 #define OPTION_VAL_VULKAN_VN NULL
 #define CEMU_PRECOMPILED_SHADERS_LABEL_VN "Bộ đổ bóng biên dịch sẵn (OpenGL)"
@@ -37691,7 +40001,7 @@ struct retro_core_options_v2 options_val = {
 #define CEMU_GX2DRAWDONE_SYNC_LABEL_VN "Đồng bộ GX2DrawDone"
 #define CEMU_GX2DRAWDONE_SYNC_INFO_0_VN "Buộc trò chơi chờ cho đến khi bộ xử lý đồ họa hoàn tất mọi công việc mỗi khi trò chơi gọi GX2DrawDone, giống như tùy chọn Đồng bộ hoàn toàn tại GX2DrawDone trong phiên bản độc lập. Một số trò chơi cần tùy chọn này để hiển thị chính xác; tắt có thể giúp chạy nhanh hơn. Có thể bật hoặc tắt trong khi chơi."
 #define CEMU_VK_ACCURATE_BARRIERS_LABEL_VN "Rào cản đồng bộ chính xác (Vulkan)"
-#define CEMU_VK_ACCURATE_BARRIERS_INFO_0_VN "Duy trì đồng bộ hóa giữa các lệnh vẽ mà một số trò chơi cần để dựng hình chính xác, giống như tùy chọn cùng tên trong phiên bản độc lập. Tắt có thể giúp chạy nhanh hơn nhưng sẽ gây lỗi hiển thị trong những trò chơi đó. Có thể bật hoặc tắt trong khi chơi."
+#define CEMU_VK_ACCURATE_BARRIERS_INFO_0_VN "Duy trì đồng bộ hóa giữa các lệnh vẽ mà một số trò chơi cần để Dựng hình chính xác, giống như tùy chọn cùng tên trong phiên bản độc lập. Tắt có thể giúp chạy nhanh hơn nhưng sẽ gây lỗi hiển thị trong những trò chơi đó. Có thể bật hoặc tắt trong khi chơi."
 #define CEMU_RUMBLE_STRENGTH_LABEL_VN "Cường độ rung"
 #define CEMU_RUMBLE_STRENGTH_INFO_0_VN "Mức rung của tay cầm khi trò chơi yêu cầu: động cơ của Tay cầm chơi game và của Điều khiển Wii hoặc Tay cầm Pro. Tắt sẽ không gửi bất kỳ lệnh rung nào đến giao diện chính."
 #define OPTION_VAL_10_VN NULL
@@ -37704,8 +40014,17 @@ struct retro_core_options_v2 options_val = {
 #define OPTION_VAL_80_VN NULL
 #define OPTION_VAL_90_VN NULL
 #define OPTION_VAL_100_VN NULL
+#define CEMU_STICK_DEADZONE_P1_LABEL_VN "Vùng chết cần điều khiển (người chơi 1)"
+#define CEMU_STICK_DEADZONE_P1_INFO_0_VN "Cần điều khiển của người chơi 1 (trên tay cầm GamePad hoặc tay cầm ở cổng 1) phải di chuyển bao xa thì trò chơi mới nhận tín hiệu, tính theo tỷ lệ phần trăm toàn bộ hành trình di chuyển; vượt qua ngưỡng này, phần hành trình còn lại sẽ được kéo giãn để bao phủ toàn bộ dải giá trị. 25% là giá trị mặc định của Cemu độc lập. Giá trị thấp hơn phù hợp với cần điều khiển tự nằm ở chính giữa (loại hiệu ứng Hall, TMR); hãy tăng giá trị nếu nhân vật hoặc góc nhìn trong trò chơi tự di chuyển."
+#define OPTION_VAL_5_VN NULL
+#define OPTION_VAL_15_VN NULL
+#define OPTION_VAL_25_VN NULL
+#define OPTION_VAL_35_VN NULL
+#define OPTION_VAL_45_VN NULL
+#define CEMU_STICK_DEADZONE_P2_LABEL_VN "Vùng chết cần điều khiển (người chơi 2-4)"
+#define CEMU_STICK_DEADZONE_P2_INFO_0_VN "Cần điều khiển trên các tay cầm Wii Remote, Pro và Classic ở cổng 2 đến 4 phải di chuyển bao xa thì trò chơi mới nhận tín hiệu, tính theo tỷ lệ phần trăm toàn bộ hành trình di chuyển; vượt qua ngưỡng này, phần hành trình còn lại sẽ được kéo giãn để bao phủ toàn bộ dải giá trị. 25% là giá trị mặc định của Cemu độc lập. Giá trị thấp hơn phù hợp với cần điều khiển tự nằm ở chính giữa (loại hiệu ứng Hall, TMR); hãy tăng giá trị nếu nhân vật hoặc góc nhìn trong trò chơi tự di chuyển."
 #define CEMU_GAMEPAD_MOTION_LABEL_VN "Điều khiển chuyển động của tay cầm GamePad"
-#define CEMU_GAMEPAD_MOTION_INFO_0_VN "Con quay hồi chuyển và cảm biến gia tốc của tay cầm GamePad, lấy từ các cảm biến mà RetroArch đọc được trên cổng 1: cảm biến tích hợp của điện thoại hoặc máy tính bảng, hoặc cảm biến của tay cầm nếu trình điều khiển đầu vào của RetroArch hỗ trợ (DualShock 4, DualSense và các loại khác). Cần bật tùy chọn này đối với những trò chơi yêu cầu ngắm bắn hoặc điều khiển hướng di chuyển bằng cách nghiêng tay cầm GamePad. Tắt: tay cầm GamePad giữ nguyên trạng thái đứng yên, giống như khi tắt chức năng chuyển động trong chế độ độc lập."
+#define CEMU_GAMEPAD_MOTION_INFO_0_VN "Con quay hồi chuyển và cảm biến gia tốc của tay cầm GamePad, lấy từ các cảm biến mà RetroArch đọc được trên cổng 1: cảm biến tích hợp của điện thoại hoặc máy tính bảng, hoặc cảm biến của tay cầm nếu trình điều khiển Điều khiển của RetroArch hỗ trợ (DualShock 4, DualSense và các loại khác). Cần bật tùy chọn này đối với những trò chơi yêu cầu ngắm bắn hoặc điều khiển hướng di chuyển bằng cách nghiêng tay cầm GamePad. Tắt: tay cầm GamePad giữ nguyên trạng thái đứng yên, giống như khi tắt chức năng chuyển động trong chế độ độc lập."
 #define CEMU_NUMBER_OF_SCREEN_LAYOUTS_LABEL_VN "# Số bố cục màn hình"
 #define CEMU_SCREEN_LAYOUT1_LABEL_VN "Bố cục 1"
 #define OPTION_VAL_DEFAULT_SCREEN_VN "Màn hình mặc định"
@@ -37726,11 +40045,11 @@ struct retro_core_options_v2 options_val = {
 #define OPTION_VAL_NORMAL_VN "Bình thường"
 #define OPTION_VAL_SWAPPED_VN "Hoán đổi"
 #define CEMU_INSTALL_GAME_LABEL_VN "Cài đặt trò chơi"
-#define CEMU_INSTALL_GAME_INFO_0_VN "Cài đặt mọi trò chơi từ thư mục nguồn (system/Cemu/titles), bao gồm cả các thư mục con, vào thư mục trò chơi đã cài đặt của máy Wii U được mô phỏng (saves/Cemu/mlc01/usr/title/00050000), tương tự cách máy chơi game cài đặt trò chơi từ đĩa. Một trò chơi là ảnh đĩa (.wud, .wux, .iso) hoặc tệp .wua; bản cập nhật trò chơi và nội dung tải thêm chứa trong tệp .wua cũng được cài đặt cùng. Ảnh đĩa được mã hóa (.wud, .wux) cần có khóa đĩa: đặt trong một tệp cùng tên với ảnh đĩa và có phần mở rộng .key (game.wux, game.key), hoặc trong system/Cemu/keys.txt. Trò chơi đã được cài đặt ở cùng phiên bản hoặc phiên bản mới hơn sẽ được giữ nguyên.\n\nKhi BẬT, quá trình cài đặt bắt đầu ngay lập tức, tiến trình được hiển thị dưới dạng thông báo, và thiết lập này sẽ tự TẮT khi tất cả trò chơi đã được cài đặt và bạn thoát khỏi trình đơn này hoặc thay đổi tùy chọn khác. Trò chơi đã cài đặt được khởi chạy bằng cách nạp tệp .rpx trong thư mục mã của trò chơi ở thư mục trò chơi đã cài đặt; không cần đến ảnh đĩa của trò chơi nữa."
+#define CEMU_INSTALL_GAME_INFO_0_VN "Cài đặt mọi trò chơi từ thư mục nguồn (system/Cemu/titles), bao gồm cả các thư mục con, vào thư mục trò chơi đã cài đặt của máy Wii U được mô phỏng (saves/Cemu/mlc01/usr/title/00050000), tương tự cách máy chơi game cài đặt trò chơi từ đĩa. Một trò chơi là ảnh đĩa (.wud, .wux, .iso) hoặc tệp .wua; bản cập nhật trò chơi và nội dung tải thêm chứa trong tệp .wua cũng được cài đặt cùng. Ảnh đĩa được mã hóa (.wud, .wux) cần có khóa đĩa: đặt trong một tệp cùng tên với ảnh đĩa và có phần mở rộng .key (game.wux, game.key), hoặc trong system/Cemu/keys.txt. Trò chơi đã được cài đặt ở cùng phiên bản hoặc phiên bản mới hơn sẽ được giữ nguyên.\n\nKhi BẬT, quá trình cài đặt bắt đầu ngay lập tức, tiến trình được hiển thị dưới dạng thông báo, và thiết lập này sẽ tự TẮT khi tất cả trò chơi đã được cài đặt và bạn thoát khỏi Menu này hoặc thay đổi tùy chọn khác. Trò chơi đã cài đặt được khởi chạy bằng cách nạp tệp .rpx trong thư mục mã của trò chơi ở thư mục trò chơi đã cài đặt; không cần đến ảnh đĩa của trò chơi nữa."
 #define CEMU_UNINSTALL_GAME_LABEL_VN "Gỡ cài đặt trò chơi"
 #define CEMU_UNINSTALL_GAME_INFO_0_VN "Gỡ cài đặt trò chơi đang chạy cùng tất cả bản cập nhật trò chơi và nội dung tải thêm liên quan khỏi thư mục đã cài đặt (saves/Cemu/mlc01/usr/title) sau khi trò chơi được đóng hoặc khởi động lại; tùy chọn vẫn BẬT cho đến lúc đó. Dữ liệu lưu có mã định danh trò chơi (saves/Cemu/mlc01/usr/save/) sẽ không bị xóa."
 #define CEMU_INSTALL_TITLES_LABEL_VN "Cài đặt nội dung"
-#define CEMU_INSTALL_TITLES_INFO_0_VN "Cài đặt mọi bản cập nhật trò chơi và nội dung tải thêm từ thư mục nguồn (system/Cemu/titles), bao gồm cả các thư mục con, vào thư mục đã cài đặt (saves/Cemu/mlc01/usr/title). Mỗi nội dung phải nằm trong một thư mục riêng trong thư mục nguồn; bản tải xuống từ máy chủ NUS (các tệp .app) cần có tệp title.tmd và title.tik chứa khóa giải mã đặt bên cạnh. Phiên bản đã cài đặt nếu bằng hoặc mới hơn sẽ được giữ nguyên.\n\nKhi BẬT, quá trình cài đặt bắt đầu ngay lập tức, tiến trình được hiển thị dưới dạng thông báo, và thiết lập này sẽ tự TẮT khi tất cả nội dung đã được cài đặt và bạn thoát khỏi trình đơn này hoặc thay đổi tùy chọn khác. Trò chơi sẽ sử dụng nội dung đã cài đặt sau khi được khởi động lại.\n\nCó thể cài đặt nội dung từ các vị trí khác bằng cách vào Trình đơn chính > Nạp nội dung của RetroArch, rồi chọn tệp title.tmd tương ứng, với tệp title.tik đặt bên cạnh."
+#define CEMU_INSTALL_TITLES_INFO_0_VN "Cài đặt mọi bản cập nhật trò chơi và nội dung tải thêm từ thư mục nguồn (system/Cemu/titles), bao gồm cả các thư mục con, vào thư mục đã cài đặt (saves/Cemu/mlc01/usr/title). Mỗi nội dung phải nằm trong một thư mục riêng trong thư mục nguồn; bản tải xuống từ máy chủ NUS (các tệp .app) cần có tệp title.tmd và title.tik chứa khóa giải mã đặt bên cạnh. Phiên bản đã cài đặt nếu bằng hoặc mới hơn sẽ được giữ nguyên.\n\nKhi BẬT, quá trình cài đặt bắt đầu ngay lập tức, tiến trình được hiển thị dưới dạng thông báo, và thiết lập này sẽ tự TẮT khi tất cả nội dung đã được cài đặt và bạn thoát khỏi Menu này hoặc thay đổi tùy chọn khác. Trò chơi sẽ sử dụng nội dung đã cài đặt sau khi được khởi động lại.\n\nCó thể cài đặt nội dung từ các vị trí khác bằng cách vào Menu chính > Nạp nội dung của RetroArch, rồi chọn tệp title.tmd tương ứng, với tệp title.tik đặt bên cạnh."
 #define CEMU_UNINSTALL_TITLES_LABEL_VN "Gỡ cài đặt nội dung"
 #define CEMU_UNINSTALL_TITLES_INFO_0_VN "Gỡ cài đặt bản cập nhật trò chơi và nội dung tải thêm của trò chơi đang chạy khỏi thư mục đã cài đặt (saves/Cemu/mlc01/usr/title) sau khi trò chơi được đóng hoặc khởi động lại; tùy chọn vẫn BẬT cho đến lúc đó. Các bản sao trong thư mục nguồn (system/Cemu/titles) sẽ được giữ nguyên."
 #define CEMU_INSTALL_REMOVE_SOURCE_LABEL_VN "Xóa tệp sau khi cài đặt"
@@ -37740,7 +40059,7 @@ struct retro_core_options_v2 options_val = {
 #define CEMU_CONVERT_TO_WUA_LABEL_VN "Bắt đầu chuyển đổi sang WUA"
 #define CEMU_CONVERT_TO_WUA_INFO_0_VN "Ghi trò chơi vào thư mục đầu ra dưới dạng tệp .wua. Quá trình này vẫn tiếp tục chạy trong khi thực hiện."
 #define CEMU_INTERNAL_RESOLUTION_LABEL_VN "Độ phân giải nội bộ (Cần khởi động lại)"
-#define CEMU_INTERNAL_RESOLUTION_INFO_0_VN "Thiết lập dự phòng chung cho các trò chơi không có gói đồ họa điều chỉnh độ phân giải: thay đổi kích thước mọi vùng đệm dựng hình có hình dạng tương ứng với màn hình, trong đó một số trò chơi sử dụng các vùng đệm có thể gặp lỗi khi thay đổi kích thước. Giá trị là bội số của độ phân giải gốc của trò chơi: với trò chơi 720p, mức 0.5x là 640x360, bằng một phần tư số điểm ảnh, còn mức 2x là 2560x1440; với trò chơi 1080p, mức 0.5x là 960x540. Khi bật gói điều chỉnh độ phân giải cho trò chơi đang tải (Gói đồ họa), gói đó sẽ quyết định độ phân giải."
+#define CEMU_INTERNAL_RESOLUTION_INFO_0_VN "Thiết lập dự phòng chung cho các trò chơi không có gói đồ họa điều chỉnh độ phân giải: thay đổi kích thước mọi vùng đệm Dựng hình có hình dạng tương ứng với màn hình, trong đó một số trò chơi sử dụng các vùng đệm có thể gặp lỗi khi thay đổi kích thước. Giá trị là bội số của độ phân giải gốc của trò chơi: với trò chơi 720p, mức 0.5x là 640x360, bằng một phần tư số điểm ảnh, còn mức 2x là 2560x1440; với trò chơi 1080p, mức 0.5x là 960x540. Khi bật gói điều chỉnh độ phân giải cho trò chơi đang tải (Gói đồ họa), gói đó sẽ quyết định độ phân giải."
 #define OPTION_VAL_0_25X_VN "0.25x (320x180 ở 720p)"
 #define OPTION_VAL_0_5X_VN "0.5x (640x360 ở 720p)"
 #define OPTION_VAL_0_75X_VN "0.75x (960x540 ở 720p)"
@@ -37748,8 +40067,8 @@ struct retro_core_options_v2 options_val = {
 #define OPTION_VAL_1_5X_VN "1.5x (1920x1080 ở 720p)"
 #define OPTION_VAL_2X_VN "2x (2560x1440 ở 720p)"
 #define OPTION_VAL_3X_VN "3x (3840x2160 ở 720p)"
-#define CEMU_RENDER_AHEAD_LABEL_VN "Kết xuất trước một khung hình"
-#define CEMU_RENDER_AHEAD_INFO_0_VN "Cho phép Cemu bắt đầu dựng hình khung hình tiếp theo trong khi RetroArch hiển thị khung hình trước đó, giống như Cemu độc lập. Hình ảnh mượt hơn khi thời gian dựng hình chiếm phần lớn thời gian của mỗi khung hình, nhưng độ trễ đầu vào tăng thêm một khung hình."
+#define CEMU_RENDER_AHEAD_LABEL_VN "Dựng hình trước một khung hình"
+#define CEMU_RENDER_AHEAD_INFO_0_VN "Cho phép Cemu bắt đầu Dựng hình khung hình tiếp theo trong khi RetroArch hiển thị khung hình trước đó, giống như Cemu độc lập. Hình ảnh mượt hơn khi thời gian Dựng hình chiếm phần lớn thời gian của mỗi khung hình, nhưng độ trễ Điều khiển tăng thêm một khung hình."
 #define CEMU_AUDIO_THREAD_LABEL_VN "Luồng âm thanh (Cần khởi động lại)"
 #define CEMU_AUDIO_THREAD_INFO_0_VN "Bật: RetroArch xử lý âm thanh trên luồng riêng, còn âm thanh của Wii U chạy theo nhịp đồng hồ như trong Cemu độc lập, nhờ đó âm thanh không bị ngắt quãng khi một khung hình bị trễ (đang tải, biên dịch bộ đổ bóng). Khi đó, tính năng Đồng bộ âm thanh của RetroArch không còn điều tiết nhịp xử lý khung hình; Đồng bộ dọc sẽ đảm nhiệm việc này, còn số liệu thống kê âm thanh của RetroArch sẽ để trống. Tắt: Âm thanh được chuyển giao cùng với từng khung hình."
 #define CEMU_BC1_16BIT_LABEL_VN "Giảm bộ nhớ kết cấu BC1 (Cần khởi động lại)"
@@ -38027,6 +40346,52 @@ struct retro_core_option_v2_definition option_defs_vn[] = {
 			{ NULL, NULL },
 		},
 		"100"
+	},
+	{
+		"cemu_stick_deadzone_p1",
+		CEMU_STICK_DEADZONE_P1_LABEL_VN,
+		NULL,
+		CEMU_STICK_DEADZONE_P1_INFO_0_VN,
+		NULL,
+		"controller",
+		{
+			{ "0", "Off" },
+			{ "5", OPTION_VAL_5_VN },
+			{ "10", OPTION_VAL_10_VN },
+			{ "15", OPTION_VAL_15_VN },
+			{ "20", OPTION_VAL_20_VN },
+			{ "25", OPTION_VAL_25_VN },
+			{ "30", OPTION_VAL_30_VN },
+			{ "35", OPTION_VAL_35_VN },
+			{ "40", OPTION_VAL_40_VN },
+			{ "45", OPTION_VAL_45_VN },
+			{ "50", OPTION_VAL_50_VN },
+			{ NULL, NULL },
+		},
+		"25"
+	},
+	{
+		"cemu_stick_deadzone_p2",
+		CEMU_STICK_DEADZONE_P2_LABEL_VN,
+		NULL,
+		CEMU_STICK_DEADZONE_P2_INFO_0_VN,
+		NULL,
+		"controller",
+		{
+			{ "0", "Off" },
+			{ "5", OPTION_VAL_5_VN },
+			{ "10", OPTION_VAL_10_VN },
+			{ "15", OPTION_VAL_15_VN },
+			{ "20", OPTION_VAL_20_VN },
+			{ "25", OPTION_VAL_25_VN },
+			{ "30", OPTION_VAL_30_VN },
+			{ "35", OPTION_VAL_35_VN },
+			{ "40", OPTION_VAL_40_VN },
+			{ "45", OPTION_VAL_45_VN },
+			{ "50", OPTION_VAL_50_VN },
+			{ NULL, NULL },
+		},
+		"25"
 	},
 	{
 		"cemu_gamepad_motion",
