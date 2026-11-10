@@ -254,6 +254,10 @@ find_package(ZLIB REQUIRED)
 find_package(zstd MODULE REQUIRED) # MODULE so that zstd::zstd is available
 find_package(OpenSSL COMPONENTS Crypto SSL REQUIRED)
 find_package(glm REQUIRED)
+# Some glm installs export the target without its namespace.
+if (NOT TARGET glm::glm AND TARGET glm)
+	add_library(glm::glm ALIAS glm)
+endif()
 find_package(fmt 12.1 REQUIRED)
 find_package(PNG REQUIRED)
 
