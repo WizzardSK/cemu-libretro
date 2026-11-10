@@ -274,12 +274,10 @@ void LoadOpenGLImports()
 {
 	PFNGLXGETPROCADDRESSPROC _glXGetProcAddress = nullptr;
 	void* libGL = dlopen("libGL.so.1", RTLD_NOW | RTLD_GLOBAL);
-	_glXGetProcAddress = (PFNGLXGETPROCADDRESSPROC)dlsym(libGL, "glXGetProcAddressARB");
-	if(!_glXGetProcAddress)
-	{
+	if(!libGL)
 		libGL = dlopen("libGL.so", RTLD_NOW | RTLD_GLOBAL);
+	if(libGL)
 		_glXGetProcAddress = (PFNGLXGETPROCADDRESSPROC)dlsym(libGL, "glXGetProcAddressARB");
-	}
 
 	void* libEGL = dlopen("libEGL.so.1", RTLD_NOW | RTLD_GLOBAL);
 	if(!libEGL)
@@ -287,7 +285,9 @@ void LoadOpenGLImports()
 		libGL = dlopen("libEGL.so", RTLD_NOW | RTLD_GLOBAL);
 	}
 
-#define GLFUNC(__type, __name)	__name = (__type)_GetOpenGLFunction(libGL, _glXGetProcAddress, STRINGIFY(__name));
+	// A system without GLX has no libGL; EGL resolves the GL entry points there.
+	auto _eglGetProcAddress = (GL_IMPORT(*)(const char*))(libEGL ? dlsym(libEGL, "eglGetProcAddress") : nullptr);
+#define GLFUNC(__type, __name)	__name = (__type)(_glXGetProcAddress ? _GetOpenGLFunction(libGL, _glXGetProcAddress, STRINGIFY(__name)) : _eglGetProcAddress ? _eglGetProcAddress(STRINGIFY(__name)) : nullptr);
 #define EGLFUNC(__type, __name)	__name = (__type)dlsym(libEGL, STRINGIFY(__name));
 #include "Common/GLInclude/glFunctions.h"
 #undef GLFUNC

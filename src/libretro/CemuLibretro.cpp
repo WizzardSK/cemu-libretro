@@ -310,7 +310,10 @@ static void* cemu_gl_get_proc(const char* name)
 	// No GLX; eglGetProcAddress covers both core and extension entry points here.
 	return (void*)eglGetProcAddress(name);
 #else
-	return (void*)lr_glXGetProcAddress((const GLubyte*)name);
+	if (void* p = (void*)lr_glXGetProcAddress((const GLubyte*)name))
+		return p;
+	// No libGL in the process: the frontend's context is an EGL one.
+	return (void*)eglGetProcAddress(name);
 #endif
 }
 #endif // ENABLE_OPENGL
