@@ -26,6 +26,7 @@
 #include "audio/IAudioAPI.h"
 #include "audio/IAudioInputAPI.h"
 #if BOOST_OS_WINDOWS
+#include <WinSock2.h>
 #pragma comment(lib,"Dbghelp.lib")
 #endif
 
@@ -117,6 +118,11 @@ void CemuCommonInit()
 
 	CEMU_INIT_STAGE("exception handler");
     ExceptionHandler_Init();
+#if BOOST_OS_WINDOWS
+	// init sockets
+	WSADATA wsaData;
+	WSAStartup(MAKEWORD(2, 2), &wsaData);
+#endif
 	// read config
 	CEMU_INIT_STAGE("config");
 	GetConfigHandle().Load();

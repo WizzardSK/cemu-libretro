@@ -1,6 +1,5 @@
 #include "Cafe/OS/common/OSCommon.h"
 #include "WindowSystem.h"
-#include "Cafe/OS/libs/gx2/GX2.h"
 #include "Cafe/GameProfile/GameProfile.h"
 #include "Cafe/HW/Espresso/Interpreter/PPCInterpreterInternal.h"
 #include "Cafe/HW/Espresso/Recompiler/PPCRecompiler.h"
@@ -20,6 +19,7 @@
 #include "Cafe/TitleList/GameInfo.h"
 #include "Cafe/OS/libs/coreinit/coreinit_Alarm.h"
 #include "Cafe/OS/libs/coreinit/coreinit_MEM.h"
+#include "Cafe/OS/libs/coreinit/coreinit_IPC.h"
 #include "Cafe/OS/libs/snd_core/ax.h"
 #include "Cafe/OS/RPL/rpl.h"
 #include "Cafe/HW/Latte/Core/Latte.h"
@@ -28,6 +28,7 @@
 #include "GamePatch.h"
 #include "HW/Espresso/Debugger/GDBStub.h"
 
+#include "Common/CafeStaticVar.h"
 #include "Cafe/IOSU/legacy/iosu_ioctl.h"
 #include "Cafe/IOSU/legacy/iosu_act.h"
 #include "Cafe/IOSU/legacy/iosu_fpd.h"
@@ -586,8 +587,9 @@ namespace CafeSystem
 			platform = "Linux (AppImage)";
 		else if (getenv ("SNAP"))
 			platform = "Linux (Snap)";
-		else if (platform = getenv ("container"))
+		else if (getenv ("container"))
 		{
+			platform = getenv ("container");
 			if (strcmp (platform, "flatpak") == 0)
 				platform = "Linux (Flatpak)";
 		}
@@ -658,10 +660,6 @@ namespace CafeSystem
 		// misc systems
 		cemuLog_log(LogType::Force, "Init: rplSymbolStorage");
 		rplSymbolStorage_init();
-		// allocate memory for all SysAllocators
-		// must happen before COS module init, but also before iosu::kernel::Initialize()
-		cemuLog_log(LogType::Force, "Init: SysAllocators");
-		SysAllocatorContainer::GetInstance().Initialize();
 		// init IOSU modules
 		cemuLog_log(LogType::Force, "Init: IOSU modules");
 		for(auto& module : s_iosuModules)
@@ -682,11 +680,6 @@ namespace CafeSystem
 		// init hardware register interfaces
 		cemuLog_log(LogType::Force, "Init: HW_SI");
 		HW_SI::Initialize();
-		// Everything allocated from the system area up to here belongs to the
-		// process - the SysAllocators above all, which hand out their addresses
-		// for as long as it lives. What a title allocates comes after this line
-		// and is given back when it stops.
-		coreinit_markSysAreaPersistent();
 		cemuLog_log(LogType::Force, "Init: done");
 	}
 
@@ -741,6 +734,7 @@ namespace CafeSystem
         iosu::mcp::Shutdown();
         iosu::fsa::Shutdown();
 		ShutdownIOSUModules();
+		cemu_assert_debug(!IOSUStaticData::HasAnyAllocations()); // check for leak
         s_initialized = false;
     }
 
@@ -1188,6 +1182,7 @@ namespace CafeSystem
 		coreinit::OSSchedulerEnd();
 		phase("stopping the GPU thread");
 		Latte_Stop();
+		coreinit::IPCCloseAllHandles();
 		// reset Cafe OS userspace modules
 		phase("resetting audio");
 		snd_core::reset();
@@ -1218,12 +1213,6 @@ namespace CafeSystem
 		UnmountBaseDirectories();
 		phase("releasing memory");
 		DestroyMemorySpace();
-		// The system area is a bump allocator with no free, and CEMU_AREA stays
-		// mapped across titles, so this has to be given back by hand. The
-		// modules that cache a pointer into it (the placeholder font, the swkbd
-		// state, the uds workspace, the GX2 shared area) have dropped theirs by
-		// now - RPLUnmapped and _GX2DriverReset both ran above.
-		coreinit_releaseSysAreaForTitle();
 		LaunchSettings::ClearCosArgstr();
 		sSystemRunning = false;
 		phase("done");

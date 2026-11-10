@@ -40,6 +40,7 @@ enum class MMU_MEM_AREA_ID
 
 	CEMU_PRIVATE,
 	NULL_GUARD,
+	IOSU_PRIVATE,
 };
 
 struct MMURange
@@ -126,6 +127,7 @@ extern MMURange mmuRange_CODECAVE;
 extern MMURange mmuRange_TEXT_AREA;
 extern MMURange mmuRange_MEM2;
 extern MMURange mmuRange_CEMU_AREA;
+extern MMURange mmuRange_IOSU_AREA;
 extern MMURange mmuRange_OVERLAY_AREA;
 extern MMURange mmuRange_FGBUCKET;
 extern MMURange mmuRange_TILINGAPERTURE;

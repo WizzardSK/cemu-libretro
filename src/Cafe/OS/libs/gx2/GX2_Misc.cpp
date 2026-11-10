@@ -1,3 +1,4 @@
+#include "Cafe/OS/libs/coreinit/coreinit_MEM.h"
 #include "Cafe/HW/Latte/ISA/RegDefines.h"
 #include "Cafe/OS/common/OSCommon.h"
 #include "GX2.h"
@@ -78,7 +79,7 @@ void gx2Export_GX2SampleBottomGPUCycle(PPCInterpreter_t* hCPU)
 
 namespace GX2
 {
-	SysAllocator<uint8, 640 * 480 * 4, 0x1000> _lastFrame;
+	CafeStaticVar<uint8, 640 * 480 * 4, 0x1000> _lastFrame{s_gx2StaticData};
 	uint32 sGX2MainCoreIndex = 0;
 
 	void _test_AddrLib();
@@ -184,10 +185,10 @@ namespace GX2
         sGX2MainCoreIndex = 0;
         GX2CommandResetToDefaultState();
         GX2EventResetToDefaultState();
-        // The shared area was allocated from the system area, which is given
-        // back when the title stops. GX2Init only allocates a new one if this
-        // is null, so a kept pointer would have the next title reading and
-        // writing whatever ends up at that address instead.
+        // The shared area was allocated from the system area: give it back
+        // when the title stops. GX2Init allocates a new one when this is null.
+        if (LatteGPUState.sharedAreaAddr != MPTR_NULL)
+            coreinit_freeToSysArea(LatteGPUState.sharedAreaAddr);
         LatteGPUState.sharedAreaAddr = MPTR_NULL;
         LatteGPUState.sharedArea = nullptr;
 	}

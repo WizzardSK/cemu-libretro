@@ -36,6 +36,7 @@ namespace nn
 			if(!g_offlineDBInitialized)
 				return;
 			delete g_offlineDBArchive;
+			g_offlineDBArchive = nullptr;
 			g_offlineDBInitialized = false;
 		}
 

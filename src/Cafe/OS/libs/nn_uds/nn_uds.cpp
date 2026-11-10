@@ -1,4 +1,5 @@
 #include "Cafe/OS/common/OSCommon.h"
+#include "Cafe/OS/libs/coreinit/coreinit_MEM.h"
 
 typedef struct  
 {
@@ -27,27 +28,14 @@ namespace nn::uds
 
 		void RPLMapped() override
 		{
+			udsWorkspace = nullptr;
 			osLib_addFunction("nn_uds", "__sti___11_uds_Api_cpp_f5d9abb2", nnUdsExport___sti___11_uds_Api_cpp_f5d9abb2);
 		};
 
 		void RPLUnmapped() override
 		{
-			// The workspace lives in the system area, which is given back when
-			// the title stops. Keeping the pointer would hand the next title's
-			// allocation to this one.
-			udsWorkspace = nullptr;
-		};
-
-		void rpl_entry(uint32 moduleHandle, coreinit::RplEntryReason reason) override
-		{
-			if (reason == coreinit::RplEntryReason::Loaded)
-			{
-				udsWorkspace = nullptr;
-			}
-			else if (reason == coreinit::RplEntryReason::Unloaded)
-			{
-				udsWorkspace = nullptr;
-			}
+			if (udsWorkspace)
+				coreinit_freeToSysArea(memory_getVirtualOffsetFromPointer(udsWorkspace));
 		}
 	}s_COSnnUdsModule;
 

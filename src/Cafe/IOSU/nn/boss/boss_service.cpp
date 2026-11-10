@@ -25,6 +25,9 @@
 
 namespace iosu::boss
 {
+	constinit IOSUStaticData s_staticData;
+	nn::IPCService::WorkArea s_workArea(s_staticData);
+
 	using namespace ::nn::boss;
 
 	static constexpr nnResult RESULT_SUCCESS = 0x200080;
@@ -990,7 +993,7 @@ namespace iosu::boss
 	class BossMainService : public iosu::nn::IPCService
 	{
 	public:
-		BossMainService() : iosu::nn::IPCService("/dev/boss") {}
+		BossMainService() : iosu::nn::IPCService("/dev/boss", s_workArea) {}
 
 		nnResult ServiceCall(IPCServiceCall& serviceCall) override
 		{
@@ -1427,6 +1430,18 @@ namespace iosu::boss
 
 	class : public ::IOSUModule
 	{
+		void SystemLaunch() override
+		{
+			s_staticData.Allocate();
+		}
+
+		void SystemExit() override
+		{
+			s_bossService.Stop();
+			s_bossDaemon.Stop();
+			s_staticData.Deallocate();
+		}
+
 		void TitleStart() override
 		{
 			s_bossService.Start();

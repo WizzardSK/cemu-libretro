@@ -42,8 +42,6 @@ MPTR coreinit_allocFromSysArea(uint32 size, uint32 alignment);
 // The system area has no free. These draw the line between what the process
 // keeps and what a title borrows: mark once the process-wide allocations are
 // done, release when the title stops.
-void coreinit_markSysAreaPersistent();
-void coreinit_releaseSysAreaForTitle();
 void coreinit_freeToSysArea(MPTR mem);
 
 // mem exports

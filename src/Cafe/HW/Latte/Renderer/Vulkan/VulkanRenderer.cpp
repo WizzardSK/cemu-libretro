@@ -54,6 +54,7 @@ const  std::vector<const char*> kOptionalDeviceExtensions =
 	VK_KHR_PRESENT_ID_EXTENSION_NAME,
 	VK_EXT_DEPTH_CLIP_ENABLE_EXTENSION_NAME,
 	VK_EXT_PIPELINE_ROBUSTNESS_EXTENSION_NAME,
+	VK_KHR_VERTEX_ATTRIBUTE_DIVISOR_EXTENSION_NAME,
 	VK_EXT_ATTACHMENT_FEEDBACK_LOOP_LAYOUT_EXTENSION_NAME,
 	VK_EXT_ATTACHMENT_FEEDBACK_LOOP_DYNAMIC_STATE_EXTENSION_NAME
 };
@@ -295,6 +296,14 @@ void VulkanRenderer::GetDeviceFeatures()
 		prevStruct = &attachmentFeedbackLoopLayoutFeature;
 	}
 
+	VkPhysicalDeviceVertexAttributeDivisorFeaturesKHR vertexAttributeDivisorFeature{};
+	if (m_featureControl.deviceExtensions.vertex_attribute_divisor)
+	{
+		vertexAttributeDivisorFeature.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VERTEX_ATTRIBUTE_DIVISOR_FEATURES_KHR;
+		vertexAttributeDivisorFeature.pNext = prevStruct;
+		prevStruct = &vertexAttributeDivisorFeature;
+	}
+
 	VkPhysicalDeviceFeatures2 physicalDeviceFeatures2{};
 	physicalDeviceFeatures2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
 	physicalDeviceFeatures2.pNext = prevStruct;
@@ -311,6 +320,14 @@ void VulkanRenderer::GetDeviceFeatures()
 		pfcp.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FLOAT_CONTROLS_PROPERTIES_KHR;
 		pfcp.pNext = prevStruct;
 		prevStruct = &pfcp;
+	}
+
+	VkPhysicalDeviceVertexAttributeDivisorPropertiesKHR vertexAttributeDivisorProperties{};
+	if (m_featureControl.deviceExtensions.vertex_attribute_divisor)
+	{
+		vertexAttributeDivisorProperties.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VERTEX_ATTRIBUTE_DIVISOR_PROPERTIES_KHR;
+		vertexAttributeDivisorProperties.pNext = prevStruct;
+		prevStruct = &vertexAttributeDivisorProperties;
 	}
 
 	VkPhysicalDeviceProperties2 prop2{};
@@ -354,6 +371,10 @@ void VulkanRenderer::GetDeviceFeatures()
 		if ( pprf.pipelineRobustness != VK_TRUE )
 			m_featureControl.deviceExtensions.pipeline_robustness = false;
 	}
+	m_featureControl.deviceExtensions.vertex_attribute_divisor = m_featureControl.deviceExtensions.vertex_attribute_divisor &&
+		vertexAttributeDivisorFeature.vertexAttributeInstanceRateDivisor == VK_TRUE &&
+		vertexAttributeDivisorProperties.supportsNonZeroFirstInstance == VK_TRUE &&
+		vertexAttributeDivisorProperties.maxVertexAttribDivisor >= 0xFFFF;
 	if (m_featureControl.deviceExtensions.attachment_feedback_loop_layout)
 		m_featureControl.deviceExtensions.attachment_feedback_loop_layout = attachmentFeedbackLoopLayoutFeature.attachmentFeedbackLoopLayout == VK_TRUE;
 	if (m_featureControl.deviceExtensions.attachment_feedback_loop_dynamic_state && m_featureControl.deviceExtensions.attachment_feedback_loop_layout)
@@ -753,6 +774,16 @@ VulkanRenderer::VulkanRenderer() : Renderer(RendererAPI::Vulkan)
 		attachmentFeedbackLoopDynamicStateFeature.pNext = deviceExtensionFeatures;
 		deviceExtensionFeatures = &attachmentFeedbackLoopDynamicStateFeature;
 		attachmentFeedbackLoopDynamicStateFeature.attachmentFeedbackLoopDynamicState = VK_TRUE;
+	}
+
+	// enable VK_KHR_vertex_attribute_divisor
+	VkPhysicalDeviceVertexAttributeDivisorFeaturesKHR vertexAttributeDivisorFeature{};
+	if (m_featureControl.deviceExtensions.vertex_attribute_divisor)
+	{
+		vertexAttributeDivisorFeature.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VERTEX_ATTRIBUTE_DIVISOR_FEATURES_KHR;
+		vertexAttributeDivisorFeature.pNext = deviceExtensionFeatures;
+		deviceExtensionFeatures = &vertexAttributeDivisorFeature;
+		vertexAttributeDivisorFeature.vertexAttributeInstanceRateDivisor = VK_TRUE;
 	}
 
 	std::vector<const char*> used_extensions;
@@ -1670,6 +1701,8 @@ VkDeviceCreateInfo VulkanRenderer::CreateDeviceCreateInfo(const std::vector<VkDe
 	}
 	if (m_featureControl.deviceExtensions.pipeline_robustness)
 		used_extensions.emplace_back(VK_EXT_PIPELINE_ROBUSTNESS_EXTENSION_NAME);
+	if (m_featureControl.deviceExtensions.vertex_attribute_divisor)
+		used_extensions.emplace_back(VK_KHR_VERTEX_ATTRIBUTE_DIVISOR_EXTENSION_NAME);
 	if (UseAttachmentFeedbackLoop())
 	{
 		used_extensions.emplace_back(VK_EXT_ATTACHMENT_FEEDBACK_LOOP_LAYOUT_EXTENSION_NAME);
@@ -1782,6 +1815,7 @@ bool VulkanRenderer::CheckDeviceExtensionSupport(const VkPhysicalDevice device, 
 	info.deviceExtensions.dynamic_rendering = false; // isExtensionAvailable(VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME);
 	info.deviceExtensions.depth_clip_enable = isExtensionAvailable(VK_EXT_DEPTH_CLIP_ENABLE_EXTENSION_NAME);
 	info.deviceExtensions.pipeline_robustness = isExtensionAvailable(VK_EXT_PIPELINE_ROBUSTNESS_EXTENSION_NAME);
+	info.deviceExtensions.vertex_attribute_divisor = isExtensionAvailable(VK_KHR_VERTEX_ATTRIBUTE_DIVISOR_EXTENSION_NAME);
 	info.deviceExtensions.attachment_feedback_loop_layout = isExtensionAvailable(VK_EXT_ATTACHMENT_FEEDBACK_LOOP_LAYOUT_EXTENSION_NAME);
 	info.deviceExtensions.attachment_feedback_loop_dynamic_state = isExtensionAvailable(VK_EXT_ATTACHMENT_FEEDBACK_LOOP_DYNAMIC_STATE_EXTENSION_NAME);
 	// dynamic rendering doesn't provide any benefits for us right now. Driver implementations are very unoptimized as of Feb 2022

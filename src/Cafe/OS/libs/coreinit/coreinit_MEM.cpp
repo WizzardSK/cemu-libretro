@@ -6,57 +6,37 @@
 #include "Cafe/OS/RPL/rpl.h"
 #include "Cafe/OS/libs/coreinit/coreinit_MEM_FrmHeap.h"
 #include "coreinit_DynLoad.h"
+#include "util/ChunkedHeap/ChunkedHeap.h"
 
 // the system area is a block of memory that exists only in the emulator. It is used to simplify dynamic memory allocation for system data
-// this partially overlaps with the system heap from coreinit_SysHeap.cpp -> Use SysHeap for everything
-MPTR sysAreaAllocatorOffset = 0;
-// Where the allocator stood once the allocations that outlive a title had been
-// made (the SysAllocators, which hand out their addresses for the life of the
-// process). Everything above this line belongs to the title that is running.
-static MPTR sysAreaPersistentOffset = 0;
+// it's deprecated -> Use SysHeap/CafeStaticVar for everything
 
-// There is no free for this allocator, so without this a title's allocations -
-// the 8MB system heap above all - stay taken after it stops, and the next title
-// starts 8MB further up a 32MB area. The fourth launch in a process used to run
-// it out and take the emulator down with "Ran out of system memory", which is
-// what a reset, or a second game in one session, is.
-void coreinit_markSysAreaPersistent()
-{
-	sysAreaPersistentOffset = sysAreaAllocatorOffset;
-}
+static std::unique_ptr<VHeap> s_cosSysHeap;
+static std::mutex s_allocatorMtx;
 
-void coreinit_releaseSysAreaForTitle()
-{
-	sysAreaAllocatorOffset = sysAreaPersistentOffset;
-}
-
+// deprecated
 MPTR coreinit_allocFromSysArea(uint32 size, uint32 alignment)
 {
+	std::unique_lock _(s_allocatorMtx);
 	cemu_assert_debug(mmuRange_CEMU_AREA.isMapped());
-	// deprecated, use OSAllocFromSystem instead (for everything but SysAllocator which probably should use its own allocator?)
-	static std::mutex s_allocator_mutex;
-	s_allocator_mutex.lock();
-	sysAreaAllocatorOffset = (sysAreaAllocatorOffset+alignment-1);
-	sysAreaAllocatorOffset -= (sysAreaAllocatorOffset%alignment);
-	uint32 newMemOffset =  mmuRange_CEMU_AREA.getBase() + sysAreaAllocatorOffset;
-	sysAreaAllocatorOffset += (size+3)&~3;
-	if( sysAreaAllocatorOffset >= mmuRange_CEMU_AREA.getSize() )
-	{
+	if (!s_cosSysHeap)
+		s_cosSysHeap = std::make_unique<VHeap>(mmuRange_CEMU_AREA.getPtr(), mmuRange_CEMU_AREA.getSize());
+	MEMPTR<void> r = s_cosSysHeap->alloc(size, alignment);
+	if (!r)
 		cemuLog_log(LogType::Force, "Ran out of system memory");
-		cemu_assert(false); // out of bounds
-	}
-	s_allocator_mutex.unlock();
-	// The area is handed back when a title stops, so the second title to run in
-	// a process gets memory the first one wrote in. A fresh mapping would have
-	// been zero, and some of what is allocated here is read before it is
-	// written, so give every caller the same thing the first one saw.
-	memset(memory_getPointerFromVirtualOffset(newMemOffset), 0, size);
-	return newMemOffset;
+	cemu_assert(r);
+	// Freed blocks are handed out again (a title's allocations go back when it
+	// stops), and some of what is allocated here is read before it is written:
+	// give every caller zeroed memory, as a fresh mapping would be.
+	memset(r.GetPtr(), 0, size);
+	return r.GetMPTR();
 }
 
 void coreinit_freeToSysArea(MPTR mem)
 {
-	// todo
+	cemu_assert(mem != MPTR_NULL);
+	std::unique_lock _(s_allocatorMtx);
+	s_cosSysHeap->free(MEMPTR<void>(mem).GetPtr());
 }
 
 namespace coreinit
@@ -74,7 +54,7 @@ namespace coreinit
 	MEMList g_list3;
 
 	std::array<uint32, 3> gHeapFillValues{ 0xC3C3C3C3, 0xF3F3F3F3, 0xD3D3D3D3 };
-	SysAllocator<OSSpinLock> gHeapGlobalLock;
+	CafeStaticVar<OSSpinLock> gHeapGlobalLock{coreinit::g_coreinitStaticData};
 	MEMHeapBase* gDefaultHeap;
 
 	bool MEMHeapTable_Add(MEMHeapBase* heap)
@@ -586,7 +566,7 @@ namespace coreinit
 		hCPU->instructionPointer = gCoreinitData->MEMFreeToDefaultHeap.GetMPTR();
 	}
 
-	SysAllocator<MEMAllocatorFunc> gDefaultHeapAllocator;
+	CafeStaticVar<MEMAllocatorFunc> gDefaultHeapAllocator{coreinit::g_coreinitStaticData};
 
 	void coreinitExport_MEMInitAllocatorForDefaultHeap(PPCInterpreter_t* hCPU)
 	{
@@ -645,6 +625,7 @@ namespace coreinit
             it = nullptr;
 
         g_heapTableCount = 0;
+        gHeapFillValues = { 0xC3C3C3C3, 0xF3F3F3F3, 0xD3D3D3D3 };
         g_slockInitialized = false;
         g_listsInitialized = false;
         gDefaultHeap = nullptr;

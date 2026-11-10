@@ -12,6 +12,8 @@ endif()
 
 if(MSVC)
 	add_compile_definitions(WIN32_LEAN_AND_MEAN CURL_STATICLIB)
+	# generate symbols for Release build
+	string(APPEND CMAKE_CXX_FLAGS_RELEASE " /Zi")
 elseif(UNIX)
 	if(APPLE)
 		if (ENABLE_VULKAN)

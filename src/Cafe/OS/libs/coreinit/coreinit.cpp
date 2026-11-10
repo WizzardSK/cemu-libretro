@@ -1,3 +1,4 @@
+#include "Cafe/OS/libs/coreinit/coreinit_MEM.h"
 #include "Cafe/OS/common/OSCommon.h"
 #include "Common/SysAllocator.h"
 #include "Cafe/OS/RPL/rpl_symbol_storage.h"
@@ -184,6 +185,8 @@ void coreinitExport_OSGetSharedData(PPCInterpreter_t* hCPU)
 
 namespace coreinit
 {
+	COSStaticData g_coreinitStaticData;
+
 	sint32 OSGetCoreId()
 	{
 		return PPCInterpreter_getCoreIndex(PPCInterpreter_getCurrentInstance());
@@ -297,12 +300,14 @@ namespace coreinit
 
 		void RPLMapped() override
 		{
+			g_coreinitStaticData.Allocate();
 			coreinit::InitializeCore();
 			coreinit::InitializeSchedulerLock();
 			coreinit::InitializeSysHeap();
 
 			// allocate coreinit global data
-			gCoreinitData = (CoreinitSharedData*)memory_getPointerFromVirtualOffset(coreinit_allocFromSysArea(sizeof(CoreinitSharedData), 32));
+			if (!gCoreinitData)
+				gCoreinitData = (CoreinitSharedData*)memory_getPointerFromVirtualOffset(coreinit_allocFromSysArea(sizeof(CoreinitSharedData), 32));
 			memset(gCoreinitData, 0x00, sizeof(CoreinitSharedData));
 
 			// coreinit weak links
@@ -360,6 +365,13 @@ namespace coreinit
 			osLib_addFunction("coreinit", "UCReadSysConfig", coreinitExport_UCReadSysConfig);
 		};
 
+		void RPLUnmapped() override
+		{
+			ResetAsyncCallback();
+			ResetFS();
+			g_coreinitStaticData.Deallocate();
+		}
+
 		void rpl_entry(uint32 moduleHandle, coreinit::RplEntryReason reason) override
 		{
 			if (reason == coreinit::RplEntryReason::Loaded)
@@ -375,8 +387,10 @@ namespace coreinit
 			}
 			else if (reason == coreinit::RplEntryReason::Unloaded)
 			{
-				// The placeholder font sits in the system area, which is given
-				// back when the title stops. It is loaded again on demand.
+				// The placeholder font sits in the system area: give it back
+				// when the title stops. It is loaded again on demand.
+				if (placeholderFont != MPTR_NULL)
+					coreinit_freeToSysArea(placeholderFont);
 				placeholderFont = MPTR_NULL;
 				placeholderFontSize = 0;
 			}

@@ -1,12 +1,12 @@
 #include "Cafe/OS/libs/snd_core/ax.h"
 #include "Cafe/OS/libs/snd_core/ax_internal.h"
-#include "Cafe/HW/MMU/MMU.h"
 #include "audio/IAudioAPI.h"
 #include "libretro/LibretroAudioAPI.h"
 
 #include <atomic>
 //#include "ax.h"
 #include "config/CemuConfig.h"
+#include "Common/CafeStaticVar.h"
 
 namespace snd_core
 {
@@ -143,8 +143,8 @@ namespace snd_core
 		_AXOutInitDeviceModes();
 	}
 
-	extern SysAllocator<sint32, AX_SAMPLES_MAX * AX_TV_CHANNEL_COUNT> __AXTVBuffer48;
-	extern SysAllocator<sint32, AX_SAMPLES_MAX* AX_DRC_CHANNEL_COUNT * 2> __AXDRCBuffer48;
+	extern CafeStaticVar<sint32, AX_SAMPLES_MAX * AX_TV_CHANNEL_COUNT> __AXTVBuffer48;
+	extern CafeStaticVar<sint32, AX_SAMPLES_MAX* AX_DRC_CHANNEL_COUNT * 2> __AXDRCBuffer48;
 
 	sint16 __buf_AXTVDMABuffers_0[AX_SAMPLES_MAX * AX_TV_CHANNEL_COUNT];
 	sint16 __buf_AXTVDMABuffers_1[AX_SAMPLES_MAX * AX_TV_CHANNEL_COUNT];
@@ -479,6 +479,8 @@ namespace snd_core
 	void AXOut_reset()
 	{
 		std::unique_lock lock(g_audioMutex);
+		tempAudioBlockCounter = 0;
+		tempDRCAudioBlockCounter = 0;
 		if (g_tvAudio)
 		{
 			g_tvAudio->Stop();
