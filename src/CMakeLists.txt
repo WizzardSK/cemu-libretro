@@ -125,6 +125,13 @@ if(ENABLE_LIBRETRO)
 		PREFIX ""
 	)
 
+	# Where a frontend that builds its cores, such as Kodi's game add-ons,
+	# looks for them
+	install(TARGETS cemu_libretro
+		LIBRARY DESTINATION lib/libretro
+		RUNTIME DESTINATION lib/libretro
+	)
+
 	target_link_libraries(cemu_libretro PRIVATE
 		libzip::zip
 		CemuAudio
