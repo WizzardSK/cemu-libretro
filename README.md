@@ -2,7 +2,7 @@
 
 Cemu (Wii U emulator) as a libretro core for RetroArch.
 
-Version: **2.6-372-g29f2f1fa**, upstream Cemu as merged (`29f2f1fa`, 15 Oct 2026).
+Version: **2.6-411-gb487cb70**, upstream Cemu as merged (`b487cb70`, 10 Nov 2026).
 
 ## Getting the core
 
@@ -117,7 +117,7 @@ git fetch cemuup main
 git merge cemuup/main
 ```
 
-Last sync: upstream `29f2f1fa` (merged 23 Oct 2026). The core reports its version as `git describe --tags --match v2.6 cemuup/main` (`2.6-372-g29f2f1fa`), set in `retro_get_system_info` and `cemu_libretro.info`; update both, and the version at the top of this README, on every sync.
+Last sync: upstream `b487cb70` (merged 10 Nov 2026). The core reports its version as `git describe --tags --match v2.6 cemuup/main` (`2.6-411-gb487cb70`), set in `retro_get_system_info` and `cemu_libretro.info`; update both, and the version at the top of this README, on every sync.
 
 The fork has no `main` of its own: upstream is merged straight into `libretro`,
 the only long-lived branch here.
