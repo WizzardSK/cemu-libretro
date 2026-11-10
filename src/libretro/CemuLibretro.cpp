@@ -141,7 +141,19 @@ static HGLRC s_wgl_shared_context = nullptr;
 #define CEMU_DEFINED_BOOL
 #endif
 #include <X11/Xlib.h>
+#if __has_include(<GL/glx.h>)
 #include <GL/glx.h>
+#else
+// No GLX headers on a GBM-only system: the types and values the run-time lookup below uses.
+typedef struct __GLXcontextRec* GLXContext;
+typedef struct __GLXFBConfigRec* GLXFBConfig;
+typedef XID GLXDrawable;
+#define GLX_FBCONFIG_ID 0x8013
+#define GLX_CONTEXT_MAJOR_VERSION_ARB 0x2091
+#define GLX_CONTEXT_MINOR_VERSION_ARB 0x2092
+#define GLX_CONTEXT_PROFILE_MASK_ARB 0x9126
+#define GLX_CONTEXT_CORE_PROFILE_BIT_ARB 0x00000001
+#endif
 #ifdef CEMU_DEFINED_BOOL
 #undef Bool
 #endif
@@ -298,10 +310,31 @@ static void* cemu_gl_get_proc(const char* name)
 	// No GLX; eglGetProcAddress covers both core and extension entry points here.
 	return (void*)eglGetProcAddress(name);
 #else
-	return (void*)lr_glXGetProcAddress((const GLubyte*)name);
+	if (void* p = (void*)lr_glXGetProcAddress((const GLubyte*)name))
+		return p;
+	// No libGL in the process: the frontend's context is an EGL one.
+	return (void*)eglGetProcAddress(name);
 #endif
 }
 #endif // ENABLE_OPENGL
+
+#ifndef _WIN32
+#include <dlfcn.h>
+#endif
+
+// A shared libcrypto belongs to the whole process: cleaning it up would break
+// OpenSSL for the frontend and every other core, as it cannot be started again.
+static bool libretro_openssl_is_built_in()
+{
+#ifdef _WIN32
+	return true;
+#else
+	Dl_info openssl{}, self{};
+	return dladdr(reinterpret_cast<void*>(&OPENSSL_cleanup), &openssl) &&
+		dladdr(reinterpret_cast<void*>(&libretro_openssl_is_built_in), &self) &&
+		openssl.dli_fbase == self.dli_fbase;
+#endif
+}
 
 // ============================================================================
 // CafeSystem implementation for libretro
@@ -6704,7 +6737,8 @@ RETRO_API void retro_deinit()
 	// no longer pins the library, and its cleanup runs here instead of at
 	// process exit, when the code would not be there any more. The crash
 	// handlers go back to the frontend's.
-	OPENSSL_cleanup();
+	if (libretro_openssl_is_built_in())
+		OPENSSL_cleanup();
 	ExceptionHandler_Shutdown();
 
 	s_initialized = false;
