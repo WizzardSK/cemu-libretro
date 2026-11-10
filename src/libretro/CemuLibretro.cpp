@@ -24,6 +24,7 @@
 
 #include "Cafe/CafeSystem.h"
 #include "Cafe/IOSU/legacy/iosu_act.h"
+#include "Cafe/HW/Espresso/PPCState.h"
 #include "Cafe/HW/Espresso/Recompiler/PPCRecompiler.h"
 #include "Cafe/OS/libs/coreinit/coreinit_Thread.h"
 #include "Cafe/OS/common/OSCommon.h"
@@ -6731,6 +6732,11 @@ RETRO_API void retro_deinit()
 	// static's destructor, it is joined inside FreeLibrary under the loader
 	// lock, which the thread needs in order to exit: the frontend hangs.
 	FileCache_StopAsyncWriter();
+
+	// CemuCommonInit's PPCTimer_init measures the TSC on a detached thread for
+	// three seconds, so a load that fails sooner would unload the library under it
+	if (s_cafe_system_initialized)
+		PPCTimer_waitForInit();
 
 	// What would otherwise keep this library loaded, or point into it once it
 	// is gone. OpenSSL is built with no-pinshared (the overlay port), so it
