@@ -141,7 +141,19 @@ static HGLRC s_wgl_shared_context = nullptr;
 #define CEMU_DEFINED_BOOL
 #endif
 #include <X11/Xlib.h>
+#if __has_include(<GL/glx.h>)
 #include <GL/glx.h>
+#else
+// No GLX headers on a GBM-only system: the types and values the run-time lookup below uses.
+typedef struct __GLXcontextRec* GLXContext;
+typedef struct __GLXFBConfigRec* GLXFBConfig;
+typedef XID GLXDrawable;
+#define GLX_FBCONFIG_ID 0x8013
+#define GLX_CONTEXT_MAJOR_VERSION_ARB 0x2091
+#define GLX_CONTEXT_MINOR_VERSION_ARB 0x2092
+#define GLX_CONTEXT_PROFILE_MASK_ARB 0x9126
+#define GLX_CONTEXT_CORE_PROFILE_BIT_ARB 0x00000001
+#endif
 #ifdef CEMU_DEFINED_BOOL
 #undef Bool
 #endif
