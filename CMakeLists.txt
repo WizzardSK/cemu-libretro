@@ -294,8 +294,9 @@ endif()
 
 if (ENABLE_OPENGL AND NOT ANDROID AND NOT WEBOS)
 	# Android and webOS have no desktop OpenGL, only GLES/EGL - the core uses
-	# Vulkan on both.
-	find_package(OpenGL REQUIRED)
+	# Vulkan on both. Only the GL headers are needed: ask for libOpenGL, not GLX, which a
+	# GBM-only system does not have.
+	find_package(OpenGL REQUIRED COMPONENTS OpenGL)
 	add_compile_definitions(ENABLE_OPENGL)
 endif()
 
