@@ -258,7 +258,7 @@ find_package(glm REQUIRED)
 if (NOT TARGET glm::glm AND TARGET glm)
 	add_library(glm::glm ALIAS glm)
 endif()
-find_package(fmt 12.1 REQUIRED)
+find_package(fmt 9 REQUIRED)
 find_package(PNG REQUIRED)
 
 # glslang versions older than 11.11.0 define targets without a namespace
