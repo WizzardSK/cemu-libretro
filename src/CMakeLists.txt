@@ -157,7 +157,9 @@ if(ENABLE_LIBRETRO)
 	endif()
 
 	if(WIN32)
-		target_link_libraries(cemu_libretro PRIVATE opengl32)
+		# ws2_32: util/Socket's WSAPoll and WSAIoctl; its #pragma comment(lib)
+		# is MSVC's, the MinGW build would not link it
+		target_link_libraries(cemu_libretro PRIVATE opengl32 ws2_32)
 		# imgui pulls fontawesome out of the resource archive, so none of it may
 		# be dropped. link.exe and the MinGW ld spell that differently.
 		if(MSVC)

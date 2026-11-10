@@ -1,7 +1,7 @@
 #include "util/Socket/Socket.h"
 
 #if BOOST_OS_WINDOWS
-#include <WinSock2.h>
+#include <winsock2.h> // lower case, as the MinGW cross build finds it
 #include <ws2tcpip.h>
 #include <mswsock.h>
 #pragma comment(lib, "Ws2_32.lib")
