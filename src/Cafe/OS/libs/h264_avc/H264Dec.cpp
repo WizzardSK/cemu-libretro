@@ -407,10 +407,7 @@ namespace H264
 	{
 		std::unique_lock _lock(sDecoderSessionsMutex);
 		for (auto& it : sDecoderSessions)
-		{
-			it.second->Destroy();
 			delete it.second;
-		}
 		sDecoderSessions.clear();
 		sCurrentSessionHandle.store(1);
 	}
