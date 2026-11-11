@@ -154,6 +154,19 @@ void memory_init()
 	}
 }
 
+void memory_release()
+{
+	if (!memory_base)
+		return;
+	for (auto& itr : g_mmuRanges)
+	{
+		if (itr->isMapped())
+			itr->unmapMem();
+	}
+	MemMapper::FreeReservation(memory_base, (size_t)0x100000000);
+	memory_base = nullptr;
+}
+
 void memory_mapForCurrentTitle()
 {
 	for (auto& itr : g_mmuRanges)

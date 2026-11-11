@@ -62,7 +62,12 @@ namespace MemMapper
 	void FreeMemory(void* baseAddr, size_t size, bool fromReservation)
 	{
 		if (fromReservation)
+		{
+			// As decommitting does on Windows, give the pages back: taking access
+			// away alone leaves them in memory
 			mprotect(baseAddr, size, PROT_NONE);
+			madvise(baseAddr, size, MADV_DONTNEED);
+		}
 		else
 			munmap(baseAddr, size);
 	}

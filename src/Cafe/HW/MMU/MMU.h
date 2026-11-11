@@ -1,6 +1,8 @@
 #pragma once
 
 void memory_init();
+// Frees the whole address space; nothing may access Wii U memory any more
+void memory_release();
 void memory_mapForCurrentTitle();
 void memory_unmapForCurrentTitle();
 void memory_logModifiedMemoryRanges();
