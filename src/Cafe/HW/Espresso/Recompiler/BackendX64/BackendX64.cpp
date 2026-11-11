@@ -1340,6 +1340,7 @@ void PPCRecompilerX64Gen_imlInstruction_name_r(PPCRecFunction_t* PPCRecFunction,
 uint8* codeMemoryBlock = nullptr;
 sint32 codeMemoryBlockIndex = 0;
 sint32 codeMemoryBlockSize = 0;
+std::vector<std::pair<uint8*, sint32>> codeMemoryBlocks;
 
 std::mutex mtx_allocExecutableMemory;
 
@@ -1352,6 +1353,7 @@ uint8* PPCRecompilerX86_allocateExecutableMemory(sint32 size)
 		codeMemoryBlockSize = std::max(1024*1024*4, size+1024); // 4MB (or more if the function is larger than 4MB)
 		codeMemoryBlockIndex = 0;
 		codeMemoryBlock = (uint8*)MemMapper::AllocateMemory(nullptr, codeMemoryBlockSize, MemMapper::PAGE_PERMISSION::P_RWX);
+		codeMemoryBlocks.emplace_back(codeMemoryBlock, codeMemoryBlockSize);
 	}
 	uint8* codeMem = codeMemoryBlock + codeMemoryBlockIndex;
 	codeMemoryBlockIndex += size;
@@ -1362,6 +1364,17 @@ uint8* PPCRecompilerX86_allocateExecutableMemory(sint32 size)
 		codeMemoryBlockIndex++;
 	}
 	return codeMem;
+}
+
+void PPCRecompilerX86_freeExecutableMemory()
+{
+	std::lock_guard<std::mutex> lck(mtx_allocExecutableMemory);
+	for (auto& [block, size] : codeMemoryBlocks)
+		MemMapper::FreeMemory(block, size, false);
+	codeMemoryBlocks.clear();
+	codeMemoryBlock = nullptr;
+	codeMemoryBlockIndex = 0;
+	codeMemoryBlockSize = 0;
 }
 
 bool PPCRecompiler_generateX64Code(PPCRecFunction_t* PPCRecFunction, ppcImlGenContext_t* ppcImlGenContext)

@@ -783,6 +783,14 @@ void PPCRecompiler_Shutdown()
         // mark as unmapped
         ppcRecompiler_reservedBlockMask[i] = false;
     }
+	// Freeing the blocks above only takes away access on Linux, and the
+	// pointers to the table and the code go when the core is unloaded, so
+	// without this each title run in the same process keeps its own.
+	MemMapper::FreeReservation(ppcRecompilerInstanceData, sizeof(PPCRecompilerInstanceData_t));
+	ppcRecompilerInstanceData = nullptr;
+#ifdef ARCH_X86_64
+	PPCRecompilerX86_freeExecutableMemory();
+#endif
 	s_ppcRecompilerState.recompilerEnableCount = 0;
 	s_ppcRecompilerState.initialized = false;
 }

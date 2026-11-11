@@ -6745,6 +6745,11 @@ RETRO_API void retro_deinit()
 	// handlers go back to the frontend's.
 	if (libretro_openssl_is_built_in())
 		OPENSSL_cleanup();
+	// The Wii U's address space is reserved once for every title this library
+	// runs, and what stays mapped in it between titles would outlive the
+	// library. With a GPU device still alive, something may still use it.
+	if (!s_emu_initialized && !s_gpu_context_created)
+		memory_release();
 	ExceptionHandler_Shutdown();
 
 	s_initialized = false;
