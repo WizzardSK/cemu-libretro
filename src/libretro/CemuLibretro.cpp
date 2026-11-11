@@ -2261,6 +2261,10 @@ static const char* libretro_get_option_value(const char* key)
 	retro_variable var{key, nullptr};
 	if (!environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var))
 		return nullptr;
+	// Kodi answers an option it doesn't know with an empty string, and no
+	// option here has an empty value
+	if (var.value && !*var.value)
+		return nullptr;
 	return var.value;
 }
 
