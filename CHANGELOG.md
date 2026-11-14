@@ -2,11 +2,14 @@
 
 What changed in the libretro core of this fork, newest first. Changes that come with a merge of upstream Cemu are in upstream's own history; a merge is noted here with the upstream version it brought in.
 
-## Unreleased
+## November 2026
 
 - Linux: the memory a game used is freed when it closes, and the rest when the core is unloaded. The console's RAM, the recompiler's lookup table and the code it recompiled stayed in memory until the frontend exited, so a frontend that keeps running between games, such as Kodi, kept about 500 MB more for every Twilight Princess HD session.
 - Kodi: a title's graphic packs no longer all start switched on. Kodi answers the graphic pack options, which are declared when the game starts, with an empty value, and the core took any value but "disabled" as on, so every pack was enabled, cheats and HUD-removing mods included. An empty value now counts as unset, and each pack keeps its own default.
 - Merged up to upstream Cemu 2.6-411 (b487cb70): Super Smash Bros. for Wii U's intro is in colour again (#32, upstream #2100), texture readback for Color Splash and Xenoblade Chronicles X, memcpy-style texture copies, little-endian indices, the Vulkan async pipeline race, H264 state reset and display reordering cap, nlibcurl and nsysnet rework, and guest and IOSU static data bound to their module's lifetime, so a title's system-area memory is freed when it stops. The core reports upstream's version.
+
+## October 2026
+
 - Linux: content loaded a second time in the same RetroArch, after closing it, no longer crashes RetroArch. The core's OpenSSL read the system's `openssl.cnf`, which loads the pkcs11 engine on many distributions; that system library stays loaded when the core is unloaded and kept pointers into the first copy of the core, so the second load crashed in it. The core's OpenSSL no longer reads the system's config.
 - A crash is no longer the core's to end: Cemu's crash handlers still write their crash log to `log.txt`, and then hand the crash to the handler there was before, where they used to end RetroArch at once (`_Exit` on Linux and Android, `exit(0)` on Windows), so the system's crash report (Android's tombstone, Windows Error Reporting) is written and names the fault. Ctrl+C and SIGTERM are left to RetroArch, which the core used to end on them (sco8487).
 - New options Controller > Stick Dead Zone (Player 1) and (Players 2-4), 0% to 50%, 25% by default as standalone Cemu. The GamePad's sticks had no dead zone at all, so the slightest touch, or a stick resting a hair off centre, moved the character, while a Pro Controller had Cemu's 25% (demifiend9, Smash 4); now both follow the option, and sticks that rest at the centre can go lower (NNshi).
@@ -31,9 +34,6 @@ What changed in the libretro core of this fork, newest first. Changes that come 
 - Start Conversion to WUA is also offered for a `.wua` that lacks an installed update or DLC, or has an older version of one: a new `.wua` is written with them. Its help text says which of the three cases it is: the game alone, the game with its update and DLC, or a `.wua` to add them to. An existing file is never replaced; a taken name gets a number after it, where the conversion used to overwrite a `.wua` of the same name (sco8487).
 - Sound: each frame hands RetroArch one frame's worth of audio, as other cores do, and more only to work off a backlog. It handed over whatever the game had made by the end of the frame, a different amount every frame, so RetroArch's audio buffer swung between blocking and running dry without settling (NNshi).
 - Sound: the game's audio frames are made at the console's pace, one every 3 ms, and faster only to catch up. At 30 fps each frame's 33 ms of audio was made in a 19 ms burst followed by a 14 ms gap, so streaming voices were fed unevenly, with pops and crackles standalone Cemu does not have (NNshi, Wind Waker HD).
-
-## October 2026
-
 ### Upstream
 
 - Merged up to upstream Cemu 2.6-356 (aa20e2f8), after the merge of 3 October (32e6628a, Latte shader and texture fixes). The core reports upstream's version.

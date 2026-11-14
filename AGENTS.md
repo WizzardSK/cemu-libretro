@@ -29,7 +29,7 @@ This repository builds the libretro core and nothing else. The standalone's part
 ## Changelog and README
 
 - `CHANGELOG.md` is updated in the same commit as the change it describes: what changed for someone using the core, newest first. Not a copy of the commit message.
-- A change on a feature branch gets its entry on that branch, under "Unreleased"; it reaches `libretro` with the squash merge.
+- Entries go under the heading of the current month (e.g. "November 2026"). A change on a feature branch gets its entry on that branch; it reaches `libretro` with the squash merge.
 - `README.md` is kept true in the same way: when a change makes a sentence in it wrong (a limit lifted, an option added, a file moved), fix the sentence in that commit.
 
 ## Code
