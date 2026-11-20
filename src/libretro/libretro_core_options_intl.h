@@ -1020,12 +1020,12 @@ struct retro_core_options_v2 options_ar = {
 #define OPTION_VAL_GERMAN_AST "Alemán"
 #define OPTION_VAL_ITALIAN_AST "Italianu"
 #define OPTION_VAL_SPANISH_AST "Castellán"
-#define OPTION_VAL_CHINESE_AST NULL
-#define OPTION_VAL_KOREAN_AST NULL
-#define OPTION_VAL_DUTCH_AST NULL
-#define OPTION_VAL_PORTUGUESE_AST NULL
-#define OPTION_VAL_RUSSIAN_AST NULL
-#define OPTION_VAL_TAIWANESE_AST NULL
+#define OPTION_VAL_CHINESE_AST "Chinu"
+#define OPTION_VAL_KOREAN_AST "Coreanu"
+#define OPTION_VAL_DUTCH_AST "Neerlandés"
+#define OPTION_VAL_PORTUGUESE_AST "Portugués"
+#define OPTION_VAL_RUSSIAN_AST "Rusu"
+#define OPTION_VAL_TAIWANESE_AST "Taiwanés"
 #define CEMU_AUDIO_CHANNELS_LABEL_AST NULL
 #define CEMU_AUDIO_CHANNELS_INFO_0_AST NULL
 #define OPTION_VAL_MONO_AST "Monu"
@@ -19043,13 +19043,13 @@ struct retro_core_options_v2 options_gl = {
 #define CATEGORY_SYSTEM_INFO_0_HE NULL
 #define CATEGORY_GRAPHICS_LABEL_HE NULL
 #define CATEGORY_GRAPHICS_INFO_0_HE NULL
-#define CATEGORY_CONTROLLER_LABEL_HE "בקר משחק"
+#define CATEGORY_CONTROLLER_LABEL_HE "בקר"
 #define CATEGORY_CONTROLLER_INFO_0_HE NULL
 #define CATEGORY_TITLE_MANAGER_LABEL_HE NULL
 #define CATEGORY_TITLE_MANAGER_INFO_0_HE NULL
 #define CATEGORY_CORE_LABEL_HE "ליבה"
 #define CATEGORY_CORE_INFO_0_HE NULL
-#define CATEGORY_LOGGING_LABEL_HE "רישום"
+#define CATEGORY_LOGGING_LABEL_HE "רישום ביומן"
 #define CATEGORY_LOGGING_INFO_0_HE NULL
 #define CATEGORY_GRAPHIC_PACKS_LABEL_HE NULL
 #define CATEGORY_GRAPHIC_PACKS_INFO_0_HE NULL
@@ -19057,7 +19057,7 @@ struct retro_core_options_v2 options_gl = {
 #define CATEGORY_CHEATS_INFO_0_HE NULL
 #define CEMU_CPU_MODE_LABEL_HE NULL
 #define CEMU_CPU_MODE_INFO_0_HE NULL
-#define OPTION_VAL_AUTO_HE NULL
+#define OPTION_VAL_AUTO_HE "אוטומטי"
 #define OPTION_VAL_SINGLECORE_INTERPRETER_HE NULL
 #define OPTION_VAL_SINGLECORE_RECOMPILER_HE NULL
 #define OPTION_VAL_MULTICORE_RECOMPILER_HE NULL
@@ -19142,7 +19142,7 @@ struct retro_core_options_v2 options_gl = {
 #define OPTION_VAL_SELECT_R3_HE NULL
 #define OPTION_VAL_TAB_HE NULL
 #define CEMU_DRC_POSITION_LABEL_HE NULL
-#define OPTION_VAL_NORMAL_HE NULL
+#define OPTION_VAL_NORMAL_HE "רגיל"
 #define OPTION_VAL_SWAPPED_HE NULL
 #define CEMU_INSTALL_GAME_LABEL_HE NULL
 #define CEMU_INSTALL_GAME_INFO_0_HE NULL
@@ -19163,7 +19163,7 @@ struct retro_core_options_v2 options_gl = {
 #define OPTION_VAL_0_25X_HE NULL
 #define OPTION_VAL_0_5X_HE NULL
 #define OPTION_VAL_0_75X_HE NULL
-#define OPTION_VAL_NATIVE_HE NULL
+#define OPTION_VAL_NATIVE_HE "מקורי"
 #define OPTION_VAL_1_5X_HE NULL
 #define OPTION_VAL_2X_HE NULL
 #define OPTION_VAL_3X_HE NULL
@@ -40084,7 +40084,7 @@ struct retro_core_options_v2 options_val = {
 #define CEMU_LOG_INPUT_API_LABEL_VN "Ghi các lệnh gọi API tay cầm vào tệp nhật ký (gỡ lỗi)"
 #define CEMU_LOG_INPUT_API_INFO_0_VN "Ghi lại mọi lệnh gọi tay cầm mà trò chơi thực hiện - trò chơi kiểm tra những tay cầm nào và hệ thống đã phản hồi như thế nào. Tạo rất nhiều dữ liệu; chỉ nên bật trong vài giây mỗi lần."
 #define CEMU_LOG_AUDIO_LABEL_VN "Ghi nhật ký âm thanh và nhịp khung hình (gỡ lỗi)"
-#define CEMU_LOG_AUDIO_INFO_0_VN "Mỗi giây, ghi lại số mẫu âm thanh AX đã tạo ra, số mẫu phải loại bỏ khỏi bộ đệm vòng và số mẫu giao diện chính đã lấy; đồng thời ghi lại số lần giao diện chính chạy lõi giả lập, số khung hình trò chơi đã hoàn thành và thời gian được phân bổ cho từng công việc (chờ luồng xử lý đồ họa, xuất khung hình, âm thanh). Dùng để xác định liệu trò chơi chạy chậm bị giới hạn bởi bộ xử lý được mô phỏng, bộ xử lý đồ họa hay giao diện chính."
+#define CEMU_LOG_AUDIO_INFO_0_VN "Mỗi giây, ghi lại số mẫu âm thanh AX đã tạo ra, số mẫu phải loại bỏ khỏi bộ đệm vòng và số mẫu giao diện chính đã lấy; đồng thời ghi lại số lần giao diện chính chạy trình giả lập, số khung hình trò chơi đã hoàn thành và thời gian được phân bổ cho từng công việc (chờ luồng xử lý đồ họa, xuất khung hình, âm thanh). Dùng để xác định liệu trò chơi chạy chậm bị giới hạn bởi bộ xử lý được mô phỏng, bộ xử lý đồ họa hay giao diện chính."
 #define CEMU_LOG_THREAD_TIME_LABEL_VN "Ghi nhật ký thời gian xử lý của luồng (gỡ lỗi)"
 #define CEMU_LOG_THREAD_TIME_INFO_0_VN "Mỗi giây, ghi lại mức độ bận của luồng trên từng lõi PowerPC được mô phỏng, luồng xử lý đồ họa và luồng của giao diện chính, tính theo tỷ lệ phần trăm công suất của một lõi máy thật. Luồng gần mức 100% chính là luồng mà trò chơi chạy chậm đang phải chờ."
 #define CEMU_DUMP_SHADERS_LABEL_VN "Xuất bộ tạo bóng (gỡ lỗi)"
