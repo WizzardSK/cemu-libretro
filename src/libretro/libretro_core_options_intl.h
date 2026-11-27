@@ -13399,7 +13399,7 @@ struct retro_core_options_v2 options_eo = {
 #define CEMU_ACCURATE_SHADER_MUL_LABEL_ES "Multiplicación precisa de shaders"
 #define CEMU_ACCURATE_SHADER_MUL_INFO_0_ES "Emula las multiplicaciones dentro de la GPU de forma exacta, necesarias para la mayoría de juegos. El valor automático utilizará el perfil del juego si existe, como haría la aplicación independiente (Super Mario 3D World, Captain Toad y Xenoblade Chronicles X la desactivarán), en caso contrario, esta opción se mantendrá activada."
 #define CEMU_GX2DRAWDONE_SYNC_LABEL_ES "Sincronización de GX2DrawDone"
-#define CEMU_GX2DRAWDONE_SYNC_INFO_0_ES "Cuando la GPU invoque GX2DrawDonw, obliga al juego a que espere hasta que haya terminado todas sus tareas, como haría la aplicación independiente con la opción Sincronización completa en GX2DrawDone. Algunos juegos necesitan este comportamiento para mostrarse correctamente, desactivar esta opción podría ser más rápido. Esta opción puede cambiarse durante una partida."
+#define CEMU_GX2DRAWDONE_SYNC_INFO_0_ES "Cuando la GPU invoque GX2DrawDone, obliga al juego a esperar hasta que haya terminado todas sus tareas, como haría la aplicación independiente con la opción Sincronización completa en GX2DrawDone. Algunos juegos necesitan este comportamiento para mostrarse correctamente, desactivar esta opción podría hacer que funcione más rápido. Esta opción puede cambiarse durante una partida."
 #define CEMU_VK_ACCURATE_BARRIERS_LABEL_ES "Barreras precisas (Vulkan)"
 #define CEMU_VK_ACCURATE_BARRIERS_INFO_0_ES "Mantiene la sincronización entre dibujados que es necesaria para que algunos juegos se rendericen correctamente, tal y como haría la opción con el mismo nombre de la aplicación independiente. Desactiva esta opción para aumentar la velocidad mostrando defectos gráficos en dichos juegos. Esta opción puede cambiarse durante una partida."
 #define CEMU_RUMBLE_STRENGTH_LABEL_ES "Intensidad de vibración"
@@ -13459,7 +13459,7 @@ struct retro_core_options_v2 options_eo = {
 #define CEMU_CONVERT_TO_WUA_LABEL_ES "Iniciar conversión a WUA"
 #define CEMU_CONVERT_TO_WUA_INFO_0_ES "Escribe el título en el directorio de salida en formato .wua. El emulador seguirá ejecutándose durante el proceso."
 #define CEMU_INTERNAL_RESOLUTION_LABEL_ES "Resolución interna (es necesario reiniciar)"
-#define CEMU_INTERNAL_RESOLUTION_INFO_0_ES "Una alternativa genérica para aquellos juegos que no tengan paquetes de gráficos para resoluciones: reescala todos los objetivos de renderizado con forma de pantalla, usados por algunos juegos en cosas que fallan al ser reescaladas. El valor es un múltiplo de la resolución interna del juego: si el juego se muestra a 720p, × 0,5 la reducirá a 640 × 360, una cuarta parte de los píxeles, y un valor de × 2 la duplicaría a 2560 × 1440; en el caso de un juego mostrado a 1080p, x 160 reducirá su resolución a 960 × 540. Cuando se active un paquete de resolución para el juego cargado (un paquete de gráficos), el paquete establecerá una resolución concreta."
+#define CEMU_INTERNAL_RESOLUTION_INFO_0_ES "Una alternativa genérica para aquellos juegos que no tengan paquetes de gráficos para resoluciones: reescala todos los objetivos de renderizado con forma de pantalla, usados por algunos juegos en cosas que fallan al ser reescaladas. El valor es un múltiplo de la resolución interna del juego: si el juego se muestra a 720p, × 0,5 la reducirá a 640 × 360, una cuarta parte de los píxeles, y un valor de × 2 la duplicaría a 2560 × 1440; en el caso de un juego mostrado a 1080p, × 0,5 reducirá su resolución a 960 × 540. Cuando se active un paquete de resolución para el juego cargado (un paquete de gráficos), el paquete establecerá una resolución concreta."
 #define OPTION_VAL_0_25X_ES "× 0,25 (320 × 180 a 720p)"
 #define OPTION_VAL_0_5X_ES "× 0,5 (640 × 360 a 720p)"
 #define OPTION_VAL_0_75X_ES "× 0,75 (960 × 540 a 720p)"
@@ -22870,11 +22870,11 @@ struct retro_core_options_v2 options_id = {
 #define OPTION_VAL_GERMAN_IT "Tedesco"
 #define OPTION_VAL_ITALIAN_IT "Italiano"
 #define OPTION_VAL_SPANISH_IT "Spagnolo"
-#define OPTION_VAL_CHINESE_IT NULL
-#define OPTION_VAL_KOREAN_IT NULL
-#define OPTION_VAL_DUTCH_IT NULL
-#define OPTION_VAL_PORTUGUESE_IT NULL
-#define OPTION_VAL_RUSSIAN_IT NULL
+#define OPTION_VAL_CHINESE_IT "Cinese"
+#define OPTION_VAL_KOREAN_IT "Coreano"
+#define OPTION_VAL_DUTCH_IT "Olandese"
+#define OPTION_VAL_PORTUGUESE_IT "Portoghese"
+#define OPTION_VAL_RUSSIAN_IT "Russo"
 #define OPTION_VAL_TAIWANESE_IT NULL
 #define CEMU_AUDIO_CHANNELS_LABEL_IT NULL
 #define CEMU_AUDIO_CHANNELS_INFO_0_IT NULL
@@ -22883,11 +22883,11 @@ struct retro_core_options_v2 options_id = {
 #define OPTION_VAL_SURROUND_IT NULL
 #define CEMU_ACCOUNT_LABEL_IT NULL
 #define CEMU_ACCOUNT_INFO_0_IT NULL
-#define CEMU_CREATE_ACCOUNT_LABEL_IT NULL
+#define CEMU_CREATE_ACCOUNT_LABEL_IT "Crea un Account"
 #define CEMU_CREATE_ACCOUNT_INFO_0_IT NULL
 #define CEMU_RENAME_ACCOUNT_LABEL_IT NULL
 #define CEMU_RENAME_ACCOUNT_INFO_0_IT NULL
-#define CEMU_REMOVE_ACCOUNT_LABEL_IT NULL
+#define CEMU_REMOVE_ACCOUNT_LABEL_IT "Elimina Account"
 #define CEMU_REMOVE_ACCOUNT_INFO_0_IT NULL
 #define CEMU_GPU_API_LABEL_IT NULL
 #define CEMU_GPU_API_INFO_0_IT NULL
@@ -22944,13 +22944,13 @@ struct retro_core_options_v2 options_id = {
 #define CEMU_DRC_POSITION_LABEL_IT NULL
 #define OPTION_VAL_NORMAL_IT "Normale"
 #define OPTION_VAL_SWAPPED_IT NULL
-#define CEMU_INSTALL_GAME_LABEL_IT NULL
+#define CEMU_INSTALL_GAME_LABEL_IT "Installa Giochi"
 #define CEMU_INSTALL_GAME_INFO_0_IT NULL
-#define CEMU_UNINSTALL_GAME_LABEL_IT NULL
+#define CEMU_UNINSTALL_GAME_LABEL_IT "Disinstalla Gioco"
 #define CEMU_UNINSTALL_GAME_INFO_0_IT NULL
-#define CEMU_INSTALL_TITLES_LABEL_IT NULL
+#define CEMU_INSTALL_TITLES_LABEL_IT "Installa Contenuto"
 #define CEMU_INSTALL_TITLES_INFO_0_IT NULL
-#define CEMU_UNINSTALL_TITLES_LABEL_IT NULL
+#define CEMU_UNINSTALL_TITLES_LABEL_IT "Disinstalla Contenuto"
 #define CEMU_UNINSTALL_TITLES_INFO_0_IT NULL
 #define CEMU_INSTALL_REMOVE_SOURCE_LABEL_IT NULL
 #define CEMU_INSTALL_REMOVE_SOURCE_INFO_0_IT NULL
@@ -22960,13 +22960,13 @@ struct retro_core_options_v2 options_id = {
 #define CEMU_CONVERT_TO_WUA_INFO_0_IT NULL
 #define CEMU_INTERNAL_RESOLUTION_LABEL_IT NULL
 #define CEMU_INTERNAL_RESOLUTION_INFO_0_IT NULL
-#define OPTION_VAL_0_25X_IT NULL
-#define OPTION_VAL_0_5X_IT NULL
-#define OPTION_VAL_0_75X_IT NULL
+#define OPTION_VAL_0_25X_IT "0,25x (320x180 a 720p)"
+#define OPTION_VAL_0_5X_IT "0,5x (640x360 a 720p)"
+#define OPTION_VAL_0_75X_IT "0,75x (960x540 a 720p)"
 #define OPTION_VAL_NATIVE_IT "Nativo"
-#define OPTION_VAL_1_5X_IT NULL
-#define OPTION_VAL_2X_IT NULL
-#define OPTION_VAL_3X_IT NULL
+#define OPTION_VAL_1_5X_IT "1,5x (1920x1080 a 720p)"
+#define OPTION_VAL_2X_IT "2x (2560x1440 a 720p)"
+#define OPTION_VAL_3X_IT "3x (3840x2160 a 720p)"
 #define CEMU_RENDER_AHEAD_LABEL_IT NULL
 #define CEMU_RENDER_AHEAD_INFO_0_IT NULL
 #define CEMU_AUDIO_THREAD_LABEL_IT NULL
@@ -39956,7 +39956,7 @@ struct retro_core_options_v2 options_val = {
 #define CATEGORY_CHEATS_LABEL_VN "Mã gian lận (Cần khởi động lại)"
 #define CATEGORY_CHEATS_INFO_0_VN "Các gói mã gian lận của trò chơi đang tải, lấy từ thư mục Cheats của các gói đồ họa."
 #define CEMU_CPU_MODE_LABEL_VN "Chế độ CPU (Cần khởi động lại)"
-#define CEMU_CPU_MODE_INFO_0_VN "Cách mô phỏng các trình giả lập PowerPC của Wii U. Tự động: sử dụng chế độ trong hồ sơ trò chơi nếu có, giống như phiên bản độc lập; nếu không, dùng trình biên dịch lại đa lõi trên CPU có từ bốn lõi vật lý trở lên và dùng trình biên dịch lại đơn lõi trong các trường hợp còn lại. Các chế độ thông dịch chậm hơn nhiều và chủ yếu dành cho việc gỡ lỗi."
+#define CEMU_CPU_MODE_INFO_0_VN "Cách mô phỏng các trình giả lập PowerPC của Wii U. Tự động: sử dụng chế độ trong hồ sơ trò chơi nếu có, giống như phiên bản độc lập; nếu không, dùng trình biên dịch lại đa trình giả lập trên CPU có từ bốn trình giả lập vật lý trở lên và dùng trình biên dịch lại đơn trình giả lập trong các trường hợp còn lại. Các chế độ thông dịch chậm hơn nhiều và chủ yếu dành cho việc gỡ lỗi."
 #define OPTION_VAL_AUTO_VN "Tự động"
 #define OPTION_VAL_SINGLECORE_INTERPRETER_VN "Trình thông dịch đơn luồng"
 #define OPTION_VAL_SINGLECORE_RECOMPILER_VN "Trình biên dịch lại đơn luồng"
@@ -39986,7 +39986,7 @@ struct retro_core_options_v2 options_val = {
 #define CEMU_CREATE_ACCOUNT_LABEL_VN "Tạo tài khoản"
 #define CEMU_CREATE_ACCOUNT_INFO_0_VN "Tạo tài khoản mới có tên Người chơi 2, Người chơi 3, v. v. và đặt tài khoản đó làm tài khoản đang hoạt động. Sau đó, thiết lập này tự chuyển về TẮT. Tài khoản mới sẽ xuất hiện trong danh sách tài khoản sau khi thoát khỏi menu này và mở lại. Máy chơi game hỗ trợ tối đa 12 tài khoản."
 #define CEMU_RENAME_ACCOUNT_LABEL_VN "Đổi tên tài khoản đang hoạt động"
-#define CEMU_RENAME_ACCOUNT_INFO_0_VN "Mở giao diện nhập tên cho tài khoản đang hoạt động sau khi thoát khỏi menu này, rồi chuyển về TẮT. Tên đang nhập sẽ được hiển thị dưới dạng thông báo đè lên trò chơi, vì vậy thông báo trên màn hình của giao diện điều khiển phải được bật.\n\nVới tay cầm: Lên và Xuống thay đổi ký tự cuối cùng, Phải thêm một ký tự, Trái xóa một ký tự, Start xác nhận, Select hủy.\n\nVới bàn phím: nhập văn bản, Backspace xóa một ký tự, Enter xác nhận, Escape hủy (có thể cần bật Tập trung vào trò chơi trên giao diện điều khiển để chuyển phím đến lõi).\n\nTên có tối đa 10 ký tự. Trò chơi sẽ không nhận được thao tác điều khiển nào cho đến khi giao diện nhập tên được đóng, và trò chơi đang chạy sẽ hiển thị tên mới khi được khởi chạy lại."
+#define CEMU_RENAME_ACCOUNT_INFO_0_VN "Mở giao diện nhập tên cho tài khoản đang hoạt động sau khi thoát khỏi menu này, rồi chuyển về TẮT. Tên đang nhập sẽ được hiển thị dưới dạng thông báo đè lên trò chơi, vì vậy thông báo trên màn hình của giao diện điều khiển phải được bật.\n\nVới tay cầm: Lên và Xuống thay đổi ký tự cuối cùng, Phải thêm một ký tự, Trái xóa một ký tự, Start xác nhận, Select hủy.\n\nVới bàn phím: nhập văn bản, Backspace xóa một ký tự, Enter xác nhận, Escape hủy (có thể cần bật Tập trung vào trò chơi trên giao diện điều khiển để chuyển phím đến trình giả lập).\n\nTên có tối đa 10 ký tự. Trò chơi sẽ không nhận được thao tác điều khiển nào cho đến khi giao diện nhập tên được đóng, và trò chơi đang chạy sẽ hiển thị tên mới khi được khởi chạy lại."
 #define CEMU_REMOVE_ACCOUNT_LABEL_VN "Xóa tài khoản"
 #define CEMU_REMOVE_ACCOUNT_INFO_0_VN "Xóa tài khoản đã chọn khỏi thư mục tài khoản (saves/Cemu/mlc01/usr/save/system/act), tương tự thao tác xóa người dùng trên máy chơi game, khi thoát khỏi Menu này. Tùy chọn sẽ hiển thị lại TẮT khi quay lại Menu.\n\nKhông thể xóa tài khoản đang hoạt động, cũng như tài khoản đã dùng để khởi chạy trò chơi đang chạy cho đến khi trò chơi đó được đóng.\n\nCẢNH BÁO: xóa tài khoản cũng sẽ xóa vĩnh viễn dữ liệu lưu của tài khoản đó trong tất cả trò chơi. Hãy sao lưu mọi dữ liệu lưu muốn giữ lại trước khi xóa tài khoản."
 #define CEMU_GPU_API_LABEL_VN "Giao diện đồ họa"
@@ -40053,7 +40053,7 @@ struct retro_core_options_v2 options_val = {
 #define CEMU_UNINSTALL_TITLES_LABEL_VN "Gỡ cài đặt nội dung"
 #define CEMU_UNINSTALL_TITLES_INFO_0_VN "Gỡ cài đặt bản cập nhật trò chơi và nội dung tải thêm của trò chơi đang chạy khỏi thư mục đã cài đặt (saves/Cemu/mlc01/usr/title) sau khi trò chơi được đóng hoặc khởi động lại; tùy chọn vẫn BẬT cho đến lúc đó. Các bản sao trong thư mục nguồn (system/Cemu/titles) sẽ được giữ nguyên."
 #define CEMU_INSTALL_REMOVE_SOURCE_LABEL_VN "Xóa tệp sau khi cài đặt"
-#define CEMU_INSTALL_REMOVE_SOURCE_INFO_0_VN "Xóa những nội dung mà các tùy chọn Cài đặt trò chơi và Cài đặt nội dung đã cài đặt khỏi thư mục nguồn (system/Cemu/titles): thư mục của bản cập nhật trò chơi hoặc nội dung tải thêm sau khi được cài đặt, và ảnh đĩa (cùng tệp .key) hoặc tệp .wua sau khi mọi nội dung chứa trong đó đã được cài đặt. Các tệp đang được trò chơi chạy sử dụng sẽ bị xóa khi trò chơi được đóng hoặc khởi động lại.\n\nCẢNH BÁO: thao tác này sẽ xóa vĩnh viễn các tệp khỏi thư mục nguồn. Thư mục đó dành cho lõi tự quản lý; hãy lưu trữ dữ liệu trò chơi muốn giữ lại ở một nơi khác."
+#define CEMU_INSTALL_REMOVE_SOURCE_INFO_0_VN "Xóa những nội dung mà các tùy chọn Cài đặt trò chơi và Cài đặt nội dung đã cài đặt khỏi thư mục nguồn (system/Cemu/titles): thư mục của bản cập nhật trò chơi hoặc nội dung tải thêm sau khi được cài đặt, và ảnh đĩa (cùng tệp .key) hoặc tệp .wua sau khi mọi nội dung chứa trong đó đã được cài đặt. Các tệp đang được trò chơi chạy sử dụng sẽ bị xóa khi trò chơi được đóng hoặc khởi động lại.\n\nCẢNH BÁO: thao tác này sẽ xóa vĩnh viễn các tệp khỏi thư mục nguồn. Thư mục đó dành cho trình giả lập tự quản lý; hãy lưu trữ dữ liệu trò chơi muốn giữ lại ở một nơi khác."
 #define CEMU_WUA_OUTPUT_DIR_LABEL_VN "Thư mục đầu ra"
 #define CEMU_WUA_OUTPUT_DIR_INFO_0_VN "Nơi tệp .wua được ghi. Cần đủ dung lượng để chứa tệp này."
 #define CEMU_CONVERT_TO_WUA_LABEL_VN "Bắt đầu chuyển đổi sang WUA"
@@ -40086,7 +40086,7 @@ struct retro_core_options_v2 options_val = {
 #define CEMU_LOG_AUDIO_LABEL_VN "Ghi nhật ký âm thanh và nhịp khung hình (gỡ lỗi)"
 #define CEMU_LOG_AUDIO_INFO_0_VN "Mỗi giây, ghi lại số mẫu âm thanh AX đã tạo ra, số mẫu phải loại bỏ khỏi bộ đệm vòng và số mẫu giao diện chính đã lấy; đồng thời ghi lại số lần giao diện chính chạy trình giả lập, số khung hình trò chơi đã hoàn thành và thời gian được phân bổ cho từng công việc (chờ luồng xử lý đồ họa, xuất khung hình, âm thanh). Dùng để xác định liệu trò chơi chạy chậm bị giới hạn bởi bộ xử lý được mô phỏng, bộ xử lý đồ họa hay giao diện chính."
 #define CEMU_LOG_THREAD_TIME_LABEL_VN "Ghi nhật ký thời gian xử lý của luồng (gỡ lỗi)"
-#define CEMU_LOG_THREAD_TIME_INFO_0_VN "Mỗi giây, ghi lại mức độ bận của luồng trên từng lõi PowerPC được mô phỏng, luồng xử lý đồ họa và luồng của giao diện chính, tính theo tỷ lệ phần trăm công suất của một lõi máy thật. Luồng gần mức 100% chính là luồng mà trò chơi chạy chậm đang phải chờ."
+#define CEMU_LOG_THREAD_TIME_INFO_0_VN "Mỗi giây, ghi lại mức độ bận của luồng trên từng trình giả lập PowerPC được mô phỏng, luồng xử lý đồ họa và luồng của giao diện chính, tính theo tỷ lệ phần trăm công suất của một trình giả lập máy thật. Luồng gần mức 100% chính là luồng mà trò chơi chạy chậm đang phải chờ."
 #define CEMU_DUMP_SHADERS_LABEL_VN "Xuất bộ tạo bóng (gỡ lỗi)"
 #define CEMU_DUMP_SHADERS_INFO_0_VN "Ghi mã nguồn của mọi bộ tạo bóng mà game sử dụng vào system/Cemu/dump/shaders, đặt tên theo mã băm của chúng như được hiển thị trong log.txt. Dùng để báo cáo bộ tạo bóng bị lỗi hoặc hiển thị sai trên một GPU cụ thể. Làm chậm quá trình biên dịch bộ tạo bóng và nhanh chóng làm đầy thư mục, vì vậy hãy tắt lại sau khi sử dụng."
 #define CEMU_EMULATE_SKYLANDER_PORTAL_LABEL_VN "Mô phỏng cổng sức mạnh Skylanders (Cần khởi động lại)"
